@@ -1,4 +1,4 @@
-const TONClient = require('./dist/TONClient');
+const {TONClient} = require('./dist/TONClient');
 
 module.exports = {
     TONClient
