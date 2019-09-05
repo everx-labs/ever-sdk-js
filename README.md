@@ -1,2 +1,2 @@
 # ton-client-js
-TON Client Shared JavaScript Library
+Shared JavaScript TON Client Library
