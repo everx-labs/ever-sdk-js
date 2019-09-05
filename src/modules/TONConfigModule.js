@@ -1,5 +1,4 @@
 // @flow
-import query from "apollo-cache-inmemory/lib/fragmentMatcherIntrospectionQuery";
 import { TONModule } from '../TONModule';
 
 export type TONConfigData = {
@@ -10,11 +9,6 @@ export type TONConfigData = {
     queriesWsServer?: string,
     log_verbose?: boolean,
 }
-
-const methods = {
-    init: 'config.init',
-    version: 'config.version',
-};
 
 type URLParts = {
     protocol: string,
@@ -111,13 +105,13 @@ export default class TONConfigModule extends TONModule {
     }
 
     async getVersion(): Promise<string> {
-        return this.requestLibrary(methods.version);
+        return this.requestLibrary('version');
     }
 
 
     async setup(): Promise<void> {
         if (this.data) {
-            await this.requestLibrary(methods.init, this.data);
+            await this.requestLibrary('setup', this.data);
         }
     }
 
