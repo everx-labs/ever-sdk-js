@@ -1,8 +1,6 @@
 // @flow
 /* eslint-disable class-methods-use-this, no-use-before-define */
 import TONQueriesModule from "./modules/TONQueriesModule";
-import TONTransactionsModule from './modules/TONTransactionsModule';
-import TONWalletModule from './modules/TONWalletModule';
 import TONConfigModule from './modules/TONConfigModule';
 import TONContractsModule from './modules/TONContractsModule';
 import TONCryptoModule from './modules/TONCryptoModule';
@@ -58,7 +56,7 @@ type TONClientPlatform = {
     createLibrary: () => Promise<TONClientLibrary>,
 };
 
-export default class TONClient {
+export class TONClient {
     static shared = new TONClient();
 
     static setLibrary(clientPlatform: TONClientPlatform) {
@@ -70,8 +68,6 @@ export default class TONClient {
     config: TONConfigModule;
     crypto: TONCryptoModule;
     contracts: TONContractsModule;
-    transactions: TONTransactionsModule;
-    wallet: TONWalletModule;
     queries: TONQueriesModule;
 
 
@@ -80,8 +76,6 @@ export default class TONClient {
         this.config = this.context.getModule(TONConfigModule);
         this.crypto = this.context.getModule(TONCryptoModule);
         this.contracts = this.context.getModule(TONContractsModule);
-        this.transactions = this.context.getModule(TONTransactionsModule);
-        this.wallet = this.context.getModule(TONWalletModule);
         this.queries = this.context.getModule(TONQueriesModule);
     }
 

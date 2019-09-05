@@ -1,5 +1,5 @@
 // @flow
-import TONClient from '../TONClient';
+import {TONClient} from '../TONClient';
 import TONConfigModule from './TONConfigModule';
 import type { TONKeyPairData } from './TONCryptoModule';
 import { TONModule } from '../TONModule';

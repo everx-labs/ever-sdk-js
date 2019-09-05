@@ -7,7 +7,7 @@ import { split } from 'apollo-link';
 import { getMainDefinition } from 'apollo-utilities';
 import gql from 'graphql-tag';
 import TONConfigModule from './TONConfigModule';
-import TONClient from '../TONClient';
+import { TONClient } from '../TONClient';
 import { TONModule } from '../TONModule';
 import type { TONModuleContext } from '../TONModule';
 
