@@ -1,5 +1,5 @@
 // @flow
-import {TONClient} from '../TONClient';
+import { TONClient } from '../TONClient';
 import TONConfigModule from './TONConfigModule';
 import type { TONKeyPairData } from './TONCryptoModule';
 import { TONModule } from '../TONModule';
@@ -125,7 +125,6 @@ type QAddrStd = {
 type QAddr = 'AddrNone' | QAddrStd
 
 
-
 type QMessage = {
     id: string,
     header: {
@@ -157,7 +156,7 @@ export default class TONContractsModule extends TONModule {
                 }
             }
         }[] = await this.queries.accounts.query({
-                _key: { eq: params.address },
+            id: { eq: params.address },
         }, 'storage { balance { Grams } }');
         if (accounts && accounts.length > 0) {
             return {
@@ -212,7 +211,7 @@ export default class TONContractsModule extends TONModule {
         const message = await this.create_send_grams_message(params);
         const transaction = await this.process_message(
             message,
-            '_key status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary{ aborted } } }',
+            'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary{ aborted } } }',
         );
         if (transaction.description.Ordinary.aborted) {
             throw {
@@ -268,7 +267,7 @@ export default class TONContractsModule extends TONModule {
             };
         }
         return await this.queries.transactions.waitFor({
-            _key: { eq: params.messageId },
+            id: { eq: params.messageId },
             status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
         }, resultFields);
     }
@@ -302,7 +301,7 @@ export default class TONContractsModule extends TONModule {
         });
         const transaction = await this.process_message(
             message,
-            '_key status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } }',
+            'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } }',
         );
         const ordinary = transaction.description.Ordinary;
         if (ordinary.aborted) {
@@ -322,12 +321,12 @@ export default class TONContractsModule extends TONModule {
         const message = await this.create_run_message(params);
         const transaction = await this.process_message(
             message,
-            '_key status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } } out_msgs',
+            'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } } out_msgs',
         );
         const ordinary = transaction.description.Ordinary;
         if (ordinary.aborted) {
             throw {
-                code: 'ContractsRunFailed',
+                code: 3040,
                 message: 'Run failed',
             };
         }
@@ -336,12 +335,11 @@ export default class TONContractsModule extends TONModule {
             return { output: null };
         }
         const outputMessages: QMessage[] = await Promise.all(outputMessageIds.map(id => {
-            console.log('>>>', id);
-                return this.queries.messages.waitFor({
-                    _key: { eq: id },
-                    status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
-                }, 'body header { ...on MessageHeaderExtOutMsgInfoVariant { ExtOutMsgInfo { created_at } } }');
-            }));
+            return this.queries.messages.waitFor({
+                id: { eq: id },
+                status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
+            }, 'body header { ...on MessageHeaderExtOutMsgInfoVariant { ExtOutMsgInfo { created_at } } }');
+        }));
         const externalMessage = outputMessages.find((x: QMessage) => x.header && x.header.ExtOutMsgInfo);
         if (!externalMessage) {
             return { output: null };
@@ -355,7 +353,7 @@ export default class TONContractsModule extends TONModule {
 
     async run_local_js(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
         const accounts = await TONClient.shared.queries.select(
-             "RETURN DOCUMENT(\"accounts/" + params.address + "\")", { });
+            "RETURN DOCUMENT(\"accounts/" + params.address + "\")", {});
 
         return this.requestLibrary('contracts.run.local', {
             address: params.address,
