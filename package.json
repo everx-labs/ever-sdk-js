@@ -1,7 +1,7 @@
 {
-	"name": "ton-sdk-js",
-	"version": "0.10.0",
-	"description": "TON SDK API for Java Script",
+	"name": "ton-client-js",
+	"version": "0.11.0",
+	"description": "TON Client for Java Script",
 	"main": "dist/index.js",
 	"scripts": {
 		"babel": "babel src --out-dir dist --source-maps inline",
