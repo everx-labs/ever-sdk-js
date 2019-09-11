@@ -87,7 +87,7 @@ type TONContractDecodeRunOutputParams = {
     bodyBase64: string,
 }
 
-type TONContractDecodeUnknownRunParams = {
+type TONContractDecodeMessageBodyParams = {
     abi: TONContractABI,
     bodyBase64: string,
 }
@@ -96,7 +96,7 @@ type TONContractRunResult = {
     output: any,
 }
 
-type TONContractUnknownRunResult = {
+type TONContractDecodeMessageBodyResult = {
     function: string,
     output: any,
 }
@@ -190,20 +190,20 @@ export default class TONContractsModule extends TONModule {
 
 
     async deploy(params: TONContractDeployParams): Promise<TONContractDeployResult> {
-        return this.deploy_js(params);
+        return this.deployJs(params);
     }
 
 
     async run(params: TONContractRunParams): Promise<TONContractRunResult> {
-        return this.run_js(params);
+        return this.runJs(params);
     }
 
-    async run_local(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
+    async runLocal(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
 
-        return this.run_local_js(params);
+        return this.runLocalJs(params);
     }
 
-    async create_deploy_message(params: TONContractDeployParams): Promise<TONContractDeployMessage> {
+    async createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage> {
         return this.requestLibrary('contracts.deploy.message', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
@@ -213,7 +213,7 @@ export default class TONContractsModule extends TONModule {
     }
 
 
-    async create_run_message(params: TONContractRunParams): Promise<TONContractMessage> {
+    async createRunMessage(params: TONContractRunParams): Promise<TONContractMessage> {
         return this.requestLibrary('contracts.run.message', {
             address: params.address,
             abi: params.abi,
@@ -223,9 +223,9 @@ export default class TONContractsModule extends TONModule {
         });
     }
 
-    async send_grams(params: TONContractSendGramsParams): Promise<void> {
-        const message = await this.create_send_grams_message(params);
-        const transaction = await this.process_message(
+    async sendGrams(params: TONContractSendGramsParams): Promise<void> {
+        const message = await this.createSendGramsMessage(params);
+        const transaction = await this.processMessage(
             message,
             'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary{ aborted } } }',
         );
@@ -237,19 +237,27 @@ export default class TONContractsModule extends TONModule {
         }
     }
 
-    async create_send_grams_message(params: TONContractSendGramsParams): Promise<TONContractMessage> {
+    async createSendGramsMessage(params: TONContractSendGramsParams): Promise<TONContractMessage> {
         return this.requestLibrary('contracts.send.grams.message', params);
     }
 
-    async decode_run_output(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
+    async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
         return this.requestLibrary('contracts.run.output', params);
     }
 
-    async decode_unknown_run_input(params: TONContractDecodeUnknownRunParams): Promise<TONContractUnknownRunResult> {
+    async decodeInputMessageBody(params: TONContractDecodeMessageBodyParams)
+        : Promise<TONContractDecodeMessageBodyResult>
+    {
         return this.requestLibrary('contracts.run.unknown.input', params);
     }
 
-    async process_message(
+    async decodeOutputMessageBody(params: TONContractDecodeMessageBodyParams)
+        : Promise<TONContractDecodeMessageBodyResult>
+    {
+        return this.requestLibrary('contracts.run.unknown.output', params);
+    }
+
+    async processMessage(
         params: TONContractMessage,
         resultFields: string,
     ): Promise<QTransaction> {
@@ -288,7 +296,7 @@ export default class TONContractsModule extends TONModule {
         }, resultFields);
     }
 
-    async deploy_native(params: TONContractDeployParams): Promise<TONContractDeployResult> {
+    async deployNative(params: TONContractDeployParams): Promise<TONContractDeployResult> {
         return this.requestLibrary('contracts.deploy', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
@@ -298,7 +306,7 @@ export default class TONContractsModule extends TONModule {
     }
 
 
-    async run_native(params: TONContractRunParams): Promise<TONContractRunResult> {
+    async runNative(params: TONContractRunParams): Promise<TONContractRunResult> {
         return await this.requestLibrary('contracts.run', {
             address: params.address,
             abi: params.abi,
@@ -308,14 +316,14 @@ export default class TONContractsModule extends TONModule {
         });
     }
 
-    async deploy_js(params: TONContractDeployParams): Promise<TONContractDeployResult> {
-        const message = await this.create_deploy_message(params);
-        await this.send_grams({
+    async deployJs(params: TONContractDeployParams): Promise<TONContractDeployResult> {
+        const message = await this.createDeployMessage(params);
+        await this.sendGrams({
             fromAccount: '',
             toAccount: message.address,
             amount: 1000000000,
         });
-        const transaction = await this.process_message(
+        const transaction = await this.processMessage(
             message,
             'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } }',
         );
@@ -333,9 +341,9 @@ export default class TONContractsModule extends TONModule {
     }
 
 
-    async run_js(params: TONContractRunParams): Promise<TONContractRunResult> {
-        const message = await this.create_run_message(params);
-        const transaction = await this.process_message(
+    async runJs(params: TONContractRunParams): Promise<TONContractRunResult> {
+        const message = await this.createRunMessage(params);
+        const transaction = await this.processMessage(
             message,
             'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } } out_msgs',
         );
@@ -360,14 +368,14 @@ export default class TONContractsModule extends TONModule {
         if (!externalMessage) {
             return { output: null };
         }
-        return this.decode_run_output({
+        return this.decodeRunOutput({
             abi: params.abi,
             functionName: params.functionName,
             bodyBase64: externalMessage.body,
         });
     }
 
-    async run_local_js(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
+    async runLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
         const accounts = await TONClient.shared.queries.select(
             "RETURN DOCUMENT(\"accounts/" + params.address + "\")", {});
 
