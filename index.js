@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-const {TONClient} = require('./dist/TONClient');
+const { TONClient } = require('./dist/TONClient');
 
 module.exports = {
-    TONClient
+    TONClient,
 };

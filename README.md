@@ -1,6 +1,8 @@
 # ton-client-js
 Shared JavaScript TON Client Library
 
+See https://docs.ton.dev for documentation
+
 ---
 Copyright 2018-2019 TON DEV SOLUTIONS LTD.
 
