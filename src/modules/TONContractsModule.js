@@ -245,15 +245,15 @@ export default class TONContractsModule extends TONModule {
         return this.requestLibrary('contracts.run.output', params);
     }
 
-    async decodeInputMessageBody(params: TONContractDecodeMessageBodyParams)
-        : Promise<TONContractDecodeMessageBodyResult>
-    {
+    async decodeInputMessageBody(
+        params: TONContractDecodeMessageBodyParams,
+    ): Promise<TONContractDecodeMessageBodyResult> {
         return this.requestLibrary('contracts.run.unknown.input', params);
     }
 
-    async decodeOutputMessageBody(params: TONContractDecodeMessageBodyParams)
-        : Promise<TONContractDecodeMessageBodyResult>
-    {
+    async decodeOutputMessageBody(
+        params: TONContractDecodeMessageBodyParams,
+    ): Promise<TONContractDecodeMessageBodyResult> {
         return this.requestLibrary('contracts.run.unknown.output', params);
     }
 
@@ -281,7 +281,12 @@ export default class TONContractsModule extends TONModule {
             redirect: 'follow',
             referrer: 'no-referrer',
             body: JSON.stringify({
-                records: [{ key: params.messageIdBase64, value: params.messageBodyBase64 }],
+                records: [
+                    {
+                        key: params.messageIdBase64,
+                        value: params.messageBodyBase64,
+                    },
+                ],
             }),
         });
         if (response.status !== 200) {
@@ -290,7 +295,7 @@ export default class TONContractsModule extends TONModule {
                 message: `Post message failed: ${await response.text()}`,
             };
         }
-        return await this.queries.transactions.waitFor({
+        return this.queries.transactions.waitFor({
             id: { eq: params.messageId },
             status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
         }, resultFields);
@@ -331,7 +336,7 @@ export default class TONContractsModule extends TONModule {
         if (ordinary.aborted) {
             throw {
                 code: 3050,
-                message: `Deploy failed`,
+                message: 'Deploy failed',
             };
         }
         return {
@@ -358,26 +363,32 @@ export default class TONContractsModule extends TONModule {
         if (!outputMessageIds || outputMessageIds.length === 0) {
             return { output: null };
         }
-        const outputMessages: QMessage[] = await Promise.all(outputMessageIds.map(id => {
-            return this.queries.messages.waitFor({
-                id: { eq: id },
-                status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
-            }, 'body header { ...on MessageHeaderExtOutMsgInfoVariant { ExtOutMsgInfo { created_at } } }');
-        }));
-        const externalMessage = outputMessages.find((x: QMessage) => x.header && x.header.ExtOutMsgInfo);
-        if (!externalMessage) {
-            return { output: null };
-        }
-        return this.decodeRunOutput({
-            abi: params.abi,
-            functionName: params.functionName,
-            bodyBase64: externalMessage.body,
+        const externalMessages: QMessage[] = (await Promise.all(outputMessageIds.map((id) => {
+            return this.queries.messages.waitFor(
+                {
+                    id: { eq: id },
+                    status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
+                },
+                'body header { ...on MessageHeaderExtOutMsgInfoVariant { ExtOutMsgInfo { created_at } } }',
+            );
+        }))).filter((x: QMessage) => {
+            return x.header && x.header.ExtOutMsgInfo;
         });
+        const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
+            return this.decodeOutputMessageBody({
+                abi: params.abi,
+                bodyBase64: x.body,
+            });
+        }));
+        const resultOutput = outputs.find((x: TONContractDecodeMessageBodyResult) => {
+            return x.function.toLowerCase() === params.functionName.toLowerCase();
+        });
+        return resultOutput ? { output: resultOutput.output } : { output: null };
     }
 
     async runLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
         const accounts = await TONClient.shared.queries.select(
-            "RETURN DOCUMENT(\"accounts/" + params.address + "\")", {});
+            'RETURN DOCUMENT("accounts/' + params.address + '")', {});
 
         return this.requestLibrary('contracts.run.local', {
             address: params.address,
