@@ -101,12 +101,6 @@ type TONContractDecodeMessageBodyResult = {
     output: any,
 }
 
-type TONContractSendGramsParams = {
-    fromAccount: string,
-    toAccount: string,
-    amount: number,
-}
-
 type TONContractMessage = {
     messageId: string,
     messageIdBase64: string,
@@ -223,24 +217,6 @@ export default class TONContractsModule extends TONModule {
         });
     }
 
-    async sendGrams(params: TONContractSendGramsParams): Promise<void> {
-        const message = await this.createSendGramsMessage(params);
-        const transaction = await this.processMessage(
-            message,
-            'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary{ aborted } } }',
-        );
-        if (transaction.description.Ordinary.aborted) {
-            throw {
-                code: 'ContractsSendGramsFailed',
-                message: 'Send Grams Failed',
-            };
-        }
-    }
-
-    async createSendGramsMessage(params: TONContractSendGramsParams): Promise<TONContractMessage> {
-        return this.requestLibrary('contracts.send.grams.message', params);
-    }
-
     async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
         return this.requestLibrary('contracts.run.output', params);
     }
@@ -323,11 +299,6 @@ export default class TONContractsModule extends TONModule {
 
     async deployJs(params: TONContractDeployParams): Promise<TONContractDeployResult> {
         const message = await this.createDeployMessage(params);
-        await this.sendGrams({
-            fromAccount: '',
-            toAccount: message.address,
-            amount: 1000000000,
-        });
         const transaction = await this.processMessage(
             message,
             'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } }',
