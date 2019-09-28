@@ -3,7 +3,8 @@ module.exports = {
 		'js',
 	],
 	modulePathIgnorePatterns: [
-		'init.js',
+		'init-tests.js',
+        'contracts\/'
 	],
 	transform: {
 		'^.+\\.js$': 'babel-jest',

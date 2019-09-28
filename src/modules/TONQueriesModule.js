@@ -16,7 +16,7 @@
 
 // @flow
 import { ApolloClient } from 'apollo-client';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
 import { HttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import { split } from 'apollo-link';
@@ -31,6 +31,54 @@ type Subscription = {
     unsubscribe: () => void
 }
 
+const unionsScheme = {
+    "data": {
+        "__schema": {
+            "types": [{
+                "kind": "UNION",
+                "name": "MessageHeader",
+                "possibleTypes": [{ "name": "MessageHeaderIntMsgInfoVariant" }, { "name": "MessageHeaderExtInMsgInfoVariant" }, { "name": "MessageHeaderExtOutMsgInfoVariant" }]
+            }, {
+                "kind": "UNION",
+                "name": "MsgAddressInt",
+                "possibleTypes": [{ "name": "MsgAddressIntAddrNoneVariant" }, { "name": "MsgAddressIntAddrStdVariant" }, { "name": "MsgAddressIntAddrVarVariant" }]
+            }, {
+                "kind": "UNION",
+                "name": "MsgAddressExt",
+                "possibleTypes": [{ "name": "MsgAddressExtAddrNoneVariant" }, { "name": "MsgAddressExtAddrExternVariant" }]
+            }, {
+                "kind": "UNION",
+                "name": "InMsg",
+                "possibleTypes": [{ "name": "InMsgExternalVariant" }, { "name": "InMsgIHRVariant" }, { "name": "InMsgImmediatellyVariant" }, { "name": "InMsgFinalVariant" }, { "name": "InMsgTransitVariant" }, { "name": "InMsgDiscardedFinalVariant" }, { "name": "InMsgDiscardedTransitVariant" }]
+            }, {
+                "kind": "UNION",
+                "name": "IntermediateAddress",
+                "possibleTypes": [{ "name": "IntermediateAddressRegularVariant" }, { "name": "IntermediateAddressSimpleVariant" }, { "name": "IntermediateAddressExtVariant" }]
+            }, {
+                "kind": "UNION",
+                "name": "OutMsg",
+                "possibleTypes": [{ "name": "OutMsgNoneVariant" }, { "name": "OutMsgExternalVariant" }, { "name": "OutMsgImmediatelyVariant" }, { "name": "OutMsgOutMsgNewVariant" }, { "name": "OutMsgTransitVariant" }, { "name": "OutMsgDequeueVariant" }, { "name": "OutMsgTransitRequiredVariant" }]
+            }, {
+                "kind": "UNION",
+                "name": "AccountStorageState",
+                "possibleTypes": [{ "name": "AccountStorageStateAccountUninitVariant" }, { "name": "AccountStorageStateAccountActiveVariant" }, { "name": "AccountStorageStateAccountFrozenVariant" }]
+            }, {
+                "kind": "UNION",
+                "name": "TransactionDescription",
+                "possibleTypes": [{ "name": "TransactionDescriptionOrdinaryVariant" }, { "name": "TransactionDescriptionStorageVariant" }, { "name": "TransactionDescriptionTickTockVariant" }, { "name": "TransactionDescriptionSplitPrepareVariant" }, { "name": "TransactionDescriptionSplitInstallVariant" }, { "name": "TransactionDescriptionMergePrepareVariant" }, { "name": "TransactionDescriptionMergeInstallVariant" }]
+            }, {
+                "kind": "UNION",
+                "name": "TrComputePhase",
+                "possibleTypes": [{ "name": "TrComputePhaseSkippedVariant" }, { "name": "TrComputePhaseVmVariant" }]
+            }, {
+                "kind": "UNION",
+                "name": "TrBouncePhase",
+                "possibleTypes": [{ "name": "TrBouncePhaseNegfundsVariant" }, { "name": "TrBouncePhaseNofundsVariant" }, { "name": "TrBouncePhaseOkVariant" }]
+            }]
+        }
+    }
+};
+
 export default class TONQueriesModule extends TONModule {
     constructor(context: TONModuleContext) {
         super(context);
@@ -43,7 +91,11 @@ export default class TONQueriesModule extends TONModule {
         if (!configData || !clientPlatform) {
             throw Error('TON SDK does not configured');
         }
-        const cache = new InMemoryCache();
+        const fragmentMatcher = new IntrospectionFragmentMatcher({
+            introspectionQueryResultData: unionsScheme.data
+        });
+
+        const cache = new InMemoryCache({ fragmentMatcher });
 
         const httpLink = new HttpLink({
             uri: config.queriesHttpUrl(),
@@ -70,6 +122,8 @@ export default class TONQueriesModule extends TONModule {
             httpLink,
         );
 
+
+
         const defaultOptions = {
             watchQuery: {
                 fetchPolicy: 'no-cache',
@@ -92,6 +146,7 @@ export default class TONQueriesModule extends TONModule {
     }
 
     async close() {
+        await this.client.clearStore();
         this.client.stop();
     }
 
@@ -116,7 +171,7 @@ export default class TONQueriesModule extends TONModule {
 
     accounts: TONQCollection;
 
-    client: any;
+    client: ApolloClient;
 }
 
 

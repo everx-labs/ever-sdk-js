@@ -387,7 +387,7 @@ export default class TONContractsModule extends TONModule {
     }
 
     async runLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
-        const accounts = await TONClient.shared.queries.select(
+        const accounts = await this.queries.select(
             'RETURN DOCUMENT("accounts/' + params.address + '")', {});
 
         return this.requestLibrary('contracts.run.local', {
