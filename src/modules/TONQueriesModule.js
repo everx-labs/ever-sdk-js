@@ -146,8 +146,8 @@ export default class TONQueriesModule extends TONModule {
     }
 
     async close() {
-        await this.client.clearStore();
         this.client.stop();
+        await this.client.clearStore();
     }
 
     async select(query: string, bindVars: {}) {
