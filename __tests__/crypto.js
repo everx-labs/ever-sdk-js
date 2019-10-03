@@ -190,5 +190,7 @@ test('crypto', async () => {
     expect(second).toEqual('xprvA1KNMo63UcGjmDF1bX39Cw2BXGUwrwMjeD5qvQ3tA3qS3mZQkGtpf4DHq8FDLKAvAjXsYGLHDP2dVzLu9ycta8PXLuSYib2T3vzLf3brVgZ');
     expect(await crypto.hdkeyXPrvSecret(second)).toEqual('1c566ade41169763b155761406d3cef08b29b31cf8014f51be08c0cb4e67c5e1');
     expect(await crypto.hdkeyXPrvPublic(second)).toEqual('02a87d9764eedaacee45b0f777b5a242939b05fa06873bf511ca9a59cb46a5f526');
+
+
 });
 

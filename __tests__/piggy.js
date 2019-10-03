@@ -126,7 +126,7 @@ test('piggyBank', async () => {
         functionName: 'getSubscriptionAccount',
         input: {},
     });
-    // console.log('[PiggyBank] Get subscription response:', getSubscriptionResponse);
+    console.log('[PiggyBank] Get subscription response:', getSubscriptionResponse);
 
 
     // Call subscribe in subscription

@@ -6,7 +6,6 @@ const path = require('path');
 const os = require('os');
 const http = require('http');
 const zlib = require('zlib');
-const library = require('./tonclient.node');
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
@@ -94,6 +93,7 @@ async function init() {
             await dl('libtonclientnodejs.dylib', `tonclient_${bv}_nodejs_dylib_${p}`);
         }
     }
+    const library = require('./tonclient.node');
     TONClient.setLibrary({
         fetch,
         WebSocket: WebSocket.w3cwebsocket,
@@ -112,7 +112,7 @@ async function done() {
 const tests = {
     config: {
         defaultWorkchain: 0,
-        servers: ["http://0.0.0.0"],
+        servers: ["http://0.0.0.0:82"],
         queriesServer: "http://0.0.0.0:4000/graphql",
         log_verbose: true,
     },

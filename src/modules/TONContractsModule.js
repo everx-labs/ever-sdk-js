@@ -257,10 +257,7 @@ export default class TONContractsModule extends TONModule {
         return this.requestLibrary('contracts.run.unknown.output', params);
     }
 
-    async processMessage(
-        params: TONContractMessage,
-        resultFields: string,
-    ): Promise<QTransaction> {
+    async sendMessage(params: TONContractMessage): Promise<void> {
         const { clientPlatform } = TONClient;
         if (!clientPlatform) {
             throw {
@@ -291,10 +288,17 @@ export default class TONContractsModule extends TONModule {
         });
         if (response.status !== 200) {
             throw {
-                code: 'ContractsPostMessageFailed',
-                message: `Post message failed: ${await response.text()}`,
+                code: 3004,
+                message: `Send node request failed: ${await response.text()}`,
             };
         }
+    }
+
+    async processMessage(
+        params: TONContractMessage,
+        resultFields: string,
+    ): Promise<QTransaction> {
+        await this.sendMessage(params);
         return this.queries.transactions.waitFor({
             id: { eq: params.messageId },
             status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
