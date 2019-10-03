@@ -390,10 +390,53 @@ export default class TONContractsModule extends TONModule {
         return resultOutput ? { output: resultOutput.output } : { output: null };
     }
 
-    async runLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
-        const accounts = await this.queries.select(
-            'RETURN DOCUMENT("accounts/' + params.address + '")', {});
 
+    async runLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
+        function removeTypeName(obj: any) {
+            if (obj.__typename) {
+                delete obj.__typename;
+            }
+            Object.values(obj).forEach((value) => {
+                if (!!value && typeof value === 'object') {
+                    removeTypeName(value);
+                }
+            });
+        }
+        const accounts = await this.queries.accounts.query(
+            { id: { eq: params.address } },
+            `
+            addr {
+                ...on MsgAddressIntAddrNoneVariant {
+                    AddrNone {
+                        None
+                    }
+                }
+                ...on MsgAddressIntAddrStdVariant {
+                    AddrStd {
+                        workchain_id
+                        address
+                    }
+                }
+                ...on MsgAddressIntAddrVarVariant {
+                    AddrVar {
+                        workchain_id
+                        address
+                    }
+                }
+            }
+            storage {
+                state {
+                    ...on AccountStorageStateAccountActiveVariant {
+                        AccountActive {
+                            code
+                            data
+                        }
+                    }
+                }
+            }
+            `
+        );
+        removeTypeName(accounts[0]);
         return this.requestLibrary('contracts.run.local', {
             address: params.address,
             account: accounts[0],

@@ -16,9 +16,6 @@
 
 /* eslint-disable no-bitwise */
 
-import { SubscriptionContractPackage } from './contracts/SubscriptionContract';
-import { WalletContractPackage } from "./contracts/WalletContract";
-
 import { tests } from "./init-tests";
 
 beforeAll(tests.init);
