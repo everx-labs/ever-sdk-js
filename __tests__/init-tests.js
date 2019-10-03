@@ -112,8 +112,7 @@ async function done() {
 const tests = {
     config: {
         defaultWorkchain: 0,
-        servers: ["http://0.0.0.0:82"],
-        queriesServer: "http://0.0.0.0:4000/graphql",
+        servers: ["http://0.0.0.0"],
         log_verbose: true,
     },
     client: new TONClient(),
