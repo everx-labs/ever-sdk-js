@@ -74,8 +74,6 @@ type TONClientPlatform = {
 };
 
 export class TONClient {
-    static shared = new TONClient();
-
     static setLibrary(clientPlatform: TONClientPlatform) {
         TONClient.clientPlatform = clientPlatform;
     }
