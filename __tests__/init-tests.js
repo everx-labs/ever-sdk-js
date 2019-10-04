@@ -112,7 +112,7 @@ async function done() {
 const tests = {
     config: {
         defaultWorkchain: 0,
-        servers: ["http://0.0.0.0"],
+        servers: ["http://192.168.99.100"],
         log_verbose: true,
     },
     client: new TONClient(),
