@@ -137,7 +137,7 @@ export default class TONCryptoModule extends TONModule {
     }
 
     async scrypt(params: TONScryptParams): Promise<string> {
-        const fixed: TONScryptParams = Object.assign({}, params);
+        const fixed: TONScryptParams = (Object.assign({}, params): any);
         fixed.password = fixInputMessage(params.password);
         fixed.salt = fixInputMessage(params.salt);
         return this.requestLibrary('crypto.scrypt', fixed);
@@ -160,25 +160,25 @@ export default class TONCryptoModule extends TONModule {
     }
 
     async naclBox(params: TONNaclBoxParams): Promise<string> {
-        const fixed: TONNaclBoxParams = Object.assign({}, params);
+        const fixed: TONNaclBoxParams = (Object.assign({}, params): any);
         fixed.message = fixInputMessage(params.message);
         return this.requestLibrary('crypto.nacl.box', fixed);
     }
 
     async naclBoxOpen(params: TONNaclBoxParams): Promise<string> {
-        const fixed: TONNaclBoxParams = Object.assign({}, params);
+        const fixed: TONNaclBoxParams = (Object.assign({}, params): any);
         fixed.message = fixInputMessage(params.message);
         return this.requestLibrary('crypto.nacl.box.open', fixed);
     }
 
     async naclSecretBox(params: TONNaclSecretBoxParams): Promise<string> {
-        const fixed: TONNaclBoxParams = Object.assign({}, params);
+        const fixed: TONNaclBoxParams = (Object.assign({}, params): any);
         fixed.message = fixInputMessage(params.message);
         return this.requestLibrary('crypto.nacl.secret.box', fixed);
     }
 
     async naclSecretBoxOpen(params: TONNaclSecretBoxParams): Promise<string> {
-        const fixed: TONNaclBoxParams = Object.assign({}, params);
+        const fixed: TONNaclBoxParams = (Object.assign({}, params): any);
         fixed.message = fixInputMessage(params.message);
         return this.requestLibrary('crypto.nacl.secret.box.open', fixed);
     }

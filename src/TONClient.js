@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { TONConfigData } from "./modules/TONConfigModule";
 // @flow
 /* eslint-disable class-methods-use-this, no-use-before-define */
 import TONQueriesModule from "./modules/TONQueriesModule";
@@ -73,8 +74,6 @@ type TONClientPlatform = {
 };
 
 export class TONClient {
-    static shared = new TONClient();
-
     static setLibrary(clientPlatform: TONClientPlatform) {
         TONClient.clientPlatform = clientPlatform;
     }
@@ -95,6 +94,12 @@ export class TONClient {
         this.queries = this.context.getModule(TONQueriesModule);
     }
 
+    static async create(config: TONConfigData): Promise<TONClient> {
+        const client = new TONClient();
+        client.config.setData(config);
+        await client.setup();
+        return client;
+    }
 
     async setup(): Promise<void> {
         if (!TONClient.library) {
