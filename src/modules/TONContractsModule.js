@@ -233,10 +233,7 @@ export default class TONContractsModule extends TONModule {
         return this.requestLibrary('contracts.run.unknown.output', params);
     }
 
-    async processMessage(
-        params: TONContractMessage,
-        resultFields: string,
-    ): Promise<QTransaction> {
+    async sendMessage(params: TONContractMessage): Promise<void> {
         const { clientPlatform } = TONClient;
         if (!clientPlatform) {
             throw {
@@ -267,10 +264,17 @@ export default class TONContractsModule extends TONModule {
         });
         if (response.status !== 200) {
             throw {
-                code: 'ContractsPostMessageFailed',
-                message: `Post message failed: ${await response.text()}`,
+                code: 3004,
+                message: `Send node request failed: ${await response.text()}`,
             };
         }
+    }
+
+    async processMessage(
+        params: TONContractMessage,
+        resultFields: string,
+    ): Promise<QTransaction> {
+        await this.sendMessage(params);
         return this.queries.transactions.waitFor({
             id: { eq: params.messageId },
             status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
@@ -357,10 +361,53 @@ export default class TONContractsModule extends TONModule {
         return resultOutput ? { output: resultOutput.output } : { output: null };
     }
 
-    async runLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
-        const accounts = await TONClient.shared.queries.select(
-            'RETURN DOCUMENT("accounts/' + params.address + '")', {});
 
+    async runLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
+        function removeTypeName(obj: any) {
+            if (obj.__typename) {
+                delete obj.__typename;
+            }
+            Object.values(obj).forEach((value) => {
+                if (!!value && typeof value === 'object') {
+                    removeTypeName(value);
+                }
+            });
+        }
+        const accounts = await this.queries.accounts.query(
+            { id: { eq: params.address } },
+            `
+            addr {
+                ...on MsgAddressIntAddrNoneVariant {
+                    AddrNone {
+                        None
+                    }
+                }
+                ...on MsgAddressIntAddrStdVariant {
+                    AddrStd {
+                        workchain_id
+                        address
+                    }
+                }
+                ...on MsgAddressIntAddrVarVariant {
+                    AddrVar {
+                        workchain_id
+                        address
+                    }
+                }
+            }
+            storage {
+                state {
+                    ...on AccountStorageStateAccountActiveVariant {
+                        AccountActive {
+                            code
+                            data
+                        }
+                    }
+                }
+            }
+            `
+        );
+        removeTypeName(accounts[0]);
         return this.requestLibrary('contracts.run.local', {
             address: params.address,
             account: accounts[0],
