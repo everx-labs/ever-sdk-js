@@ -92,7 +92,7 @@ export default class TONQueriesModule extends TONModule {
         this.accounts = new TONQCollection(this, 'accounts');
     }
 
-    async ensureClient(): Promise<ApolloClient> {
+    ensureClient(): ApolloClient {
         if (this._client) {
             return this._client;
         }
@@ -165,7 +165,7 @@ export default class TONQueriesModule extends TONModule {
         const gqlQuery = gql([`query select($query: String!, $bindVarsJson: String!) {
             select(query: $query, bindVarsJson: $bindVarsJson)
         }`]);
-        const client = await this.ensureClient();
+        const client = this.ensureClient();
         return JSON.parse((await client.query({
             query: gqlQuery,
             variables: {
@@ -215,7 +215,7 @@ class TONQCollection {
             ${c}(filter: $filter, orderBy: $orderBy, limit: $limit) { ${result} }
         }`;
         const query = gql([ql]);
-        const client = await this.module.ensureClient();
+        const client = this.module.ensureClient();
         return (await client.query({
             query,
             variables: {
