@@ -65,6 +65,56 @@ type TONContractDeployResult = {
     alreadyDeployed: boolean,
 }
 
+type TONContractUnsignedMessage = {
+    unsignedBytesBase64: string,
+    bytesToSignBase64: string,
+}
+
+type TONContractMessage = {
+    messageId: string,
+    messageIdBase64: string,
+    messageBodyBase64: string,
+}
+
+type TONContractUnsignedDeployMessage = {
+    address: string,
+    signParams: TONContractUnsignedMessage,
+}
+
+type TONContractUnsignedRunMessage = {
+    abi: TONContractABI,
+    functionName: string,
+    signParams: TONContractUnsignedMessage,
+}
+
+type TONContractDeployMessage = {
+    address: string,
+    message: TONContractMessage;
+}
+
+type TONContractRunMessage = {
+    abi: TONContractABI,
+    functionName: string,
+    message: TONContractMessage;
+}
+
+type TONContractCreateSignedMessageParams = {
+    unsignedBytesBase64: string,
+    signBytesBase64: string,
+    publicKeyHex: string,
+}
+
+type TONContractCreateSignedDeployMessageParams = {
+    address: string,
+    createSignedParams: TONContractCreateSignedMessageParams,
+}
+
+type TONContractCreateSignedRunMessageParams = {
+    abi: TONContractABI,
+    functionName: string,
+    createSignedParams: TONContractCreateSignedMessageParams,
+}
+
 type TONContractRunParams = {
     address: string,
     abi: TONContractABI,
@@ -99,19 +149,6 @@ type TONContractRunResult = {
 type TONContractDecodeMessageBodyResult = {
     function: string,
     output: any,
-}
-
-type TONContractMessage = {
-    messageId: string,
-    messageIdBase64: string,
-    messageBodyBase64: string,
-}
-
-type TONContractDeployMessage = {
-    address: string,
-    messageId: string,
-    messageIdBase64: string,
-    messageBodyBase64: string,
 }
 
 type QTransaction = {
@@ -183,43 +220,128 @@ export default class TONContractsModule extends TONModule {
     }
 
 
+    // Facade functions
+
     async deploy(params: TONContractDeployParams): Promise<TONContractDeployResult> {
-        return this.deployJs(params);
+        return this.internalDeployJs(params);
     }
 
 
     async run(params: TONContractRunParams): Promise<TONContractRunResult> {
-        return this.runJs(params);
+        return this.internalRunJs(params);
     }
 
     async runLocal(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
 
-        return this.runLocalJs(params);
+        return this.internalRunLocalJs(params);
     }
 
+    // Message creation
+
     async createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage> {
-        return this.requestLibrary('contracts.deploy.message', {
+        const message: {
+            address: string,
+            messageId: string,
+            messageIdBase64: string,
+            messageBodyBase64: string,
+
+        } = await this.requestLibrary('contracts.deploy.message', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
             imageBase64: params.package.imageBase64,
             keyPair: params.keyPair,
         });
+        return {
+            message: {
+                messageId: message.messageId,
+                messageIdBase64: message.messageIdBase64,
+                messageBodyBase64: message.messageBodyBase64,
+            },
+            address: message.address
+        }
     }
 
 
-    async createRunMessage(params: TONContractRunParams): Promise<TONContractMessage> {
-        return this.requestLibrary('contracts.run.message', {
+    async createRunMessage(params: TONContractRunParams): Promise<TONContractRunMessage> {
+        const message = await this.requestLibrary('contracts.run.message', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
             input: params.input,
             keyPair: params.keyPair,
         });
+        return {
+            abi: params.abi,
+            functionName: params.functionName,
+            message
+        }
     }
+
+    async createUnsignedDeployMessage(params: TONContractDeployParams): Promise<TONContractUnsignedDeployMessage> {
+        const result: {
+            encoded: TONContractUnsignedMessage,
+            addressHex: string,
+        } = await this.requestLibrary('contracts.deploy.encode_unsigned_message', {
+            abi: params.package.abi,
+            constructorParams: params.constructorParams,
+            imageBase64: params.package.imageBase64,
+            publicKeyHex: params.keyPair.public,
+        });
+        return {
+            address: result.addressHex,
+            signParams: result.encoded,
+        }
+    }
+
+
+    async createUnsignedRunMessage(params: TONContractRunParams): Promise<TONContractUnsignedRunMessage> {
+        const signParams = await this.requestLibrary('contracts.run.encode_unsigned_message', {
+            address: params.address,
+            abi: params.abi,
+            functionName: params.functionName,
+            input: params.input,
+        });
+        return {
+            abi: params.abi,
+            functionName: params.functionName,
+            signParams,
+        }
+    }
+
+
+    async createSignedMessage(params: TONContractCreateSignedMessageParams): Promise<TONContractMessage> {
+        return this.requestLibrary('contracts.encode_message_with_sign', params);
+    }
+
+
+    async createSignedDeployMessage(
+        params: TONContractCreateSignedDeployMessageParams
+    ): Promise<TONContractDeployMessage> {
+        const message = await this.createSignedMessage(params.createSignedParams);
+        return {
+            address: params.address,
+            message
+        }
+    }
+
+
+    async createSignedRunMessage(
+        params: TONContractCreateSignedRunMessageParams
+    ): Promise<TONContractRunMessage> {
+        const message = await this.createSignedMessage(params.createSignedParams);
+        return {
+            abi: params.abi,
+            functionName: params.functionName,
+            message
+        }
+    }
+
+    // Message parsing
 
     async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
         return this.requestLibrary('contracts.run.output', params);
     }
+
 
     async decodeInputMessageBody(
         params: TONContractDecodeMessageBodyParams,
@@ -227,11 +349,14 @@ export default class TONContractsModule extends TONModule {
         return this.requestLibrary('contracts.run.unknown.input', params);
     }
 
+
     async decodeOutputMessageBody(
         params: TONContractDecodeMessageBodyParams,
     ): Promise<TONContractDecodeMessageBodyResult> {
         return this.requestLibrary('contracts.run.unknown.output', params);
     }
+
+    // Message processing
 
     async sendMessage(params: TONContractMessage): Promise<void> {
         const { clientPlatform } = TONClient;
@@ -270,41 +395,19 @@ export default class TONContractsModule extends TONModule {
         }
     }
 
-    async processMessage(
-        params: TONContractMessage,
-        resultFields: string,
-    ): Promise<QTransaction> {
-        await this.sendMessage(params);
+
+    async processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction> {
+        await this.sendMessage(message);
         return this.queries.transactions.waitFor({
-            id: { eq: params.messageId },
+            id: { eq: message.messageId },
             status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
         }, resultFields);
     }
 
-    async deployNative(params: TONContractDeployParams): Promise<TONContractDeployResult> {
-        return this.requestLibrary('contracts.deploy', {
-            abi: params.package.abi,
-            constructorParams: params.constructorParams,
-            imageBase64: params.package.imageBase64,
-            keyPair: params.keyPair,
-        });
-    }
 
-
-    async runNative(params: TONContractRunParams): Promise<TONContractRunResult> {
-        return await this.requestLibrary('contracts.run', {
-            address: params.address,
-            abi: params.abi,
-            functionName: params.functionName,
-            input: params.input,
-            keyPair: params.keyPair,
-        });
-    }
-
-    async deployJs(params: TONContractDeployParams): Promise<TONContractDeployResult> {
-        const message = await this.createDeployMessage(params);
+    async processDeployMessage(params: TONContractDeployMessage): Promise<TONContractDeployResult> {
         const transaction = await this.processMessage(
-            message,
+            params.message,
             'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } }',
         );
         const ordinary = transaction.description.Ordinary;
@@ -315,16 +418,15 @@ export default class TONContractsModule extends TONModule {
             };
         }
         return {
-            address: message.address,
+            address: params.address,
             alreadyDeployed: false,
         };
     }
 
 
-    async runJs(params: TONContractRunParams): Promise<TONContractRunResult> {
-        const message = await this.createRunMessage(params);
+    async processRunMessage(params: TONContractRunMessage): Promise<TONContractRunResult> {
         const transaction = await this.processMessage(
-            message,
+            params.message,
             'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } } out_msgs',
         );
         const ordinary = transaction.description.Ordinary;
@@ -361,8 +463,42 @@ export default class TONContractsModule extends TONModule {
         return resultOutput ? { output: resultOutput.output } : { output: null };
     }
 
+    // Internals
 
-    async runLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
+    async internalDeployNative(params: TONContractDeployParams): Promise<TONContractDeployResult> {
+        return this.requestLibrary('contracts.deploy', {
+            abi: params.package.abi,
+            constructorParams: params.constructorParams,
+            imageBase64: params.package.imageBase64,
+            keyPair: params.keyPair,
+        });
+    }
+
+
+    async internalRunNative(params: TONContractRunParams): Promise<TONContractRunResult> {
+        return await this.requestLibrary('contracts.run', {
+            address: params.address,
+            abi: params.abi,
+            functionName: params.functionName,
+            input: params.input,
+            keyPair: params.keyPair,
+        });
+    }
+
+
+    async internalDeployJs(params: TONContractDeployParams): Promise<TONContractDeployResult> {
+        const message = await this.createDeployMessage(params);
+        return this.processDeployMessage(message);
+    }
+
+
+    async internalRunJs(params: TONContractRunParams): Promise<TONContractRunResult> {
+        const message = await this.createRunMessage(params);
+        return this.processRunMessage(message);
+    }
+
+
+    async internalRunLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
         function removeTypeName(obj: any) {
             if (obj.__typename) {
                 delete obj.__typename;
@@ -373,6 +509,7 @@ export default class TONContractsModule extends TONModule {
                 }
             });
         }
+
         const accounts = await this.queries.accounts.query(
             { id: { eq: params.address } },
             `

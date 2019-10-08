@@ -17,6 +17,7 @@
 // @flow
 
 import type { TONContractPackage } from '../src/modules/TONContractsModule';
+import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
 import { tests } from "./init-tests";
 
@@ -24,7 +25,7 @@ const giverDeployMsg = 'b5ee9c7241045301000000091e00035188019ce136b7f94b13d6c436
 const giverDeployMsgId = '641134d787db0c30809d62826b5ec343ed9ced58ccf83e5de55425494dd4acf9';
 
 const giverAddress = 'ce709b5bfca589eb621b5a5786d0b562761144ac48f59e0b0d35ad0973bcdb86';
-const giverAbi = 
+const giverAbi =
 {
     "ABI version": 0,
     "functions": [{
@@ -262,3 +263,28 @@ test('filterOutput', async () => {
     expect(JSON.stringify(resultReturn)).toEqual(`{"output":{"value0":"0x0"}}`);
 });
 
+test('External Signing', async () => {
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+    const deployParams = {
+        package: events_package,
+        constructorParams: {},
+        keyPair: keys,
+    };
+    const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
+    const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
+    const signBytesBase64 = await crypto.naclSignDetached({
+        base64: unsignedMessage.signParams.bytesToSignBase64,
+    }, signKey.secret, TONOutputEncoding.Base64);
+    const signed = await contracts.createSignedDeployMessage({
+        address: unsignedMessage.address,
+        createSignedParams: {
+            publicKeyHex: keys.public,
+            signBytesBase64: signBytesBase64,
+            unsignedBytesBase64: unsignedMessage.signParams.unsignedBytesBase64,
+        }
+    });
+
+    const message = await contracts.createDeployMessage(deployParams);
+    expect(signed.message.messageBodyBase64).toEqual(message.message.messageBodyBase64);
+});
