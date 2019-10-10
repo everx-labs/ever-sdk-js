@@ -16,6 +16,7 @@
 
 import { WalletContractPackage } from "./contracts/WalletContract";
 import { tests } from "./init-tests";
+import get_grams_from_giver from './contracts';
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -104,6 +105,15 @@ test("Subscribe for transactions with addresses", async () => {
         public: 'fb98b2541ba805648f25eb469dd4766fcdde03a2cfe6fb41d8c1571c29407ca3',
         secret: '7bfe77bbd3ad57ada9ed323da83504723e3af7cd3ba68b02d3c8335f75e0a24e',
     };
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: walletKeys,
+    });
+
+    await get_grams_from_giver(message.address);
+
     await contracts.deploy({
         package: WalletContractPackage,
         constructorParams: {},

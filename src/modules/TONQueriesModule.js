@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
+import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
 // @flow
 import { ApolloClient } from 'apollo-client';
-import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
+import { split } from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
-import { split } from 'apollo-link';
 import { getMainDefinition } from 'apollo-utilities';
 import gql from 'graphql-tag';
-import TONConfigModule from './TONConfigModule';
 import { TONClient } from '../TONClient';
-import { TONModule } from '../TONModule';
 import type { TONModuleContext } from '../TONModule';
+import { TONModule } from '../TONModule';
+import TONConfigModule from './TONConfigModule';
 
 type Subscription = {
     unsubscribe: () => void
@@ -82,9 +82,20 @@ const unionsScheme = {
 export default class TONQueriesModule extends TONModule {
     constructor(context: TONModuleContext) {
         super(context);
+        this._client = null;
     }
 
     async setup() {
+        this.transactions = new TONQCollection(this, 'transactions');
+        this.messages = new TONQCollection(this, 'messages');
+        this.blocks = new TONQCollection(this, 'blocks');
+        this.accounts = new TONQCollection(this, 'accounts');
+    }
+
+    ensureClient(): ApolloClient {
+        if (this._client) {
+            return this._client;
+        }
         const config: TONConfigModule = this.context.getModule(TONConfigModule);
         const configData = config.data;
         const { clientPlatform } = TONClient;
@@ -133,28 +144,29 @@ export default class TONQueriesModule extends TONModule {
             },
         };
 
-        const client = new ApolloClient({
+        this._client = new ApolloClient({
             cache,
             link,
             defaultOptions,
         });
-        this.client = client;
-        this.transactions = new TONQCollection(client, 'transactions');
-        this.messages = new TONQCollection(client, 'messages');
-        this.blocks = new TONQCollection(client, 'blocks');
-        this.accounts = new TONQCollection(client, 'accounts');
+        return this._client;
     }
 
     async close() {
-        this.client.stop();
-        await this.client.clearStore();
+        if (this._client) {
+            const client = this._client;
+            this._client = null;
+            client.stop();
+            await client.clearStore();
+        }
     }
 
     async select(query: string, bindVars: {}) {
         const gqlQuery = gql([`query select($query: String!, $bindVarsJson: String!) {
             select(query: $query, bindVarsJson: $bindVarsJson)
         }`]);
-        return JSON.parse((await this.client.query({
+        const client = this.ensureClient();
+        return JSON.parse((await client.query({
             query: gqlQuery,
             variables: {
                 query,
@@ -183,13 +195,13 @@ type OrderBy = {
 }
 
 class TONQCollection {
-    client: any;
+    module: TONQueriesModule;
 
     collectionName: string;
     typeName: string;
 
-    constructor(client: any, collectionName: string) {
-        this.client = client;
+    constructor(module: TONQueriesModule, collectionName: string) {
+        this.module = module;
         this.collectionName = collectionName;
         this.typeName = collectionName.substr(0, 1).toUpperCase() +
             collectionName.substr(1, collectionName.length - 2);
@@ -203,7 +215,8 @@ class TONQCollection {
             ${c}(filter: $filter, orderBy: $orderBy, limit: $limit) { ${result} }
         }`;
         const query = gql([ql]);
-        return (await this.client.query({
+        const client = this.module.ensureClient();
+        return (await client.query({
             query,
             variables: {
                 filter,
@@ -219,7 +232,8 @@ class TONQCollection {
         	${this.collectionName}(filter: $filter) { ${result} }
         }`;
         const query = gql([text]);
-        const observable = this.client.subscribe({
+        const client = this.module.ensureClient();
+        const observable = client.subscribe({
             query,
             variables: {
                 filter,

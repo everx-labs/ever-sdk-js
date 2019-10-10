@@ -17,6 +17,7 @@
 /* eslint-disable no-bitwise */
 
 import { tests } from "./init-tests";
+import get_grams_from_giver from './contracts';
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -65,6 +66,15 @@ test("RunLocal", async () => {
     console.log(`Keys: ${JSON.stringify(keys)}`);
 
     // Deploy custom contract
+    const deployMessage = await ton.contracts.createDeployMessage({
+        package: Package,
+        constructorParams: {
+            _scale: 8,
+        },
+        keyPair: keys,
+    });
+    await get_grams_from_giver(deployMessage.address);
+
     const { address: packageAddress } = (await ton.contracts.deploy({
         package: Package,
         constructorParams: {
