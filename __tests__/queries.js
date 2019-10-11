@@ -95,16 +95,13 @@ const transactionWithAddresses = `
 `;
 
 test("Subscribe for transactions with addresses", async () => {
-    const { contracts, queries } = tests.client;
+    const { contracts, queries, crypto } = tests.client;
     const transactions = [];
     const subscription = (await queries.transactions.subscribe({}, transactionWithAddresses, (e, d) => {
         transactions.push(d);
     }));
 
-    const walletKeys = {
-        public: 'fb98b2541ba805648f25eb469dd4766fcdde03a2cfe6fb41d8c1571c29407ca3',
-        secret: '7bfe77bbd3ad57ada9ed323da83504723e3af7cd3ba68b02d3c8335f75e0a24e',
-    };
+    const walletKeys = await crypto.ed25519Keypair();
 
     const message = await contracts.createDeployMessage({
         package: WalletContractPackage,
@@ -124,7 +121,7 @@ test("Subscribe for transactions with addresses", async () => {
 });
 
 test("Subscribe for messages", async () => {
-    const { contracts, queries } = tests.client;
+    const { contracts, queries, crypto } = tests.client;
     const docs = [];
     const subscription = (await queries.messages.subscribe({
         header: {
@@ -142,10 +139,16 @@ test("Subscribe for messages", async () => {
         docs.push(doc);
     }));
 
-    const walletKeys = {
-        public: 'fb98b2541ba805648f25eb469dd4766fcdde03a2cfe6fb41d8c1571c29407ca3',
-        secret: '7bfe77bbd3ad57ada9ed323da83504723e3af7cd3ba68b02d3c8335f75e0a24e',
-    };
+    const walletKeys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: walletKeys,
+    });
+
+    await get_grams_from_giver(message.address);
+
     await contracts.deploy({
         package: WalletContractPackage,
         constructorParams: {},
