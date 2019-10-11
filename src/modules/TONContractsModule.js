@@ -513,25 +513,6 @@ export default class TONContractsModule extends TONModule {
         const accounts = await this.queries.accounts.query(
             { id: { eq: params.address } },
             `
-            addr {
-                ...on MsgAddressIntAddrNoneVariant {
-                    AddrNone {
-                        None
-                    }
-                }
-                ...on MsgAddressIntAddrStdVariant {
-                    AddrStd {
-                        workchain_id
-                        address
-                    }
-                }
-                ...on MsgAddressIntAddrVarVariant {
-                    AddrVar {
-                        workchain_id
-                        address
-                    }
-                }
-            }
             storage {
                 state {
                     ...on AccountStorageStateAccountActiveVariant {

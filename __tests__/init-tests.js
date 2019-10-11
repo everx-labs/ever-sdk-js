@@ -83,7 +83,7 @@ async function dl(dst, src) {
     process.stdout.write('\n');
 }
 
-jest.setTimeout(60_000);
+jest.setTimeout(200_000);
 
 async function init() {
     const addonPath = path.join(binariesPath, 'tonclient.node');
@@ -109,10 +109,12 @@ async function done() {
 
 }
 
+export const nodeSe = false;
+
 const tests = {
     config: {
         defaultWorkchain: 0,
-        servers: ["http://0.0.0.0"],
+        servers: nodeSe ? ["http://0.0.0.0"] : ["https://azt005.tonlabs.io"],
         log_verbose: true,
     },
     client: new TONClient(),

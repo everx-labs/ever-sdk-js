@@ -27,30 +27,50 @@ afterAll(tests.done);
 
 const PiggyBankPackage = {
     abi: {
-        'ABI version': 0,
-        functions: [{
-            name: 'transfer',
-            signed: true,
-            inputs: [{ name: 'to', type: 'bits256' }],
-            outputs: [],
-        }, {
-            name: 'getTargetAmount',
-            inputs: [],
-            outputs: [{ name: 'amount', type: 'uint64' }],
-        }, {
-            name: 'getGoal',
-            inputs: [],
-            outputs: [{ name: 'goal', type: 'uint8[]' }],
-        }, {
-            name: 'constructor',
-            inputs: [
-                { name: 'amount', type: 'uint64' },
-                { name: 'goal', type: 'uint8[]' },
-            ],
-            outputs: [],
-        }],
+        "ABI version": 1,
+        "functions": [
+            {
+                "name": "constructor",
+                "inputs": [
+                    {"name":"amount","type":"uint64"},
+                    {"name":"goal","type":"uint8[]"}
+                ],
+                "outputs": [
+                ]
+            },
+            {
+                "name": "getGoal",
+                "inputs": [
+                ],
+                "outputs": [
+                    {"name":"value0","type":"uint8[]"}
+                ]
+            },
+            {
+                "name": "getTargetAmount",
+                "inputs": [
+                ],
+                "outputs": [
+                    {"name":"value0","type":"uint64"}
+                ]
+            },
+            {
+                "name": "transfer",
+                "inputs": [
+                    {"name":"to","type":"uint256"}
+                ],
+                "outputs": [
+                ]
+            }
+        ],
+        "events": [
+        ],
+        "data": [
+            {"key":100,"name":"targetGoal","type":"uint8[]"},
+            {"key":101,"name":"targetAmount","type":"uint64"}
+        ]
     },
-    imageBase64: 'te6ccgECHwEAApUAAgE0AgEAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATL/AIn0BSHBAZN49KCbePQN8rSAIPSh8jPiAwEBwAQCASAGBQAp/+ABw8AEhcfABAdMHAfJr0x8B8AKAgHWEQcBAawIAgFIDAkCAWILCgCjt9kOJRb7UTQ1DBxAXj0DjCCEE9kOJRwyMsHyx/OjjGOK8hyz0Fyz0Byz0Bwzws/cM8LH3HPQFzPNQHPMaS+lXHPQM8TlXHPQc8R4snYcPsA2IAA/t1nVP8x1j8BcG149BZxAXj0FsjM7UTQ1v8wzxbJ7VSACAUgQDQEJuWWEepAOAf4xgQEAmAGLCtcmAdcY2DDXC//tR28QbxdvEO1E0NQwcAF49A4w0z8wIbuOTyCAD4BkqYVcoTKLCHBYjj7++QBTbmRCZHlJbnQB7UdvEG8Y+kJvEsjPhkDKB8v/ydCOF8jPhSDPigBAgQEAz0DOAfoCgGvPQM7J2HD7ANjfAYsIDwBwcBIDAe1HbxBvGPpCbxLIz4ZAygfL/8nQjhfIz4Ugz4oAQIEBAM9AzgH6AoBrz0DOydiBAID7ADAAo7iKB9ILfaiaGoYOAC8egcYaZ+YZGfKAAigfSFln8cYxxXkOWeguWegOWegOGeFn7hnhY+456AuZ5qA55jSX0q456Bnicq456DniPFk7Dh9gGxACASAeEgEBMBMCA8/AFRQAGTQ1ygF+kD6QPoAbwSABbQg0wcB8muJ9AWAIPQK8qnXCwCOGSDHAvJt1SDHAPJtIfkBAe1E0NcL//kQ8qiXIMcCktQx3+KAWAQHAFwIBSBsYAgFiGhkACbfZDiUQAAm3WdU/0AIBSB0cAAm5ZYR6mAAJuIoH0ggABTbMIA==',
+    imageBase64: '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',
 };
 
 const stringToArray = (string) => {
