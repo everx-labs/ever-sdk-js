@@ -130,6 +130,8 @@ test('load', async () => {
     expect(contract.id).toBeNull();
     expect(contract.balanceGrams).toBeNull();
 
+    await get_grams_from_giver(walletAddress);
+
     const w = await contracts.load({
         address: walletAddress,
         includeImage: false,
