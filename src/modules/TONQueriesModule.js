@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
 // @flow
+
+import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
 import { ApolloClient } from 'apollo-client';
 import { split } from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
@@ -183,7 +184,7 @@ export default class TONQueriesModule extends TONModule {
 
     accounts: TONQCollection;
 
-    client: ApolloClient;
+    _client: ApolloClient;
 }
 
 
