@@ -540,6 +540,11 @@ export default class TONContractsModule extends TONModule {
                             data
                         }
                     }
+                    ...on AccountStorageStateAccountUninitVariant {
+                        AccountUninit {
+                            None
+                        }
+                    }
                 }
             }
             `
