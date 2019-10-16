@@ -109,7 +109,7 @@ async function done() {
 
 }
 
-export const nodeSe = false;
+export const nodeSe = true;
 
 const tests = {
     config: {
