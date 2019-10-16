@@ -57,6 +57,7 @@ type TONContractLoadResult = {
 type TONContractDeployParams = {
     package: TONContractPackage,
     constructorParams: any,
+    initParams?: any,
     keyPair: TONKeyPairData,
 }
 
@@ -248,6 +249,7 @@ export default class TONContractsModule extends TONModule {
         } = await this.requestLibrary('contracts.deploy.message', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
+            initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             keyPair: params.keyPair,
         });
@@ -284,6 +286,7 @@ export default class TONContractsModule extends TONModule {
         } = await this.requestLibrary('contracts.deploy.encode_unsigned_message', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
+            initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             publicKeyHex: params.keyPair.public,
         });
@@ -469,6 +472,7 @@ export default class TONContractsModule extends TONModule {
         return this.requestLibrary('contracts.deploy', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
+            initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             keyPair: params.keyPair,
         });

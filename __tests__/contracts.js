@@ -19,6 +19,7 @@
 import type { TONContractPackage } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
+import { SubscriptionContractPackage } from './contracts/SubscriptionContract';
 import { tests, nodeSe } from "./init-tests";
 
 const nodeSeGiverAddress = 'a46af093b38fcae390e9af5104a93e22e82c29bcb35bf88160e4478417028884';
@@ -377,3 +378,26 @@ test('External Signing', async () => {
     expect(signed.message.messageBodyBase64).toEqual(message.message.messageBodyBase64);
 });
 
+test('changeInitState', async () => {
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+
+    const walletAddess1 = '0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF';
+    const walletAddess2 = '0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210';
+
+    const message1 = await contracts.createDeployMessage({
+        package: SubscriptionContractPackage,
+        constructorParams: { wallet: walletAddess1},
+        initParams: { mywallet: walletAddess1 },
+        keyPair: keys,
+    });
+
+    const message2 = await contracts.createDeployMessage({
+        package: SubscriptionContractPackage,
+        constructorParams: { wallet: walletAddess1 },
+        initParams: { mywallet: walletAddess2 },
+        keyPair: keys,
+    });
+
+    expect(message1.address).not.toEqual(message2.address);
+});
