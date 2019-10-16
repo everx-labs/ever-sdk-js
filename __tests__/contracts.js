@@ -19,7 +19,6 @@
 import type { TONContractPackage } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
-import { SubscriptionContractPackage } from './contracts/SubscriptionContract';
 import { tests, nodeSe } from "./init-tests";
 
 const nodeSeGiverAddress = 'a46af093b38fcae390e9af5104a93e22e82c29bcb35bf88160e4478417028884';
@@ -382,22 +381,61 @@ test('changeInitState', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const walletAddess1 = '0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF';
-    const walletAddess2 = '0xFEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210';
+    const subscriptionAddess1 = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+    const subscriptionAddess2 = '0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
 
     const message1 = await contracts.createDeployMessage({
-        package: SubscriptionContractPackage,
-        constructorParams: { wallet: walletAddess1},
-        initParams: { mywallet: walletAddess1 },
+        package: WalletContractPackage,
+        constructorParams: {},
+        initParams: { subscription: subscriptionAddess1 },
         keyPair: keys,
     });
 
     const message2 = await contracts.createDeployMessage({
-        package: SubscriptionContractPackage,
-        constructorParams: { wallet: walletAddess1 },
-        initParams: { mywallet: walletAddess2 },
+        package: WalletContractPackage,
+        constructorParams: {},
+        initParams: { subscription: subscriptionAddess2 },
         keyPair: keys,
     });
 
     expect(message1.address).not.toEqual(message2.address);
+
+    await get_grams_from_giver(message1.address);
+    await get_grams_from_giver(message2.address);
+
+    const deployed1 = await contracts.deploy({
+        package: WalletContractPackage,
+        constructorParams: {},
+        initParams: { subscription: subscriptionAddess1 },
+        keyPair: keys,
+    });
+
+    const deployed2 = await contracts.deploy({
+        package: WalletContractPackage,
+        constructorParams: {},
+        initParams: { subscription: subscriptionAddess2 },
+        keyPair: keys,
+    });
+
+    expect(deployed1.address).toEqual(message1.address);
+    expect(deployed2.address).toEqual(message2.address);
+
+    const result1 = await contracts.run({
+        address: deployed1.address,
+        functionName: 'getSubscriptionAccount',
+        abi: WalletContractPackage.abi,
+        input: { },
+        keyPair: keys,
+    });
+
+    const result2 = await contracts.run({
+        address: deployed2.address,
+        functionName: 'getSubscriptionAccount',
+        abi: WalletContractPackage.abi,
+        input: { },
+        keyPair: keys,
+    });
+
+    expect(result1).toEqual({output: { value0: subscriptionAddess1 }});
+    expect(result2).toEqual({output: { value0: subscriptionAddess2 }});
 });
