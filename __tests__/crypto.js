@@ -194,3 +194,39 @@ test('crypto', async () => {
 
 });
 
+test("naclBox", async () => {
+    const crypto = tests.client.crypto;
+    const A = await crypto.ed25519Keypair();
+    const B = await crypto.ed25519Keypair();
+
+    const AP = (await crypto.naclBoxKeypairFromSecretKey(A.secret)).public;
+    const BP = (await crypto.naclBoxKeypairFromSecretKey(B.secret)).public;
+
+    const encrypted = await crypto.naclBox({
+        secretKey: A.secret,
+        theirPublicKey: BP,
+        nonce: 'cd7f99924bf422544046e83595dd5803f17536f5c9a11746',
+        message: { hex: '010203' },
+        outputEncoding: "Hex",
+    });
+
+    const decryptedA = await crypto.naclBoxOpen({
+        secretKey: A.secret,
+        theirPublicKey: BP,
+        nonce: 'cd7f99924bf422544046e83595dd5803f17536f5c9a11746',
+        message: { hex: encrypted },
+        outputEncoding: "Hex",
+    });
+
+    const decryptedB = await crypto.naclBoxOpen({
+        secretKey: B.secret,
+        theirPublicKey: AP,
+        nonce: 'cd7f99924bf422544046e83595dd5803f17536f5c9a11746',
+        message: { hex: encrypted },
+        outputEncoding: "Hex",
+    });
+
+    expect(decryptedA).toEqual('010203');
+    expect(decryptedB).toEqual('010203');
+});
+
