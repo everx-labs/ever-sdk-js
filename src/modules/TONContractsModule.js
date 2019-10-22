@@ -136,11 +136,13 @@ type TONContractDecodeRunOutputParams = {
     abi: TONContractABI,
     functionName: string,
     bodyBase64: string,
+    internal?: boolean,
 }
 
 type TONContractDecodeMessageBodyParams = {
     abi: TONContractABI,
     bodyBase64: string,
+    internal?: boolean,
 }
 
 type TONContractRunResult = {
@@ -150,6 +152,39 @@ type TONContractRunResult = {
 type TONContractDecodeMessageBodyResult = {
     function: string,
     output: any,
+}
+
+type TONContractGetDeployDataParams = {
+    abi?: TONContractABI,
+    initParams?: any,
+    imageBase64?: string,
+    publicKeyHex: string,
+}
+
+
+type TONContractGetDeployDataResult = {
+    imageBase64?: string,
+    dataBase64: string,
+}
+
+type TONContractGetCodeFromImageParams = {
+    imageBase64: string,
+}
+
+type TONContractGetCodeFromImageResult = {
+    codeBase64: string,
+}
+
+type TONContractCreateRunBodyParams = {
+    abi: TONContractABI,
+    function: string,
+    params: any,
+    internal?: boolean,
+    keyPair?: TONKeyPairData,
+}
+
+type TONContractCreateRunBodyResult = {
+    bodyBase64: string,
 }
 
 type QTransaction = {
@@ -339,6 +374,24 @@ export default class TONContractsModule extends TONModule {
         }
     }
 
+    async getCodeFromImage(
+        params: TONContractGetCodeFromImageParams
+    ): Promise<TONContractGetCodeFromImageResult> {
+        return this.requestLibrary('contracts.deploy.code_from_image', params);
+    }
+
+    async getDeployData(
+        params: TONContractGetDeployDataParams
+    ): Promise<TONContractGetDeployDataResult> {
+        return this.requestLibrary('contracts.deploy.data', params);
+    }
+
+    async createRunBody(
+        params: TONContractCreateRunBodyParams
+    ): Promise<TONContractCreateRunBodyResult> {
+        return this.requestLibrary('contracts.run.body', params);
+    }
+
     // Message parsing
 
     async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
@@ -436,7 +489,7 @@ export default class TONContractsModule extends TONModule {
         if (ordinary.aborted) {
             throw {
                 code: 3040,
-                message: 'Run failed',
+                message: 'Run failed ' + transaction.id,
             };
         }
         const outputMessageIds = transaction.out_msgs;
