@@ -59,6 +59,7 @@ type TONContractDeployParams = {
     constructorParams: any,
     initParams?: any,
     keyPair: TONKeyPairData,
+    workchainId?: number,
 }
 
 type TONContractDeployResult = {
@@ -274,6 +275,7 @@ export default class TONContractsModule extends TONModule {
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             keyPair: params.keyPair,
+            workchainId: params.workchainId,
         });
         return {
             message: {
@@ -311,6 +313,7 @@ export default class TONContractsModule extends TONModule {
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             publicKeyHex: params.keyPair.public,
+            workchainId: params.workchainId,
         });
         return {
             address: result.addressHex,
@@ -526,7 +529,6 @@ export default class TONContractsModule extends TONModule {
 
     async internalRunJs(params: TONContractRunParams): Promise<TONContractRunResult> {
         const message = await this.createRunMessage(params);
-        console.log('Message ID: ' + message.message.messageId);
         return this.processRunMessage(message);
     }
 
