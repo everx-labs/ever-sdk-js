@@ -159,8 +159,6 @@ export default async function get_grams_from_giver(account) {
         convertTo: TONAddressStringTypes.AccountId
     });
 
-    console.log("Account ID: " + accountId.address);
-
     if (nodeSe) {
         const result = await contracts.run({
             address: nodeSeGiverAddress,
