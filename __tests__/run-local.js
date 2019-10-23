@@ -59,7 +59,7 @@ test("RunLocal", async () => {
         keyPair: keys,
     });
 
-    console.log(`Get quote (run): ${JSON.stringify(runResponse)}`);
+    console.log(`Get (run): ${JSON.stringify(runResponse)}`);
 
     // Get the returned value with runLocal
     const runLocalResponse = await ton.contracts.runLocal({
@@ -70,7 +70,7 @@ test("RunLocal", async () => {
         keyPair: keys,
     });
 
-    console.log(`Get quote (runLocal): ${JSON.stringify(runResponse)}`);
+    console.log(`Get (runLocal): ${JSON.stringify(runResponse)}`);
 
     expect(runResponse).toEqual(runLocalResponse);
 });
