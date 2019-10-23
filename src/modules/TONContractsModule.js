@@ -555,7 +555,7 @@ async function checkTransaction(transaction) {
         message: "Transaction aborted",
         data: {
             phase: TONClientTransactionPhase.unknown,
-            transactionId: transaction.id
+            transaction_id: transaction.id
         }
     };
 
@@ -579,6 +579,7 @@ async function checkTransaction(transaction) {
         if (ordinary.compute_ph.Skipped) {
             const reason = ordinary.compute_ph.Skipped.reason;
             error.data.phase = TONClientTransactionPhase.computeSkipped;
+            error.message = 'Compute phase skipped by unknown reason';
             if (reason == 'NoState') {
                 error.code = TONClientComputeSkippedStatus.noState;
                 error.message = 'Account has no code and data';
@@ -609,6 +610,7 @@ async function checkTransaction(transaction) {
         if (!action.success) {
             error.data.phase = TONClientTransactionPhase.action;
             error.code = action.result_code;
+            error.message = "Action phase failed";
             if (action.no_funds) {
                 error.message = 'Too low balance to send outbound message';
             }

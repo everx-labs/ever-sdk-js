@@ -34,7 +34,7 @@ export type TONClientError = {
     code: number,
     message: string,    
     data?: {
-        trsansactionId: number,
+        transaction_id: number,
         phase: string
     }
 }
