@@ -277,9 +277,25 @@ test('Run aborted transaction', async () => {
         expect(error.code).toEqual(102);
         expect(error.message).toEqual('VM terminated with exception');
         expect(error.data.phase).toEqual('computeVm');
-        //expect(error.data.transaction_id != null);
-        return error;
+        expect(error.data.transaction_id).toBeTruthy();
     }
+
+    /*TODO: uncomment when rust ton-client library will support detailed errors.
+    try {
+        await contracts.run({
+            address: message.address,
+            abi: WalletContractPackage.abi,
+            functionName: "sendTransaction",
+            input: {},
+            keyPair: keys
+        });
+    } catch (error) {
+        console.log(error);
+        expect(error.source).toEqual('client');
+        expect(error.code).toEqual(3012);
+        expect(error.data).toBeNull();
+    }
+    */
 });
 
 /*
