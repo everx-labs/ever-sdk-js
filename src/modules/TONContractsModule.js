@@ -152,6 +152,28 @@ type TONContractDecodeMessageBodyResult = {
     output: any,
 }
 
+export const TONAddressStringTypes = {
+    AccountId: 'AccountId',
+    Hex: 'Hex',
+    Base64: 'Base64',
+};
+
+type TONContractAddressBase64Params = {
+    url: boolean,
+    test: boolean,
+    bounce: boolean,
+}
+
+type TONContractConvertAddressParams = {
+    address: string,
+    convertTo: TONAddressStringTypes,
+    base64Params?: TONContractAddressBase64Params,
+}
+
+type TONContractConvertAddressResult = {
+    address: string,
+}
+
 type QTransaction = {
     id: string,
     description: {
@@ -466,6 +488,12 @@ export default class TONContractsModule extends TONModule {
         return resultOutput ? { output: resultOutput.output } : { output: null };
     }
 
+    // Address processing
+
+    async convertAddress(params: TONContractConvertAddressParams): Promise<TONContractConvertAddressResult> {
+        return this.requestLibrary('contracts.address.convert', params);
+    }
+
     // Internals
 
     async internalDeployNative(params: TONContractDeployParams): Promise<TONContractDeployResult> {
@@ -498,6 +526,7 @@ export default class TONContractsModule extends TONModule {
 
     async internalRunJs(params: TONContractRunParams): Promise<TONContractRunResult> {
         const message = await this.createRunMessage(params);
+        console.log('Message ID: ' + message.message.messageId);
         return this.processRunMessage(message);
     }
 

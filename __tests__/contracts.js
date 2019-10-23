@@ -17,11 +17,12 @@
 // @flow
 
 import type { TONContractPackage } from '../src/modules/TONContractsModule';
+import { TONAddressStringTypes } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
 import { tests, nodeSe } from "./init-tests";
 
-const nodeSeGiverAddress = 'a46af093b38fcae390e9af5104a93e22e82c29bcb35bf88160e4478417028884';
+const nodeSeGiverAddress = '0:a46af093b38fcae390e9af5104a93e22e82c29bcb35bf88160e4478417028884';
 const nodeSeGiverAbi =
 {
 	"ABI version": 1,
@@ -50,7 +51,7 @@ const nodeSeGiverAbi =
 };
 
 const giverWalletAddressBase64 = 'UQC7oawjsBAYgInWIBDdsA1ZTADw4hd5Tz8rU6gYlOxxRrJ6';
-const giverWalletAddressHex = 'BBA1AC23B010188089D62010DDB00D594C00F0E217794F3F2B53A81894EC7146';
+const giverWalletAddressHex = '0:BBA1AC23B010188089D62010DDB00D594C00F0E217794F3F2B53A81894EC7146';
 
 const giverWalletKeys = {
     secret: '2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe',
@@ -153,13 +154,20 @@ async function check_giver() {
 export default async function get_grams_from_giver(account) {
     const { contracts, queries } = tests.client;
 
+    const accountId = await contracts.convertAddress({
+        address: account,
+        convertTo: TONAddressStringTypes.AccountId
+    });
+
+    console.log("Account ID: " + accountId.address);
+
     if (nodeSe) {
         const result = await contracts.run({
             address: nodeSeGiverAddress,
             functionName: 'sendGrams',
             abi: nodeSeGiverAbi,
             input: {
-                dest: `0x${account}`,
+                dest: `0x${accountId.address}`,
                 amount: 500000000
             },
             keyPair: null,
@@ -171,7 +179,7 @@ export default async function get_grams_from_giver(account) {
             functionName: 'sendTransaction',
             abi: GiverWalletPackage.abi,
             input: {
-                dest: `0x${account}`,
+                dest: `0x${accountId.address}`,
                 value: 500000000,
                 bounce: false
             },
@@ -201,12 +209,12 @@ const walletKeys = {
     secret: '7bfe77bbd3ad57ada9ed323da83504723e3af7cd3ba68b02d3c8335f75e0a24e',
 };
 
-const walletAddress = 'adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
+const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
 
 test('load', async () => {
     const { contracts } = tests.client;
     const contract = await contracts.load({
-        address: '0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
+        address: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
         includeImage: false,
     });
     expect(contract.id).toBeNull();
