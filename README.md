@@ -1,5 +1,5 @@
 # ton-client-js
-Shared JavaScript TON Client Library
+Shared JavaScript TON Labs Client Library
 
 See https://docs.ton.dev for documentation
 
