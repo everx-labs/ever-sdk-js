@@ -445,3 +445,53 @@ test('changeInitState', async () => {
     expect(result1).toEqual({output: { value0: subscriptionAddess1 }});
     expect(result2).toEqual({output: { value0: subscriptionAddess2 }});
 });
+
+test('Address conversion', async () => {
+    const { contracts } = tests.client;
+
+    const accountId = "fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
+    const hex = "-1:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
+    const hexWorkchain0 = "0:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
+    const base64 = "Uf/8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15+KsQHFLbKSMiYG+9";
+    const base64_url = "kf_8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15-KsQHFLbKSMiYIny";
+
+    var convertedAddress = await contracts.convertAddress({
+        address: accountId,
+        convertTo: TONAddressStringTypes.Hex
+    });
+    expect(convertedAddress.address).toEqual(hexWorkchain0);
+
+    convertedAddress = await contracts.convertAddress({
+        address: hex,
+        convertTo: TONAddressStringTypes.AccountId
+    });
+    expect(convertedAddress.address).toEqual(accountId);
+
+    convertedAddress = await contracts.convertAddress({
+        address: hex,
+        convertTo: TONAddressStringTypes.Base64,
+        base64Params: {
+            test: false,
+            bounce: false,
+            url: false
+        }
+    });
+    expect(convertedAddress.address).toEqual(base64);
+
+    convertedAddress = await contracts.convertAddress({
+        address: base64,
+        convertTo: TONAddressStringTypes.Base64,
+        base64Params: {
+            test: true,
+            bounce: true,
+            url: true
+        }
+    });
+    expect(convertedAddress.address).toEqual(base64_url);
+
+    convertedAddress = await contracts.convertAddress({
+        address: base64_url,
+        convertTo: TONAddressStringTypes.Hex
+    });
+    expect(convertedAddress.address).toEqual(hex);
+});
