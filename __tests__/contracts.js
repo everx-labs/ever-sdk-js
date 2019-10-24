@@ -240,6 +240,64 @@ test('deploy_new', async () => {
         keyPair: keys,
     });
 });
+
+test('Run aborted transaction', async () => {
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    await get_grams_from_giver(message.address);
+
+    const address = await contracts.deploy({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    try {
+        await contracts.run({
+            address: message.address,
+            abi: WalletContractPackage.abi,
+            functionName: "sendTransaction",
+            input: {
+                dest: 0,
+                value: 0,
+                bounce: false
+            },
+            keyPair: keys
+        });
+    } catch (error) {
+        console.log(error);
+        expect(error.source).toEqual('node');
+        expect(error.code).toEqual(102);
+        expect(error.message).toEqual('VM terminated with exception');
+        expect(error.data.phase).toEqual('computeVm');
+        expect(error.data.transaction_id).toBeTruthy();
+    }
+
+    /*TODO: uncomment when rust ton-client library will support detailed errors.
+    try {
+        await contracts.run({
+            address: message.address,
+            abi: WalletContractPackage.abi,
+            functionName: "sendTransaction",
+            input: {},
+            keyPair: keys
+        });
+    } catch (error) {
+        console.log(error);
+        expect(error.source).toEqual('client');
+        expect(error.code).toEqual(3012);
+        expect(error.data).toBeNull();
+    }
+    */
+});
+
 /*
 test('run', async () => {
     const { contracts } = tests.client;

@@ -15,7 +15,12 @@
  */
 
 // @flow
-import { TONClient } from '../TONClient';
+import { 
+    TONClient, 
+    TONClientErrorSource,
+    TONClientTransactionPhase,
+    TONClientStoragePhaseStatus
+} from '../TONClient';
 import TONConfigModule from './TONConfigModule';
 import type { TONKeyPairData } from './TONCryptoModule';
 import { TONModule } from '../TONModule';
@@ -365,6 +370,7 @@ export default class TONContractsModule extends TONModule {
         const { clientPlatform } = TONClient;
         if (!clientPlatform) {
             throw {
+                source: TONClientErrorSource.client,
                 code: 'ClientDoesNotConfigured',
                 message: 'TON Client SDK does not configured',
             };
@@ -392,6 +398,7 @@ export default class TONContractsModule extends TONModule {
         });
         if (response.status !== 200) {
             throw {
+                source: TONClientErrorSource.client,
                 code: 3004,
                 message: `Send node request failed: ${await response.text()}`,
             };
@@ -411,15 +418,9 @@ export default class TONContractsModule extends TONModule {
     async processDeployMessage(params: TONContractDeployMessage): Promise<TONContractDeployResult> {
         const transaction = await this.processMessage(
             params.message,
-            'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } }',
+            transactionDetails,
         );
-        const ordinary = transaction.description.Ordinary;
-        if (ordinary.aborted) {
-            throw {
-                code: 3050,
-                message: 'Deploy failed',
-            };
-        }
+        await checkTransaction(transaction);
         return {
             address: params.address,
             alreadyDeployed: false,
@@ -430,15 +431,9 @@ export default class TONContractsModule extends TONModule {
     async processRunMessage(params: TONContractRunMessage): Promise<TONContractRunResult> {
         const transaction = await this.processMessage(
             params.message,
-            'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } } out_msgs',
+            transactionDetails,
         );
-        const ordinary = transaction.description.Ordinary;
-        if (ordinary.aborted) {
-            throw {
-                code: 3040,
-                message: 'Run failed',
-            };
-        }
+        await checkTransaction(transaction);
         const outputMessageIds = transaction.out_msgs;
         if (!outputMessageIds || outputMessageIds.length === 0) {
             return { output: null };
@@ -543,7 +538,121 @@ export default class TONContractsModule extends TONModule {
             input: params.input,
             keyPair: params.keyPair,
         });
-    }
+    }    
 }
 
 TONContractsModule.moduleName = 'TONContractsModule';
+
+async function checkTransaction(transaction) {
+    const ordinary = transaction.description.Ordinary;
+    if (!ordinary.aborted) {
+        return;
+    }
+
+    var error = {
+        source: TONClientErrorSource.node,
+        code: -1,
+        message: "Transaction aborted",
+        data: {
+            phase: TONClientTransactionPhase.unknown,
+            transaction_id: transaction.id
+        }
+    };
+
+    if (ordinary.storage_ph) {
+        const status = ordinary.storage_ph.status_change;
+        if (status == "Frozen") {
+            error.code = TONClientStorageStatus.frozen;
+            error.message = 'Account was frozen due storage phase';
+            error.data.phase = TONClientTransactionPhase.storage;
+            throw error;
+        }
+        if (status == "Deleted") {
+            error.code = TONClientStorageStatus.deleted;
+            error.message = 'Account was deleted due storage phase';
+            error.data.phase = TONClientTransactionPhase.storage;
+            throw error;
+        }
+    }
+
+    if (ordinary.compute_ph) {
+        if (ordinary.compute_ph.Skipped) {
+            const reason = ordinary.compute_ph.Skipped.reason;
+            error.data.phase = TONClientTransactionPhase.computeSkipped;
+            error.message = 'Compute phase skipped by unknown reason';
+            if (reason == 'NoState') {
+                error.code = TONClientComputeSkippedStatus.noState;
+                error.message = 'Account has no code and data';
+            }
+            if (reason == 'BadState') {
+                error.code = TONClientComputeSkippedStatus.badState;
+                error.message = 'Account has bad state: frozen or deleted';
+            }
+            if (reason == 'NoGas') {
+                error.code = TONClientComputeSkippedStatus.noGas;
+                error.message = 'No gas to execute VM';
+            }
+            throw error;
+        }
+        if (ordinary.compute_ph.Vm) {
+            const vm = ordinary.compute_ph.Vm;
+            if (!vm.success) {
+                error.data.phase = TONClientTransactionPhase.computeVm;
+                error.message = 'VM terminated with exception';
+                error.code = vm.exit_code;
+                throw error;
+            }
+        }
+    }
+
+    if (ordinary.action) {
+        const action = ordinary.action;
+        if (!action.success) {
+            error.data.phase = TONClientTransactionPhase.action;
+            error.code = action.result_code;
+            error.message = "Action phase failed";
+            if (action.no_funds) {
+                error.message = 'Too low balance to send outbound message';
+            }
+            if (!action.valid) {
+                error.message = 'Outbound message is invalid';
+            }
+            throw error;
+        }
+    }
+
+    throw error
+}
+
+const transactionDetails = `
+    id
+    status
+    out_msgs
+    description {
+    	...on TransactionDescriptionOrdinaryVariant {
+        Ordinary {
+          aborted
+          storage_ph {
+            status_change
+          }
+          compute_ph {
+            ...on TrComputePhaseSkippedVariant {
+              Skipped {reason}
+            }
+            ...on TrComputePhaseVmVariant {
+              Vm {
+                success
+                exit_code
+              }
+            }
+          }
+          action {
+            success
+            valid
+            result_code
+            no_funds
+          }
+        }
+      }
+  	}    
+   `

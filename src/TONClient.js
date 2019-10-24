@@ -32,15 +32,37 @@ import type {
 export type TONClientError = {
     source: string,
     code: number,
-    message: string,
+    message: string,    
+    data?: {
+        transaction_id: number,
+        phase: string
+    }
 }
 
 export const TONClientErrorSource = {
-    sdk: 'sdk',
-    tvm: 'tvm',
-    stdlib: 'stdlib',
-    contract: 'contract'
+    client: 'client',
+    node: 'node'
 };
+
+export const TONClientTransactionPhase = {
+    storage: 'storage',
+    computeSkipped: 'computeSkipped',
+    computeVm: "computeVm",
+    action: 'action',
+    unknown: 'unknown'
+};
+
+export const TONClientComputeSkippedStatus = {
+    noState: 0,
+    badState: 1,
+    noGas: 2
+}
+
+export const TONClientStorageStatus = {
+    unchanged: 0,
+    frozen: 1,
+    deleted: 2
+}
 
 class ModuleContext implements TONModuleContext {
     modules: Map<string, TONModule>;
