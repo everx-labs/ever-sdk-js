@@ -18,7 +18,7 @@
 
 import { SubscriptionContractPackage } from './contracts/SubscriptionContract';
 import { WalletContractPackage } from "./contracts/WalletContract";
-import get_grams_from_giver from './contracts';
+import { deploy_with_giver} from './contracts';
 
 import { tests } from "./init-tests";
 
@@ -94,14 +94,7 @@ test('piggyBank', async () => {
     const keys = await crypto.ed25519Keypair();
     // console.log('[PiggyBank] Wallet keys:', keys);
     // Deploy wallet
-    const walletMessage = await contracts.createDeployMessage({
-        package: WalletContractPackage,
-        constructorParams: {},
-        keyPair: keys
-    });
-    await get_grams_from_giver(walletMessage.address);
-
-    const walletAddress = (await contracts.deploy({
+    const walletAddress = (await deploy_with_giver({
         package: WalletContractPackage,
         constructorParams: {},
         keyPair: keys
@@ -118,14 +111,7 @@ test('piggyBank', async () => {
     // console.log('[PiggyBank] Wallet version:', version);
 
     // Deploy piggy bank
-    const piggyMessage = await contracts.createDeployMessage({
-        package: PiggyBankPackage,
-        constructorParams: piggyBankParams,
-        keyPair: keys,
-    });
-    await get_grams_from_giver(piggyMessage.address);
-
-    const piggyBankAddress = (await contracts.deploy({
+    const piggyBankAddress = (await deploy_with_giver({
         package: PiggyBankPackage,
         constructorParams: piggyBankParams,
         keyPair: keys,
@@ -135,15 +121,7 @@ test('piggyBank', async () => {
 
     // Deploy subscription
     const subscriptionParams = { wallet: `0x${walletAddress}` };
-
-    const subscriptionMessage = await contracts.createDeployMessage({
-        package: SubscriptionContractPackage,
-        constructorParams: subscriptionParams,
-        keyPair: keys,
-    });
-    await get_grams_from_giver(subscriptionMessage.address);
-
-    const subscriptionAddress = (await contracts.deploy({
+    const subscriptionAddress = (await deploy_with_giver({
         package: SubscriptionContractPackage,
         constructorParams: subscriptionParams,
         keyPair: keys,

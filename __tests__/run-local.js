@@ -17,7 +17,7 @@
 /* eslint-disable no-bitwise */
 
 import { tests } from "./init-tests";
-import get_grams_from_giver from './contracts';
+import { deploy_with_giver} from './contracts';
 import { SubscriptionContractPackage } from "./contracts/SubscriptionContract";
 
 beforeAll(tests.init);
@@ -31,16 +31,7 @@ test("RunLocal", async () => {
     const walletAddress = '0x2222222222222222222222222222222222222222222222222222222222222222';
 
     // Deploy custom contract
-    const deployMessage = await ton.contracts.createDeployMessage({
-        package: SubscriptionContractPackage,
-        constructorParams: {
-            wallet: walletAddress,
-        },
-        keyPair: keys,
-    });
-    await get_grams_from_giver(deployMessage.address);
-
-    const { address: packageAddress } = (await ton.contracts.deploy({
+    const { address: packageAddress } = (await deploy_with_giver({
         package: SubscriptionContractPackage,
         constructorParams: {
             wallet: walletAddress,

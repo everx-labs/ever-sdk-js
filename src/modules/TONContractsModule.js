@@ -164,6 +164,7 @@ type TONContractGetDeployDataParams = {
 
 type TONContractGetDeployDataResult = {
     imageBase64?: string,
+    accountId?: string,
     dataBase64: string,
 }
 
