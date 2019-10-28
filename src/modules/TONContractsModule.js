@@ -26,16 +26,29 @@ export type TONContractABIParameter = {
     type: string,
 }
 
+export type TONContractABIDataItem = {
+    key: number,
+    name: string,
+    type: string,
+}
+
 export type TONContractABIFunction = {
     name: string,
-    signed?: boolean,
     inputs: TONContractABIParameter[],
     outputs: TONContractABIParameter[],
 };
 
+export type TONContractABIEvent = {
+    name: string,
+    inputs: TONContractABIParameter[],
+};
+
 export type TONContractABI = {
     'ABI version': number,
+    setTime?: boolean,
     functions: TONContractABIFunction[],
+    events: TONContractABIEvent[],
+    data: TONContractABIDataItem[],
 };
 
 export type TONContractPackage = {
@@ -186,6 +199,16 @@ type TONContractCreateRunBodyParams = {
 
 type TONContractCreateRunBodyResult = {
     bodyBase64: string,
+}
+
+type TONContractGetFunctionIdParams = {
+    abi: TONContractABI,
+    function: string,
+    input: boolean,
+}
+
+type TONContractGetFunctionIdResult = {
+    id: number,
 }
 
 type QTransaction = {
@@ -393,6 +416,12 @@ export default class TONContractsModule extends TONModule {
         return this.requestLibrary('contracts.run.body', params);
     }
 
+    async getFunctionId(
+        params: TONContractGetFunctionIdParams
+    ): Promise<TONContractGetFunctionIdResult> {
+        return this.requestLibrary('contracts.function.id', params);
+    }
+
     // Message parsing
 
     async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
@@ -546,12 +575,14 @@ export default class TONContractsModule extends TONModule {
 
     async internalDeployJs(params: TONContractDeployParams): Promise<TONContractDeployResult> {
         const message = await this.createDeployMessage(params);
+        console.log(message.message.messageId);
         return this.processDeployMessage(message);
     }
 
 
     async internalRunJs(params: TONContractRunParams): Promise<TONContractRunResult> {
         const message = await this.createRunMessage(params);
+        console.log(message.message.messageId);
         return this.processRunMessage(message);
     }
 
