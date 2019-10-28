@@ -519,7 +519,7 @@ export default class TONContractsModule extends TONModule {
         if (ordinary.aborted) {
             throw {
                 code: 3040,
-                message: 'Run failed ' + transaction.id,
+                message: 'Run failed',
             };
         }
         const outputMessageIds = transaction.out_msgs;
