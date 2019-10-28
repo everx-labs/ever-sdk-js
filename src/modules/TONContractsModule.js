@@ -401,7 +401,7 @@ export default class TONContractsModule extends TONModule {
     async getCodeFromImage(
         params: TONContractGetCodeFromImageParams
     ): Promise<TONContractGetCodeFromImageResult> {
-        return this.requestLibrary('contracts.deploy.code_from_image', params);
+        return this.requestLibrary('contracts.image.code', params);
     }
 
     async getDeployData(
@@ -582,7 +582,6 @@ export default class TONContractsModule extends TONModule {
 
     async internalRunJs(params: TONContractRunParams): Promise<TONContractRunResult> {
         const message = await this.createRunMessage(params);
-        console.log(message.message.messageId);
         return this.processRunMessage(message);
     }
 
