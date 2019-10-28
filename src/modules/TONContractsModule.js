@@ -575,7 +575,6 @@ export default class TONContractsModule extends TONModule {
 
     async internalDeployJs(params: TONContractDeployParams): Promise<TONContractDeployResult> {
         const message = await this.createDeployMessage(params);
-        console.log(message.message.messageId);
         return this.processDeployMessage(message);
     }
 
