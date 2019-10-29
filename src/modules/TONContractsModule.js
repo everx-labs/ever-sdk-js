@@ -160,6 +160,7 @@ type TONContractDecodeMessageBodyParams = {
 
 type TONContractRunResult = {
     output: any,
+    transaction: QTransaction
 }
 
 type TONContractDecodeMessageBodyResult = {
@@ -566,7 +567,10 @@ export default class TONContractsModule extends TONModule {
         const resultOutput = outputs.find((x: TONContractDecodeMessageBodyResult) => {
             return x.function.toLowerCase() === params.functionName.toLowerCase();
         });
-        return resultOutput ? { output: resultOutput.output } : { output: null };
+        return {
+            output: resultOutput ? resultOutput.output : null,
+            transaction
+        };
     }
 
     // Internals
