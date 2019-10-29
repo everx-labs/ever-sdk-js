@@ -26,16 +26,29 @@ export type TONContractABIParameter = {
     type: string,
 }
 
+export type TONContractABIDataItem = {
+    key: number,
+    name: string,
+    type: string,
+}
+
 export type TONContractABIFunction = {
     name: string,
-    signed?: boolean,
     inputs: TONContractABIParameter[],
     outputs: TONContractABIParameter[],
 };
 
+export type TONContractABIEvent = {
+    name: string,
+    inputs: TONContractABIParameter[],
+};
+
 export type TONContractABI = {
     'ABI version': number,
+    setTime?: boolean,
     functions: TONContractABIFunction[],
+    events: TONContractABIEvent[],
+    data: TONContractABIDataItem[],
 };
 
 export type TONContractPackage = {
@@ -136,11 +149,13 @@ type TONContractDecodeRunOutputParams = {
     abi: TONContractABI,
     functionName: string,
     bodyBase64: string,
+    internal?: boolean,
 }
 
 type TONContractDecodeMessageBodyParams = {
     abi: TONContractABI,
     bodyBase64: string,
+    internal?: boolean,
 }
 
 type TONContractRunResult = {
@@ -150,6 +165,50 @@ type TONContractRunResult = {
 type TONContractDecodeMessageBodyResult = {
     function: string,
     output: any,
+}
+
+type TONContractGetDeployDataParams = {
+    abi?: TONContractABI,
+    initParams?: any,
+    imageBase64?: string,
+    publicKeyHex: string,
+}
+
+
+type TONContractGetDeployDataResult = {
+    imageBase64?: string,
+    accountId?: string,
+    dataBase64: string,
+}
+
+type TONContractGetCodeFromImageParams = {
+    imageBase64: string,
+}
+
+type TONContractGetCodeFromImageResult = {
+    codeBase64: string,
+}
+
+type TONContractCreateRunBodyParams = {
+    abi: TONContractABI,
+    function: string,
+    params: any,
+    internal?: boolean,
+    keyPair?: TONKeyPairData,
+}
+
+type TONContractCreateRunBodyResult = {
+    bodyBase64: string,
+}
+
+type TONContractGetFunctionIdParams = {
+    abi: TONContractABI,
+    function: string,
+    input: boolean,
+}
+
+type TONContractGetFunctionIdResult = {
+    id: number,
 }
 
 type QTransaction = {
@@ -356,6 +415,30 @@ export default class TONContractsModule extends TONModule {
             functionName: params.functionName,
             message
         }
+    }
+
+    async getCodeFromImage(
+        params: TONContractGetCodeFromImageParams
+    ): Promise<TONContractGetCodeFromImageResult> {
+        return this.requestLibrary('contracts.image.code', params);
+    }
+
+    async getDeployData(
+        params: TONContractGetDeployDataParams
+    ): Promise<TONContractGetDeployDataResult> {
+        return this.requestLibrary('contracts.deploy.data', params);
+    }
+
+    async createRunBody(
+        params: TONContractCreateRunBodyParams
+    ): Promise<TONContractCreateRunBodyResult> {
+        return this.requestLibrary('contracts.run.body', params);
+    }
+
+    async getFunctionId(
+        params: TONContractGetFunctionIdParams
+    ): Promise<TONContractGetFunctionIdResult> {
+        return this.requestLibrary('contracts.function.id', params);
     }
 
     // Message parsing
