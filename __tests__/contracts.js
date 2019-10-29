@@ -276,7 +276,7 @@ test('Run aborted transaction', async () => {
         console.log(error);
         expect(error.source).toEqual('node');
         expect(error.code).toEqual(102);
-        expect(error.message).toEqual('VM terminated with exception');
+        expect(error.message).toEqual('VM terminated with exception (102) at computeVm');
         expect(error.data.phase).toEqual('computeVm');
         expect(error.data.transaction_id).toBeTruthy();
     }
@@ -395,7 +395,7 @@ test('filterOutput', async () => {
         input: { id: "0" },
         keyPair: keys,
     });
-    expect(JSON.stringify(resultReturn)).toEqual(`{"output":{"value0":"0x0"}}`);
+    expect(JSON.stringify(resultReturn.output)).toEqual(`{"value0":"0x0"}`);
 });
 
 test('External Signing', async () => {

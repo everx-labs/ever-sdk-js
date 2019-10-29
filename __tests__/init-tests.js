@@ -114,7 +114,7 @@ export const nodeSe = false;
 const tests: { config: TONConfigData } = {
     config: {
         defaultWorkchain: 0,
-        servers: ['http://eu-central-1.large.testnet.ton.dev/'],
+        servers: ['https://testnet.ton.dev'],
         log_verbose: true,
     },
     client: new TONClient(),

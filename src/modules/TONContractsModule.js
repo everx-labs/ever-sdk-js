@@ -660,6 +660,7 @@ export default class TONContractsModule extends TONModule {
             throw TONClientError.runLocalAccountDoesNotExists(params.functionName, params.address);
         }
         removeTypeName(accounts[0]);
+        console.log('>>>', accounts);
         return this.requestLibrary('contracts.run.local', {
             address: params.address,
             account: accounts[0],
