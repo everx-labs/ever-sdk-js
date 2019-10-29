@@ -16,9 +16,12 @@ const v: string[] = pkg.version.split('.');
 const bv = `${v[0]}.${v[1]}.${~~(Number.parseInt(v[2]) / 100) * 100}`.split('.').join('_');
 const binariesHost = 'sdkbinaries.tonlabs.io';
 const binariesPath = __dirname;
+
+export const nodeSe = false;
+
 const serversConfig = {
     local: ['http://0.0.0.0'],
-    external: ['http://eu-central-1.large.testnet.ton.dev/']
+    external: ['https://testnet.ton.dev']
 };
 
 function downloadAndGunzip(dest, url) {
@@ -113,7 +116,6 @@ async function done() {
     await tests.client.close();
 }
 
-export const nodeSe = false;
 
 const tests: { config: TONConfigData } = {
     config: {
