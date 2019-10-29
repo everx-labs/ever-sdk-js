@@ -286,7 +286,7 @@ class TONQCollection {
                         doResolve(existing[0]);
                     }
                 })();
-            }, 1000);
+            }, 10_000);
         });
     }
 }
