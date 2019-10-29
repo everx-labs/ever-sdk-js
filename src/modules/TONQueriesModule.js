@@ -138,7 +138,6 @@ export default class TONQueriesModule extends TONModule {
         );
 
 
-
         const defaultOptions = {
             watchQuery: {
                 fetchPolicy: 'no-cache',
@@ -262,31 +261,42 @@ class TONQCollection {
             return existing[0];
         }
         return new Promise((resolve) => {
+            const forceCheckTimeout = 10_000;
             let subscription: any = null;
-            let interval: any = null;
+            let resolved: boolean = false;
+
             const doResolve = (doc) => {
-                if (interval) {
-                    clearInterval(interval);
-                    interval = null;
+                if (resolved) {
+                    return;
                 }
+                resolved = true;
                 if (subscription) {
                     subscription.unsubscribe();
                     subscription = null;
-                    resolve(doc);
                 }
+                resolve(doc);
+
             };
-            subscription = this.subscribe(filter, result, (change, doc) => {
-                doResolve(doc);
-            });
-            interval = setInterval(() => {
+
+            const forceCheck = () => {
                 (async () => {
-                    config.log('waitFor', this.collectionName, filter);
+                    if (resolved) {
+                        return;
+                    }
+                    config.log('waitFor.forceCheck', this.collectionName, filter);
                     const existing = await this.query(filter, result);
                     if (existing.length > 0) {
                         doResolve(existing[0]);
+                    } else {
+                        setTimeout(forceCheck, forceCheckTimeout);
                     }
                 })();
-            }, 10_000);
+            };
+
+            subscription = this.subscribe(filter, result, (change, doc) => {
+                doResolve(doc);
+            });
+            setTimeout(forceCheck, forceCheckTimeout);
         });
     }
 }
