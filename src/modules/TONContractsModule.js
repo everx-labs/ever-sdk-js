@@ -490,6 +490,7 @@ export default class TONContractsModule extends TONModule {
                 ],
             }),
         });
+        this.config.log('request posted');
         if (response.status !== 200) {
             throw TONClientError.sendNodeRequestFailed(await response.text());
         }
@@ -497,11 +498,25 @@ export default class TONContractsModule extends TONModule {
 
 
     async processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction> {
-        await this.sendMessage(message);
-        const transaction =  await this.queries.transactions.waitFor({
-            id: { eq: message.messageId },
-            status: { eq: 'Finalized' },
-        }, resultFields);
+        let transaction: QTransaction;
+        let retry = true;
+        while(retry) {
+            retry = false;
+            await this.sendMessage(message);
+            try {
+                transaction = await this.queries.transactions.waitFor({
+                    id: { eq: message.messageId },
+                    status: { eq: 'Finalized' },
+                }, resultFields, 10_000);
+            } catch (error) {
+                if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
+                    this.config.log('Timeout, retrying...');
+                    retry = true;
+                } else {
+                    throw error;
+                }
+            }
+        }
         this.config.log('transaction received', {
             id: message.messageId,
             block_id: transaction.block_id,
@@ -685,10 +700,14 @@ async function checkTransaction(transaction: QTransaction) {
     }
 
     function nodeError(message: string, code: number, phase: string) {
-        return new TONClientError(message, code, TONClientError.source.NODE, {
-            phase,
-            transaction_id: transaction.id
-        })
+        return new TONClientError(
+            `${message} (${code}) at ${phase}`,
+            code,
+            TONClientError.source.NODE,
+            {
+                phase,
+                transaction_id: transaction.id
+            })
     }
 
     if (ordinary.storage_ph) {

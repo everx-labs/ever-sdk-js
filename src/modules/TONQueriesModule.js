@@ -23,7 +23,7 @@ import { HttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 import gql from 'graphql-tag';
-import { TONClient } from '../TONClient';
+import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
@@ -254,13 +254,13 @@ class TONQCollection {
         };
     }
 
-    async waitFor(filter: any, result: string): Promise<any> {
+    async waitFor(filter: any, result: string, timeout?: number): Promise<any> {
         const config = this.module.config;
         const existing = await this.query(filter, result);
         if (existing.length > 0) {
             return existing[0];
         }
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const forceCheckTimeout = 10_000;
             let subscription: any = null;
             let resolved: boolean = false;
@@ -274,8 +274,11 @@ class TONQCollection {
                     subscription.unsubscribe();
                     subscription = null;
                 }
-                resolve(doc);
-
+                if (doc !== null) {
+                    resolve(doc);
+                } else {
+                    reject(TONClientError.waitForTimeout())
+                }
             };
 
             const forceCheck = () => {
@@ -293,10 +296,20 @@ class TONQCollection {
                 })();
             };
 
+            const rejectOnTimeout = () => {
+                if (!resolved) {
+                    config.log('waitFor rejected on timeout', this.collectionName, filter);
+                    doResolve(null);
+                }
+            };
+
             subscription = this.subscribe(filter, result, (change, doc) => {
                 doResolve(doc);
             });
             setTimeout(forceCheck, forceCheckTimeout);
+            if (timeout) {
+                setTimeout(rejectOnTimeout, timeout);
+            }
         });
     }
 }

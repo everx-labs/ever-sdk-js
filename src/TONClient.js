@@ -34,6 +34,7 @@ export class TONClientError extends Error {
         CLIENT_DOES_NOT_CONFIGURED: 1000,
         SEND_NODE_REQUEST_FAILED: 1001,
         RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS: 1002,
+        WAIT_FOR_TIMEOUT: 1003,
     };
 
     source: string;
@@ -67,6 +68,14 @@ export class TONClientError extends Error {
         return new TONClientError(
             `[${functionName}] run local failed: account [${address}] does not exists`,
             TONClientError.code.RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static waitForTimeout() {
+        return new TONClientError(
+            'Wait for operation rejected on timeout',
+            TONClientError.code.WAIT_FOR_TIMEOUT,
             TONClientError.source.CLIENT,
         );
     }
