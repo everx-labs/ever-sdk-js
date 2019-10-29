@@ -499,7 +499,7 @@ export default class TONContractsModule extends TONModule {
         await this.sendMessage(message);
         return this.queries.transactions.waitFor({
             id: { eq: message.messageId },
-            status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
+            status: { eq: 'Finalized' },
         }, resultFields);
     }
 
@@ -544,7 +544,7 @@ export default class TONContractsModule extends TONModule {
             return this.queries.messages.waitFor(
                 {
                     id: { eq: id },
-                    status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
+                    status: { eq: 'Finalized' },
                 },
                 'body header { ...on MessageHeaderExtOutMsgInfoVariant { ExtOutMsgInfo { created_at } } }',
             );

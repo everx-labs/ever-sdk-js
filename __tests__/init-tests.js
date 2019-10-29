@@ -109,15 +109,15 @@ async function done() {
     await tests.client.close();
 }
 
-export const nodeSe = true;
+export const nodeSe = false;
 
 const tests: { config: TONConfigData } = {
     config: {
         defaultWorkchain: 0,
         // servers: ["https://us-east-1.large.testnet.ton.dev"],
-        servers: ["https://private-test.tonlabs.io"],
+        servers: ['https://eu-central-1.large.testnet.ton.dev/'],
+        // servers: ["https://private-test.tonlabs.io"],
         // servers: ["https://main-test.tonlabs.io"],
-        // queriesServer: 'http://0.0.0.0:4000/graphql',
         log_verbose: true,
     },
     client: new TONClient(),

@@ -25,7 +25,7 @@ test('basic', async () => {
 	try {
         await client.crypto.hdkeyXPrvDerivePath("???", "");
     } catch (error) {
-	    expect(error.source).toEqual('sdk');
+	    expect(error.source).toEqual('client');
 	    expect(error.code).toEqual(2018);
     }
 });
