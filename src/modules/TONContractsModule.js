@@ -497,10 +497,16 @@ export default class TONContractsModule extends TONModule {
 
     async processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction> {
         await this.sendMessage(message);
-        return this.queries.transactions.waitFor({
+        const transaction =  await this.queries.transactions.waitFor({
             id: { eq: message.messageId },
             status: { eq: 'Finalized' },
         }, resultFields);
+        this.config.log('transaction received', {
+            id: message.messageId,
+            block_id: transaction.block_id,
+            now: `${new Date(transaction.now * 1000)} (${transaction.now})`,
+        });
+        return transaction;
     }
 
 
@@ -765,6 +771,8 @@ const transactionDetails = `
     id
     status
     out_msgs
+    block_id
+    now
     description {
     	...on TransactionDescriptionOrdinaryVariant {
         Ordinary {
