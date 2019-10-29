@@ -15,15 +15,10 @@
  */
 
 // @flow
-import { 
-    TONClient, 
-    TONClientErrorSource,
-    TONClientTransactionPhase,
-    TONClientStoragePhaseStatus
-} from '../TONClient';
+import { TONClient, TONClientError } from '../TONClient';
+import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import type { TONKeyPairData } from './TONCryptoModule';
-import { TONModule } from '../TONModule';
 import TONQueriesModule from './TONQueriesModule';
 
 export type TONContractABIParameter = {
@@ -162,6 +157,24 @@ type QTransaction = {
     description: {
         Ordinary: {
             aborted: boolean,
+            storage_ph: {
+                status_change: string;
+            },
+            compute_ph: {
+                Vm: {
+                    success: boolean;
+                    exit_code: number;
+                };
+                Skipped: {
+                    reason: string,
+                };
+            };
+            action: {
+                valid: boolean;
+                no_funds: boolean;
+                success: boolean;
+                result_code: number;
+            };
         }
     },
     status: string,
@@ -245,12 +258,12 @@ export default class TONContractsModule extends TONModule {
     // Message creation
 
     async createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage> {
+        this.config.log('createDeployMessage', params);
         const message: {
             address: string,
             messageId: string,
             messageIdBase64: string,
             messageBodyBase64: string,
-
         } = await this.requestLibrary('contracts.deploy.message', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
@@ -270,6 +283,7 @@ export default class TONContractsModule extends TONModule {
 
 
     async createRunMessage(params: TONContractRunParams): Promise<TONContractRunMessage> {
+        this.config.log('createRunMessage', params);
         const message = await this.requestLibrary('contracts.run.message', {
             address: params.address,
             abi: params.abi,
@@ -369,11 +383,7 @@ export default class TONContractsModule extends TONModule {
     async sendMessage(params: TONContractMessage): Promise<void> {
         const { clientPlatform } = TONClient;
         if (!clientPlatform) {
-            throw {
-                source: TONClientErrorSource.client,
-                code: 'ClientDoesNotConfigured',
-                message: 'TON Client SDK does not configured',
-            };
+            throw TONClientError.clientDoesNotConfigured();
         }
         const { fetch } = clientPlatform;
         const url = this.config.requestsUrl();
@@ -397,11 +407,7 @@ export default class TONContractsModule extends TONModule {
             }),
         });
         if (response.status !== 200) {
-            throw {
-                source: TONClientErrorSource.client,
-                code: 3004,
-                message: `Send node request failed: ${await response.text()}`,
-            };
+            throw TONClientError.sendNodeRequestFailed(await response.text());
         }
     }
 
@@ -416,11 +422,23 @@ export default class TONContractsModule extends TONModule {
 
 
     async processDeployMessage(params: TONContractDeployMessage): Promise<TONContractDeployResult> {
+        this.config.log('processDeployMessage', params);
         const transaction = await this.processMessage(
             params.message,
             transactionDetails,
         );
         await checkTransaction(transaction);
+        await this.queries.accounts.waitFor({
+            addr: { AddrStd: { workchain_id: { eq: 0 }, address: { eq: params.address } } }
+        }, `
+            storage {
+                state {
+                    ...on AccountStorageStateAccountActiveVariant {
+                        AccountActive { split_depth } 
+                    }
+                }
+            }
+        `);
         return {
             address: params.address,
             alreadyDeployed: false,
@@ -429,6 +447,7 @@ export default class TONContractsModule extends TONModule {
 
 
     async processRunMessage(params: TONContractRunMessage): Promise<TONContractRunResult> {
+        this.config.log('processRunMessage', params);
         const transaction = await this.processMessage(
             params.message,
             transactionDetails,
@@ -529,6 +548,9 @@ export default class TONContractsModule extends TONModule {
             }
             `
         );
+        if (accounts.length === 0) {
+            throw TONClientError.runLocalAccountDoesNotExists(params.functionName, params.address);
+        }
         removeTypeName(accounts[0]);
         return this.requestLibrary('contracts.run.local', {
             address: params.address,
@@ -538,69 +560,100 @@ export default class TONContractsModule extends TONModule {
             input: params.input,
             keyPair: params.keyPair,
         });
-    }    
+    }
 }
 
 TONContractsModule.moduleName = 'TONContractsModule';
 
-async function checkTransaction(transaction) {
+export const TONClientTransactionPhase = {
+    storage: 'storage',
+    computeSkipped: 'computeSkipped',
+    computeVm: "computeVm",
+    action: 'action',
+    unknown: 'unknown'
+};
+
+export const TONClientComputeSkippedStatus = {
+    noState: 0,
+    badState: 1,
+    noGas: 2
+};
+
+export const TONClientStorageStatus = {
+    unchanged: 0,
+    frozen: 1,
+    deleted: 2
+};
+
+async function checkTransaction(transaction: QTransaction) {
     const ordinary = transaction.description.Ordinary;
     if (!ordinary.aborted) {
         return;
     }
 
-    var error = {
-        source: TONClientErrorSource.node,
-        code: -1,
-        message: "Transaction aborted",
-        data: {
-            phase: TONClientTransactionPhase.unknown,
+    function nodeError(message: string, code: number, phase: string) {
+        return new TONClientError(message, code, TONClientError.source.NODE, {
+            phase,
             transaction_id: transaction.id
-        }
-    };
+        })
+    }
 
     if (ordinary.storage_ph) {
         const status = ordinary.storage_ph.status_change;
-        if (status == "Frozen") {
-            error.code = TONClientStorageStatus.frozen;
-            error.message = 'Account was frozen due storage phase';
-            error.data.phase = TONClientTransactionPhase.storage;
-            throw error;
+        if (status === "Frozen") {
+            throw nodeError(
+                'Account was frozen due storage phase',
+                TONClientStorageStatus.frozen,
+                TONClientTransactionPhase.storage
+            );
         }
-        if (status == "Deleted") {
-            error.code = TONClientStorageStatus.deleted;
-            error.message = 'Account was deleted due storage phase';
-            error.data.phase = TONClientTransactionPhase.storage;
-            throw error;
+        if (status === "Deleted") {
+            throw nodeError(
+                'Account was deleted due storage phase',
+                TONClientStorageStatus.deleted,
+                TONClientTransactionPhase.storage
+            );
         }
     }
 
     if (ordinary.compute_ph) {
         if (ordinary.compute_ph.Skipped) {
             const reason = ordinary.compute_ph.Skipped.reason;
-            error.data.phase = TONClientTransactionPhase.computeSkipped;
-            error.message = 'Compute phase skipped by unknown reason';
-            if (reason == 'NoState') {
-                error.code = TONClientComputeSkippedStatus.noState;
-                error.message = 'Account has no code and data';
+            if (reason === 'NoState') {
+                throw nodeError(
+                    'Account has no code and data',
+                    TONClientComputeSkippedStatus.noState,
+                    TONClientTransactionPhase.computeSkipped
+                );
             }
-            if (reason == 'BadState') {
-                error.code = TONClientComputeSkippedStatus.badState;
-                error.message = 'Account has bad state: frozen or deleted';
+            if (reason === 'BadState') {
+                throw nodeError(
+                    'Account has bad state: frozen or deleted',
+                    TONClientComputeSkippedStatus.badState,
+                    TONClientTransactionPhase.computeSkipped
+                );
             }
-            if (reason == 'NoGas') {
-                error.code = TONClientComputeSkippedStatus.noGas;
-                error.message = 'No gas to execute VM';
+            if (reason === 'NoGas') {
+                throw nodeError(
+                    'No gas to execute VM',
+                    TONClientComputeSkippedStatus.noGas,
+                    TONClientTransactionPhase.computeSkipped
+                );
             }
-            throw error;
+            throw nodeError(
+                'Compute phase skipped by unknown reason',
+                -1,
+                TONClientTransactionPhase.computeSkipped
+            );
         }
         if (ordinary.compute_ph.Vm) {
             const vm = ordinary.compute_ph.Vm;
             if (!vm.success) {
-                error.data.phase = TONClientTransactionPhase.computeVm;
-                error.message = 'VM terminated with exception';
-                error.code = vm.exit_code;
-                throw error;
+                throw nodeError(
+                    'VM terminated with exception',
+                    vm.exit_code,
+                    TONClientTransactionPhase.computeVm
+                );
             }
         }
     }
@@ -608,20 +661,21 @@ async function checkTransaction(transaction) {
     if (ordinary.action) {
         const action = ordinary.action;
         if (!action.success) {
-            error.data.phase = TONClientTransactionPhase.action;
-            error.code = action.result_code;
-            error.message = "Action phase failed";
-            if (action.no_funds) {
-                error.message = 'Too low balance to send outbound message';
-            }
-            if (!action.valid) {
-                error.message = 'Outbound message is invalid';
-            }
-            throw error;
+            throw nodeError(
+                action.no_funds
+                    ? 'Too low balance to send outbound message'
+                    : (!action.valid ? 'Outbound message is invalid' : 'Action phase failed'),
+                action.result_code,
+                TONClientTransactionPhase.action
+            );
         }
     }
 
-    throw error
+    throw nodeError(
+        'Transaction aborted',
+        -1,
+        TONClientTransactionPhase.unknown
+    );
 }
 
 const transactionDetails = `
@@ -655,4 +709,4 @@ const transactionDetails = `
         }
       }
   	}    
-   `
+   `;

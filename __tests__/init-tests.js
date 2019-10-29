@@ -1,5 +1,6 @@
 // @flow
 import { TONClient } from "../src/TONClient";
+import type { TONConfigData } from "../types";
 
 const fs = require('fs');
 const path = require('path');
@@ -111,10 +112,11 @@ async function done() {
 
 export const nodeSe = true;
 
-const tests = {
+const tests: { config: TONConfigData } = {
     config: {
         defaultWorkchain: 0,
-        servers: nodeSe ? ["http://0.0.0.0"] : ["https://azt005.tonlabs.io"],
+        servers: ["https://us-east-1.large.testnet.ton.dev"],
+        // queriesServer: 'http://0.0.0.0:4000/graphql',
         log_verbose: true,
     },
     client: new TONClient(),

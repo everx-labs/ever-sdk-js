@@ -50,7 +50,7 @@ const nodeSeGiverAbi =
 };
 
 const giverWalletAddressBase64 = 'UQC7oawjsBAYgInWIBDdsA1ZTADw4hd5Tz8rU6gYlOxxRrJ6';
-const giverWalletAddressHex = 'BBA1AC23B010188089D62010DDB00D594C00F0E217794F3F2B53A81894EC7146';
+const giverWalletAddressHex = 'bba1ac23b010188089d62010ddb00d594c00f0e217794f3f2b53a81894ec7146';
 
 const giverWalletKeys = {
     secret: '2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe',
@@ -408,7 +408,7 @@ test('filterOutput', async () => {
 test('External Signing', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
-    
+
     var contract_package = events_package;
     contract_package.abi["setTime"] = false;
 

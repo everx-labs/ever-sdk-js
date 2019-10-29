@@ -81,12 +81,15 @@ const unionsScheme = {
 };
 
 export default class TONQueriesModule extends TONModule {
+    config: TONConfigModule;
+
     constructor(context: TONModuleContext) {
         super(context);
         this._client = null;
     }
 
     async setup() {
+        this.config = this.context.getModule(TONConfigModule);
         this.transactions = new TONQCollection(this, 'transactions');
         this.messages = new TONQCollection(this, 'messages');
         this.blocks = new TONQCollection(this, 'blocks');
@@ -97,7 +100,7 @@ export default class TONQueriesModule extends TONModule {
         if (this._client) {
             return this._client;
         }
-        const config: TONConfigModule = this.context.getModule(TONConfigModule);
+        const config = this.config;
         const configData = config.data;
         const { clientPlatform } = TONClient;
         if (!configData || !clientPlatform) {
@@ -253,6 +256,7 @@ class TONQCollection {
     }
 
     async waitFor(filter: any, result: string): Promise<any> {
+        const config = this.module.config;
         const existing = await this.query(filter, result);
         if (existing.length > 0) {
             return existing[0];
@@ -276,6 +280,7 @@ class TONQCollection {
             });
             interval = setInterval(() => {
                 (async () => {
+                    config.log('waitFor', this.collectionName, filter);
                     const existing = await this.query(filter, result);
                     if (existing.length > 0) {
                         doResolve(existing[0]);
