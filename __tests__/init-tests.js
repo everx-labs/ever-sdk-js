@@ -110,7 +110,7 @@ async function done() {
 
 }
 
-export const nodeSe = true;
+export const nodeSe = false;
 
 const tests: { config: TONConfigData } = {
     config: {
