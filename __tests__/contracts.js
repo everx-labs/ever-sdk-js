@@ -273,7 +273,7 @@ test('Run aborted transaction', async () => {
             keyPair: keys
         });
     } catch (error) {
-        console.log(error);
+        //console.log(error);
         expect(error.source).toEqual('node');
         expect(error.code).toEqual(102);
         expect(error.message).toEqual('VM terminated with exception (102) at computeVm');
@@ -281,7 +281,6 @@ test('Run aborted transaction', async () => {
         expect(error.data.transaction_id).toBeTruthy();
     }
 
-    /*TODO: uncomment when rust ton-client library will support detailed errors.
     try {
         await contracts.run({
             address: message.address,
@@ -291,12 +290,11 @@ test('Run aborted transaction', async () => {
             keyPair: keys
         });
     } catch (error) {
-        console.log(error);
+        //console.log(error);
         expect(error.source).toEqual('client');
         expect(error.code).toEqual(3012);
         expect(error.data).toBeNull();
     }
-    */
 });
 
 /*
@@ -467,8 +465,8 @@ test('changeInitState', async () => {
         keyPair: keys,
     });
 
-    expect(result1).toEqual({output: { value0: subscriptionAddess1 }});
-    expect(result2).toEqual({output: { value0: subscriptionAddess2 }});
+    expect(result1.output).toEqual({ value0: subscriptionAddess1 });
+    expect(result2.output).toEqual({ value0: subscriptionAddess2 });
 });
 
 const setCode1_package: TONContractPackage = {

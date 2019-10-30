@@ -238,7 +238,8 @@ test('Deploy from contract 1', async () => {
         keyPair: keys,
     });
 
-    const address = addressResult.output.value0.substring(2);
+    const addressNumber = addressResult.output.value0.substring(2);
+    const address = '0'.repeat(64 - addressNumber.length) + addressNumber;
 
     const wait = await queries.accounts.waitFor(
         {
@@ -315,7 +316,8 @@ test('Deploy from contract 2', async () => {
         keyPair: keys,
     });
 
-    const address = addressResult.output.value0.substring(2);
+    const addressNumber = addressResult.output.value0.substring(2);
+    const address = '0'.repeat(64 - addressNumber.length) + addressNumber;
 
     const wait = await queries.accounts.waitFor(
         {
@@ -378,7 +380,8 @@ test('Deploy from contract 3', async () => {
         keyPair: keys,
     });
 
-    const address = addressResult.output.value0.substring(2);
+    const addressNumber = addressResult.output.value0.substring(2);
+    const address = '0'.repeat(64 - addressNumber.length) + addressNumber;
 
     expect(BigInt(addressResult.output.value0)).toEqual(BigInt(`0x${deployData.accountId}`));
 
