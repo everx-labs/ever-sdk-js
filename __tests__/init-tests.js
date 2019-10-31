@@ -13,7 +13,8 @@ const WebSocket = require('websocket');
 const p = os.platform();
 const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json')).toString('utf8'));
 const v: string[] = pkg.version.split('.');
-const bv = `${v[0]}.${v[1]}.${~~(Number.parseInt(v[2]) / 100) * 100}`.split('.').join('_');
+export const binariesVersion = `${v[0]}.${v[1]}.${~~(Number.parseInt(v[2]) / 100) * 100}`;
+const bv = binariesVersion.split('.').join('_');
 const binariesHost = 'sdkbinaries.tonlabs.io';
 const binariesPath = __dirname;
 

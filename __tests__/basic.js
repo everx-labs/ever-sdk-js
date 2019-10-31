@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import { tests } from "./init-tests";
+import { tests, binariesVersion } from "./init-tests";
 
 beforeAll(tests.init);
 afterAll(tests.done);
 
 test('basic', async () => {
 	const client = tests.client;
-	expect(await client.config.getVersion()).toEqual('0.11.0');
+	expect(await client.config.getVersion()).toEqual(binariesVersion);
 	try {
         await client.crypto.hdkeyXPrvDerivePath("???", "");
     } catch (error) {
