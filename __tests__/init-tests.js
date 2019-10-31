@@ -110,6 +110,7 @@ async function init() {
         }
     });
     tests.client = await TONClient.create(tests.config);
+    console.log('[Init] Created client is connected to: ', tests.client.config.data.servers);
 }
 
 async function done() {
