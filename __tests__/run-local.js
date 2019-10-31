@@ -17,7 +17,6 @@
 /* eslint-disable no-bitwise */
 
 import { tests } from "./init-tests";
-import { deploy_with_giver} from './contracts';
 import { SubscriptionContractPackage } from "./contracts/SubscriptionContract";
 
 beforeAll(tests.init);
@@ -31,7 +30,7 @@ test("RunLocal", async () => {
     const walletAddress = '0x2222222222222222222222222222222222222222222222222222222222222222';
 
     // Deploy custom contract
-    const { address: packageAddress } = (await deploy_with_giver({
+    const { address: packageAddress } = (await tests.deploy_with_giver({
         package: SubscriptionContractPackage,
         constructorParams: {
             wallet: walletAddress,

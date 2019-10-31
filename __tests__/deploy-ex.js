@@ -20,7 +20,6 @@
 import type { TONContractPackage } from '../src/modules/TONContractsModule';
 import { WalletContractPackage } from './contracts/WalletContract';
 import { tests } from "./init-tests";
-import { deploy_with_giver } from './contracts';
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -202,7 +201,7 @@ test('Deploy from contract 1', async () => {
     const { contracts, crypto, queries } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const deployer = await deploy_with_giver({
+    const deployer = await tests.deploy_with_giver({
         package: deployer_package,
         constructorParams: {},
         keyPair: keys,
@@ -267,7 +266,7 @@ test('Deploy from contract 2', async () => {
     const { contracts, crypto, queries } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const deployer = await deploy_with_giver({
+    const deployer = await tests.deploy_with_giver({
         package: deployer_package,
         constructorParams: {},
         keyPair: keys,
@@ -345,7 +344,7 @@ test('Deploy from contract 3', async () => {
     const { contracts, crypto, queries } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const deployer = await deploy_with_giver({
+    const deployer = await tests.deploy_with_giver({
         package: deployer_package,
         constructorParams: {},
         keyPair: keys,
