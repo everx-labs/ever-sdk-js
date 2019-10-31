@@ -112,6 +112,31 @@ async function init() {
     });
     tests.client = await TONClient.create(tests.config);
     console.log('[Init] Created client is connected to: ', tests.client.config.data.servers);
+    //await generateGiverKeys(tests.client);
+    await readGiverKeys();
+}
+async function readGiverKeys() {
+    try {
+        giverWalletKeys = JSON.parse(fs.readFileSync(path.join(binariesPath, 'giverKeys'), 'utf8'));
+        giverWalletAddressHex = await getGiverAddress();
+        console.log("Use custom giver keys:\n", giverWalletKeys);
+        console.log("Giver address: 0:" + giverWalletAddressHex);
+    } catch (error) {
+        console.log("Custom giver keys not provided. Use default");
+    }
+}
+
+async function generateGiverKeys() {
+    const keys = await tests.client.crypto.ed25519Keypair();
+    fs.writeFileSync(path.join(binariesPath, 'giverKeys'), JSON.stringify(keys));
+}
+
+async function getGiverAddress(): Promise<string> {
+    return (await tests.client.contracts.createDeployMessage({
+        package: GiverWalletPackage,
+        constructorParams: {},
+        keyPair: giverWalletKeys,
+    })).address;
 }
 
 async function done() {
@@ -147,10 +172,9 @@ const nodeSeGiverAbi =
 	]
 };
 
-const giverWalletAddressBase64 = 'UQC7oawjsBAYgInWIBDdsA1ZTADw4hd5Tz8rU6gYlOxxRrJ6';
-const giverWalletAddressHex = 'bba1ac23b010188089d62010ddb00d594c00f0e217794f3f2b53a81894ec7146';
+let giverWalletAddressHex = 'bba1ac23b010188089d62010ddb00d594c00f0e217794f3f2b53a81894ec7146';
 
-const giverWalletKeys = {
+let giverWalletKeys = {
     secret: '2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe',
     public: 'd542f44146f169c6726c8cf70e4cbb3d33d8d842a4afd799ac122c5808d81ba3',
 };
@@ -206,14 +230,8 @@ const giverRequestAmount = 500000000;
 async function check_giver() {
     const ton = tests.client;
 
-    const deployMsg = await ton.contracts.createDeployMessage({
-        package: GiverWalletPackage,
-        constructorParams: {},
-        keyPair: giverWalletKeys,
-    });
-
     const accounts = await ton.queries.accounts.query({
-        id: { eq: deployMsg.address }
+        id: { eq: giverWalletAddressHex }
     },
     `
         storage {
@@ -227,13 +245,13 @@ async function check_giver() {
     `);
 
     if (accounts.length === 0) {
-        throw "Giver wallet does not exist. Send some grams to " + giverWalletAddressBase64 + " (" + deployMsg.address + ")"
+        throw "Giver wallet does not exist. Send some grams to " + "0:" + giverWalletAddressHex
     }
 
     if (!(accounts[0]["storage"]["balance"]["Grams"]) ||
-        parseInt(accounts[0]["storage"]["balance"]["Grams"], 10) < giverRequestAmount)
+        parseInt(accounts[0]["storage"]["balance"]["Grams"]) < giverRequestAmount)
     {
-        throw "Giver has no money. Send some grams to " + giverWalletAddressBase64 + " (" + deployMsg.address + ")"
+        throw "Giver has no money. Send some grams to " + "0:" + giverWalletAddressHex
     }
 
     if (!(accounts[0].storage.state.AccountActive)) {

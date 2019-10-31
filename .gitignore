@@ -8,3 +8,4 @@ node_modules/
 package-lock.json
 /__tests__/*.dylib
 /__tests__/*.node
+/__tests__/giverKeys
