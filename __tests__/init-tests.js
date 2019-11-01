@@ -114,7 +114,7 @@ async function init() {
 }
 async function readGiverKeys() {
     try {
-        giverWalletKeys = JSON.parse(fs.readFileSync(path.join(binariesPath, 'giverKeys.txt'), 'utf8'));
+        giverWalletKeys = JSON.parse(fs.readFileSync(path.resolve(os.homedir(), 'giverKeys.json'), 'utf8'));
         giverWalletAddressHex = await getGiverAddress();
         console.log("Use custom giver keys:\n", giverWalletKeys);
         console.log("Giver address: 0:" + giverWalletAddressHex);
@@ -125,7 +125,7 @@ async function readGiverKeys() {
 
 async function generateGiverKeys() {
     const keys = await tests.client.crypto.ed25519Keypair();
-    fs.writeFileSync(path.join(binariesPath, 'giverKeys.txt'), JSON.stringify(keys));
+    fs.writeFileSync(path.resolve(os.homedir(), 'giverKeys.json'), JSON.stringify(keys));
 }
 
 async function getGiverAddress(): Promise<string> {
