@@ -20,7 +20,7 @@ const binariesPath = __dirname;
 
 export const nodeSe = false;
 
-const serversConfig = JSON.parse(fs.readFileSync('servers.json'));
+const serversConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'servers.json')));
 
 function downloadAndGunzip(dest, url) {
     return new Promise((resolve, reject) => {
