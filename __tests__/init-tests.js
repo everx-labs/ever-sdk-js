@@ -20,10 +20,7 @@ const binariesPath = __dirname;
 
 export const nodeSe = false;
 
-const serversConfig = {
-    local: ['http://0.0.0.0'],
-    external: ['https://testnet.ton.dev']
-};
+const serversConfig = JSON.parse(fs.readFileSync('servers.json'));
 
 function downloadAndGunzip(dest, url) {
     return new Promise((resolve, reject) => {
