@@ -64,7 +64,6 @@ type TONContractLoadParams = {
 type TONContractLoadResult = {
     id: ?string,
     balanceGrams: ?string,
-    imageBase64: ?string,
 }
 
 type TONContractDeployParams = {
@@ -212,56 +211,118 @@ type TONContractGetFunctionIdResult = {
     id: number,
 }
 
+type QCurrencyCollection = {
+    grams: string,
+}
+
+const QMessageProcessing = {
+    unknown: 0,
+    queued: 1,
+    processing: 2,
+    preliminary: 3,
+    proposed: 4,
+    finalized: 5,
+    refused: 6,
+    transiting: 7,
+};
+
+const QTransactionProcessing = {
+    unknown: 0,
+    preliminary: 1,
+    proposed: 2,
+    finalized: 3,
+    refused: 4,
+};
+
+const QAccountType = {
+    uninit: 0,
+    active: 1,
+    frozen: 2
+};
+
+const QAccountStatusChange = {
+    unchanged: 0,
+    frozen: 1,
+    deleted: 2,
+};
+
+type QAccount = {
+    acc_type: number,
+    addr: string,
+    last_paid: string,
+    due_payment: string,
+    last_trans_lt: string,
+    balance: QCurrencyCollection,
+    split_depth: number,
+    tick: boolean,
+    tock: boolean,
+    code: string,
+    data: string,
+    library: string,
+
+}
+
+const QTransactionType = {
+    ordinary: 0,
+    storage: 1,
+    tick: 2,
+    tock: 3,
+    splitPrepare: 4,
+    splitInstall: 5,
+    mergePrepare: 6,
+    mergeInstall: 7
+};
+
+const QComputeType = {
+    skipped: 0,
+    vm: 1,
+};
+
+const QSkippedReason = {
+    noState: 0,
+    badState: 1,
+    noGas: 2,
+};
+
 type QTransaction = {
     id: string,
-    description: {
-        Ordinary: {
-            aborted: boolean,
-            storage_ph: {
-                status_change: string;
-            },
-            compute_ph: {
-                Vm: {
-                    success: boolean;
-                    exit_code: number;
-                };
-                Skipped: {
-                    reason: string,
-                };
-            };
-            action: {
-                valid: boolean;
-                no_funds: boolean;
-                success: boolean;
-                result_code: number;
-            };
-        }
+    tr_type: number,
+    status: number,
+    block_id: string,
+    aborted: boolean,
+    now: number,
+    storage: {
+        status_change: number,
     },
-    status: string,
+    compute: {
+        type: number,
+        success: boolean,
+        exit_code: number,
+        skipped_reason: number,
+    },
+    action: {
+        valid: boolean,
+        no_funds: boolean,
+        success: boolean,
+        result_code: number,
+    };
     out_msgs: string[],
 }
 
-type QAddrStd = {
-    AddrStd: {
-        workchain_id: number,
-        address: string,
-    }
-}
-
-type QAddr = 'AddrNone' | QAddrStd
-
+const QMessageType = {
+    internal: 0,
+    extIn: 1,
+    extOut: 2
+};
 
 type QMessage = {
     id: string,
-    header: {
-        ExtOutMsgInfo?: {
-            src: QAddr,
-            dst: QAddr,
-            created_at: number,
-        },
-    },
+    msg_type: number,
+    status: number,
+    src: string,
+    dst: string,
+    created_at: number,
     body: string,
-    status: string,
 }
 
 export default class TONContractsModule extends TONModule {
@@ -275,26 +336,18 @@ export default class TONContractsModule extends TONModule {
     }
 
     async load(params: TONContractLoadParams): Promise<TONContractLoadResult> {
-        const accounts: ?{
-            storage: {
-                balance: {
-                    Grams: string
-                }
-            }
-        }[] = await this.queries.accounts.query({
+        const accounts: QAccount[] = await this.queries.accounts.query({
             id: { eq: params.address },
-        }, 'storage { balance { Grams } }');
+        }, 'balance { grams }');
         if (accounts && accounts.length > 0) {
             return {
                 id: params.address,
-                balanceGrams: accounts[0].storage.balance.Grams,
-                imageBase64: null,
+                balanceGrams: accounts[0].balance.grams,
             };
         }
         return {
             id: null,
             balanceGrams: null,
-            imageBase64: null,
         };
     }
 
@@ -498,15 +551,15 @@ export default class TONContractsModule extends TONModule {
 
 
     async processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction> {
-        let transaction: QTransaction;
+        let transaction: ?QTransaction = null;
         let retry = true;
-        while(retry) {
+        while (retry) {
             retry = false;
             await this.sendMessage(message);
             try {
                 transaction = await this.queries.transactions.waitFor({
-                    id: { eq: message.messageId },
-                    status: { eq: 'Finalized' },
+                    in_msg: { eq: message.messageId },
+                    status: { eq: QTransactionProcessing.finalized },
                 }, resultFields, 10_000);
             } catch (error) {
                 if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
@@ -517,10 +570,13 @@ export default class TONContractsModule extends TONModule {
                 }
             }
         }
+        if (!transaction) {
+            throw TONClientError.internalError('transaction is null');
+        }
         this.config.log('transaction received', {
             id: message.messageId,
             block_id: transaction.block_id,
-            now: `${new Date(transaction.now * 1000)} (${transaction.now})`,
+            now: `${new Date(transaction.now * 1000).toISOString()} (${transaction.now})`,
         });
         return transaction;
     }
@@ -534,16 +590,9 @@ export default class TONContractsModule extends TONModule {
         );
         await checkTransaction(transaction);
         await this.queries.accounts.waitFor({
-            addr: { AddrStd: { workchain_id: { eq: 0 }, address: { eq: params.address } } }
-        }, `
-            storage {
-                state {
-                    ...on AccountStorageStateAccountActiveVariant {
-                        AccountActive { split_depth } 
-                    }
-                }
-            }
-        `);
+            id: { eq: params.address },
+            acc_type: { eq: QAccountType.active }
+        }, 'id');
         return {
             address: params.address,
             alreadyDeployed: false,
@@ -560,18 +609,18 @@ export default class TONContractsModule extends TONModule {
         await checkTransaction(transaction);
         const outputMessageIds = transaction.out_msgs;
         if (!outputMessageIds || outputMessageIds.length === 0) {
-            return { output: null };
+            return { output: null, transaction };
         }
         const externalMessages: QMessage[] = (await Promise.all(outputMessageIds.map((id) => {
             return this.queries.messages.waitFor(
                 {
                     id: { eq: id },
-                    status: { eq: 'Finalized' },
+                    status: { eq: QMessageProcessing.finalized },
                 },
-                'body header { ...on MessageHeaderExtOutMsgInfoVariant { ExtOutMsgInfo { created_at } } }',
+                'body msg_type',
             );
         }))).filter((x: QMessage) => {
-            return x.header && x.header.ExtOutMsgInfo;
+            return x.msg_type === QMessageType.extOut;
         });
         const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
             return this.decodeOutputMessageBody({
@@ -636,34 +685,17 @@ export default class TONContractsModule extends TONModule {
             });
         }
 
-        const accounts = await this.queries.accounts.query(
-            { id: { eq: params.address } },
-            `
-            storage {
-                state {
-                    ...on AccountStorageStateAccountActiveVariant {
-                        AccountActive {
-                            code
-                            data
-                        }
-                    }
-                    ...on AccountStorageStateAccountUninitVariant {
-                        AccountUninit {
-                            None
-                        }
-                    }
-                }
-            }
-            `
+        const account = await this.queries.accounts.waitFor({
+                id: { eq: params.address },
+                acc_type: { eq: QAccountType.active },
+            },
+            'code data'
         );
-        if (accounts.length === 0) {
-            throw TONClientError.runLocalAccountDoesNotExists(params.functionName, params.address);
-        }
-        removeTypeName(accounts[0]);
-        console.log('>>>', accounts);
+
+        removeTypeName(account);
         return this.requestLibrary('contracts.run.local', {
             address: params.address,
-            account: accounts[0],
+            account,
             abi: params.abi,
             functionName: params.functionName,
             input: params.input,
@@ -695,8 +727,7 @@ export const TONClientStorageStatus = {
 };
 
 async function checkTransaction(transaction: QTransaction) {
-    const ordinary = transaction.description.Ordinary;
-    if (!ordinary.aborted) {
+    if (!transaction.aborted) {
         return;
     }
 
@@ -711,16 +742,17 @@ async function checkTransaction(transaction: QTransaction) {
             })
     }
 
-    if (ordinary.storage_ph) {
-        const status = ordinary.storage_ph.status_change;
-        if (status === "Frozen") {
+    const storage = transaction.storage;
+    if (storage) {
+        const status = storage.status_change;
+        if (status === QAccountStatusChange.frozen) {
             throw nodeError(
                 'Account was frozen due storage phase',
                 TONClientStorageStatus.frozen,
                 TONClientTransactionPhase.storage
             );
         }
-        if (status === "Deleted") {
+        if (status === QAccountStatusChange.deleted) {
             throw nodeError(
                 'Account was deleted due storage phase',
                 TONClientStorageStatus.deleted,
@@ -729,24 +761,25 @@ async function checkTransaction(transaction: QTransaction) {
         }
     }
 
-    if (ordinary.compute_ph) {
-        if (ordinary.compute_ph.Skipped) {
-            const reason = ordinary.compute_ph.Skipped.reason;
-            if (reason === 'NoState') {
+    const compute = transaction.compute;
+    if (compute) {
+        if (compute.type === QComputeType.skipped) {
+            const reason = compute.skipped_reason;
+            if (reason === QSkippedReason.noState) {
                 throw nodeError(
                     'Account has no code and data',
                     TONClientComputeSkippedStatus.noState,
                     TONClientTransactionPhase.computeSkipped
                 );
             }
-            if (reason === 'BadState') {
+            if (reason === QSkippedReason.badState) {
                 throw nodeError(
                     'Account has bad state: frozen or deleted',
                     TONClientComputeSkippedStatus.badState,
                     TONClientTransactionPhase.computeSkipped
                 );
             }
-            if (reason === 'NoGas') {
+            if (reason === QSkippedReason.noGas) {
                 throw nodeError(
                     'No gas to execute VM',
                     TONClientComputeSkippedStatus.noGas,
@@ -759,20 +792,19 @@ async function checkTransaction(transaction: QTransaction) {
                 TONClientTransactionPhase.computeSkipped
             );
         }
-        if (ordinary.compute_ph.Vm) {
-            const vm = ordinary.compute_ph.Vm;
-            if (!vm.success) {
+        if (compute.type === QComputeType.vm) {
+            if (!compute.success) {
                 throw nodeError(
                     'VM terminated with exception',
-                    vm.exit_code,
+                    compute.exit_code,
                     TONClientTransactionPhase.computeVm
                 );
             }
         }
     }
 
-    if (ordinary.action) {
-        const action = ordinary.action;
+    const action = transaction.action;
+    if (action) {
         if (!action.success) {
             throw nodeError(
                 action.no_funds
@@ -793,35 +825,25 @@ async function checkTransaction(transaction: QTransaction) {
 
 const transactionDetails = `
     id
+    tr_type
     status
     out_msgs
     block_id
     now
-    description {
-    	...on TransactionDescriptionOrdinaryVariant {
-        Ordinary {
-          aborted
-          storage_ph {
-            status_change
-          }
-          compute_ph {
-            ...on TrComputePhaseSkippedVariant {
-              Skipped {reason}
-            }
-            ...on TrComputePhaseVmVariant {
-              Vm {
-                success
-                exit_code
-              }
-            }
-          }
-          action {
-            success
-            valid
-            result_code
-            no_funds
-          }
-        }
-      }
+    aborted
+    storage {
+        status_change
+    }
+    compute {
+        type
+        skipped_reason
+        success
+        exit_code
+    }
+    action {
+        success
+        valid
+        result_code
+        no_funds
   	}    
    `;

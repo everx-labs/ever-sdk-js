@@ -35,6 +35,7 @@ export class TONClientError extends Error {
         SEND_NODE_REQUEST_FAILED: 1001,
         RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS: 1002,
         WAIT_FOR_TIMEOUT: 1003,
+        INTERNAL_ERROR: 1004,
     };
 
     source: string;
@@ -46,6 +47,14 @@ export class TONClientError extends Error {
         this.code = code;
         this.source = source;
         this.data = data;
+    }
+
+    static internalError(message: string): TONClientError {
+        return new TONClientError(
+            `Internal error: ${message}`,
+            TONClientError.code.INTERNAL_ERROR,
+            TONClientError.source.CLIENT,
+        );
     }
 
     static clientDoesNotConfigured(): TONClientError {
