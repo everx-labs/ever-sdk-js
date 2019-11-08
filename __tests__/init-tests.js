@@ -315,8 +315,6 @@ const tests: { config: TONConfigData } = {
     config: {
         defaultWorkchain: 0,
         servers: nodeSe ? serversConfig.local : serversConfig.external,
-        requestsServer: 'http://0.0.0.0:3000/topics/requests',
-        queriesServer: 'http://0.0.0.0:4000/graphql',
         log_verbose: false,
     },
     client: new TONClient(),
