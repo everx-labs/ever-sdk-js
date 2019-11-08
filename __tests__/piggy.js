@@ -16,7 +16,7 @@
 
 /* eslint-disable no-bitwise */
 
-import { TONAddressStringTypes } from '../src/modules/TONContractsModule';
+import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { SubscriptionContractPackage } from './contracts/SubscriptionContract';
 import { WalletContractPackage } from "./contracts/WalletContract";
 
@@ -101,7 +101,7 @@ test('piggyBank', async () => {
     })).address;
     const walletAccountId = await contracts.convertAddress({
         address: walletAddress,
-        convertTo: TONAddressStringTypes.AccountId
+        convertTo: TONAddressStringVariant.AccountId
     });
 
     // console.log('[PiggyBank] Wallet address:', walletAddress);
@@ -124,7 +124,7 @@ test('piggyBank', async () => {
     console.log('[PiggyBank] Piggy Bank address:', piggyBankAddress);
     const piggyBankAccountId = await contracts.convertAddress({
         address: piggyBankAddress,
-        convertTo: TONAddressStringTypes.AccountId
+        convertTo: TONAddressStringVariant.AccountId
     });
 
     // Deploy subscription
@@ -137,7 +137,7 @@ test('piggyBank', async () => {
     console.log('[PiggyBank] Subscription address:', subscriptionAddress);
     const subscriptionAccountId = await contracts.convertAddress({
         address: subscriptionAddress,
-        convertTo: TONAddressStringTypes.AccountId
+        convertTo: TONAddressStringVariant.AccountId
     });
 
     // Set subscription account in the wallet

@@ -17,7 +17,7 @@
 // @flow
 
 import type { TONContractPackage } from '../src/modules/TONContractsModule';
-import { TONAddressStringTypes } from '../src/modules/TONContractsModule';
+import { TONAddressStringVariant, TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
 import { tests } from "./init-tests";
@@ -412,19 +412,19 @@ test('Address conversion', async () => {
 
     var convertedAddress = await contracts.convertAddress({
         address: accountId,
-        convertTo: TONAddressStringTypes.Hex
+        convertTo: TONAddressStringVariant.Hex
     });
     expect(convertedAddress.address).toEqual(hexWorkchain0);
 
     convertedAddress = await contracts.convertAddress({
         address: hex,
-        convertTo: TONAddressStringTypes.AccountId
+        convertTo: TONAddressStringVariant.AccountId
     });
     expect(convertedAddress.address).toEqual(accountId);
 
     convertedAddress = await contracts.convertAddress({
         address: hex,
-        convertTo: TONAddressStringTypes.Base64,
+        convertTo: TONAddressStringVariant.Base64,
         base64Params: {
             test: false,
             bounce: false,
@@ -435,7 +435,7 @@ test('Address conversion', async () => {
 
     convertedAddress = await contracts.convertAddress({
         address: base64,
-        convertTo: TONAddressStringTypes.Base64,
+        convertTo: TONAddressStringVariant.Base64,
         base64Params: {
             test: true,
             bounce: true,
@@ -446,7 +446,7 @@ test('Address conversion', async () => {
 
     convertedAddress = await contracts.convertAddress({
         address: base64_url,
-        convertTo: TONAddressStringTypes.Hex
+        convertTo: TONAddressStringVariant.Hex
     });
     expect(convertedAddress.address).toEqual(hex);
 });

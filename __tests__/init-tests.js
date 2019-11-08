@@ -269,7 +269,7 @@ async function get_grams_from_giver(account) {
     
     const accountId = await contracts.convertAddress({
         address: account,
-        convertTo: TONAddressStringTypes.AccountId
+        convertTo: TONAddressStringVariant.AccountId
     });
 
     if (nodeSe) {

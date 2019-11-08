@@ -212,6 +212,30 @@ type TONContractGetFunctionIdResult = {
     id: number,
 }
 
+export const TONAddressStringVariant = {
+    AccountId: 'AccountId',
+    Hex: 'Hex',
+    Base64: 'Base64',
+};
+
+export type TONAddressStringVariantType = $Keys<typeof TONAddressStringVariant>;
+
+type TONContractAddressBase64Params = {
+    url: boolean,
+    test: boolean,
+    bounce: boolean,
+}
+
+type TONContractConvertAddressParams = {
+    address: string,
+    convertTo: TONAddressStringVariantType,
+    base64Params?: TONContractAddressBase64Params,
+}
+
+type TONContractConvertAddressResult = {
+    address: string,
+}
+
 type QCurrencyCollection = {
     grams: string,
 }
@@ -284,28 +308,6 @@ const QSkippedReason = {
     badState: 1,
     noGas: 2,
 };
-
-export const TONAddressStringTypes = {
-    AccountId: 'AccountId',
-    Hex: 'Hex',
-    Base64: 'Base64',
-};
-
-type TONContractAddressBase64Params = {
-    url: boolean,
-    test: boolean,
-    bounce: boolean,
-}
-
-type TONContractConvertAddressParams = {
-    address: string,
-    convertTo: TONAddressStringTypes,
-    base64Params?: TONContractAddressBase64Params,
-}
-
-type TONContractConvertAddressResult = {
-    address: string,
-}
 
 type QTransaction = {
     id: string,
