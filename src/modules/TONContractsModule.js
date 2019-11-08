@@ -240,7 +240,40 @@ type QCurrencyCollection = {
     grams: string,
 }
 
-const QMessageProcessing = {
+export const QAccountStatus = {
+    uninit: 0,
+    frozen: 1,
+    active: 2,
+    nonExist: 3,
+};
+
+export const QAccountStatusChange = {
+    unchanged: 0,
+    frozen: 1,
+    deleted: 2,
+};
+
+export const QSkipReason = {
+    noState: 0,
+    badState: 1,
+    noGas: 2,
+};
+
+
+export const QAccountType = {
+    uninit: 0,
+    active: 1,
+    frozen: 2,
+};
+
+export const QMessageType = {
+    internal: 0,
+    extIn: 1,
+    extOut: 2,
+};
+
+
+export const QMessageProcessingStatus = {
     unknown: 0,
     queued: 1,
     processing: 2,
@@ -251,7 +284,18 @@ const QMessageProcessing = {
     transiting: 7,
 };
 
-const QTransactionProcessing = {
+export const QTransactionType = {
+    ordinary: 0,
+    storage: 1,
+    tick: 2,
+    tock: 3,
+    splitPrepare: 4,
+    splitInstall: 5,
+    mergePrepare: 6,
+    mergeInstall: 7,
+};
+
+export const QTransactionProcessingStatus = {
     unknown: 0,
     preliminary: 1,
     proposed: 2,
@@ -259,19 +303,40 @@ const QTransactionProcessing = {
     refused: 4,
 };
 
-const QAccountType = {
-    uninit: 0,
-    active: 1,
-    frozen: 2
+
+export const QComputeType = {
+    skipped: 0,
+    vm: 1,
 };
 
-const QAccountStatusChange = {
-    unchanged: 0,
-    frozen: 1,
-    deleted: 2,
+
+export const QBounceType = {
+    negFunds: 0,
+    noFunds: 1,
+    ok: 2,
 };
 
-type QAccount = {
+export const QInMsgType = {
+    external: 0,
+    ihr: 1,
+    immediatelly: 2,
+    final: 3,
+    transit: 4,
+    discardedFinal: 5,
+    discardedTransit: 6,
+};
+
+export const QOutMsgType = {
+    none: 0,
+    external: 1,
+    immediately: 2,
+    outMsgNew: 3,
+    transit: 4,
+    dequeue: 5,
+    transitRequired: 6,
+};
+
+export type QAccount = {
     acc_type: number,
     addr: string,
     last_paid: string,
@@ -287,29 +352,7 @@ type QAccount = {
 
 }
 
-const QTransactionType = {
-    ordinary: 0,
-    storage: 1,
-    tick: 2,
-    tock: 3,
-    splitPrepare: 4,
-    splitInstall: 5,
-    mergePrepare: 6,
-    mergeInstall: 7
-};
-
-const QComputeType = {
-    skipped: 0,
-    vm: 1,
-};
-
-const QSkippedReason = {
-    noState: 0,
-    badState: 1,
-    noGas: 2,
-};
-
-type QTransaction = {
+export type QTransaction = {
     id: string,
     tr_type: number,
     status: number,
@@ -334,13 +377,7 @@ type QTransaction = {
     out_msgs: string[],
 }
 
-const QMessageType = {
-    internal: 0,
-    extIn: 1,
-    extOut: 2
-};
-
-type QMessage = {
+export type QMessage = {
     id: string,
     msg_type: number,
     status: number,
@@ -586,7 +623,7 @@ export default class TONContractsModule extends TONModule {
             try {
                 transaction = await this.queries.transactions.waitFor({
                     in_msg: { eq: message.messageId },
-                    status: { eq: QTransactionProcessing.finalized },
+                    status: { eq: QTransactionProcessingStatus.finalized },
                 }, resultFields, 10_000);
             } catch (error) {
                 if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
@@ -642,7 +679,7 @@ export default class TONContractsModule extends TONModule {
             return this.queries.messages.waitFor(
                 {
                     id: { eq: id },
-                    status: { eq: QMessageProcessing.finalized },
+                    status: { eq: QMessageProcessingStatus.finalized },
                 },
                 'body msg_type',
             );
@@ -798,21 +835,21 @@ async function checkTransaction(transaction: QTransaction) {
     if (compute) {
         if (compute.type === QComputeType.skipped) {
             const reason = compute.skipped_reason;
-            if (reason === QSkippedReason.noState) {
+            if (reason === QSkipReason.noState) {
                 throw nodeError(
                     'Account has no code and data',
                     TONClientComputeSkippedStatus.noState,
                     TONClientTransactionPhase.computeSkipped
                 );
             }
-            if (reason === QSkippedReason.badState) {
+            if (reason === QSkipReason.badState) {
                 throw nodeError(
                     'Account has bad state: frozen or deleted',
                     TONClientComputeSkippedStatus.badState,
                     TONClientTransactionPhase.computeSkipped
                 );
             }
-            if (reason === QSkippedReason.noGas) {
+            if (reason === QSkipReason.noGas) {
                 throw nodeError(
                     'No gas to execute VM',
                     TONClientComputeSkippedStatus.noGas,
