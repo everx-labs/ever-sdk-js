@@ -1,5 +1,6 @@
 // @flow
 import { TONClient } from "../src/TONClient";
+import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import type { TONConfigData } from "../types";
 
 const fs = require('fs');
