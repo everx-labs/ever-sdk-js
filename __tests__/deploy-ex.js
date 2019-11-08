@@ -211,7 +211,7 @@ test('Deploy from contract 1', async () => {
         address: deployer.address,
         functionName: 'setContract',
         abi: deployer_package.abi,
-        input: { 
+        input: {
             _contract: deployee_package.imageBase64,
         },
         keyPair: keys,
@@ -243,9 +243,9 @@ test('Deploy from contract 1', async () => {
     const wait = await queries.accounts.waitFor(
         {
             id: { eq: address },
-            storage: { balance: { Grams: { gt: "0" } } }
+            balance: { gt: "0" }
         },
-		'id storage {balance {Grams}}'
+		'id balance'
     );
 
     const result = await contracts.run({
@@ -280,7 +280,7 @@ test('Deploy from contract 2', async () => {
         address: deployer.address,
         functionName: 'setCode',
         abi: deployer_package.abi,
-        input: { 
+        input: {
             _code: code.codeBase64,
         },
         keyPair: keys,
@@ -321,9 +321,9 @@ test('Deploy from contract 2', async () => {
     const wait = await queries.accounts.waitFor(
         {
             id: { eq: address },
-            storage: { balance: { Grams: { gt: "0" } } }
+            balance: { gt: "0" }
         },
-		'id storage {balance {Grams}}'
+		'id balance'
     );
 
     const result = await contracts.run({
@@ -370,7 +370,7 @@ test('Deploy from contract 3', async () => {
         address: deployer.address,
         functionName: 'deploy3',
         abi: deployer_package.abi,
-        input: { 
+        input: {
             contr: deployData.imageBase64,
             addr: `0x${deployData.accountId}`,
             grams: 300000000,
@@ -387,9 +387,9 @@ test('Deploy from contract 3', async () => {
     const wait = await queries.accounts.waitFor(
         {
             id: { eq: address },
-            storage: { balance: { Grams: { gt: "0" } } }
+            balance: { gt: "0" }
         },
-		'id storage {balance {Grams}}'
+		'id balance'
     );
 
     const result = await contracts.run({

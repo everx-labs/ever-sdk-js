@@ -1,6 +1,7 @@
 // @flow
+
 import { TONClient } from "../src/TONClient";
-import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
+import { QAccountType, TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import type { TONConfigData } from "../types";
 
 const fs = require('fs');
@@ -19,7 +20,7 @@ const bv = binariesVersion.split('.').join('_');
 const binariesHost = 'sdkbinaries.tonlabs.io';
 const binariesPath = __dirname;
 
-export const nodeSe = false;
+export const nodeSe = true;
 
 const serversConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'servers.json')));
 
@@ -170,7 +171,9 @@ const nodeSeGiverAbi =
 	]
 };
 
-let giverWalletAddressHex = '0:bba1ac23b010188089d62010ddb00d594c00f0e217794f3f2b53a81894ec7146';
+let giverWalletAddressHex = nodeSe
+    ? '0:a46af093b38fcae390e9af5104a93e22e82c29bcb35bf88160e4478417028884'
+    : '0:bba1ac23b010188089d62010ddb00d594c00f0e217794f3f2b53a81894ec7146';
 
 let giverWalletKeys = {
     secret: '2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe',
@@ -231,28 +234,19 @@ async function check_giver() {
     const accounts = await ton.queries.accounts.query({
         id: { eq: giverWalletAddressHex }
     },
-    `
-        storage {
-            balance { Grams }
-            state {
-                ...on AccountStorageStateAccountActiveVariant {
-                    AccountActive { split_depth } 
-                }
-            }
-        }
-    `);
+    'acc_type balance');
 
     if (accounts.length === 0) {
         throw "Giver wallet does not exist. Send some grams to " + giverWalletAddressHex
     }
 
-    if (!(accounts[0]["storage"]["balance"]["Grams"]) ||
-        parseInt(accounts[0]["storage"]["balance"]["Grams"]) < giverRequestAmount)
+    if (!(accounts[0]["balance"]) ||
+        parseInt(accounts[0]["balance"]) < giverRequestAmount)
     {
         throw "Giver has no money. Send some grams to " + giverWalletAddressHex
     }
 
-    if (!(accounts[0].storage.state.AccountActive)) {
+    if (!(accounts[0].acc_type !== QAccountType.active)) {
         console.log('No giver. Deploy');
 
         await ton.contracts.deploy({
@@ -267,7 +261,7 @@ async function check_giver() {
 
 async function get_grams_from_giver(account) {
     const { contracts, queries } = tests.client;
-    
+
     const accountId = await contracts.convertAddress({
         address: account,
         convertTo: TONAddressStringVariant.AccountId
@@ -303,15 +297,11 @@ async function get_grams_from_giver(account) {
     const wait = await queries.accounts.waitFor(
         {
             id: { eq: account },
-            storage: {
-                balance: {
-                    Grams: { gt: "0" }
-                }
-            }
+            balance: { gt: '0' }
         },
-		'id storage {balance {Grams}}'
+		'id balance'
     );
-};
+}
 
 async function deploy_with_giver(params: TONContractDeployParams) {
     const { contracts } = tests.client;
@@ -325,6 +315,8 @@ const tests: { config: TONConfigData } = {
     config: {
         defaultWorkchain: 0,
         servers: nodeSe ? serversConfig.local : serversConfig.external,
+        requestsServer: 'http://0.0.0.0:3000/topics/requests',
+        queriesServer: 'http://0.0.0.0:4000/graphql',
         log_verbose: true,
     },
     client: new TONClient(),

@@ -36,6 +36,7 @@ export class TONClientError extends Error {
         RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS: 1002,
         WAIT_FOR_TIMEOUT: 1003,
         INTERNAL_ERROR: 1004,
+        QUERY_FAILED: 1005,
     };
 
     source: string;
@@ -85,6 +86,14 @@ export class TONClientError extends Error {
         return new TONClientError(
             'Wait for operation rejected on timeout',
             TONClientError.code.WAIT_FOR_TIMEOUT,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static queryFailed(errors: Error[]) {
+        return new TONClientError(
+            `Query failed: ${errors.map(x => x.message || x.toString()).join('\n')}`,
+            TONClientError.code.QUERY_FAILED,
             TONClientError.source.CLIENT,
         );
     }

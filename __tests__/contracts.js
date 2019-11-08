@@ -17,7 +17,7 @@
 // @flow
 
 import type { TONContractPackage } from '../src/modules/TONContractsModule';
-import { TONAddressStringVariant, TONAddressStringVariant } from '../src/modules/TONContractsModule';
+import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
 import { tests } from "./init-tests";
@@ -87,7 +87,8 @@ test('Run aborted transaction', async () => {
             keyPair: keys
         });
     } catch (error) {
-        //console.log(error);
+        const e = error;
+        console.log(e);
         expect(error.source).toEqual('node');
         expect(error.code).toEqual(102);
         expect(error.message).toEqual('VM terminated with exception (102) at computeVm');

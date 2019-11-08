@@ -219,14 +219,23 @@ class TONQCollection {
         }`;
         const query = gql([ql]);
         const client = this.module.ensureClient();
-        return (await client.query({
-            query,
-            variables: {
-                filter,
-                orderBy,
-                limit
-            },
-        })).data[c];
+        try {
+            return (await client.query({
+                query,
+                variables: {
+                    filter,
+                    orderBy,
+                    limit
+                },
+            })).data[c];
+        } catch (error) {
+            const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
+            if (errors) {
+                throw TONClientError.queryFailed(errors);
+            } else {
+                throw error;
+            }
+        }
     }
 
 

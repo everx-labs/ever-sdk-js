@@ -236,9 +236,12 @@ type TONContractConvertAddressResult = {
     address: string,
 }
 
-type QCurrencyCollection = {
-    grams: string,
-}
+type QOtherCurrencyCollection = {
+    currency: number,
+    value: string,
+}[]
+
+
 
 export const QAccountStatus = {
     uninit: 0,
@@ -268,8 +271,8 @@ export const QAccountType = {
 
 export const QMessageType = {
     internal: 0,
-    extIn: 1,
-    extOut: 2,
+    extIn: 2,
+    extOut: 3,
 };
 
 
@@ -342,7 +345,7 @@ export type QAccount = {
     last_paid: string,
     due_payment: string,
     last_trans_lt: string,
-    balance: QCurrencyCollection,
+    balance: string,
     split_depth: number,
     tick: boolean,
     tock: boolean,
@@ -363,7 +366,7 @@ export type QTransaction = {
         status_change: number,
     },
     compute: {
-        type: number,
+        compute_type: number,
         success: boolean,
         exit_code: number,
         skipped_reason: number,
@@ -400,11 +403,11 @@ export default class TONContractsModule extends TONModule {
     async load(params: TONContractLoadParams): Promise<TONContractLoadResult> {
         const accounts: QAccount[] = await this.queries.accounts.query({
             id: { eq: params.address },
-        }, 'balance { grams }');
+        }, 'balance');
         if (accounts && accounts.length > 0) {
             return {
                 id: params.address,
-                balanceGrams: accounts[0].balance.grams,
+                balanceGrams: accounts[0].balance,
             };
         }
         return {
@@ -684,6 +687,7 @@ export default class TONContractsModule extends TONModule {
                 'body msg_type',
             );
         }))).filter((x: QMessage) => {
+            console.log('>>>', x);
             return x.msg_type === QMessageType.extOut;
         });
         const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
@@ -833,7 +837,7 @@ async function checkTransaction(transaction: QTransaction) {
 
     const compute = transaction.compute;
     if (compute) {
-        if (compute.type === QComputeType.skipped) {
+        if (compute.compute_type === QComputeType.skipped) {
             const reason = compute.skipped_reason;
             if (reason === QSkipReason.noState) {
                 throw nodeError(
@@ -862,7 +866,7 @@ async function checkTransaction(transaction: QTransaction) {
                 TONClientTransactionPhase.computeSkipped
             );
         }
-        if (compute.type === QComputeType.vm) {
+        if (compute.compute_type === QComputeType.vm) {
             if (!compute.success) {
                 throw nodeError(
                     'VM terminated with exception',
@@ -905,7 +909,7 @@ const transactionDetails = `
         status_change
     }
     compute {
-        type
+        compute_type
         skipped_reason
         success
         exit_code

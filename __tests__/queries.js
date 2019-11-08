@@ -24,33 +24,11 @@ test('Transaction List', async () => {
         tests.client.queries.accounts.subscribe(
             {
                 id: { eq: '1' },
-                storage: {
-                    state: {
-                        AccountActive: {
-                            code: { ne: "" },
-                            data: { ne: "" },
-                        }
-                    }
-                }
+                code: { ne: "" },
+                data: { ne: "" },
 
             },
-            `
-            storage {
-                state {
-                    ...on AccountStorageStateAccountActiveVariant {
-                        AccountActive {
-                            code
-                            data
-                        }
-                    }
-                    ...on AccountStorageStateAccountUninitVariant {
-                        AccountUninit {
-                            None
-                        }
-                    }
-                }
-            }
-            `, (e, d) => {
+            'acc_type code data', (e, d) => {
                 console.log('>>>', { e, d });
             }
         );
