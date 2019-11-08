@@ -271,8 +271,8 @@ export const QAccountType = {
 
 export const QMessageType = {
     internal: 0,
-    extIn: 2,
-    extOut: 3,
+    extIn: 1,
+    extOut: 2,
 };
 
 
