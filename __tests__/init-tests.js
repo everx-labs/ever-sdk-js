@@ -117,7 +117,7 @@ async function readGiverKeys() {
         giverWalletKeys = JSON.parse(fs.readFileSync(path.resolve(os.homedir(), 'giverKeys.json'), 'utf8'));
         giverWalletAddressHex = await getGiverAddress();
         console.log("Use custom giver keys:\n", giverWalletKeys);
-        console.log("Giver address: 0:" + giverWalletAddressHex);
+        console.log("Giver address: " + giverWalletAddressHex);
     } catch (error) {
         console.log("Custom giver keys not provided. Use default");
     }
@@ -141,7 +141,7 @@ async function done() {
 }
 
 
-const nodeSeGiverAddress = 'a46af093b38fcae390e9af5104a93e22e82c29bcb35bf88160e4478417028884';
+const nodeSeGiverAddress = '0:a46af093b38fcae390e9af5104a93e22e82c29bcb35bf88160e4478417028884';
 const nodeSeGiverAbi =
 {
 	"ABI version": 1,
@@ -169,7 +169,7 @@ const nodeSeGiverAbi =
 	]
 };
 
-let giverWalletAddressHex = 'bba1ac23b010188089d62010ddb00d594c00f0e217794f3f2b53a81894ec7146';
+let giverWalletAddressHex = '0:bba1ac23b010188089d62010ddb00d594c00f0e217794f3f2b53a81894ec7146';
 
 let giverWalletKeys = {
     secret: '2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe',
@@ -242,13 +242,13 @@ async function check_giver() {
     `);
 
     if (accounts.length === 0) {
-        throw "Giver wallet does not exist. Send some grams to " + "0:" + giverWalletAddressHex
+        throw "Giver wallet does not exist. Send some grams to " + giverWalletAddressHex
     }
 
     if (!(accounts[0]["storage"]["balance"]["Grams"]) ||
         parseInt(accounts[0]["storage"]["balance"]["Grams"]) < giverRequestAmount)
     {
-        throw "Giver has no money. Send some grams to " + "0:" + giverWalletAddressHex
+        throw "Giver has no money. Send some grams to " + giverWalletAddressHex
     }
 
     if (!(accounts[0].storage.state.AccountActive)) {
@@ -266,6 +266,11 @@ async function check_giver() {
 
 async function get_grams_from_giver(account) {
     const { contracts, queries } = tests.client;
+    
+    const accountId = await contracts.convertAddress({
+        address: account,
+        convertTo: TONAddressStringTypes.AccountId
+    });
 
     if (nodeSe) {
         const result = await contracts.run({
@@ -273,7 +278,7 @@ async function get_grams_from_giver(account) {
             functionName: 'sendGrams',
             abi: nodeSeGiverAbi,
             input: {
-                dest: `0x${account}`,
+                dest: `0x${accountId.address}`,
                 amount: giverRequestAmount
             },
             keyPair: null,
@@ -285,7 +290,7 @@ async function get_grams_from_giver(account) {
             functionName: 'sendTransaction',
             abi: GiverWalletPackage.abi,
             input: {
-                dest: `0x${account}`,
+                dest: `0x${accountId.address}`,
                 value: giverRequestAmount,
                 bounce: false
             },
