@@ -16,6 +16,7 @@
 
 /* eslint-disable no-bitwise */
 
+import { TONAddressStringTypes } from '../src/modules/TONContractsModule';
 import { SubscriptionContractPackage } from './contracts/SubscriptionContract';
 import { WalletContractPackage } from "./contracts/WalletContract";
 
@@ -98,6 +99,11 @@ test('piggyBank', async () => {
         constructorParams: {},
         keyPair: keys
     })).address;
+    const walletAccountId = await contracts.convertAddress({
+        address: walletAddress,
+        convertTo: TONAddressStringTypes.AccountId
+    });
+
     // console.log('[PiggyBank] Wallet address:', walletAddress);
     // Get wallet version
     /*const version = await contracts.run({
@@ -115,21 +121,27 @@ test('piggyBank', async () => {
         constructorParams: piggyBankParams,
         keyPair: keys,
     })).address;
-     console.log('[PiggyBank] Piggy Bank address:', piggyBankAddress);
-
+    console.log('[PiggyBank] Piggy Bank address:', piggyBankAddress);
+    const piggyBankAccountId = await contracts.convertAddress({
+        address: piggyBankAddress,
+        convertTo: TONAddressStringTypes.AccountId
+    });
 
     // Deploy subscription
-    const subscriptionParams = { wallet: `0x${walletAddress}` };
+    const subscriptionParams = { wallet: `0x${walletAccountId.address}` };
     const subscriptionAddress = (await tests.deploy_with_giver({
         package: SubscriptionContractPackage,
         constructorParams: subscriptionParams,
         keyPair: keys,
     })).address;
-     console.log('[PiggyBank] Subscription address:', subscriptionAddress);
-
+    console.log('[PiggyBank] Subscription address:', subscriptionAddress);
+    const subscriptionAccountId = await contracts.convertAddress({
+        address: subscriptionAddress,
+        convertTo: TONAddressStringTypes.AccountId
+    });
 
     // Set subscription account in the wallet
-    const setSubscriptionInput = { addr: `0x${subscriptionAddress}` };
+    const setSubscriptionInput = { addr: `0x${subscriptionAccountId.address}` };
     const setSubscriptionResponse = await contracts.run({
         address: walletAddress,
         abi: WalletContractPackage.abi,
@@ -155,7 +167,7 @@ test('piggyBank', async () => {
     const subscribeInput = {
         subscriptionId: `0x${subscriptionId}`,
         pubkey: `0x${keys.public}`,
-        to: `0x${piggyBankAddress}`,
+        to: `0x${piggyBankAccountId.address}`,
         value: 123,
         period: 1,
     };

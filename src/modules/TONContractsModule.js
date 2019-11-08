@@ -71,6 +71,7 @@ type TONContractDeployParams = {
     constructorParams: any,
     initParams?: any,
     keyPair: TONKeyPairData,
+    workchainId?: number,
 }
 
 type TONContractDeployResult = {
@@ -284,6 +285,28 @@ const QSkippedReason = {
     noGas: 2,
 };
 
+export const TONAddressStringTypes = {
+    AccountId: 'AccountId',
+    Hex: 'Hex',
+    Base64: 'Base64',
+};
+
+type TONContractAddressBase64Params = {
+    url: boolean,
+    test: boolean,
+    bounce: boolean,
+}
+
+type TONContractConvertAddressParams = {
+    address: string,
+    convertTo: TONAddressStringTypes,
+    base64Params?: TONContractAddressBase64Params,
+}
+
+type TONContractConvertAddressResult = {
+    address: string,
+}
+
 type QTransaction = {
     id: string,
     tr_type: number,
@@ -383,6 +406,7 @@ export default class TONContractsModule extends TONModule {
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             keyPair: params.keyPair,
+            workchainId: params.workchainId,
         });
         return {
             message: {
@@ -421,6 +445,7 @@ export default class TONContractsModule extends TONModule {
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             publicKeyHex: params.keyPair.public,
+            workchainId: params.workchainId,
         });
         return {
             address: result.addressHex,
@@ -635,6 +660,12 @@ export default class TONContractsModule extends TONModule {
             output: resultOutput ? resultOutput.output : null,
             transaction
         };
+    }
+
+    // Address processing
+
+    async convertAddress(params: TONContractConvertAddressParams): Promise<TONContractConvertAddressResult> {
+        return this.requestLibrary('contracts.address.convert', params);
     }
 
     // Internals

@@ -17,6 +17,7 @@
 // @flow
 
 import type { TONContractPackage } from '../src/modules/TONContractsModule';
+import { TONAddressStringTypes } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
 import { tests } from "./init-tests";
@@ -31,12 +32,12 @@ const walletKeys = {
     secret: '7bfe77bbd3ad57ada9ed323da83504723e3af7cd3ba68b02d3c8335f75e0a24e',
 };
 
-const walletAddress = 'adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
+const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
 
 test('load', async () => {
     const { contracts } = tests.client;
     const contract = await contracts.load({
-        address: '0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
+        address: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
         includeImage: false,
     });
     expect(contract.id).toBeNull();
@@ -398,4 +399,54 @@ test('testRunBody', async () => {
 
     expect(parseResultInternal.function).toEqual('constructor');
     expect(parseResultInternal.output).toEqual({wallet: walletAddress});
+});
+
+test('Address conversion', async () => {
+    const { contracts } = tests.client;
+
+    const accountId = "fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
+    const hex = "-1:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
+    const hexWorkchain0 = "0:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
+    const base64 = "Uf/8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15+KsQHFLbKSMiYG+9";
+    const base64_url = "kf_8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15-KsQHFLbKSMiYIny";
+
+    var convertedAddress = await contracts.convertAddress({
+        address: accountId,
+        convertTo: TONAddressStringTypes.Hex
+    });
+    expect(convertedAddress.address).toEqual(hexWorkchain0);
+
+    convertedAddress = await contracts.convertAddress({
+        address: hex,
+        convertTo: TONAddressStringTypes.AccountId
+    });
+    expect(convertedAddress.address).toEqual(accountId);
+
+    convertedAddress = await contracts.convertAddress({
+        address: hex,
+        convertTo: TONAddressStringTypes.Base64,
+        base64Params: {
+            test: false,
+            bounce: false,
+            url: false
+        }
+    });
+    expect(convertedAddress.address).toEqual(base64);
+
+    convertedAddress = await contracts.convertAddress({
+        address: base64,
+        convertTo: TONAddressStringTypes.Base64,
+        base64Params: {
+            test: true,
+            bounce: true,
+            url: true
+        }
+    });
+    expect(convertedAddress.address).toEqual(base64_url);
+
+    convertedAddress = await contracts.convertAddress({
+        address: base64_url,
+        convertTo: TONAddressStringTypes.Hex
+    });
+    expect(convertedAddress.address).toEqual(hex);
 });
