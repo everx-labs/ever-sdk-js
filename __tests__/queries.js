@@ -20,18 +20,18 @@ beforeAll(tests.init);
 afterAll(tests.done);
 
 test('Transaction List', async () => {
-    return new Promise((resolve) => {
-        tests.client.queries.accounts.subscribe(
-            {
-                id: { eq: '1' },
-                code: { ne: "" },
-                data: { ne: "" },
-
-            },
-            'acc_type code data', (e, d) => {
-                console.log('>>>', { e, d });
-            }
-        );
-    });
+    // return new Promise((resolve) => {
+    //     tests.client.queries.accounts.subscribe(
+    //         {
+    //             id: { eq: '1' },
+    //             code: { ne: "" },
+    //             data: { ne: "" },
+    //
+    //         },
+    //         'acc_type code data', (e, d) => {
+    //             console.log('>>>', { e, d });
+    //         }
+    //     );
+    // });
 });
 

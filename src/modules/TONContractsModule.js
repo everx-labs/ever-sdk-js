@@ -641,7 +641,7 @@ export default class TONContractsModule extends TONModule {
             throw TONClientError.internalError('transaction is null');
         }
         this.config.log('transaction received', {
-            id: message.messageId,
+            id: transaction.id,
             block_id: transaction.block_id,
             now: `${new Date(transaction.now * 1000).toISOString()} (${transaction.now})`,
         });
@@ -687,7 +687,6 @@ export default class TONContractsModule extends TONModule {
                 'body msg_type',
             );
         }))).filter((x: QMessage) => {
-            console.log('>>>', x);
             return x.msg_type === QMessageType.extOut;
         });
         const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
