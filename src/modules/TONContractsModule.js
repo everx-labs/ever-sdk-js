@@ -61,29 +61,45 @@ export const TONAddressStringVariant = {
     Base64: 'Base64',
 };
 
-export const QAccountStatus = {
-    uninit: 0,
-    frozen: 1,
-    active: 2,
-    nonExist: 3,
+export const TONClientTransactionPhase = {
+    storage: 'storage',
+    computeSkipped: 'computeSkipped',
+    computeVm: "computeVm",
+    action: 'action',
+    unknown: 'unknown'
 };
 
-export const QAccountStatusChange = {
-    unchanged: 0,
-    frozen: 1,
-    deleted: 2,
-};
-
-export const QSkipReason = {
+export const TONClientComputeSkippedStatus = {
     noState: 0,
     badState: 1,
-    noGas: 2,
+    noGas: 2
 };
 
-export const QAccountType = {
-    uninit: 0,
-    active: 1,
-    frozen: 2,
+export const TONClientStorageStatus = {
+    unchanged: 0,
+    frozen: 1,
+    deleted: 2
+};
+
+export const QInMsgType = {
+    external: 0,
+    ihr: 1,
+    immediately: 2,
+    final: 3,
+    transit: 4,
+    discardedFinal: 5,
+    discardedTransit: 6,
+};
+
+export const QOutMsgType = {
+    external: 0,
+    immediately: 1,
+    outMsgNew: 2,
+    transit: 3,
+    dequeueImmediately: 4,
+    dequeue: 5,
+    transitRequired: 6,
+    none: -1,
 };
 
 export const QMessageType = {
@@ -91,7 +107,6 @@ export const QMessageType = {
     extIn: 1,
     extOut: 2,
 };
-
 
 export const QMessageProcessingStatus = {
     unknown: 0,
@@ -102,6 +117,25 @@ export const QMessageProcessingStatus = {
     finalized: 5,
     refused: 6,
     transiting: 7,
+};
+
+export const QBlockProcessingStatus = {
+    unknown: 0,
+    proposed: 1,
+    finalized: 2,
+    refused: 3,
+};
+
+export const QSplitType = {
+    none: 0,
+    split: 2,
+    merge: 3,
+};
+
+export const QAccountType = {
+    uninit: 0,
+    active: 1,
+    frozen: 2,
 };
 
 export const QTransactionType = {
@@ -123,9 +157,28 @@ export const QTransactionProcessingStatus = {
     refused: 4,
 };
 
+export const QAccountStatus = {
+    uninit: 0,
+    active: 1,
+    frozen: 2,
+    nonExist: 3,
+};
+
+export const QAccountStatusChange = {
+    unchanged: 0,
+    frozen: 1,
+    deleted: 2,
+};
+
 export const QComputeType = {
     skipped: 0,
     vm: 1,
+};
+
+export const QSkipReason = {
+    noState: 0,
+    badState: 1,
+    noGas: 2,
 };
 
 export const QBounceType = {
@@ -134,45 +187,6 @@ export const QBounceType = {
     ok: 2,
 };
 
-export const QInMsgType = {
-    external: 0,
-    ihr: 1,
-    immediatelly: 2,
-    final: 3,
-    transit: 4,
-    discardedFinal: 5,
-    discardedTransit: 6,
-};
-
-export const QOutMsgType = {
-    none: 0,
-    external: 1,
-    immediately: 2,
-    outMsgNew: 3,
-    transit: 4,
-    dequeue: 5,
-    transitRequired: 6,
-};
-
-export const TONClientTransactionPhase = {
-    storage: 'storage',
-    computeSkipped: 'computeSkipped',
-    computeVm: "computeVm",
-    action: 'action',
-    unknown: 'unknown'
-};
-
-export const TONClientComputeSkippedStatus = {
-    noState: 0,
-    badState: 1,
-    noGas: 2
-};
-
-export const TONClientStorageStatus = {
-    unchanged: 0,
-    frozen: 1,
-    deleted: 2
-};
 
 export default class TONContractsModule extends TONModule {
     config: TONConfigModule;
