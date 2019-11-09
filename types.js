@@ -9,6 +9,8 @@ export type TONConfigData = {
     log_verbose?: boolean,
 }
 
+// Crypto
+
 export type TONKeyPairData = {
     secret: string,
     public: string,
@@ -52,7 +54,7 @@ export type TONNaclSecretBoxParams = {
     outputEncoding?: TONOutputEncodingType, // default Hex
 }
 
-interface TONCryptoModule {
+export interface TONCrypto {
     factorize(challengeHex: string): Promise<TONFactorizeResult>;
 
     modularPower(baseHex: string, exponentHex: string, modulusHex: string): Promise<string>;
@@ -117,21 +119,36 @@ interface TONCryptoModule {
     hdkeyXPrvPublic(serialized: string): Promise<string>;
 }
 
+// Contracts
+
 export type TONContractABIParameter = {
+    name: string,
+    type: string,
+}
+
+export type TONContractABIDataItem = {
+    key: number,
     name: string,
     type: string,
 }
 
 export type TONContractABIFunction = {
     name: string,
-    signed?: boolean,
     inputs: TONContractABIParameter[],
     outputs: TONContractABIParameter[],
 };
 
+export type TONContractABIEvent = {
+    name: string,
+    inputs: TONContractABIParameter[],
+};
+
 export type TONContractABI = {
     'ABI version': number,
+    setTime?: boolean,
     functions: TONContractABIFunction[],
+    events: TONContractABIEvent[],
+    data: TONContractABIDataItem[],
 };
 
 export type TONContractPackage = {
@@ -139,87 +156,80 @@ export type TONContractPackage = {
     imageBase64: string,
 }
 
-declare type TONContractLoadParams = {
+export type TONContractLoadParams = {
     address: string,
     includeImage: boolean,
 }
 
-type TONContractLoadResult = {
+export type TONContractLoadResult = {
     id: ?string,
     balanceGrams: ?string,
-    imageBase64: ?string,
 }
 
-type TONContractDeployParams = {
+export type TONContractDeployParams = {
     package: TONContractPackage,
     constructorParams: any,
+    initParams?: any,
     keyPair: TONKeyPairData,
+    workchainId?: number,
 }
 
-type TONContractDeployResult = {
+export type TONContractDeployResult = {
     address: string,
     alreadyDeployed: boolean,
 }
 
-type TONContractUnsignedMessage = {
+export type TONContractUnsignedMessage = {
     unsignedBytesBase64: string,
     bytesToSignBase64: string,
 }
 
-type TONContractMessage = {
+export type TONContractMessage = {
     messageId: string,
     messageIdBase64: string,
     messageBodyBase64: string,
 }
 
-type TONContractUnsignedDeployMessage = {
+export type TONContractUnsignedDeployMessage = {
     address: string,
     signParams: TONContractUnsignedMessage,
 }
 
-type TONContractUnsignedRunMessage = {
+export type TONContractUnsignedRunMessage = {
     abi: TONContractABI,
     functionName: string,
     signParams: TONContractUnsignedMessage,
 }
 
-type TONContractDeployMessage = {
+export type TONContractDeployMessage = {
     address: string,
     message: TONContractMessage;
 }
 
-type TONContractRunMessage = {
+export type TONContractRunMessage = {
     abi: TONContractABI,
     functionName: string,
     message: TONContractMessage;
 }
 
-type TONContractCreateSignedMessageParams = {
+export type TONContractCreateSignedMessageParams = {
     unsignedBytesBase64: string,
     signBytesBase64: string,
     publicKeyHex: string,
 }
 
-type TONContractCreateSignedDeployMessageParams = {
+export type TONContractCreateSignedDeployMessageParams = {
     address: string,
     createSignedParams: TONContractCreateSignedMessageParams,
 }
 
-type TONContractCreateSignedRunMessageParams = {
+export type TONContractCreateSignedRunMessageParams = {
     abi: TONContractABI,
     functionName: string,
     createSignedParams: TONContractCreateSignedMessageParams,
 }
 
-type TONContractRunParams = {
-    address: string,
-    abi: TONContractABI,
-    functionName: string,
-    input: any,
-    keyPair: TONKeyPairData,
-}
-
-type TONContractLocalRunParams = {
+export type TONContractRunParams = {
     address: string,
     abi: TONContractABI,
     functionName: string,
@@ -227,61 +237,156 @@ type TONContractLocalRunParams = {
     keyPair?: TONKeyPairData,
 }
 
-type TONContractDecodeRunOutputParams = {
+export type TONContractLocalRunParams = {
+    address: string,
+    abi: TONContractABI,
+    functionName: string,
+    input: any,
+    keyPair?: TONKeyPairData,
+}
+
+export type TONContractDecodeRunOutputParams = {
     abi: TONContractABI,
     functionName: string,
     bodyBase64: string,
+    internal?: boolean,
 }
 
-type TONContractDecodeMessageBodyParams = {
+export type TONContractDecodeMessageBodyParams = {
     abi: TONContractABI,
     bodyBase64: string,
+    internal?: boolean,
 }
 
-type TONContractRunResult = {
+export type TONContractRunResult = {
     output: any,
+    transaction: QTransaction
 }
 
-type TONContractDecodeMessageBodyResult = {
+export type TONContractDecodeMessageBodyResult = {
     function: string,
     output: any,
 }
 
-type QTransaction = {
+export type TONContractGetDeployDataParams = {
+    abi?: TONContractABI,
+    initParams?: any,
+    imageBase64?: string,
+    publicKeyHex: string,
+}
+
+
+export type TONContractGetDeployDataResult = {
+    imageBase64?: string,
+    accountId?: string,
+    dataBase64: string,
+}
+
+export type TONContractGetCodeFromImageParams = {
+    imageBase64: string,
+}
+
+export type TONContractGetCodeFromImageResult = {
+    codeBase64: string,
+}
+
+export type TONContractCreateRunBodyParams = {
+    abi: TONContractABI,
+    function: string,
+    params: any,
+    internal?: boolean,
+    keyPair?: TONKeyPairData,
+}
+
+export type TONContractCreateRunBodyResult = {
+    bodyBase64: string,
+}
+
+export type TONContractGetFunctionIdParams = {
+    abi: TONContractABI,
+    function: string,
+    input: boolean,
+}
+
+export type TONContractGetFunctionIdResult = {
+    id: number,
+}
+
+export type TONAddressStringVariantType = 'AccountId' | 'Hex' | 'Base64';
+
+export type TONContractAddressBase64Params = {
+    url: boolean,
+    test: boolean,
+    bounce: boolean,
+}
+
+export type TONContractConvertAddressParams = {
+    address: string,
+    convertTo: TONAddressStringVariantType,
+    base64Params?: TONContractAddressBase64Params,
+}
+
+export type TONContractConvertAddressResult = {
+    address: string,
+}
+
+export type QOtherCurrencyCollection = {
+    currency: number,
+    value: string,
+}[]
+
+export type QAccount = {
+    acc_type: number,
+    addr: string,
+    last_paid: string,
+    due_payment: string,
+    last_trans_lt: string,
+    balance: string,
+    split_depth: number,
+    tick: boolean,
+    tock: boolean,
+    code: string,
+    data: string,
+    library: string,
+
+}
+
+export type QTransaction = {
     id: string,
-    description: {
-        Ordinary: {
-            aborted: boolean,
-        }
+    tr_type: number,
+    status: number,
+    block_id: string,
+    aborted: boolean,
+    now: number,
+    storage: {
+        status_change: number,
     },
-    status: string,
+    compute: {
+        compute_type: number,
+        success: boolean,
+        exit_code: number,
+        skipped_reason: number,
+    },
+    action: {
+        valid: boolean,
+        no_funds: boolean,
+        success: boolean,
+        result_code: number,
+    };
     out_msgs: string[],
 }
 
-type QAddrStd = {
-    AddrStd: {
-        workchain_id: number,
-        address: string,
-    }
-}
-
-type QAddr = 'AddrNone' | QAddrStd
-
-
-type QMessage = {
+export type QMessage = {
     id: string,
-    header: {
-        ExtOutMsgInfo?: {
-            src: QAddr,
-            dst: QAddr,
-            created_at: number,
-        },
-    },
+    msg_type: number,
+    status: number,
+    src: string,
+    dst: string,
+    created_at: number,
     body: string,
-    status: string,
 }
 
-export interface TONContractsModule {
+export interface TONContracts {
     load(params: TONContractLoadParams): Promise<TONContractLoadResult>;
 
     deploy(params: TONContractDeployParams): Promise<TONContractDeployResult>;
@@ -320,7 +425,7 @@ export interface TONContractsModule {
 }
 
 
-interface TONQueriesModule {
+interface TONQueries {
     transactions: TONQCollection;
     messages: TONQCollection;
     blocks: TONQCollection;
@@ -339,7 +444,7 @@ type Subscription = {
     unsubscribe: () => void
 }
 
-interface TONQCollection {
+export interface TONQCollection {
     query(filter: any, result: string, orderBy?: OrderBy[], limit?: number): Promise<any>;
 
     subscribe(filter: any, result: string, onDocEvent: DocEvent): Subscription;
@@ -349,8 +454,8 @@ interface TONQCollection {
 
 
 export interface TONClient {
-    crypto: TONCryptoModule;
-    contracts: TONContractsModule;
-    queries: TONQueriesModule;
+    crypto: TONCrypto;
+    contracts: TONContracts;
+    queries: TONQueries;
 }
 

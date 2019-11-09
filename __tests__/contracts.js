@@ -16,12 +16,16 @@
 
 // @flow
 
-import type { TONContractPackage } from '../src/modules/TONContractsModule';
 import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
 import { tests } from "./init-tests";
 import { SubscriptionContractPackage } from "./contracts/SubscriptionContract";
+
+import type {
+    TONContractLoadResult,
+    TONContractPackage
+} from "../types";
 
 
 beforeAll(tests.init);
@@ -45,12 +49,12 @@ test('load', async () => {
 
     await tests.get_grams_from_giver(walletAddress);
 
-    const w = await contracts.load({
+    const w: TONContractLoadResult = await contracts.load({
         address: walletAddress,
         includeImage: false,
     });
     expect(w.id).toEqual(walletAddress);
-    expect(Number.parseInt(w.balanceGrams)).toBeGreaterThan(0);
+    expect(Number.parseInt(w.balanceGrams || '')).toBeGreaterThan(0);
 });
 
 test('deploy_new', async () => {
@@ -87,8 +91,6 @@ test('Run aborted transaction', async () => {
             keyPair: keys
         });
     } catch (error) {
-        const e = error;
-        console.log(e);
         expect(error.source).toEqual('node');
         expect(error.code).toEqual(102);
         expect(error.message).toEqual('VM terminated with exception (102) at computeVm');
@@ -193,7 +195,7 @@ test('filterOutput', async () => {
         keyPair: keys,
     });
 
-    const resultEmit = await contracts.run({
+    await contracts.run({
         address: deployed.address,
         functionName: 'emitValue',
         abi: events_package.abi,
@@ -215,7 +217,7 @@ test('External Signing', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    var contract_package = events_package;
+    const contract_package = events_package;
     contract_package.abi["setTime"] = false;
 
     const deployParams = {
@@ -245,20 +247,20 @@ test('changeInitState', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const subscriptionAddess1 = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-    const subscriptionAddess2 = '0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
+    const subscriptionAddress1 = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+    const subscriptionAddress2 = '0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
 
     const deployed1 = await tests.deploy_with_giver({
         package: WalletContractPackage,
         constructorParams: {},
-        initParams: { subscription: subscriptionAddess1 },
+        initParams: { subscription: subscriptionAddress1 },
         keyPair: keys,
     });
 
     const deployed2 = await tests.deploy_with_giver({
         package: WalletContractPackage,
         constructorParams: {},
-        initParams: { subscription: subscriptionAddess2 },
+        initParams: { subscription: subscriptionAddress2 },
         keyPair: keys,
     });
 
@@ -280,8 +282,8 @@ test('changeInitState', async () => {
         keyPair: keys,
     });
 
-    expect(result1.output).toEqual({ value0: subscriptionAddess1 });
-    expect(result2.output).toEqual({ value0: subscriptionAddess2 });
+    expect(result1.output).toEqual({ value0: subscriptionAddress1 });
+    expect(result2.output).toEqual({ value0: subscriptionAddress2 });
 });
 
 const setCode1_package: TONContractPackage = {
@@ -346,7 +348,7 @@ test('testSetCode', async () => {
         imageBase64: setCode2_imageBase64
     });
 
-    const result = await contracts.run({
+    await contracts.run({
         address: deployed.address,
         functionName: 'main',
         abi: setCode1_package.abi,
@@ -366,7 +368,7 @@ test('testSetCode', async () => {
 });
 
 test('testRunBody', async () => {
-    const { contracts, crypto } = tests.client;
+    const { contracts } = tests.client;
 
     const walletAddress = '0x2222222222222222222222222222222222222222222222222222222222222222';
 
@@ -411,7 +413,7 @@ test('Address conversion', async () => {
     const base64 = "Uf/8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15+KsQHFLbKSMiYG+9";
     const base64_url = "kf_8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15-KsQHFLbKSMiYIny";
 
-    var convertedAddress = await contracts.convertAddress({
+    let convertedAddress = await contracts.convertAddress({
         address: accountId,
         convertTo: TONAddressStringVariant.Hex
     });

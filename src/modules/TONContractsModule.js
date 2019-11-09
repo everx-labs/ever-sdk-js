@@ -13,235 +13,53 @@
  * See the License for the specific TON DEV software governing permissions and
  * limitations under the License.
  */
-
 // @flow
+
+import type {
+    QAccount,
+    QMessage,
+    QTransaction,
+    TONContractConvertAddressParams,
+    TONContractConvertAddressResult,
+    TONContractCreateRunBodyParams,
+    TONContractCreateRunBodyResult,
+    TONContractCreateSignedDeployMessageParams,
+    TONContractCreateSignedMessageParams,
+    TONContractCreateSignedRunMessageParams,
+    TONContractDecodeMessageBodyParams,
+    TONContractDecodeMessageBodyResult,
+    TONContractDecodeRunOutputParams,
+    TONContractDeployMessage,
+    TONContractDeployParams,
+    TONContractDeployResult,
+    TONContractGetCodeFromImageParams,
+    TONContractGetCodeFromImageResult,
+    TONContractGetDeployDataParams,
+    TONContractGetDeployDataResult,
+    TONContractGetFunctionIdParams,
+    TONContractGetFunctionIdResult,
+    TONContractLoadParams,
+    TONContractLoadResult,
+    TONContractLocalRunParams,
+    TONContractMessage,
+    TONContractRunMessage,
+    TONContractRunParams,
+    TONContractRunResult,
+    TONContractUnsignedDeployMessage,
+    TONContractUnsignedMessage,
+    TONContractUnsignedRunMessage
+} from "../../types";
 import { TONClient, TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
-import type { TONKeyPairData } from './TONCryptoModule';
 import TONQueriesModule from './TONQueriesModule';
 
-export type TONContractABIParameter = {
-    name: string,
-    type: string,
-}
-
-export type TONContractABIDataItem = {
-    key: number,
-    name: string,
-    type: string,
-}
-
-export type TONContractABIFunction = {
-    name: string,
-    inputs: TONContractABIParameter[],
-    outputs: TONContractABIParameter[],
-};
-
-export type TONContractABIEvent = {
-    name: string,
-    inputs: TONContractABIParameter[],
-};
-
-export type TONContractABI = {
-    'ABI version': number,
-    setTime?: boolean,
-    functions: TONContractABIFunction[],
-    events: TONContractABIEvent[],
-    data: TONContractABIDataItem[],
-};
-
-export type TONContractPackage = {
-    abi: TONContractABI,
-    imageBase64: string,
-}
-
-type TONContractLoadParams = {
-    address: string,
-    includeImage: boolean,
-}
-
-type TONContractLoadResult = {
-    id: ?string,
-    balanceGrams: ?string,
-}
-
-type TONContractDeployParams = {
-    package: TONContractPackage,
-    constructorParams: any,
-    initParams?: any,
-    keyPair: TONKeyPairData,
-    workchainId?: number,
-}
-
-type TONContractDeployResult = {
-    address: string,
-    alreadyDeployed: boolean,
-}
-
-type TONContractUnsignedMessage = {
-    unsignedBytesBase64: string,
-    bytesToSignBase64: string,
-}
-
-type TONContractMessage = {
-    messageId: string,
-    messageIdBase64: string,
-    messageBodyBase64: string,
-}
-
-type TONContractUnsignedDeployMessage = {
-    address: string,
-    signParams: TONContractUnsignedMessage,
-}
-
-type TONContractUnsignedRunMessage = {
-    abi: TONContractABI,
-    functionName: string,
-    signParams: TONContractUnsignedMessage,
-}
-
-type TONContractDeployMessage = {
-    address: string,
-    message: TONContractMessage;
-}
-
-type TONContractRunMessage = {
-    abi: TONContractABI,
-    functionName: string,
-    message: TONContractMessage;
-}
-
-type TONContractCreateSignedMessageParams = {
-    unsignedBytesBase64: string,
-    signBytesBase64: string,
-    publicKeyHex: string,
-}
-
-type TONContractCreateSignedDeployMessageParams = {
-    address: string,
-    createSignedParams: TONContractCreateSignedMessageParams,
-}
-
-type TONContractCreateSignedRunMessageParams = {
-    abi: TONContractABI,
-    functionName: string,
-    createSignedParams: TONContractCreateSignedMessageParams,
-}
-
-type TONContractRunParams = {
-    address: string,
-    abi: TONContractABI,
-    functionName: string,
-    input: any,
-    keyPair: TONKeyPairData,
-}
-
-type TONContractLocalRunParams = {
-    address: string,
-    abi: TONContractABI,
-    functionName: string,
-    input: any,
-    keyPair?: TONKeyPairData,
-}
-
-type TONContractDecodeRunOutputParams = {
-    abi: TONContractABI,
-    functionName: string,
-    bodyBase64: string,
-    internal?: boolean,
-}
-
-type TONContractDecodeMessageBodyParams = {
-    abi: TONContractABI,
-    bodyBase64: string,
-    internal?: boolean,
-}
-
-type TONContractRunResult = {
-    output: any,
-    transaction: QTransaction
-}
-
-type TONContractDecodeMessageBodyResult = {
-    function: string,
-    output: any,
-}
-
-type TONContractGetDeployDataParams = {
-    abi?: TONContractABI,
-    initParams?: any,
-    imageBase64?: string,
-    publicKeyHex: string,
-}
-
-
-type TONContractGetDeployDataResult = {
-    imageBase64?: string,
-    accountId?: string,
-    dataBase64: string,
-}
-
-type TONContractGetCodeFromImageParams = {
-    imageBase64: string,
-}
-
-type TONContractGetCodeFromImageResult = {
-    codeBase64: string,
-}
-
-type TONContractCreateRunBodyParams = {
-    abi: TONContractABI,
-    function: string,
-    params: any,
-    internal?: boolean,
-    keyPair?: TONKeyPairData,
-}
-
-type TONContractCreateRunBodyResult = {
-    bodyBase64: string,
-}
-
-type TONContractGetFunctionIdParams = {
-    abi: TONContractABI,
-    function: string,
-    input: boolean,
-}
-
-type TONContractGetFunctionIdResult = {
-    id: number,
-}
 
 export const TONAddressStringVariant = {
     AccountId: 'AccountId',
     Hex: 'Hex',
     Base64: 'Base64',
 };
-
-export type TONAddressStringVariantType = $Keys<typeof TONAddressStringVariant>;
-
-type TONContractAddressBase64Params = {
-    url: boolean,
-    test: boolean,
-    bounce: boolean,
-}
-
-type TONContractConvertAddressParams = {
-    address: string,
-    convertTo: TONAddressStringVariantType,
-    base64Params?: TONContractAddressBase64Params,
-}
-
-type TONContractConvertAddressResult = {
-    address: string,
-}
-
-type QOtherCurrencyCollection = {
-    currency: number,
-    value: string,
-}[]
-
-
 
 export const QAccountStatus = {
     uninit: 0,
@@ -261,7 +79,6 @@ export const QSkipReason = {
     badState: 1,
     noGas: 2,
 };
-
 
 export const QAccountType = {
     uninit: 0,
@@ -306,12 +123,10 @@ export const QTransactionProcessingStatus = {
     refused: 4,
 };
 
-
 export const QComputeType = {
     skipped: 0,
     vm: 1,
 };
-
 
 export const QBounceType = {
     negFunds: 0,
@@ -339,56 +154,25 @@ export const QOutMsgType = {
     transitRequired: 6,
 };
 
-export type QAccount = {
-    acc_type: number,
-    addr: string,
-    last_paid: string,
-    due_payment: string,
-    last_trans_lt: string,
-    balance: string,
-    split_depth: number,
-    tick: boolean,
-    tock: boolean,
-    code: string,
-    data: string,
-    library: string,
+export const TONClientTransactionPhase = {
+    storage: 'storage',
+    computeSkipped: 'computeSkipped',
+    computeVm: "computeVm",
+    action: 'action',
+    unknown: 'unknown'
+};
 
-}
+export const TONClientComputeSkippedStatus = {
+    noState: 0,
+    badState: 1,
+    noGas: 2
+};
 
-export type QTransaction = {
-    id: string,
-    tr_type: number,
-    status: number,
-    block_id: string,
-    aborted: boolean,
-    now: number,
-    storage: {
-        status_change: number,
-    },
-    compute: {
-        compute_type: number,
-        success: boolean,
-        exit_code: number,
-        skipped_reason: number,
-    },
-    action: {
-        valid: boolean,
-        no_funds: boolean,
-        success: boolean,
-        result_code: number,
-    };
-    out_msgs: string[],
-}
-
-export type QMessage = {
-    id: string,
-    msg_type: number,
-    status: number,
-    src: string,
-    dst: string,
-    created_at: number,
-    body: string,
-}
+export const TONClientStorageStatus = {
+    unchanged: 0,
+    frozen: 1,
+    deleted: 2
+};
 
 export default class TONContractsModule extends TONModule {
     config: TONConfigModule;
@@ -778,26 +562,6 @@ export default class TONContractsModule extends TONModule {
 }
 
 TONContractsModule.moduleName = 'TONContractsModule';
-
-export const TONClientTransactionPhase = {
-    storage: 'storage',
-    computeSkipped: 'computeSkipped',
-    computeVm: "computeVm",
-    action: 'action',
-    unknown: 'unknown'
-};
-
-export const TONClientComputeSkippedStatus = {
-    noState: 0,
-    badState: 1,
-    noGas: 2
-};
-
-export const TONClientStorageStatus = {
-    unchanged: 0,
-    frozen: 1,
-    deleted: 2
-};
 
 async function checkTransaction(transaction: QTransaction) {
     if (!transaction.aborted) {

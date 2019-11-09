@@ -17,15 +17,17 @@
 // @flow
 
 
-import type { TONContractPackage } from '../src/modules/TONContractsModule';
+import type { TONContractGetDeployDataResult, TONContractPackage } from '../types';
 import { WalletContractPackage } from './contracts/WalletContract';
 import { tests } from "./init-tests";
+
+declare function BigInt(a: any): any;
 
 beforeAll(tests.init);
 afterAll(tests.done);
 
 test('Deploy data', async () => {
-    const { contracts, crypto } = tests.client;
+    const { contracts } = tests.client;
 
     const publicKey = '1111111111111111111111111111111111111111111111111111111111111111';
     const subscriptionAddess = '0x2222222222222222222222222222222222222222222222222222222222222222';
@@ -204,7 +206,7 @@ test('Deploy from contract 1', async () => {
         keyPair: keys,
     });
 
-    const setResult = await contracts.run({
+    await contracts.run({
         address: deployer.address,
         functionName: 'setContract',
         abi: deployer_package.abi,
@@ -236,7 +238,7 @@ test('Deploy from contract 1', async () => {
 
     const address = addr(addressResult.output.value0);
 
-    const wait = await queries.accounts.waitFor({
+    await queries.accounts.waitFor({
         id: { eq: address },
         balance: { gt: "0" }
     }, 'id balance');
@@ -269,7 +271,7 @@ test('Deploy from contract 2', async () => {
         imageBase64: deployee_package.imageBase64
     });
 
-    const setResult = await contracts.run({
+    await contracts.run({
         address: deployer.address,
         functionName: 'setCode',
         abi: deployer_package.abi,
@@ -310,7 +312,7 @@ test('Deploy from contract 2', async () => {
 
     const address = addr(addressResult.output.value0);
 
-    const wait = await queries.accounts.waitFor(
+    await queries.accounts.waitFor(
         {
             id: { eq: address },
             balance: { gt: "0" }
@@ -342,7 +344,7 @@ test('Deploy from contract 3', async () => {
         keyPair: keys,
     });
 
-    const deployData = await contracts.getDeployData({
+    const deployData: TONContractGetDeployDataResult = await contracts.getDeployData({
         abi: deployee_package.abi,
         imageBase64: deployee_package.imageBase64,
         publicKeyHex: keys.public,
@@ -364,7 +366,7 @@ test('Deploy from contract 3', async () => {
         abi: deployer_package.abi,
         input: {
             contr: deployData.imageBase64,
-            addr: `0x${deployData.accountId}`,
+            addr: `0x${deployData.accountId || ''}`,
             grams: 300000000,
             payload: runBody.bodyBase64,
         },
@@ -373,9 +375,9 @@ test('Deploy from contract 3', async () => {
 
     const address = addr(addressResult.output.value0);
 
-    expect(BigInt(addressResult.output.value0)).toEqual(BigInt(`0x${deployData.accountId}`));
+    expect(BigInt(addressResult.output.value0)).toEqual(BigInt(`0x${deployData.accountId || ''}`));
 
-    const wait = await queries.accounts.waitFor(
+    await queries.accounts.waitFor(
         {
             id: { eq: address },
             balance: { gt: "0" }
@@ -384,7 +386,7 @@ test('Deploy from contract 3', async () => {
     );
 
     const result = await contracts.run({
-        address: deployData.accountId,
+        address: deployData.accountId || '',
         functionName: 'get',
         abi: deployee_package.abi,
         input: {},

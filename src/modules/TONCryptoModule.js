@@ -17,12 +17,16 @@
 // @flow
 /* eslint-disable class-methods-use-this,prefer-object-spread */
 
+import type {
+    TONFactorizeResult,
+    TONInputMessage,
+    TONKeyPairData,
+    TONOutputEncodingType,
+    TONScryptParams,
+    TONNaclBoxParams,
+    TONNaclSecretBoxParams,
+} from "../../types";
 import { TONModule } from '../TONModule';
-
-export type TONKeyPairData = {
-    secret: string,
-    public: string,
-}
 
 export const TONOutputEncoding = {
     Text: 'Text',
@@ -31,43 +35,6 @@ export const TONOutputEncoding = {
     Base64: 'Base64',
 };
 
-export type TONOutputEncodingType = $Keys<typeof TONOutputEncoding>;
-
-export type TONInputMessage = {
-    text?: string,
-    hex?: string,
-    base64?: string
-}
-
-export type TONFactorizeResult = {
-    a: string,
-    b: string
-}
-
-export type TONScryptParams = {
-    password: TONInputMessage,
-    salt: TONInputMessage,
-    logN: number,
-    r: number,
-    p: number,
-    dkLen: number,
-    outputEncoding?: TONOutputEncodingType, // default Hex
-}
-
-export type TONNaclBoxParams = {
-    message: TONInputMessage,
-    nonce: string,
-    theirPublicKey: string,
-    secretKey: string,
-    outputEncoding?: TONOutputEncodingType, // default Hex
-}
-
-export type TONNaclSecretBoxParams = {
-    message: TONInputMessage,
-    nonce: string,
-    key: string,
-    outputEncoding?: TONOutputEncodingType, // default Hex
-}
 
 function fixInputMessage(message: TONInputMessage): TONInputMessage {
     return message.text
