@@ -18,6 +18,7 @@
 
 import { tests } from "./init-tests";
 import { SubscriptionContractPackage } from "./contracts/SubscriptionContract";
+import { exportAllDeclaration } from "@babel/types";
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -27,7 +28,7 @@ test("RunLocal", async () => {
     const keys = await ton.crypto.ed25519Keypair();
     console.log(`Keys: ${JSON.stringify(keys)}`);
 
-    const walletAddress = '0x2222222222222222222222222222222222222222222222222222222222222222';
+    const walletAddress = '0:2222222222222222222222222222222222222222222222222222222222222222';
 
     // Deploy custom contract
     const { address: packageAddress } = (await tests.deploy_with_giver({
@@ -40,17 +41,6 @@ test("RunLocal", async () => {
 
     console.log(`Contract address: ${packageAddress}`);
 
-    // Get the returned value with run
-    // const runResponse = await ton.contracts.run({
-    //     address: packageAddress,
-    //     abi: SubscriptionContractPackage.abi,
-    //     functionName: 'getWallet',
-    //     input: {},
-    //     keyPair: keys,
-    // });
-    //
-    // console.log(`Get (run): ${JSON.stringify(runResponse)}`);
-
     // Get the returned value with runLocal
     const runLocalResponse = await ton.contracts.runLocal({
         address: packageAddress,
@@ -62,5 +52,9 @@ test("RunLocal", async () => {
 
     console.log(`Get (runLocal): ${JSON.stringify(runLocalResponse)}`);
 
-    // expect(runResponse.output).toEqual(runLocalResponse.output);
+    expect(runLocalResponse).toEqual({
+        output: {
+            value0: "0:2222222222222222222222222222222222222222222222222222222222222222"
+        }
+    });
 });
