@@ -31,7 +31,7 @@ async function getGiverAddress(): Promise<string> {
     })).address;
 }
 
-const nodeSeGiverAddress = '0:a46af093b38fcae390e9af5104a93e22e82c29bcb35bf88160e4478417028884';
+const nodeSeGiverAddress = '0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94';
 const nodeSeGiverAbi =
     {
         "ABI version": 1,
@@ -44,8 +44,8 @@ const nodeSeGiverAbi =
             {
                 "name": "sendGrams",
                 "inputs": [
-                    { "name": "dest", "type": "uint256" },
-                    { "name": "amount", "type": "uint64" }
+                    {"name":"dest","type":"address"},
+                    {"name":"amount","type":"uint64"}
                 ],
                 "outputs": []
             }
@@ -144,7 +144,7 @@ export async function get_grams_from_giver(account: string) {
             functionName: 'sendGrams',
             abi: nodeSeGiverAbi,
             input: {
-                dest: `0x${accountId.address}`,
+                dest: account,
                 amount: giverRequestAmount
             },
         });
