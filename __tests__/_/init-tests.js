@@ -52,8 +52,6 @@ export const tests: {
     config: {
         defaultWorkchain: 0,
         servers: nodeSe ? serversConfig.local : serversConfig.external,
-        requestsServer: 'http://localhost:3000/topics/requests',
-        queriesServer: 'http://localhost:4000/graphql',
         log_verbose: true,
     },
     client: new TONClient(),
