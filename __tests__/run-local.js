@@ -16,7 +16,7 @@
 
 /* eslint-disable no-bitwise */
 
-import { tests } from "./init-tests";
+import { tests } from "./_/init-tests";
 import { SubscriptionContractPackage } from "./contracts/SubscriptionContract";
 
 beforeAll(tests.init);

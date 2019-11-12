@@ -20,7 +20,7 @@ import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { SubscriptionContractPackage } from './contracts/SubscriptionContract';
 import { WalletContractPackage } from "./contracts/WalletContract";
 
-import { tests } from "./init-tests";
+import { tests } from "./_/init-tests";
 
 beforeAll(tests.init);
 afterAll(tests.done);

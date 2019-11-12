@@ -19,7 +19,7 @@
 
 import type { TONContractGetDeployDataResult, TONContractPackage } from '../types';
 import { WalletContractPackage } from './contracts/WalletContract';
-import { tests } from "./init-tests";
+import { tests } from "./_/init-tests";
 
 declare function BigInt(a: any): any;
 

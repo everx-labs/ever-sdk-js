@@ -15,7 +15,7 @@
  */
 
 import TONCryptoModule, { TONOutputEncoding } from "../src/modules/TONCryptoModule";
-import { tests } from "./init-tests";
+import { tests } from "./_/init-tests";
 
 beforeAll(tests.init);
 afterAll(tests.done);

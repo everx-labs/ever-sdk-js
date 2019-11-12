@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { tests, binariesVersion } from "./init-tests";
+import { binariesVersion } from "./_/binaries";
+import { tests} from "./_/init-tests";
 
 beforeAll(tests.init);
 afterAll(tests.done);

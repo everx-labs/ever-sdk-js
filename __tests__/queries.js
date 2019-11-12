@@ -14,24 +14,116 @@
  * limitations under the License.
  */
 
-import { tests } from "./init-tests";
+import { QTransactionProcessingStatus } from "../src/modules/TONContractsModule";
+import { get_grams_from_giver } from "./_/giver";
+import { WalletContractPackage } from "./contracts/WalletContract";
+import { tests } from "./_/init-tests";
 
 beforeAll(tests.init);
 afterAll(tests.done);
 
 test('Transaction List', async () => {
-    // return new Promise((resolve) => {
-    //     tests.client.queries.accounts.subscribe(
-    //         {
-    //             id: { eq: '1' },
-    //             code: { ne: "" },
-    //             data: { ne: "" },
-    //
-    //         },
-    //         'acc_type code data', (e, d) => {
-    //             console.log('>>>', { e, d });
-    //         }
-    //     );
-    // });
+    const queries = tests.client.queries;
+    const transaction = await queries.transactions.query({
+        id: { eq: 'e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465' },
+        status: { in: [0, 1, 2] }
+    }, 'id now status', [], 1);
+    // expect(transaction[0].id).toEqual('e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465');
+});
+
+test('All Accounts', async () => {
+    const queries = tests.client.queries;
+    const docs = await queries.accounts.query({}, 'id balance');
+    expect(docs.length).toBeGreaterThan(0);
+});
+
+test('Message', async () => {
+    const queries = tests.client.queries;
+    const messages = await queries.messages.query({
+        id: { eq: '3a8e38b419a452fe7a0073e71c083f926055d0f249485ab9f8ca6e9825c20b8c' }
+    }, 'body created_at');
+    // expect(messages[0].header.ExtOutMsgInfo.created_at).toEqual(1562342740);
+});
+
+test('Ranges', async () => {
+    const queries = tests.client.queries;
+    const messages = await queries.messages.query(
+        { created_at: { gt: 1562342740 }, },
+        'body created_at');
+    expect(messages[0].created_at).toBeGreaterThan(1562342740);
+});
+
+test('Wait For', async () => {
+    const queries = tests.client.queries;
+    const data = await queries.transactions.waitFor({
+        now: { gt: 1563449 },
+    }, 'id status');
+    expect(data.status).toEqual(QTransactionProcessingStatus.finalized);
+});
+
+const transactionWithAddresses = `
+    id
+    account_addr
+    in_message { dst src value }
+`;
+
+test("Subscribe for transactions with addresses", async () => {
+    const { contracts, queries, crypto } = tests.client;
+    const transactions = [];
+    const subscription = (await queries.transactions.subscribe({}, transactionWithAddresses, (e, d) => {
+        transactions.push(d);
+    }));
+
+    const walletKeys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: walletKeys,
+    });
+
+    await get_grams_from_giver(message.address);
+
+    await contracts.deploy({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: walletKeys,
+    });
+    subscription.unsubscribe();
+    expect(transactions.length).toBeGreaterThan(0);
+});
+
+test("Subscribe for messages", async () => {
+    const { contracts, queries, crypto } = tests.client;
+    const docs = [];
+    const subscription = (await queries.messages.subscribe({
+        src: { eq: '1' }
+    }, 'id', (e, doc) => {
+        docs.push(doc);
+    }));
+
+    const walletKeys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: walletKeys,
+    });
+
+    await get_grams_from_giver(message.address);
+
+    await contracts.deploy({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: walletKeys,
+    });
+    subscription.unsubscribe();
+    expect(docs.length).toEqual(0);
+});
+
+test("Transactions with addresses", async () => {
+    const queries = tests.client.queries;
+    const tr = (await queries.transactions.query({}, transactionWithAddresses))[0];
+    expect(tr).toBeTruthy();
 });
 

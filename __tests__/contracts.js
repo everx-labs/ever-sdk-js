@@ -19,7 +19,7 @@
 import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
-import { tests } from "./init-tests";
+import { tests } from "./_/init-tests";
 import { SubscriptionContractPackage } from "./contracts/SubscriptionContract";
 
 import type {
