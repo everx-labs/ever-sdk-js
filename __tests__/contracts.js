@@ -84,7 +84,7 @@ test('Run aborted transaction', async () => {
             abi: WalletContractPackage.abi,
             functionName: "sendTransaction",
             input: {
-                dest: 0,
+                dest: "0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
                 value: 0,
                 bounce: false
             },
@@ -114,30 +114,23 @@ test('Run aborted transaction', async () => {
     }
 });
 
-/*
-test('run', async () => {
-    const { contracts } = tests.client;
-    const result = await contracts.run({
-        address: walletAddress,
-        functionName: 'getVersion',
-        abi: WalletContractPackage.abi,
-        input: {},
-        keyPair: walletKeys,
-    });
-    expect(JSON.stringify(result)).toEqual(`{"output":{"error":"-0x1","version":{"major":"0x0","minor":"0x1"}}}`);
-});
-*/
 test('decodeInputMessageBody', async () => {
     const { contracts } = tests.client;
-    const body = 'te6ccgEBAgEAkQABWD/BEboAAAFt31a11CIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiAQDAVgroxdPfNhBVJLYXeA07DKQvKrlQ1qbP5gjuxdwkMO4hgjdYoA70MvP4p0RbEaOFzcdK1P8hBgssv0lBLMtjCPjvxPjSkA8JkCt/hjUCINRHrwCZtOYRLjk2PAdrwFpH';
+    const body = 'te6ccgEBAgEA3wAB8y88h10AAAFuW6FWJBERERERERERERERERERERERERERERERERERERERERERIXxlwlrjEGJEDhx3dC3WlQeZKzuAYBDOJ8+g7AM+Ek6AF49G0+VDwIkQKBdIh7hi4J5F0T/g5OggwrHI4HGN1KHAAAAAAAAAD2AAADkQAQDADBiSeQ1t5j0LwYo9dx7wefpnCQ3KrYOeAhX9ZUux62yIxWdQdUHJGCXXcoLbrDDduL9sgKSZT3TzYpRKi8YqASF8ZcJa4xBiRA4cd3Qt1pUHmSs7gGAQzifPoOwDPhJO';
 
     const result = await contracts.decodeInputMessageBody({
         abi: SubscriptionContractPackage.abi,
         bodyBase64: body
     });
 
-    expect(result.function).toEqual('getSubscription');
-    expect(result.output).toEqual({subscriptionId: "0x2222222222222222222222222222222222222222222222222222222222222222"});
+    expect(result.function).toEqual('subscribe');
+    expect(result.output).toEqual({
+        period: '0x1c8',
+        pubkey: '0x217c65c25ae31062440e1c77742dd69507992b3b806010ce27cfa0ec033e124e',
+        subscriptionId: '0x1111111111111111111111111111111111111111111111111111111111111111',
+        to: '0:bc7a369f2a1e04488140ba443dc31704f22e89ff07274106158e47038c6ea50e',
+        value: '0x7b'
+    });
 });
 
 const events_package: TONContractPackage = {
@@ -247,26 +240,32 @@ test('changeInitState', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const subscriptionAddress1 = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-    const subscriptionAddress2 = '0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
+    const subscriptionAddress1 = '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+    const subscriptionAddress2 = '0:fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
 
     const deployed1 = await tests.deploy_with_giver({
         package: WalletContractPackage,
         constructorParams: {},
-        initParams: { subscription: subscriptionAddress1 },
+        initParams: {
+            subscription: subscriptionAddress1,
+            owner: "0x" + keys.public
+        },
         keyPair: keys,
     });
 
     const deployed2 = await tests.deploy_with_giver({
         package: WalletContractPackage,
         constructorParams: {},
-        initParams: { subscription: subscriptionAddress2 },
+        initParams: {
+            subscription: subscriptionAddress2,
+            owner: "0x" + keys.public
+        },
         keyPair: keys,
     });
 
     expect(deployed1.address).not.toEqual(deployed2.address);
 
-    const result1 = await contracts.run({
+    const result1 = await contracts.runLocal({
         address: deployed1.address,
         functionName: 'getSubscriptionAccount',
         abi: WalletContractPackage.abi,
@@ -274,7 +273,7 @@ test('changeInitState', async () => {
         keyPair: keys,
     });
 
-    const result2 = await contracts.run({
+    const result2 = await contracts.runLocal({
         address: deployed2.address,
         functionName: 'getSubscriptionAccount',
         abi: WalletContractPackage.abi,
@@ -370,7 +369,7 @@ test('testSetCode', async () => {
 test('testRunBody', async () => {
     const { contracts } = tests.client;
 
-    const walletAddress = '0x2222222222222222222222222222222222222222222222222222222222222222';
+    const walletAddress = '0:2222222222222222222222222222222222222222222222222222222222222222';
 
     const result = await contracts.createRunBody({
         abi: SubscriptionContractPackage.abi,
