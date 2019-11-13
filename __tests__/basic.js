@@ -23,6 +23,7 @@ afterAll(tests.done);
 test('basic', async () => {
 	const client = tests.client;
 	expect(await client.config.getVersion()).toEqual(binariesVersion);
+	console.log('Get client and binaries version:', await client.config.getVersion())
 	try {
         await client.crypto.hdkeyXPrvDerivePath("???", "");
     } catch (error) {
