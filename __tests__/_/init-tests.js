@@ -52,7 +52,7 @@ export const tests: {
     config: {
         defaultWorkchain: 0,
         servers: nodeSe ? serversConfig.local : serversConfig.external,
-        log_verbose: true,
+        log_verbose: false,
     },
     client: new TONClient(),
     init,
