@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
+import { QTransactionProcessingStatus } from "../src/modules/TONContractsModule";
+import { get_grams_from_giver } from "./_/giver";
 import { WalletContractPackage } from "./contracts/WalletContract";
-import { tests } from "./init-tests";
-import get_grams_from_giver from './contracts';
+import { tests } from "./_/init-tests";
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -25,30 +26,31 @@ test('Transaction List', async () => {
     const queries = tests.client.queries;
     const transaction = await queries.transactions.query({
         id: { eq: 'e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465' },
-        status: { in: ["Preliminary", "Proposed", "Finalized"] }
+        status: { in: [0, 1, 2] }
     }, 'id now status', [], 1);
     // expect(transaction[0].id).toEqual('e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465');
 });
 
 test('All Accounts', async () => {
     const queries = tests.client.queries;
-    const docs = await queries.accounts.query({}, 'id storage { balance { Grams } }');
+    const docs = await queries.accounts.query({}, 'id balance');
+    expect(docs.length).toBeGreaterThan(0);
 });
 
 test('Message', async () => {
     const queries = tests.client.queries;
     const messages = await queries.messages.query({
         id: { eq: '3a8e38b419a452fe7a0073e71c083f926055d0f249485ab9f8ca6e9825c20b8c' }
-    }, 'body header { ...on MessageHeaderExtOutMsgInfoVariant { ExtOutMsgInfo { created_at } } }');
+    }, 'body created_at');
     // expect(messages[0].header.ExtOutMsgInfo.created_at).toEqual(1562342740);
 });
 
 test('Ranges', async () => {
     const queries = tests.client.queries;
-    const messages = await queries.messages.query({
-        header: { ExtOutMsgInfo: { created_at: { gt: 1562342740 } } },
-    }, 'body header { ...on MessageHeaderExtOutMsgInfoVariant { ExtOutMsgInfo { created_at } } }');
-    expect(messages[0].header.ExtOutMsgInfo.created_at).toBeGreaterThan(1562342740);
+    const messages = await queries.messages.query(
+        { created_at: { gt: 1562342740 }, },
+        'body created_at');
+    expect(messages[0].created_at).toBeGreaterThan(1562342740);
 });
 
 test('Wait For', async () => {
@@ -56,42 +58,13 @@ test('Wait For', async () => {
     const data = await queries.transactions.waitFor({
         now: { gt: 1563449 },
     }, 'id status');
-    expect(data.status).toEqual('Finalized');
+    expect(data.status).toEqual(QTransactionProcessingStatus.finalized);
 });
 
 const transactionWithAddresses = `
     id
     account_addr
-    in_message {
-      header {
-        ...on MessageHeaderExtOutMsgInfoVariant {
-          ExtOutMsgInfo {
-            dst {
-              ...on MsgAddressExtAddrNoneVariant { AddrNone { None } }
-              ...on MsgAddressExtAddrExternVariant { AddrExtern { AddrExtern } }
-            }
-          }
-        }
-        ...on MessageHeaderExtInMsgInfoVariant {
-          ExtInMsgInfo {
-            src {
-              ...on MsgAddressExtAddrExternVariant { AddrExtern { AddrExtern } }
-              ...on MsgAddressExtAddrNoneVariant { AddrNone { None } }
-            }
-          }
-        }
-        ...on MessageHeaderIntMsgInfoVariant {
-          IntMsgInfo {
-            value { Grams }
-            src {
-              ...on MsgAddressIntAddrVarVariant { AddrVar { address } }
-              ...on MsgAddressIntAddrStdVariant { AddrStd { address } }
-              ...on MsgAddressIntAddrNoneVariant { AddrNone { None } }
-            }
-          }
-        }
-      }
-    }
+    in_message { dst src value }
 `;
 
 test("Subscribe for transactions with addresses", async () => {
@@ -124,17 +97,7 @@ test("Subscribe for messages", async () => {
     const { contracts, queries, crypto } = tests.client;
     const docs = [];
     const subscription = (await queries.messages.subscribe({
-        header: {
-            ExtOutMsgInfo: {
-                src: {
-                    AddrStd: {
-                        address: {
-                            eq: '1',
-                        },
-                    },
-                },
-            },
-        },
+        src: { eq: '1' }
     }, 'id', (e, doc) => {
         docs.push(doc);
     }));

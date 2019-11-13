@@ -13,34 +13,91 @@
  * See the License for the specific TON DEV software governing permissions and
  * limitations under the License.
  */
+// @flow
 
 import type { TONConfigData } from "./modules/TONConfigModule";
-// @flow
-/* eslint-disable class-methods-use-this, no-use-before-define */
-import TONQueriesModule from "./modules/TONQueriesModule";
 import TONConfigModule from './modules/TONConfigModule';
 import TONContractsModule from './modules/TONContractsModule';
 import TONCryptoModule from './modules/TONCryptoModule';
+/* eslint-disable class-methods-use-this, no-use-before-define */
+import TONQueriesModule from "./modules/TONQueriesModule";
 
+import type { TONClientLibrary, TONModuleContext, } from './TONModule';
 import { TONModule } from './TONModule';
 
-import type {
-    TONModuleContext,
-    TONClientLibrary,
-} from './TONModule';
+export class TONClientError extends Error {
+    static source = {
+        CLIENT: 'client',
+        NODE: 'node'
+    };
+    static code = {
+        CLIENT_DOES_NOT_CONFIGURED: 1000,
+        SEND_NODE_REQUEST_FAILED: 1001,
+        RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS: 1002,
+        WAIT_FOR_TIMEOUT: 1003,
+        INTERNAL_ERROR: 1004,
+        QUERY_FAILED: 1005,
+    };
 
-export type TONClientError = {
-    source: string,
-    code: number,
-    message: string,
+    source: string;
+    code: number;
+    data: any;
+
+    constructor(message: string, code: number, source: string, data?: any) {
+        super(message);
+        this.code = code;
+        this.source = source;
+        this.data = data;
+    }
+
+    static internalError(message: string): TONClientError {
+        return new TONClientError(
+            `Internal error: ${message}`,
+            TONClientError.code.INTERNAL_ERROR,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static clientDoesNotConfigured(): TONClientError {
+        return new TONClientError(
+            'TON Client does not configured',
+            TONClientError.code.CLIENT_DOES_NOT_CONFIGURED,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static sendNodeRequestFailed(responseText: string): TONClientError {
+        return new TONClientError(
+            `Send node request failed: ${responseText}`,
+            TONClientError.code.SEND_NODE_REQUEST_FAILED,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static runLocalAccountDoesNotExists(functionName: string, address: string): TONClientError {
+        return new TONClientError(
+            `[${functionName}] run local failed: account [${address}] does not exists`,
+            TONClientError.code.RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static waitForTimeout() {
+        return new TONClientError(
+            'Wait for operation rejected on timeout',
+            TONClientError.code.WAIT_FOR_TIMEOUT,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static queryFailed(errors: Error[]) {
+        return new TONClientError(
+            `Query failed: ${errors.map(x => x.message || x.toString()).join('\n')}`,
+            TONClientError.code.QUERY_FAILED,
+            TONClientError.source.CLIENT,
+        );
+    }
 }
-
-export const TONClientErrorSource = {
-    sdk: 'sdk',
-    tvm: 'tvm',
-    stdlib: 'stdlib',
-    contract: 'contract'
-};
 
 class ModuleContext implements TONModuleContext {
     modules: Map<string, TONModule>;

@@ -16,182 +16,17 @@
 
 // @flow
 
-import type { TONContractPackage } from '../src/modules/TONContractsModule';
+import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { WalletContractPackage } from './contracts/WalletContract';
-import { tests, nodeSe } from "./init-tests";
+import { tests } from "./_/init-tests";
+import { SubscriptionContractPackage } from "./contracts/SubscriptionContract";
 
-const nodeSeGiverAddress = 'a46af093b38fcae390e9af5104a93e22e82c29bcb35bf88160e4478417028884';
-const nodeSeGiverAbi =
-{
-	"ABI version": 1,
-	"functions": [
-		{
-			"name": "constructor",
-			"inputs": [
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "sendGrams",
-			"inputs": [
-				{"name":"dest","type":"uint256"},
-				{"name":"amount","type":"uint64"}
-			],
-			"outputs": [
-			]
-		}
-	],
-	"events": [
-	],
-	"data": [
-	]
-};
+import type {
+    TONContractLoadResult,
+    TONContractPackage
+} from "../types";
 
-const giverWalletAddressBase64 = 'UQC7oawjsBAYgInWIBDdsA1ZTADw4hd5Tz8rU6gYlOxxRrJ6';
-const giverWalletAddressHex = 'BBA1AC23B010188089D62010DDB00D594C00F0E217794F3F2B53A81894EC7146';
-
-const giverWalletKeys = {
-    secret: '2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe',
-    public: 'd542f44146f169c6726c8cf70e4cbb3d33d8d842a4afd799ac122c5808d81ba3',
-};
-
-const GiverWalletPackage = {
-    abi: {
-        "ABI version": 1,
-        "functions": [
-            {
-                "name": "constructor",
-                "inputs": [
-                ],
-                "outputs": [
-                ]
-            },
-            {
-                "name": "sendTransaction",
-                "inputs": [
-                    {"name":"dest","type":"uint256"},
-                    {"name":"value","type":"uint128"},
-                    {"name":"bounce","type":"bool"}
-                ],
-                "outputs": [
-                ]
-            },
-            {
-                "name": "setSubscriptionAccount",
-                "inputs": [
-                    {"name":"addr","type":"uint256"}
-                ],
-                "outputs": [
-                ]
-            },
-            {
-                "name": "getSubscriptionAccount",
-                "inputs": [
-                ],
-                "outputs": [
-                    {"name":"value0","type":"uint256"}
-                ]
-            }
-        ],
-        "events": [
-        ],
-        "data": [
-        ]
-    },
-    imageBase64: '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',
-};
-
-
-async function check_giver() {
-    const ton = tests.client;
-
-    const deployMsg = await ton.contracts.createDeployMessage({
-        package: GiverWalletPackage,
-        constructorParams: {},
-        keyPair: giverWalletKeys,
-    });
-
-    const accounts = await ton.queries.accounts.query({
-        id: { eq: deployMsg.address }
-    },
-    `
-        storage {
-            balance { Grams }
-            state {
-                ...on AccountStorageStateAccountActiveVariant {
-                    AccountActive { split_depth } 
-                }
-            }
-        }
-    `);
-
-    if (accounts.length === 0) {
-        throw "Giver wallet does not exist. Send some grams to " + giverWalletAddressBase64 + " (" + deployMsg.address + ")"
-    }
-
-    if (!(accounts[0]["storage"]["balance"]["Grams"]) ||
-        parseInt(accounts[0]["storage"]["balance"]["Grams"], 10) < 500000000)
-    {
-        throw "Giver has no money. Send some grams to " + giverWalletAddressBase64 + " (" + deployMsg.address + ")"
-    }
-
-    if (!(accounts[0].storage.state.AccountActive)) {
-        console.log('No giver. Deploy');
-
-        await ton.contracts.deploy({
-            package: GiverWalletPackage,
-            constructorParams: {},
-            keyPair: giverWalletKeys,
-        });
-
-        console.log('Giver deployed');
-    }
-}
-
-export default async function get_grams_from_giver(account) {
-    const { contracts, queries } = tests.client;
-
-    if (nodeSe) {
-        const result = await contracts.run({
-            address: nodeSeGiverAddress,
-            functionName: 'sendGrams',
-            abi: nodeSeGiverAbi,
-            input: {
-                dest: `0x${account}`,
-                amount: 500000000
-            },
-            keyPair: null,
-        });
-    } else {
-        await check_giver();
-        const result = await contracts.run({
-            address: giverWalletAddressHex,
-            functionName: 'sendTransaction',
-            abi: GiverWalletPackage.abi,
-            input: {
-                dest: `0x${account}`,
-                value: 500000000,
-                bounce: false
-            },
-            keyPair: giverWalletKeys,
-        });
-    }
-
-
-    const wait = await queries.accounts.waitFor(
-        {
-            id: { eq: account },
-            storage: {
-                balance: {
-                    Grams: { gt: "0" }
-                }
-            }
-        },
-		'id storage {balance {Grams}}'
-    );
-};
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -201,71 +36,103 @@ const walletKeys = {
     secret: '7bfe77bbd3ad57ada9ed323da83504723e3af7cd3ba68b02d3c8335f75e0a24e',
 };
 
-const walletAddress = 'adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
+const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
 
 test('load', async () => {
     const { contracts } = tests.client;
     const contract = await contracts.load({
-        address: '0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
+        address: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
         includeImage: false,
     });
     expect(contract.id).toBeNull();
     expect(contract.balanceGrams).toBeNull();
 
-    await get_grams_from_giver(walletAddress);
+    await tests.get_grams_from_giver(walletAddress);
 
-    const w = await contracts.load({
+    const w: TONContractLoadResult = await contracts.load({
         address: walletAddress,
         includeImage: false,
     });
     expect(w.id).toEqual(walletAddress);
-    expect(Number.parseInt(w.balanceGrams)).toBeGreaterThan(0);
+    expect(Number.parseInt(w.balanceGrams || '')).toBeGreaterThan(0);
 });
 
 test('deploy_new', async () => {
-    const { contracts, crypto } = tests.client;
+    const { crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const message = await contracts.createDeployMessage({
-        package: WalletContractPackage,
-        constructorParams: {},
-        keyPair: keys,
-    });
-
-    await get_grams_from_giver(message.address);
-
-    await contracts.deploy({
+    await tests.deploy_with_giver({
         package: WalletContractPackage,
         constructorParams: {},
         keyPair: keys,
     });
 });
-/*
-test('run', async () => {
-    const { contracts } = tests.client;
-    const result = await contracts.run({
-        address: walletAddress,
-        functionName: 'getVersion',
-        abi: WalletContractPackage.abi,
-        input: {},
-        keyPair: walletKeys,
+
+test('Run aborted transaction', async () => {
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+
+    const address =  await tests.deploy_with_giver({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
     });
-    expect(JSON.stringify(result)).toEqual(`{"output":{"error":"-0x1","version":{"major":"0x0","minor":"0x1"}}}`);
+
+    try {
+        await contracts.run({
+            address: address.address,
+            abi: WalletContractPackage.abi,
+            functionName: "sendTransaction",
+            input: {
+                dest: "0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+                value: 0,
+                bounce: false
+            },
+            keyPair: keys
+        });
+    } catch (error) {
+        expect(error.source).toEqual('node');
+        expect(error.code).toEqual(102);
+        expect(error.message).toEqual('VM terminated with exception (102) at computeVm');
+        expect(error.data.phase).toEqual('computeVm');
+        expect(error.data.transaction_id).toBeTruthy();
+    }
+
+    try {
+        await contracts.run({
+            address: address.address,
+            abi: WalletContractPackage.abi,
+            functionName: "sendTransaction",
+            input: {},
+            keyPair: keys
+        });
+    } catch (error) {
+        //console.log(error);
+        expect(error.source).toEqual('client');
+        expect(error.code).toEqual(3012);
+        expect(error.data).toBeNull();
+    }
 });
 
 test('decodeInputMessageBody', async () => {
     const { contracts } = tests.client;
-    const body = 'te6ccoEBAgEAcwARcwEbACfvUIcBgJTr3AOCAGABAMDr2GubWXYR6wuk6WFn4btjW3w+DbidhSrKArHbqCaunLGN9LwAbQFT9kyOpN6DR6DJbuKkvC94KwJgan7xeTUHS89H/vKbWZbzZEHu4euhqvQE2I9aW+PNdn2BKZJXlA4=';
+    const body = 'te6ccgEBAgEA3wAB8y88h10AAAFuW6FWJBERERERERERERERERERERERERERERERERERERERERERIXxlwlrjEGJEDhx3dC3WlQeZKzuAYBDOJ8+g7AM+Ek6AF49G0+VDwIkQKBdIh7hi4J5F0T/g5OggwrHI4HGN1KHAAAAAAAAAD2AAADkQAQDADBiSeQ1t5j0LwYo9dx7wefpnCQ3KrYOeAhX9ZUux62yIxWdQdUHJGCXXcoLbrDDduL9sgKSZT3TzYpRKi8YqASF8ZcJa4xBiRA4cd3Qt1pUHmSs7gGAQzifPoOwDPhJO';
 
     const result = await contracts.decodeInputMessageBody({
-        abi: WalletContractPackage.abi,
+        abi: SubscriptionContractPackage.abi,
         bodyBase64: body
     });
 
-    expect(result.function).toEqual('createLimit');
-    expect(result.output).toEqual({ type: "0x1", value: "0x3b9aca00", meta: "x01" });
+    expect(result.function).toEqual('subscribe');
+    expect(result.output).toEqual({
+        period: '0x1c8',
+        pubkey: '0x217c65c25ae31062440e1c77742dd69507992b3b806010ce27cfa0ec033e124e',
+        subscriptionId: '0x1111111111111111111111111111111111111111111111111111111111111111',
+        to: '0:bc7a369f2a1e04488140ba443dc31704f22e89ff07274106158e47038c6ea50e',
+        value: '0x7b'
+    });
 });
-*/
+
 const events_package: TONContractPackage = {
     abi: {
         "ABI version": 1,
@@ -308,28 +175,20 @@ const events_package: TONContractPackage = {
         "data": [
         ]
     },
-    imageBase64: "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"
+    imageBase64: "te6ccgECKQEABb0AAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KATBwEK9KQg9KEIAgPNQBAJAgFiCwoAB9GG2YQCASAPDAIBIA4NADs+ADIghBFty4OghB/////sM8LHyHPC//wFCAx2zCAANT4AMiCEEW3Lg6CEH////+wzwsfIc8L//AUMIAABuAIBahIRADXX9+ALmytzIvsrw6L7a5s5B8EvwUeAg4fYAYQAjdf36AsTq0tjIvsrw6L7a5s+Q554WAkOeLOGeFgJFnhZ+4Z4WPuGeFgBBnmpJnmLjQXks456AR54vKuOegkebxEGSCL4JtmEAgEgGhQB4P/+/QFtYWluX2V4dGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYMSEVAfiOdf7+AWdldF9tc2dfcHVia2V5IMcCjhb+/wFnZXRfbXNnX3B1YmtleTFwMdsw4NUgxwGOF/7/AWdldF9tc2dfcHVia2V5MnAxMdsw4CCBAgDXIdcL/yL5ASIi+RDyqP7/AWdldF9tc2dfcHVia2V5MyADXwPbMNgixwKzFgHGlCLUMTPeJCIi/vkBc3RvcmVfc2lnbwAhb4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwGOE/78AW1zZ19pc19lbXB0eV8G2zDgItMfNCPTPzUgFwF2joDYji/+/gFtYWluX2V4dGVybmFsMiQiVXFfCPFAAf7+AW1haW5fZXh0ZXJuYWwzXwjbMOCAfPLwXwgYAf7++wFyZXBsYXlfcHJvdHBwcO1E0CD0BDI0IIEAgNdFmiDTPzIzINM/MjKWgggbd0Ay4iIluSX4I4ED6KgkoLmwjinIJAH0ACXPCz8izws/Ic8WIMntVP78AXJlcGxheV9wcm90Mn8GXwbbMOD+/AFyZXBsYXlfcHJvdDNwBV8FGQAE2zACASAeGwIBSB0cAA+5j9xA5htmEAANuLblwdtmEAIBICAfAK+6Qlje3T/zDwI8iCECQlje2CEIAAAACxzwsfIc8L//AU/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UdvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwLbMIAgEgJCEBCbiJACdQIgH+/v0BY29uc3RyX3Byb3RfMHBwgggbd0DtRNAg9AQyNCCBAIDXRY4UINI/MjMg0j8yMiBx10WUgHvy8N7eyCQB9AAjzws/Is8LP3HPQSHPFiDJ7VT+/QFjb25zdHJfcHJvdF8xXwX4ADDwIf78AXB1c2hwZGM3dG9jNO1E0PQByCMARO1HbxIB9AAhzxYgye1U/v0BcHVzaHBkYzd0b2M0MF8C2zACAWImJQCAsulhfNP/MPAi/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UdvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwLbMAEC2ScB/v79AW1haW5faW50ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgkIXD++QFzdG9yZV9zaWdvACEoAPxvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAI4cIXC6jhIighBcfuIHVVFfBvFAAV8G2zDgXwbbMOD+/gFtYWluX2ludGVybmFsMSLTHzQicbqeIIAkVWFfB/FAAV8H2zDgIyFVYV8H8UABXwc="
 };
 
 test('filterOutput', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const message = await contracts.createDeployMessage({
+    const deployed = await tests.deploy_with_giver({
         package: events_package,
         constructorParams: {},
         keyPair: keys,
     });
 
-    await get_grams_from_giver(message.address);
-
-    const deployed = await contracts.deploy({
-        package: events_package,
-        constructorParams: {},
-        keyPair: keys,
-    });
-
-    const resultEmit = await contracts.run({
+    await contracts.run({
         address: deployed.address,
         functionName: 'emitValue',
         abi: events_package.abi,
@@ -344,14 +203,14 @@ test('filterOutput', async () => {
         input: { id: "0" },
         keyPair: keys,
     });
-    expect(JSON.stringify(resultReturn)).toEqual(`{"output":{"value0":"0x0"}}`);
+    expect(JSON.stringify(resultReturn.output)).toEqual(`{"value0":"0x0"}`);
 });
 
 test('External Signing', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
-    
-    var contract_package = events_package;
+
+    const contract_package = events_package;
     contract_package.abi["setTime"] = false;
 
     const deployParams = {
@@ -381,46 +240,32 @@ test('changeInitState', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const subscriptionAddess1 = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-    const subscriptionAddess2 = '0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
+    const subscriptionAddress1 = '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+    const subscriptionAddress2 = '0:fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
 
-    const message1 = await contracts.createDeployMessage({
+    const deployed1 = await tests.deploy_with_giver({
         package: WalletContractPackage,
         constructorParams: {},
-        initParams: { subscription: subscriptionAddess1 },
+        initParams: {
+            subscription: subscriptionAddress1,
+            owner: "0x" + keys.public
+        },
         keyPair: keys,
     });
 
-    const message2 = await contracts.createDeployMessage({
+    const deployed2 = await tests.deploy_with_giver({
         package: WalletContractPackage,
         constructorParams: {},
-        initParams: { subscription: subscriptionAddess2 },
+        initParams: {
+            subscription: subscriptionAddress2,
+            owner: "0x" + keys.public
+        },
         keyPair: keys,
     });
 
-    expect(message1.address).not.toEqual(message2.address);
+    expect(deployed1.address).not.toEqual(deployed2.address);
 
-    await get_grams_from_giver(message1.address);
-    await get_grams_from_giver(message2.address);
-
-    const deployed1 = await contracts.deploy({
-        package: WalletContractPackage,
-        constructorParams: {},
-        initParams: { subscription: subscriptionAddess1 },
-        keyPair: keys,
-    });
-
-    const deployed2 = await contracts.deploy({
-        package: WalletContractPackage,
-        constructorParams: {},
-        initParams: { subscription: subscriptionAddess2 },
-        keyPair: keys,
-    });
-
-    expect(deployed1.address).toEqual(message1.address);
-    expect(deployed2.address).toEqual(message2.address);
-
-    const result1 = await contracts.run({
+    const result1 = await contracts.runLocal({
         address: deployed1.address,
         functionName: 'getSubscriptionAccount',
         abi: WalletContractPackage.abi,
@@ -428,7 +273,7 @@ test('changeInitState', async () => {
         keyPair: keys,
     });
 
-    const result2 = await contracts.run({
+    const result2 = await contracts.runLocal({
         address: deployed2.address,
         functionName: 'getSubscriptionAccount',
         abi: WalletContractPackage.abi,
@@ -436,6 +281,174 @@ test('changeInitState', async () => {
         keyPair: keys,
     });
 
-    expect(result1).toEqual({output: { value0: subscriptionAddess1 }});
-    expect(result2).toEqual({output: { value0: subscriptionAddess2 }});
+    expect(result1.output).toEqual({ value0: subscriptionAddress1 });
+    expect(result2.output).toEqual({ value0: subscriptionAddress2 });
+});
+
+const setCode1_package: TONContractPackage = {
+    abi: {
+        "ABI version": 1,
+        "functions": [
+            {
+                "name": "main",
+                "inputs": [
+                    {"name":"newcode","type":"cell"}
+                ],
+                "outputs": [
+                    {"name":"value0","type":"uint256"}
+                ]
+            },
+            {
+                "name": "getVersion",
+                "inputs": [
+                ],
+                "outputs": [
+                    {"name":"value0","type":"uint256"}
+                ]
+            },
+            {
+                "name": "constructor",
+                "inputs": [
+                ],
+                "outputs": [
+                ]
+            }
+        ],
+        "events": [
+        ],
+        "data": [
+        ]
+    } ,
+    imageBase64: "te6ccgECJQEABSUAAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KARBwEK9KQg9KEIAgPNQA4JAgFiCwoAB9GG2YQCAVgNDAALPgAcdswgABM+AAg+wRwMdswgAgFqEA8ANdf34AubK3Mi+yvDovtrmzkHwS/BR4CDh9gBhACN1/foCxOrS2Mi+yvDovtrmz5DnnhYCQ54s4Z4WAkWeFn7hnhY+4Z4WAEGeakmeYuNBeSzjnoBHni8q456CR5vEQZIIvgm2YQCASAYEgHg//79AW1haW5fZXh0ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgxIRMB+I51/v4BZ2V0X21zZ19wdWJrZXkgxwKOFv7/AWdldF9tc2dfcHVia2V5MXAx2zDg1SDHAY4X/v8BZ2V0X21zZ19wdWJrZXkycDEx2zDgIIECANch1wv/IvkBIiL5EPKo/v8BZ2V0X21zZ19wdWJrZXkzIANfA9sw2CLHArMUAcaUItQxM94kIiL++QFzdG9yZV9zaWdvACFvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAY4T/vwBbXNnX2lzX2VtcHR5XwbbMOAi0x80I9M/NSAVAXaOgNiOL/7+AW1haW5fZXh0ZXJuYWwyJCJVcV8I8UAB/v4BbWFpbl9leHRlcm5hbDNfCNsw4IB88vBfCBYB/v77AXJlcGxheV9wcm90cHBw7UTQIPQEMjQggQCA10WaINM/MjMg0z8yMpaCCBt3QDLiIiW5JfgjgQPoqCSgubCOKcgkAfQAJc8LPyLPCz8hzxYgye1U/vwBcmVwbGF5X3Byb3QyfwZfBtsw4P78AXJlcGxheV9wcm90M3AFXwUXAATbMAIBIB4ZAgEgGxoAQ7qOEp69Qw8CLIghBo4SnrghCAAAAAsc8LHyHPC//wFNswgCAVgdHAAPtx+4gcw2zCAAQbdr4C3MPAjyIIQVa+At4IQgAAAALHPCx8hzwv/8BTbMIAIBSCIfAQm4iQAnUCAB/v79AWNvbnN0cl9wcm90XzBwcIIIG3dA7UTQIPQEMjQggQCA10WOFCDSPzIzINI/MjIgcddFlIB78vDe3sgkAfQAI88LPyLPCz9xz0EhzxYgye1U/v0BY29uc3RyX3Byb3RfMV8F+AAw/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UchADxvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwIBAtwjAf7+/QFtYWluX2ludGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYJCFw/vkBc3RvcmVfc2lnbwAhJAD8b4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwCOHCFwuo4SIoIQXH7iB1VRXwbxQAFfBtsw4F8G2zDg/v4BbWFpbl9pbnRlcm5hbDEi0x80InG6niCAJFVhXwfxQAFfB9sw4CMhVWFfB/FAAV8H"
+};
+
+const setCode2_imageBase64 = 'te6ccgECJQEABSUAAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KARBwEK9KQg9KEIAgPNQA4JAgFiCwoAB9GG2YQCAVgNDAALPgActswgABM+AAg+wRwMdswgAgFqEA8ANdf34AubK3Mi+yvDovtrmzkHwS/BR4CDh9gBhACN1/foCxOrS2Mi+yvDovtrmz5DnnhYCQ54s4Z4WAkWeFn7hnhY+4Z4WAEGeakmeYuNBeSzjnoBHni8q456CR5vEQZIIvgm2YQCASAYEgHg//79AW1haW5fZXh0ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgxIRMB+I51/v4BZ2V0X21zZ19wdWJrZXkgxwKOFv7/AWdldF9tc2dfcHVia2V5MXAx2zDg1SDHAY4X/v8BZ2V0X21zZ19wdWJrZXkycDEx2zDgIIECANch1wv/IvkBIiL5EPKo/v8BZ2V0X21zZ19wdWJrZXkzIANfA9sw2CLHArMUAcaUItQxM94kIiL++QFzdG9yZV9zaWdvACFvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAY4T/vwBbXNnX2lzX2VtcHR5XwbbMOAi0x80I9M/NSAVAXaOgNiOL/7+AW1haW5fZXh0ZXJuYWwyJCJVcV8I8UAB/v4BbWFpbl9leHRlcm5hbDNfCNsw4IB88vBfCBYB/v77AXJlcGxheV9wcm90cHBw7UTQIPQEMjQggQCA10WaINM/MjMg0z8yMpaCCBt3QDLiIiW5JfgjgQPoqCSgubCOKcgkAfQAJc8LPyLPCz8hzxYgye1U/vwBcmVwbGF5X3Byb3QyfwZfBtsw4P78AXJlcGxheV9wcm90M3AFXwUXAATbMAIBIB4ZAgEgGxoAQ7qOEp69Qw8CLIghBo4SnrghCAAAAAsc8LHyHPC//wFNswgCAVgdHAAPtx+4gcw2zCAAQbdr4C3MPAjyIIQVa+At4IQgAAAALHPCx8hzwv/8BTbMIAIBSCIfAQm4iQAnUCAB/v79AWNvbnN0cl9wcm90XzBwcIIIG3dA7UTQIPQEMjQggQCA10WOFCDSPzIzINI/MjIgcddFlIB78vDe3sgkAfQAI88LPyLPCz9xz0EhzxYgye1U/v0BY29uc3RyX3Byb3RfMV8F+AAw/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UchADxvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwIBAtwjAf7+/QFtYWluX2ludGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYJCFw/vkBc3RvcmVfc2lnbwAhJAD8b4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwCOHCFwuo4SIoIQXH7iB1VRXwbxQAFfBtsw4F8G2zDg/v4BbWFpbl9pbnRlcm5hbDEi0x80InG6niCAJFVhXwfxQAFfB9sw4CMhVWFfB/FAAV8H';
+
+
+test('testSetCode', async () => {
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+
+    const deployed = await tests.deploy_with_giver({
+        package: setCode1_package,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    const version1 = await contracts.run({
+        address: deployed.address,
+        functionName: 'getVersion',
+        abi: setCode1_package.abi,
+        input: { },
+        keyPair: keys,
+    });
+
+    const code = await contracts.getCodeFromImage({
+        imageBase64: setCode2_imageBase64
+    });
+
+    await contracts.run({
+        address: deployed.address,
+        functionName: 'main',
+        abi: setCode1_package.abi,
+        input: { newcode: code.codeBase64 },
+        keyPair: keys,
+    });
+
+    const version2 = await contracts.run({
+        address: deployed.address,
+        functionName: 'getVersion',
+        abi: setCode1_package.abi,
+        input: { },
+        keyPair: keys,
+    });
+
+    expect(version1).not.toEqual(version2);
+});
+
+test('testRunBody', async () => {
+    const { contracts } = tests.client;
+
+    const walletAddress = '0:2222222222222222222222222222222222222222222222222222222222222222';
+
+    const result = await contracts.createRunBody({
+        abi: SubscriptionContractPackage.abi,
+        function: "constructor",
+        params: {wallet: walletAddress},
+        keyPair: walletKeys,
+    });
+
+    const parseResult = await contracts.decodeInputMessageBody({
+        abi: SubscriptionContractPackage.abi,
+        bodyBase64: result.bodyBase64,
+    });
+
+    expect(parseResult.function).toEqual('constructor');
+    expect(parseResult.output).toEqual({wallet: walletAddress});
+
+    const resultInternal = await contracts.createRunBody({
+        abi: SubscriptionContractPackage.abi,
+        function: "constructor",
+        params: {wallet: walletAddress},
+        internal: true,
+    });
+
+    const parseResultInternal = await contracts.decodeInputMessageBody({
+        abi: SubscriptionContractPackage.abi,
+        bodyBase64: resultInternal.bodyBase64,
+        internal: true,
+    });
+
+    expect(parseResultInternal.function).toEqual('constructor');
+    expect(parseResultInternal.output).toEqual({wallet: walletAddress});
+});
+
+test('Address conversion', async () => {
+    const { contracts } = tests.client;
+
+    const accountId = "fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
+    const hex = "-1:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
+    const hexWorkchain0 = "0:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
+    const base64 = "Uf/8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15+KsQHFLbKSMiYG+9";
+    const base64_url = "kf_8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15-KsQHFLbKSMiYIny";
+
+    let convertedAddress = await contracts.convertAddress({
+        address: accountId,
+        convertTo: TONAddressStringVariant.Hex
+    });
+    expect(convertedAddress.address).toEqual(hexWorkchain0);
+
+    convertedAddress = await contracts.convertAddress({
+        address: hex,
+        convertTo: TONAddressStringVariant.AccountId
+    });
+    expect(convertedAddress.address).toEqual(accountId);
+
+    convertedAddress = await contracts.convertAddress({
+        address: hex,
+        convertTo: TONAddressStringVariant.Base64,
+        base64Params: {
+            test: false,
+            bounce: false,
+            url: false
+        }
+    });
+    expect(convertedAddress.address).toEqual(base64);
+
+    convertedAddress = await contracts.convertAddress({
+        address: base64,
+        convertTo: TONAddressStringVariant.Base64,
+        base64Params: {
+            test: true,
+            bounce: true,
+            url: true
+        }
+    });
+    expect(convertedAddress.address).toEqual(base64_url);
+
+    convertedAddress = await contracts.convertAddress({
+        address: base64_url,
+        convertTo: TONAddressStringVariant.Hex
+    });
+    expect(convertedAddress.address).toEqual(hex);
 });

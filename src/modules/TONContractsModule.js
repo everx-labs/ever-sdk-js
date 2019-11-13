@@ -13,178 +13,180 @@
  * See the License for the specific TON DEV software governing permissions and
  * limitations under the License.
  */
-
 // @flow
-import { TONClient } from '../TONClient';
-import TONConfigModule from './TONConfigModule';
-import type { TONKeyPairData } from './TONCryptoModule';
+
+import type {
+    QAccount,
+    QMessage,
+    QTransaction,
+    TONContractConvertAddressParams,
+    TONContractConvertAddressResult,
+    TONContractCreateRunBodyParams,
+    TONContractCreateRunBodyResult,
+    TONContractCreateSignedDeployMessageParams,
+    TONContractCreateSignedMessageParams,
+    TONContractCreateSignedRunMessageParams,
+    TONContractDecodeMessageBodyParams,
+    TONContractDecodeMessageBodyResult,
+    TONContractDecodeRunOutputParams,
+    TONContractDeployMessage,
+    TONContractDeployParams,
+    TONContractDeployResult,
+    TONContractGetCodeFromImageParams,
+    TONContractGetCodeFromImageResult,
+    TONContractGetDeployDataParams,
+    TONContractGetDeployDataResult,
+    TONContractGetFunctionIdParams,
+    TONContractGetFunctionIdResult,
+    TONContractLoadParams,
+    TONContractLoadResult,
+    TONContractLocalRunParams,
+    TONContractMessage,
+    TONContractRunMessage,
+    TONContractRunParams,
+    TONContractRunResult,
+    TONContractUnsignedDeployMessage,
+    TONContractUnsignedMessage,
+    TONContractUnsignedRunMessage
+} from "../../types";
+import { TONClient, TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
+import TONConfigModule from './TONConfigModule';
 import TONQueriesModule from './TONQueriesModule';
 
-export type TONContractABIParameter = {
-    name: string,
-    type: string,
-}
 
-export type TONContractABIFunction = {
-    name: string,
-    signed?: boolean,
-    inputs: TONContractABIParameter[],
-    outputs: TONContractABIParameter[],
+export const TONAddressStringVariant = {
+    AccountId: 'AccountId',
+    Hex: 'Hex',
+    Base64: 'Base64',
 };
 
-export type TONContractABI = {
-    'ABI version': number,
-    functions: TONContractABIFunction[],
+export const TONClientTransactionPhase = {
+    storage: 'storage',
+    computeSkipped: 'computeSkipped',
+    computeVm: "computeVm",
+    action: 'action',
+    unknown: 'unknown'
 };
 
-export type TONContractPackage = {
-    abi: TONContractABI,
-    imageBase64: string,
-}
+export const TONClientComputeSkippedStatus = {
+    noState: 0,
+    badState: 1,
+    noGas: 2
+};
 
-type TONContractLoadParams = {
-    address: string,
-    includeImage: boolean,
-}
+export const TONClientStorageStatus = {
+    unchanged: 0,
+    frozen: 1,
+    deleted: 2
+};
 
-type TONContractLoadResult = {
-    id: ?string,
-    balanceGrams: ?string,
-    imageBase64: ?string,
-}
+export const QInMsgType = {
+    external: 0,
+    ihr: 1,
+    immediately: 2,
+    final: 3,
+    transit: 4,
+    discardedFinal: 5,
+    discardedTransit: 6,
+};
 
-type TONContractDeployParams = {
-    package: TONContractPackage,
-    constructorParams: any,
-    initParams?: any,
-    keyPair: TONKeyPairData,
-}
+export const QOutMsgType = {
+    external: 0,
+    immediately: 1,
+    outMsgNew: 2,
+    transit: 3,
+    dequeueImmediately: 4,
+    dequeue: 5,
+    transitRequired: 6,
+    none: -1,
+};
 
-type TONContractDeployResult = {
-    address: string,
-    alreadyDeployed: boolean,
-}
+export const QMessageType = {
+    internal: 0,
+    extIn: 1,
+    extOut: 2,
+};
 
-type TONContractUnsignedMessage = {
-    unsignedBytesBase64: string,
-    bytesToSignBase64: string,
-}
+export const QMessageProcessingStatus = {
+    unknown: 0,
+    queued: 1,
+    processing: 2,
+    preliminary: 3,
+    proposed: 4,
+    finalized: 5,
+    refused: 6,
+    transiting: 7,
+};
 
-type TONContractMessage = {
-    messageId: string,
-    messageIdBase64: string,
-    messageBodyBase64: string,
-}
+export const QBlockProcessingStatus = {
+    unknown: 0,
+    proposed: 1,
+    finalized: 2,
+    refused: 3,
+};
 
-type TONContractUnsignedDeployMessage = {
-    address: string,
-    signParams: TONContractUnsignedMessage,
-}
+export const QSplitType = {
+    none: 0,
+    split: 2,
+    merge: 3,
+};
 
-type TONContractUnsignedRunMessage = {
-    abi: TONContractABI,
-    functionName: string,
-    signParams: TONContractUnsignedMessage,
-}
+export const QAccountType = {
+    uninit: 0,
+    active: 1,
+    frozen: 2,
+};
 
-type TONContractDeployMessage = {
-    address: string,
-    message: TONContractMessage;
-}
+export const QTransactionType = {
+    ordinary: 0,
+    storage: 1,
+    tick: 2,
+    tock: 3,
+    splitPrepare: 4,
+    splitInstall: 5,
+    mergePrepare: 6,
+    mergeInstall: 7,
+};
 
-type TONContractRunMessage = {
-    abi: TONContractABI,
-    functionName: string,
-    message: TONContractMessage;
-}
+export const QTransactionProcessingStatus = {
+    unknown: 0,
+    preliminary: 1,
+    proposed: 2,
+    finalized: 3,
+    refused: 4,
+};
 
-type TONContractCreateSignedMessageParams = {
-    unsignedBytesBase64: string,
-    signBytesBase64: string,
-    publicKeyHex: string,
-}
+export const QAccountStatus = {
+    uninit: 0,
+    active: 1,
+    frozen: 2,
+    nonExist: 3,
+};
 
-type TONContractCreateSignedDeployMessageParams = {
-    address: string,
-    createSignedParams: TONContractCreateSignedMessageParams,
-}
+export const QAccountStatusChange = {
+    unchanged: 0,
+    frozen: 1,
+    deleted: 2,
+};
 
-type TONContractCreateSignedRunMessageParams = {
-    abi: TONContractABI,
-    functionName: string,
-    createSignedParams: TONContractCreateSignedMessageParams,
-}
+export const QComputeType = {
+    skipped: 0,
+    vm: 1,
+};
 
-type TONContractRunParams = {
-    address: string,
-    abi: TONContractABI,
-    functionName: string,
-    input: any,
-    keyPair: TONKeyPairData,
-}
+export const QSkipReason = {
+    noState: 0,
+    badState: 1,
+    noGas: 2,
+};
 
-type TONContractLocalRunParams = {
-    address: string,
-    abi: TONContractABI,
-    functionName: string,
-    input: any,
-    keyPair?: TONKeyPairData,
-}
+export const QBounceType = {
+    negFunds: 0,
+    noFunds: 1,
+    ok: 2,
+};
 
-type TONContractDecodeRunOutputParams = {
-    abi: TONContractABI,
-    functionName: string,
-    bodyBase64: string,
-}
-
-type TONContractDecodeMessageBodyParams = {
-    abi: TONContractABI,
-    bodyBase64: string,
-}
-
-type TONContractRunResult = {
-    output: any,
-}
-
-type TONContractDecodeMessageBodyResult = {
-    function: string,
-    output: any,
-}
-
-type QTransaction = {
-    id: string,
-    description: {
-        Ordinary: {
-            aborted: boolean,
-        }
-    },
-    status: string,
-    out_msgs: string[],
-}
-
-type QAddrStd = {
-    AddrStd: {
-        workchain_id: number,
-        address: string,
-    }
-}
-
-type QAddr = 'AddrNone' | QAddrStd
-
-
-type QMessage = {
-    id: string,
-    header: {
-        ExtOutMsgInfo?: {
-            src: QAddr,
-            dst: QAddr,
-            created_at: number,
-        },
-    },
-    body: string,
-    status: string,
-}
 
 export default class TONContractsModule extends TONModule {
     config: TONConfigModule;
@@ -197,26 +199,18 @@ export default class TONContractsModule extends TONModule {
     }
 
     async load(params: TONContractLoadParams): Promise<TONContractLoadResult> {
-        const accounts: ?{
-            storage: {
-                balance: {
-                    Grams: string
-                }
-            }
-        }[] = await this.queries.accounts.query({
+        const accounts: QAccount[] = await this.queries.accounts.query({
             id: { eq: params.address },
-        }, 'storage { balance { Grams } }');
+        }, 'balance');
         if (accounts && accounts.length > 0) {
             return {
                 id: params.address,
-                balanceGrams: accounts[0].storage.balance.Grams,
-                imageBase64: null,
+                balanceGrams: accounts[0].balance,
             };
         }
         return {
             id: null,
             balanceGrams: null,
-            imageBase64: null,
         };
     }
 
@@ -240,18 +234,19 @@ export default class TONContractsModule extends TONModule {
     // Message creation
 
     async createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage> {
+        this.config.log('createDeployMessage', params);
         const message: {
             address: string,
             messageId: string,
             messageIdBase64: string,
             messageBodyBase64: string,
-
         } = await this.requestLibrary('contracts.deploy.message', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             keyPair: params.keyPair,
+            workchainId: params.workchainId,
         });
         return {
             message: {
@@ -265,6 +260,7 @@ export default class TONContractsModule extends TONModule {
 
 
     async createRunMessage(params: TONContractRunParams): Promise<TONContractRunMessage> {
+        this.config.log('createRunMessage', params);
         const message = await this.requestLibrary('contracts.run.message', {
             address: params.address,
             abi: params.abi,
@@ -289,6 +285,7 @@ export default class TONContractsModule extends TONModule {
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             publicKeyHex: params.keyPair.public,
+            workchainId: params.workchainId,
         });
         return {
             address: result.addressHex,
@@ -339,6 +336,30 @@ export default class TONContractsModule extends TONModule {
         }
     }
 
+    async getCodeFromImage(
+        params: TONContractGetCodeFromImageParams
+    ): Promise<TONContractGetCodeFromImageResult> {
+        return this.requestLibrary('contracts.image.code', params);
+    }
+
+    async getDeployData(
+        params: TONContractGetDeployDataParams
+    ): Promise<TONContractGetDeployDataResult> {
+        return this.requestLibrary('contracts.deploy.data', params);
+    }
+
+    async createRunBody(
+        params: TONContractCreateRunBodyParams
+    ): Promise<TONContractCreateRunBodyResult> {
+        return this.requestLibrary('contracts.run.body', params);
+    }
+
+    async getFunctionId(
+        params: TONContractGetFunctionIdParams
+    ): Promise<TONContractGetFunctionIdResult> {
+        return this.requestLibrary('contracts.function.id', params);
+    }
+
     // Message parsing
 
     async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
@@ -364,10 +385,7 @@ export default class TONContractsModule extends TONModule {
     async sendMessage(params: TONContractMessage): Promise<void> {
         const { clientPlatform } = TONClient;
         if (!clientPlatform) {
-            throw {
-                code: 'ClientDoesNotConfigured',
-                message: 'TON Client SDK does not configured',
-            };
+            throw TONClientError.clientDoesNotConfigured();
         }
         const { fetch } = clientPlatform;
         const url = this.config.requestsUrl();
@@ -390,36 +408,56 @@ export default class TONContractsModule extends TONModule {
                 ],
             }),
         });
+        this.config.log('request posted');
         if (response.status !== 200) {
-            throw {
-                code: 3004,
-                message: `Send node request failed: ${await response.text()}`,
-            };
+            throw TONClientError.sendNodeRequestFailed(await response.text());
         }
     }
 
 
     async processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction> {
-        await this.sendMessage(message);
-        return this.queries.transactions.waitFor({
-            id: { eq: message.messageId },
-            status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
-        }, resultFields);
+        let transaction: ?QTransaction = null;
+        let retry = true;
+        while (retry) {
+            retry = false;
+            await this.sendMessage(message);
+            try {
+                transaction = await this.queries.transactions.waitFor({
+                    in_msg: { eq: message.messageId },
+                    status: { eq: QTransactionProcessingStatus.finalized },
+                }, resultFields, 10_000);
+            } catch (error) {
+                if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
+                    this.config.log('Timeout, retrying...');
+                    retry = true;
+                } else {
+                    throw error;
+                }
+            }
+        }
+        if (!transaction) {
+            throw TONClientError.internalError('transaction is null');
+        }
+        this.config.log('transaction received', {
+            id: transaction.id,
+            block_id: transaction.block_id,
+            now: `${new Date(transaction.now * 1000).toISOString()} (${transaction.now})`,
+        });
+        return transaction;
     }
 
 
     async processDeployMessage(params: TONContractDeployMessage): Promise<TONContractDeployResult> {
+        this.config.log('processDeployMessage', params);
         const transaction = await this.processMessage(
             params.message,
-            'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } }',
+            transactionDetails,
         );
-        const ordinary = transaction.description.Ordinary;
-        if (ordinary.aborted) {
-            throw {
-                code: 3050,
-                message: 'Deploy failed',
-            };
-        }
+        await checkTransaction(transaction);
+        await this.queries.accounts.waitFor({
+            id: { eq: params.address },
+            acc_type: { eq: QAccountType.active }
+        }, 'id');
         return {
             address: params.address,
             alreadyDeployed: false,
@@ -428,31 +466,26 @@ export default class TONContractsModule extends TONModule {
 
 
     async processRunMessage(params: TONContractRunMessage): Promise<TONContractRunResult> {
+        this.config.log('processRunMessage', params);
         const transaction = await this.processMessage(
             params.message,
-            'id status description { ...on TransactionDescriptionOrdinaryVariant { Ordinary { aborted } } } out_msgs',
+            transactionDetails,
         );
-        const ordinary = transaction.description.Ordinary;
-        if (ordinary.aborted) {
-            throw {
-                code: 3040,
-                message: 'Run failed',
-            };
-        }
+        await checkTransaction(transaction);
         const outputMessageIds = transaction.out_msgs;
         if (!outputMessageIds || outputMessageIds.length === 0) {
-            return { output: null };
+            return { output: null, transaction };
         }
         const externalMessages: QMessage[] = (await Promise.all(outputMessageIds.map((id) => {
             return this.queries.messages.waitFor(
                 {
                     id: { eq: id },
-                    status: { in: ['Preliminary', 'Proposed', 'Finalized'] },
+                    status: { eq: QMessageProcessingStatus.finalized },
                 },
-                'body header { ...on MessageHeaderExtOutMsgInfoVariant { ExtOutMsgInfo { created_at } } }',
+                'body msg_type',
             );
         }))).filter((x: QMessage) => {
-            return x.header && x.header.ExtOutMsgInfo;
+            return x.msg_type === QMessageType.extOut;
         });
         const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
             return this.decodeOutputMessageBody({
@@ -463,7 +496,16 @@ export default class TONContractsModule extends TONModule {
         const resultOutput = outputs.find((x: TONContractDecodeMessageBodyResult) => {
             return x.function.toLowerCase() === params.functionName.toLowerCase();
         });
-        return resultOutput ? { output: resultOutput.output } : { output: null };
+        return {
+            output: resultOutput ? resultOutput.output : null,
+            transaction
+        };
+    }
+
+    // Address processing
+
+    async convertAddress(params: TONContractConvertAddressParams): Promise<TONContractConvertAddressResult> {
+        return this.requestLibrary('contracts.address.convert', params);
     }
 
     // Internals
@@ -514,30 +556,17 @@ export default class TONContractsModule extends TONModule {
             });
         }
 
-        const accounts = await this.queries.accounts.query(
-            { id: { eq: params.address } },
-            `
-            storage {
-                state {
-                    ...on AccountStorageStateAccountActiveVariant {
-                        AccountActive {
-                            code
-                            data
-                        }
-                    }
-                    ...on AccountStorageStateAccountUninitVariant {
-                        AccountUninit {
-                            None
-                        }
-                    }
-                }
-            }
-            `
+        const account = await this.queries.accounts.waitFor({
+                id: { eq: params.address },
+                acc_type: { eq: QAccountType.active },
+            },
+            'code data'
         );
-        removeTypeName(accounts[0]);
+
+        removeTypeName(account);
         return this.requestLibrary('contracts.run.local', {
             address: params.address,
-            account: accounts[0],
+            account,
             abi: params.abi,
             functionName: params.functionName,
             input: params.input,
@@ -547,3 +576,125 @@ export default class TONContractsModule extends TONModule {
 }
 
 TONContractsModule.moduleName = 'TONContractsModule';
+
+async function checkTransaction(transaction: QTransaction) {
+    if (!transaction.aborted) {
+        return;
+    }
+
+    function nodeError(message: string, code: number, phase: string) {
+        return new TONClientError(
+            `${message} (${code}) at ${phase}`,
+            code,
+            TONClientError.source.NODE,
+            {
+                phase,
+                transaction_id: transaction.id
+            })
+    }
+
+    const storage = transaction.storage;
+    if (storage) {
+        const status = storage.status_change;
+        if (status === QAccountStatusChange.frozen) {
+            throw nodeError(
+                'Account was frozen due storage phase',
+                TONClientStorageStatus.frozen,
+                TONClientTransactionPhase.storage
+            );
+        }
+        if (status === QAccountStatusChange.deleted) {
+            throw nodeError(
+                'Account was deleted due storage phase',
+                TONClientStorageStatus.deleted,
+                TONClientTransactionPhase.storage
+            );
+        }
+    }
+
+    const compute = transaction.compute;
+    if (compute) {
+        if (compute.compute_type === QComputeType.skipped) {
+            const reason = compute.skipped_reason;
+            if (reason === QSkipReason.noState) {
+                throw nodeError(
+                    'Account has no code and data',
+                    TONClientComputeSkippedStatus.noState,
+                    TONClientTransactionPhase.computeSkipped
+                );
+            }
+            if (reason === QSkipReason.badState) {
+                throw nodeError(
+                    'Account has bad state: frozen or deleted',
+                    TONClientComputeSkippedStatus.badState,
+                    TONClientTransactionPhase.computeSkipped
+                );
+            }
+            if (reason === QSkipReason.noGas) {
+                throw nodeError(
+                    'No gas to execute VM',
+                    TONClientComputeSkippedStatus.noGas,
+                    TONClientTransactionPhase.computeSkipped
+                );
+            }
+            throw nodeError(
+                'Compute phase skipped by unknown reason',
+                -1,
+                TONClientTransactionPhase.computeSkipped
+            );
+        }
+        if (compute.compute_type === QComputeType.vm) {
+            if (!compute.success) {
+                throw nodeError(
+                    'VM terminated with exception',
+                    compute.exit_code,
+                    TONClientTransactionPhase.computeVm
+                );
+            }
+        }
+    }
+
+    const action = transaction.action;
+    if (action) {
+        if (!action.success) {
+            throw nodeError(
+                action.no_funds
+                    ? 'Too low balance to send outbound message'
+                    : (!action.valid ? 'Outbound message is invalid' : 'Action phase failed'),
+                action.result_code,
+                TONClientTransactionPhase.action
+            );
+        }
+    }
+
+    throw nodeError(
+        'Transaction aborted',
+        -1,
+        TONClientTransactionPhase.unknown
+    );
+}
+
+const transactionDetails = `
+    id
+    tr_type
+    status
+    out_msgs
+    block_id
+    now
+    aborted
+    storage {
+        status_change
+    }
+    compute {
+        compute_type
+        skipped_reason
+        success
+        exit_code
+    }
+    action {
+        success
+        valid
+        result_code
+        no_funds
+  	}    
+   `;

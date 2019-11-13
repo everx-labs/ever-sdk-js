@@ -1,20 +1,16 @@
-// @flow
-import { TONClient } from "../src/TONClient";
-
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const http = require('http');
 const zlib = require('zlib');
-const fetch = require('node-fetch');
-const WebSocket = require('websocket');
 
-const p = os.platform();
-const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json')).toString('utf8'));
+export const p = os.platform();
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', '..', 'package.json')).toString('utf8'));
 const v: string[] = pkg.version.split('.');
-const bv = `${v[0]}.${v[1]}.${~~(Number.parseInt(v[2]) / 100) * 100}`.split('.').join('_');
+export const binariesVersion = `${v[0]}.${v[1]}.${~~(Number.parseInt(v[2]) / 100) * 100}`;
+export const bv = binariesVersion.split('.').join('_');
 const binariesHost = 'sdkbinaries.tonlabs.io';
-const binariesPath = __dirname;
+export const binariesPath = path.resolve(__dirname, '..');
 
 function downloadAndGunzip(dest, url) {
     return new Promise((resolve, reject) => {
@@ -26,13 +22,14 @@ function downloadAndGunzip(dest, url) {
                 });
                 return;
             }
-            fs.mkdirSync(path.dirname(path.resolve(dest)), { recursive: true });
+            fs.mkdirSync(path.dirname(path.resolve(dest)), ({ recursive: true }: any));
             let file = fs.createWriteStream(dest, { flags: "w" });
             let opened = false;
             const failed = (err) => {
                 if (file) {
-                    file.close();
+                    const f = file;
                     file = null;
+                    f.close();
 
                     fs.unlink(dest, () => {
                     });
@@ -63,7 +60,9 @@ function downloadAndGunzip(dest, url) {
 
             file.on("error", err => {
                 if (err.code === "EEXIST") {
-                    file.close();
+                    if (file) {
+                        file.close();
+                    }
                     reject("File already exists");
                 } else {
                     failed(err);
@@ -74,8 +73,7 @@ function downloadAndGunzip(dest, url) {
 
 }
 
-
-async function dl(dst, src) {
+export async function dl(dst, src) {
     const dstPath = path.resolve(binariesPath, dst);
     const srcUrl = `http://${binariesHost}/${src}.gz`;
     process.stdout.write(`Downloading ${dst} from ${binariesHost} ...`);
@@ -83,9 +81,7 @@ async function dl(dst, src) {
     process.stdout.write('\n');
 }
 
-jest.setTimeout(200_000);
-
-async function init() {
+export async function ensureBinaries() {
     const addonPath = path.join(binariesPath, 'tonclient.node');
     if (!fs.existsSync(addonPath)) {
         await dl('tonclient.node', `tonclient_${bv}_nodejs_addon_${p}`);
@@ -93,33 +89,4 @@ async function init() {
             await dl('libtonclientnodejs.dylib', `tonclient_${bv}_nodejs_dylib_${p}`);
         }
     }
-    const library = require('./tonclient.node');
-    TONClient.setLibrary({
-        fetch,
-        WebSocket: WebSocket.w3cwebsocket,
-        createLibrary: () => {
-            return Promise.resolve(library);
-        }
-    });
-    tests.client = await TONClient.create(tests.config);
 }
-
-async function done() {
-    await tests.client.close();
-
-}
-
-export const nodeSe = true;
-
-const tests = {
-    config: {
-        defaultWorkchain: 0,
-        servers: nodeSe ? ["http://0.0.0.0"] : ["https://azt005.tonlabs.io"],
-        log_verbose: true,
-    },
-    client: new TONClient(),
-    init,
-    done,
-};
-
-export { tests };

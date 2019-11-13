@@ -108,6 +108,12 @@ export default class TONConfigModule extends TONModule {
         this._queriesWsUrl = resolveServer(data.queriesWsServer, queriesWsServer);
     }
 
+    log(...args: any[]) {
+        if (this._logVerbose) {
+            console.log(`[${Date.now()}]`, ...args);
+        }
+    }
+
     requestsUrl(): string {
         return this._requestsUrl;
     }
@@ -129,8 +135,10 @@ export default class TONConfigModule extends TONModule {
         if (this.data) {
             await this.requestLibrary('setup', this.data);
         }
+        this._logVerbose = (this.data && this.data.log_verbose) || false;
     }
 
+    _logVerbose: boolean;
     _requestsUrl: string;
     _queriesHttpUrl: string;
     _queriesWsUrl: string;

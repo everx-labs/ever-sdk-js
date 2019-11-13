@@ -23,7 +23,7 @@ import { HttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 import gql from 'graphql-tag';
-import { TONClient } from '../TONClient';
+import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
@@ -81,12 +81,15 @@ const unionsScheme = {
 };
 
 export default class TONQueriesModule extends TONModule {
+    config: TONConfigModule;
+
     constructor(context: TONModuleContext) {
         super(context);
         this._client = null;
     }
 
     async setup() {
+        this.config = this.context.getModule(TONConfigModule);
         this.transactions = new TONQCollection(this, 'transactions');
         this.messages = new TONQCollection(this, 'messages');
         this.blocks = new TONQCollection(this, 'blocks');
@@ -97,7 +100,7 @@ export default class TONQueriesModule extends TONModule {
         if (this._client) {
             return this._client;
         }
-        const config: TONConfigModule = this.context.getModule(TONConfigModule);
+        const config = this.config;
         const configData = config.data;
         const { clientPlatform } = TONClient;
         if (!configData || !clientPlatform) {
@@ -133,7 +136,6 @@ export default class TONQueriesModule extends TONModule {
             wsLink,
             httpLink,
         );
-
 
 
         const defaultOptions = {
@@ -217,14 +219,23 @@ class TONQCollection {
         }`;
         const query = gql([ql]);
         const client = this.module.ensureClient();
-        return (await client.query({
-            query,
-            variables: {
-                filter,
-                orderBy,
-                limit
-            },
-        })).data[c];
+        try {
+            return (await client.query({
+                query,
+                variables: {
+                    filter,
+                    orderBy,
+                    limit
+                },
+            })).data[c];
+        } catch (error) {
+            const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
+            if (errors) {
+                throw TONClientError.queryFailed(errors);
+            } else {
+                throw error;
+            }
+        }
     }
 
 
@@ -252,36 +263,62 @@ class TONQCollection {
         };
     }
 
-    async waitFor(filter: any, result: string): Promise<any> {
+    async waitFor(filter: any, result: string, timeout?: number): Promise<any> {
+        const config = this.module.config;
         const existing = await this.query(filter, result);
         if (existing.length > 0) {
             return existing[0];
         }
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+            const forceCheckTimeout = 10_000;
             let subscription: any = null;
-            let interval: any = null;
+            let resolved: boolean = false;
+
             const doResolve = (doc) => {
-                if (interval) {
-                    clearInterval(interval);
-                    interval = null;
+                if (resolved) {
+                    return;
                 }
+                resolved = true;
                 if (subscription) {
                     subscription.unsubscribe();
                     subscription = null;
+                }
+                if (doc !== null) {
                     resolve(doc);
+                } else {
+                    reject(TONClientError.waitForTimeout())
                 }
             };
-            subscription = this.subscribe(filter, result, (change, doc) => {
-                doResolve(doc);
-            });
-            interval = setInterval(() => {
+
+            const forceCheck = () => {
                 (async () => {
+                    if (resolved) {
+                        return;
+                    }
+                    config.log('waitFor.forceCheck', this.collectionName, filter);
                     const existing = await this.query(filter, result);
                     if (existing.length > 0) {
                         doResolve(existing[0]);
+                    } else {
+                        setTimeout(forceCheck, forceCheckTimeout);
                     }
                 })();
-            }, 1000);
+            };
+
+            const rejectOnTimeout = () => {
+                if (!resolved) {
+                    config.log('waitFor rejected on timeout', this.collectionName, filter);
+                    doResolve(null);
+                }
+            };
+
+            subscription = this.subscribe(filter, result, (change, doc) => {
+                doResolve(doc);
+            });
+            setTimeout(forceCheck, forceCheckTimeout);
+            if (timeout) {
+                setTimeout(rejectOnTimeout, timeout);
+            }
         });
     }
 }

@@ -4,7 +4,8 @@ module.exports = {
 	],
 	modulePathIgnorePatterns: [
 		'init-tests.js',
-        'contracts\/'
+        'contracts\/',
+        '__tests__/_\/'
 	],
 	transform: {
 		'^.+\\.js$': 'babel-jest',
