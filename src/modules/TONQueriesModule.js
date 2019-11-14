@@ -120,7 +120,12 @@ export default class TONQueriesModule extends TONModule {
         const wsLink = new WebSocketLink({
             uri: config.queriesWsUrl(),
             options: {
-                reconnect: true,
+                reconnect: false,
+                lazy: false,
+
+                connectionCallback: (error: Error[], result?: any) => {
+                    console.log('>>>выавы', error, result);
+                },
             },
             webSocketImpl: clientPlatform.WebSocket,
         });
@@ -255,7 +260,14 @@ class TONQCollection {
             next: (message) => {
                 onDocEvent('insert/update', message.data[this.collectionName]);
             },
+            error: (error: any) => {
+                console.log('>>>', error);
+            },
+            complete: () => {
+                console.log('>>>', 'complete');
+            }
         });
+        console.log('>>>', subscription);
         return {
             unsubscribe: () => {
                 subscription.unsubscribe();

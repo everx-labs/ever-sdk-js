@@ -15,6 +15,7 @@
  */
 
 import { QTransactionProcessingStatus } from "../src/modules/TONContractsModule";
+import { TONClient } from "../src/TONClient";
 import { get_grams_from_giver } from "./_/giver";
 import { WalletContractPackage } from "./contracts/WalletContract";
 import { tests } from "./_/init-tests";
@@ -26,7 +27,7 @@ test('Transaction List', async () => {
     const queries = tests.client.queries;
     const transaction = await queries.transactions.query({
         id: { eq: 'e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465' },
-        status: { in: [0, 1, 2] }
+        status: { in: [QTransactionProcessingStatus.proposed, QTransactionProcessingStatus.finalized] }
     }, 'id now status', [], 1);
     // expect(transaction[0].id).toEqual('e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465');
 });
@@ -125,5 +126,25 @@ test("Transactions with addresses", async () => {
     const queries = tests.client.queries;
     const tr = (await queries.transactions.query({}, transactionWithAddresses))[0];
     expect(tr).toBeTruthy();
+});
+
+
+test("Subscribe for failed server", async () => {
+    const client = await TONClient.create({
+        defaultWorkchain: 0,
+        servers: ['http://localhost'],
+        queriesServer: 'http://localhost:4000/graphql',
+        log_verbose: true,
+    });
+    const { queries } = client;
+    const subscription = (await queries.transactions.subscribe({}, 'id', (e, d) => {
+        console.log('>>>', d);
+    }));
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            subscription.unsubscribe();
+            resolve();
+        }, 600_000);
+    });
 });
 
