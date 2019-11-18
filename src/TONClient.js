@@ -25,7 +25,7 @@ import TONQueriesModule from "./modules/TONQueriesModule";
 import type { TONClientLibrary, TONModuleContext, } from './TONModule';
 import { TONModule } from './TONModule';
 
-export class TONClientError extends Error {
+export class TONClientError {
     static source = {
         CLIENT: 'client',
         NODE: 'node'
@@ -39,12 +39,13 @@ export class TONClientError extends Error {
         QUERY_FAILED: 1005,
     };
 
+    message: string;
     source: string;
     code: number;
     data: any;
 
     constructor(message: string, code: number, source: string, data?: any) {
-        super(message);
+        this.message = message;
         this.code = code;
         this.source = source;
         this.data = data;
