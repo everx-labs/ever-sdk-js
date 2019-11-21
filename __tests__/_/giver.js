@@ -115,7 +115,7 @@ async function check_giver() {
     }
 
     if (!(accounts[0]["balance"]) ||
-        parseInt(accounts[0]["balance"]) < giverRequestAmount) {
+        BigInt(accounts[0]["balance"]) < giverRequestAmount) {
         throw `Giver has no money. Send some grams to ${giverWalletAddressHex} (${giverWalletAddressBase64})`
     }
 
