@@ -83,10 +83,12 @@ const unionsScheme = {
 
 export default class TONQueriesModule extends TONModule {
     config: TONConfigModule;
+    overrideWsUrl: ?string;
 
     constructor(context: TONModuleContext) {
         super(context);
         this._client = null;
+        this.overrideWsUrl = null;
     }
 
     async setup() {
@@ -95,6 +97,23 @@ export default class TONQueriesModule extends TONModule {
         this.messages = new TONQCollection(this, 'messages');
         this.blocks = new TONQCollection(this, 'blocks');
         this.accounts = new TONQCollection(this, 'accounts');
+
+        const config = this.config;
+        const configData = config.data;
+        const { clientPlatform } = TONClient;
+        if (!configData || !clientPlatform) {
+            throw Error('TON Client does not configured');
+        }
+        const fetch = clientPlatform.fetch;
+        const response = await fetch(config.queriesHttpUrl(), {
+            redirect: 'manual'
+        });
+        if (response.status === 308) {
+            const location = response.headers.get('Location');
+            if (!!location) {
+                this.overrideWsUrl = location.replace(/^https:\/\//gi, 'wss://').replace(/^http:\/\//gi, 'ws://');
+            }
+        }
     }
 
     ensureClient(): ApolloClient {
@@ -118,7 +137,7 @@ export default class TONQueriesModule extends TONModule {
             fetch: clientPlatform.fetch,
         });
 
-        const subscriptionClient = new SubscriptionClient(config.queriesWsUrl(), {
+        const subscriptionClient = new SubscriptionClient(this.overrideWsUrl || config.queriesWsUrl(), {
             reconnect: true,
         }, clientPlatform.WebSocket);
 

@@ -70,11 +70,6 @@ const transactionWithAddresses = `
 
 test("Subscribe for transactions with addresses", async () => {
     const { contracts, queries, crypto } = tests.client;
-    const transactions = [];
-    const subscription = (await queries.transactions.subscribe({}, transactionWithAddresses, (e, d) => {
-        transactions.push(d);
-    }));
-
     const walletKeys = await crypto.ed25519Keypair();
 
     const message = await contracts.createDeployMessage({
@@ -83,12 +78,28 @@ test("Subscribe for transactions with addresses", async () => {
         keyPair: walletKeys,
     });
 
+    const transactions = [];
+    const subscription = (await queries.transactions.subscribe({
+        account_addr: { eq: message.address }
+    }, 'id', (e, d) => {
+        console.log('>>>', d);
+        transactions.push(d);
+    }));
+
+    console.log('>>>', 'Paying...');
     await get_grams_from_giver(message.address);
 
+    console.log('>>>', 'Deploying...');
     await contracts.deploy({
         package: WalletContractPackage,
         constructorParams: {},
         keyPair: walletKeys,
+    });
+    console.log('>>>', 'Waiting...');
+    await new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, 10_000);
     });
     subscription.unsubscribe();
     expect(transactions.length).toBeGreaterThan(0);
@@ -130,5 +141,17 @@ test("Transactions with addresses", async () => {
 
 
 test("Subscribe for failed server", async () => {
+    // console.log('>>>', 'Subscribed');
+    // tests.client.queries.accounts.subscribe(
+    //     {
+    //         id: { eq: "-1:3333333333333333333333333333333333333333333333333333333333333333" }
+    //     },
+    //     'id balance',
+    //     (e, d) => {
+    //         console.log('>>>', e, d);
+    //     });
+    // await new Promise((resolve) => {
+    //     setTimeout(resolve, 100_000);
+    // })
 });
 
