@@ -25,6 +25,10 @@ import type {
     TONScryptParams,
     TONNaclBoxParams,
     TONNaclSecretBoxParams,
+    TONMnemonicWordsParams,
+    TONMnemonicFromRandomParams,
+    TONMnemonicFromEntropyParams,
+    TONMnemonicIsValidParams, TONMnemonicDeriveSignKeysParams,
 } from "../../types";
 import { TONModule } from '../TONModule';
 
@@ -33,6 +37,19 @@ export const TONOutputEncoding = {
     Hex: 'Hex',
     HexUppercase: 'HexUppercase',
     Base64: 'Base64',
+};
+
+
+export const TONMnemonicDictionary = {
+    TON: 0,
+    ENGLISH: 1,
+    CHINESE_SIMPLIFIED: 2,
+    CHINESE_TRADITIONAL: 3,
+    FRENCH: 4,
+    ITALIAN: 5,
+    JAPANESE: 6,
+    KOREAN: 7,
+    SPANISH: 8,
 };
 
 
@@ -75,6 +92,10 @@ export default class TONCryptoModule extends TONModule {
 
     async ed25519Keypair(): Promise<TONKeyPairData> {
         return this.requestLibrary('crypto.ed25519.keypair');
+    }
+
+    async publicKeyToString(key: string): Promise<string> {
+        return this.requestLibrary('crypto.ton_public_key_string', key);
     }
 
     async sha512(
@@ -188,23 +209,27 @@ export default class TONCryptoModule extends TONModule {
 
     // Mnemonic
 
-    async mnemonicWords(): Promise<string> {
-        return this.requestLibrary('crypto.mnemonic.words');
+    async mnemonicWords(params?: TONMnemonicWordsParams): Promise<string> {
+        return this.requestLibrary('crypto.mnemonic.words', params || {});
     }
 
-    async mnemonicFromRandom(): Promise<string> {
-        return this.requestLibrary('crypto.mnemonic.from.random');
+    async mnemonicFromRandom(params?: TONMnemonicFromRandomParams): Promise<string> {
+        return this.requestLibrary('crypto.mnemonic.from.random', params || {});
     }
 
-    async mnemonicFromEntropy(entropyHex: string): Promise<string> {
+    async mnemonicFromEntropy(params: TONMnemonicFromEntropyParams): Promise<string> {
         return this.requestLibrary(
             'crypto.mnemonic.from.entropy',
-            { entropy: { hex: entropyHex } },
+            params,
         );
     }
 
-    async mnemonicIsValid(phrase: string): Promise<boolean> {
-        return this.requestLibrary('crypto.mnemonic.verify', { phrase });
+    async mnemonicIsValid(params: TONMnemonicIsValidParams): Promise<boolean> {
+        return this.requestLibrary('crypto.mnemonic.verify', params);
+    }
+
+    async mnemonicDeriveSignKeys(params: TONMnemonicDeriveSignKeysParams): Promise<TONKeyPairData> {
+        return this.requestLibrary('crypto.mnemonic.derive.sign.keys', params);
     }
 
     // HDKeys

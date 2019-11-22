@@ -1,12 +1,13 @@
 {
 	"name": "ton-client-js",
-	"version": "0.16.0",
+	"version": "0.17.0",
 	"description": "TON Client for Java Script",
 	"main": "index.js",
 	"scripts": {
 		"babel": "babel src --out-dir dist --source-maps inline",
 		"flow": "flow",
-		"test": "jest --forceExit --detectOpenHandles"
+		"test": "jest --forceExit --detectOpenHandles",
+		"npm install": "npm install"
 	},
 	"pre-commit": [],
 	"keywords": [
