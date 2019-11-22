@@ -130,21 +130,5 @@ test("Transactions with addresses", async () => {
 
 
 test("Subscribe for failed server", async () => {
-    const client = await TONClient.create({
-        defaultWorkchain: 0,
-        servers: ['http://localhost'],
-        queriesServer: 'http://localhost:4000/graphql',
-        log_verbose: true,
-    });
-    const { queries } = client;
-    const subscription = (await queries.transactions.subscribe({}, 'id', (e, d) => {
-        console.log('>>>', d);
-    }));
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            subscription.unsubscribe();
-            resolve();
-        }, 600_000);
-    });
 });
 

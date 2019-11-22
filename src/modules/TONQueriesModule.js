@@ -18,11 +18,12 @@
 
 import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
 import { ApolloClient } from 'apollo-client';
-import { split } from 'apollo-link';
+import { split } from "apollo-link";
 import { HttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 import gql from 'graphql-tag';
+import { SubscriptionClient } from "subscriptions-transport-ws";
 import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
@@ -104,7 +105,7 @@ export default class TONQueriesModule extends TONModule {
         const configData = config.data;
         const { clientPlatform } = TONClient;
         if (!configData || !clientPlatform) {
-            throw Error('TON SDK does not configured');
+            throw Error('TON Client does not configured');
         }
         const fragmentMatcher = new IntrospectionFragmentMatcher({
             introspectionQueryResultData: unionsScheme.data
@@ -117,18 +118,11 @@ export default class TONQueriesModule extends TONModule {
             fetch: clientPlatform.fetch,
         });
 
-        const wsLink = new WebSocketLink({
-            uri: config.queriesWsUrl(),
-            options: {
-                reconnect: false,
-                lazy: false,
+        const subscriptionClient = new SubscriptionClient(config.queriesWsUrl(), {
+            reconnect: true,
+        }, clientPlatform.WebSocket);
 
-                connectionCallback: (error: Error[], result?: any) => {
-                    console.log('>>>выавы', error, result);
-                },
-            },
-            webSocketImpl: clientPlatform.WebSocket,
-        });
+        const wsLink = new WebSocketLink(subscriptionClient);
 
         const link = split(
             ({ query }) => {
@@ -151,6 +145,7 @@ export default class TONQueriesModule extends TONModule {
                 fetchPolicy: 'no-cache',
             },
         };
+
 
         this._client = new ApolloClient({
             cache,
@@ -256,18 +251,9 @@ class TONQCollection {
                 filter,
             },
         });
-        const subscription = observable.subscribe({
-            next: (message) => {
-                onDocEvent('insert/update', message.data[this.collectionName]);
-            },
-            error: (error: any) => {
-                console.log('>>>', error);
-            },
-            complete: () => {
-                console.log('>>>', 'complete');
-            }
+        const subscription = observable.subscribe((message) => {
+            onDocEvent('insert/update', message.data[this.collectionName]);
         });
-        console.log('>>>', subscription);
         return {
             unsubscribe: () => {
                 subscription.unsubscribe();

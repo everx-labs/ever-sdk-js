@@ -39,6 +39,7 @@ export type TONScryptParams = {
     outputEncoding?: TONOutputEncodingType, // default Hex
 }
 
+
 export type TONNaclBoxParams = {
     message: TONInputMessage,
     nonce: string,
