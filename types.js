@@ -88,6 +88,12 @@ export type TONMnemonicDeriveSignKeysParams = {
     compliant?: boolean,
 }
 
+export type TONHDKeyFromMnemonicParams = {
+    dictionary?: TONMnemonicDictionaryType,
+    wordCount?: TONMnemonicWordCountType,
+    phrase: string,
+}
+
 export interface TONCrypto {
     factorize(challengeHex: string): Promise<TONFactorizeResult>;
 
@@ -137,7 +143,7 @@ export interface TONCrypto {
 
     mnemonicDeriveSignKeys(params: TONMnemonicDeriveSignKeysParams): Promise<TONKeyPairData>;
 
-    hdkeyXPrvFromMnemonic(params: TONMnemonicWordsParams): Promise<string>;
+    hdkeyXPrvFromMnemonic(params: TONHDKeyFromMnemonicParams): Promise<string>;
 
     hdkeyXPrvDerive(
         serialized: string,
@@ -495,5 +501,6 @@ export interface TONClient {
     crypto: TONCrypto;
     contracts: TONContracts;
     queries: TONQueries;
+    close(): void;
 }
 

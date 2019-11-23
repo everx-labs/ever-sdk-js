@@ -127,13 +127,13 @@ export default class TONConfigModule extends TONModule {
     }
 
     async getVersion(): Promise<string> {
-        return this.requestLibrary('version');
+        return this.requestCore('version');
     }
 
 
     async setup(): Promise<void> {
         if (this.data) {
-            await this.requestLibrary('setup', this.data);
+            await this.requestCore('setup', this.data);
         }
         this._logVerbose = (this.data && this.data.log_verbose) || false;
     }

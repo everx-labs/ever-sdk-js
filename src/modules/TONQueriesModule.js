@@ -16,7 +16,7 @@
 
 // @flow
 
-import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloClient } from 'apollo-client';
 import { split } from "apollo-link";
 import { HttpLink } from 'apollo-link-http';
@@ -32,54 +32,6 @@ import TONConfigModule from './TONConfigModule';
 type Subscription = {
     unsubscribe: () => void
 }
-
-const unionsScheme = {
-    "data": {
-        "__schema": {
-            "types": [{
-                "kind": "UNION",
-                "name": "MessageHeader",
-                "possibleTypes": [{ "name": "MessageHeaderIntMsgInfoVariant" }, { "name": "MessageHeaderExtInMsgInfoVariant" }, { "name": "MessageHeaderExtOutMsgInfoVariant" }]
-            }, {
-                "kind": "UNION",
-                "name": "MsgAddressInt",
-                "possibleTypes": [{ "name": "MsgAddressIntAddrNoneVariant" }, { "name": "MsgAddressIntAddrStdVariant" }, { "name": "MsgAddressIntAddrVarVariant" }]
-            }, {
-                "kind": "UNION",
-                "name": "MsgAddressExt",
-                "possibleTypes": [{ "name": "MsgAddressExtAddrNoneVariant" }, { "name": "MsgAddressExtAddrExternVariant" }]
-            }, {
-                "kind": "UNION",
-                "name": "InMsg",
-                "possibleTypes": [{ "name": "InMsgExternalVariant" }, { "name": "InMsgIHRVariant" }, { "name": "InMsgImmediatellyVariant" }, { "name": "InMsgFinalVariant" }, { "name": "InMsgTransitVariant" }, { "name": "InMsgDiscardedFinalVariant" }, { "name": "InMsgDiscardedTransitVariant" }]
-            }, {
-                "kind": "UNION",
-                "name": "IntermediateAddress",
-                "possibleTypes": [{ "name": "IntermediateAddressRegularVariant" }, { "name": "IntermediateAddressSimpleVariant" }, { "name": "IntermediateAddressExtVariant" }]
-            }, {
-                "kind": "UNION",
-                "name": "OutMsg",
-                "possibleTypes": [{ "name": "OutMsgNoneVariant" }, { "name": "OutMsgExternalVariant" }, { "name": "OutMsgImmediatelyVariant" }, { "name": "OutMsgOutMsgNewVariant" }, { "name": "OutMsgTransitVariant" }, { "name": "OutMsgDequeueVariant" }, { "name": "OutMsgTransitRequiredVariant" }]
-            }, {
-                "kind": "UNION",
-                "name": "AccountStorageState",
-                "possibleTypes": [{ "name": "AccountStorageStateAccountUninitVariant" }, { "name": "AccountStorageStateAccountActiveVariant" }, { "name": "AccountStorageStateAccountFrozenVariant" }]
-            }, {
-                "kind": "UNION",
-                "name": "TransactionDescription",
-                "possibleTypes": [{ "name": "TransactionDescriptionOrdinaryVariant" }, { "name": "TransactionDescriptionStorageVariant" }, { "name": "TransactionDescriptionTickTockVariant" }, { "name": "TransactionDescriptionSplitPrepareVariant" }, { "name": "TransactionDescriptionSplitInstallVariant" }, { "name": "TransactionDescriptionMergePrepareVariant" }, { "name": "TransactionDescriptionMergeInstallVariant" }]
-            }, {
-                "kind": "UNION",
-                "name": "TrComputePhase",
-                "possibleTypes": [{ "name": "TrComputePhaseSkippedVariant" }, { "name": "TrComputePhaseVmVariant" }]
-            }, {
-                "kind": "UNION",
-                "name": "TrBouncePhase",
-                "possibleTypes": [{ "name": "TrBouncePhaseNegfundsVariant" }, { "name": "TrBouncePhaseNofundsVariant" }, { "name": "TrBouncePhaseOkVariant" }]
-            }]
-        }
-    }
-};
 
 export default class TONQueriesModule extends TONModule {
     config: TONConfigModule;
@@ -97,79 +49,72 @@ export default class TONQueriesModule extends TONModule {
         this.messages = new TONQCollection(this, 'messages');
         this.blocks = new TONQCollection(this, 'blocks');
         this.accounts = new TONQCollection(this, 'accounts');
+    }
 
+    async getClientConfig() {
         const config = this.config;
-        const configData = config.data;
         const { clientPlatform } = TONClient;
-        if (!configData || !clientPlatform) {
+        if (!config.data || !clientPlatform) {
             throw Error('TON Client does not configured');
         }
+        let httpUrl = config.queriesHttpUrl();
+        let wsUrl = config.queriesWsUrl();
         const fetch = clientPlatform.fetch;
-        const response = await fetch(config.queriesHttpUrl(), {
+        const response = await fetch(httpUrl, {
             redirect: 'manual'
         });
         if (response.status === 308) {
             const location = response.headers.get('Location');
             if (!!location) {
-                this.overrideWsUrl = location.replace(/^https:\/\//gi, 'wss://').replace(/^http:\/\//gi, 'ws://');
+                httpUrl = location;
+                wsUrl = location
+                    .replace(/^https:\/\//gi, 'wss://')
+                    .replace(/^http:\/\//gi, 'ws://');
             }
+        }
+        return {
+            httpUrl,
+            wsUrl,
+            fetch,
+            WebSocket: clientPlatform.WebSocket,
         }
     }
 
-    ensureClient(): ApolloClient {
+    async ensureClient(): ApolloClient {
         if (this._client) {
             return this._client;
         }
-        const config = this.config;
-        const configData = config.data;
-        const { clientPlatform } = TONClient;
-        if (!configData || !clientPlatform) {
-            throw Error('TON Client does not configured');
-        }
-        const fragmentMatcher = new IntrospectionFragmentMatcher({
-            introspectionQueryResultData: unionsScheme.data
-        });
-
-        const cache = new InMemoryCache({ fragmentMatcher });
-
-        const httpLink = new HttpLink({
-            uri: config.queriesHttpUrl(),
-            fetch: clientPlatform.fetch,
-        });
-
-        const subscriptionClient = new SubscriptionClient(this.overrideWsUrl || config.queriesWsUrl(), {
-            reconnect: true,
-        }, clientPlatform.WebSocket);
-
-        const wsLink = new WebSocketLink(subscriptionClient);
-
-        const link = split(
-            ({ query }) => {
-                const definition = getMainDefinition(query);
-                return (
-                    definition.kind === 'OperationDefinition'
-                    && definition.operation === 'subscription'
-                );
-            },
-            wsLink,
-            httpLink,
-        );
-
-
-        const defaultOptions = {
-            watchQuery: {
-                fetchPolicy: 'no-cache',
-            },
-            query: {
-                fetchPolicy: 'no-cache',
-            },
-        };
-
-
+        const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
         this._client = new ApolloClient({
-            cache,
-            link,
-            defaultOptions,
+            cache: new InMemoryCache({}),
+            link: split(
+                ({ query }) => {
+                    const definition = getMainDefinition(query);
+                    return (
+                        definition.kind === 'OperationDefinition'
+                        && definition.operation === 'subscription'
+                    );
+                },
+                new WebSocketLink(new SubscriptionClient(
+                    wsUrl,
+                    {
+                        reconnect: true
+                    },
+                    WebSocket
+                )),
+                new HttpLink({
+                    uri: httpUrl,
+                    fetch,
+                }),
+            ),
+            defaultOptions: {
+                watchQuery: {
+                    fetchPolicy: 'no-cache',
+                },
+                query: {
+                    fetchPolicy: 'no-cache',
+                },
+            }
         });
         return this._client;
     }
@@ -181,20 +126,6 @@ export default class TONQueriesModule extends TONModule {
             client.stop();
             await client.clearStore();
         }
-    }
-
-    async select(query: string, bindVars: {}) {
-        const gqlQuery = gql([`query select($query: String!, $bindVarsJson: String!) {
-            select(query: $query, bindVarsJson: $bindVarsJson)
-        }`]);
-        const client = this.ensureClient();
-        return JSON.parse((await client.query({
-            query: gqlQuery,
-            variables: {
-                query,
-                bindVarsJson: JSON.stringify(bindVars),
-            },
-        })).data.select);
     }
 
     transactions: TONQCollection;
@@ -213,7 +144,7 @@ type DocEvent = (changeType: string, doc: any) => void;
 
 type OrderBy = {
     path: string,
-    sort: 'ASC' | 'DESC'
+    direction: 'ASC' | 'DESC'
 }
 
 class TONQCollection {
@@ -229,7 +160,6 @@ class TONQCollection {
             collectionName.substr(1, collectionName.length - 2);
     }
 
-
     async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number): Promise<any> {
         const c = this.collectionName;
         const t = this.typeName;
@@ -237,7 +167,7 @@ class TONQCollection {
             ${c}(filter: $filter, orderBy: $orderBy, limit: $limit) { ${result} }
         }`;
         const query = gql([ql]);
-        const client = this.module.ensureClient();
+        const client = await this.module.ensureClient();
         try {
             return (await client.query({
                 query,
@@ -257,25 +187,42 @@ class TONQCollection {
         }
     }
 
-
-    subscribe(filter: any, result: string, onDocEvent: DocEvent): Subscription {
+    subscribe(
+        filter: any,
+        result: string,
+        onDocEvent: DocEvent,
+        onError?: (err: Error) => void
+    ): Subscription {
         const text = `subscription ${this.collectionName}($filter: ${this.typeName}Filter) {
         	${this.collectionName}(filter: $filter) { ${result} }
         }`;
         const query = gql([text]);
-        const client = this.module.ensureClient();
-        const observable = client.subscribe({
-            query,
-            variables: {
-                filter,
-            },
-        });
-        const subscription = observable.subscribe((message) => {
-            onDocEvent('insert/update', message.data[this.collectionName]);
-        });
+        let subscription = null;
+        (async () => {
+            try {
+                const client = await this.module.ensureClient();
+                const observable = client.subscribe({
+                    query,
+                    variables: {
+                        filter,
+                    },
+                });
+                subscription = observable.subscribe((message) => {
+                    onDocEvent('insert/update', message.data[this.collectionName]);
+                });
+            } catch (error) {
+                if (onError) {
+                    onError(error);
+                } else {
+                    console.error('TON Client subscription error', error);
+                }
+            }
+        })();
         return {
             unsubscribe: () => {
-                subscription.unsubscribe();
+                if (subscription) {
+                    subscription.unsubscribe();
+                }
             },
         };
     }
