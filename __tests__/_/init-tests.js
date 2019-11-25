@@ -10,7 +10,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
-export const nodeSe = true;
+export const nodeSe = false;
 
 const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
 

@@ -25,6 +25,13 @@ import type {
     TONScryptParams,
     TONNaclBoxParams,
     TONNaclSecretBoxParams,
+    TONMnemonicWordsParams,
+    TONMnemonicFromRandomParams,
+    TONMnemonicFromEntropyParams,
+    TONMnemonicIsValidParams,
+    TONMnemonicDeriveSignKeysParams,
+    TONCrypto,
+    TONHDKeyFromMnemonicParams,
 } from "../../types";
 import { TONModule } from '../TONModule';
 
@@ -33,6 +40,19 @@ export const TONOutputEncoding = {
     Hex: 'Hex',
     HexUppercase: 'HexUppercase',
     Base64: 'Base64',
+};
+
+
+export const TONMnemonicDictionary = {
+    TON: 0,
+    ENGLISH: 1,
+    CHINESE_SIMPLIFIED: 2,
+    CHINESE_TRADITIONAL: 3,
+    FRENCH: 4,
+    ITALIAN: 5,
+    JAPANESE: 6,
+    KOREAN: 7,
+    SPANISH: 8,
 };
 
 
@@ -45,9 +65,9 @@ function fixInputMessage(message: TONInputMessage): TONInputMessage {
         : message;
 }
 
-export default class TONCryptoModule extends TONModule {
+export default class TONCryptoModule extends TONModule implements TONCrypto {
     async factorize(challengeHex: string): Promise<TONFactorizeResult> {
-        return this.requestLibrary('crypto.math.factorize', challengeHex);
+        return this.requestCore('crypto.math.factorize', challengeHex);
     }
 
     async modularPower(
@@ -55,7 +75,7 @@ export default class TONCryptoModule extends TONModule {
         exponentHex: string,
         modulusHex: string,
     ): Promise<string> {
-        return this.requestLibrary('crypto.math.modularPower', {
+        return this.requestCore('crypto.math.modularPower', {
             base: baseHex,
             exponent: exponentHex,
             modulus: modulusHex,
@@ -66,7 +86,7 @@ export default class TONCryptoModule extends TONModule {
         length: number,
         outputEncoding: TONOutputEncodingType = TONOutputEncoding.Hex,
     ): Promise<string> {
-        return this.requestLibrary('crypto.random.generateBytes', {
+        return this.requestCore('crypto.random.generateBytes', {
             length,
             outputEncoding,
         });
@@ -74,14 +94,18 @@ export default class TONCryptoModule extends TONModule {
 
 
     async ed25519Keypair(): Promise<TONKeyPairData> {
-        return this.requestLibrary('crypto.ed25519.keypair');
+        return this.requestCore('crypto.ed25519.keypair');
+    }
+
+    async publicKeyToString(key: string): Promise<string> {
+        return this.requestCore('crypto.ton_public_key_string', key);
     }
 
     async sha512(
         message: TONInputMessage,
         outputEncoding: TONOutputEncodingType = TONOutputEncoding.Hex,
     ): Promise<string> {
-        return this.requestLibrary(
+        return this.requestCore(
             'crypto.sha512',
             {
                 message: fixInputMessage(message),
@@ -94,7 +118,7 @@ export default class TONCryptoModule extends TONModule {
         message: TONInputMessage,
         outputEncoding: TONOutputEncodingType = TONOutputEncoding.Hex,
     ): Promise<string> {
-        return this.requestLibrary(
+        return this.requestCore(
             'crypto.sha256',
             {
                 message: fixInputMessage(message),
@@ -107,47 +131,47 @@ export default class TONCryptoModule extends TONModule {
         const fixed: TONScryptParams = (Object.assign({}, params): any);
         fixed.password = fixInputMessage(params.password);
         fixed.salt = fixInputMessage(params.salt);
-        return this.requestLibrary('crypto.scrypt', fixed);
+        return this.requestCore('crypto.scrypt', fixed);
     }
 
     async naclBoxKeypair(): Promise<TONKeyPairData> {
-        return this.requestLibrary('crypto.nacl.box.keypair');
+        return this.requestCore('crypto.nacl.box.keypair');
     }
 
     async naclBoxKeypairFromSecretKey(secretKey: string): Promise<TONKeyPairData> {
-        return this.requestLibrary('crypto.nacl.box.keypair.fromSecretKey', secretKey);
+        return this.requestCore('crypto.nacl.box.keypair.fromSecretKey', secretKey);
     }
 
     async naclSignKeypair(): Promise<TONKeyPairData> {
-        return this.requestLibrary('crypto.nacl.sign.keypair');
+        return this.requestCore('crypto.nacl.sign.keypair');
     }
 
     async naclSignKeypairFromSecretKey(secretKey: string): Promise<TONKeyPairData> {
-        return this.requestLibrary('crypto.nacl.sign.keypair.fromSecretKey', secretKey);
+        return this.requestCore('crypto.nacl.sign.keypair.fromSecretKey', secretKey);
     }
 
     async naclBox(params: TONNaclBoxParams): Promise<string> {
         const fixed: TONNaclBoxParams = (Object.assign({}, params): any);
         fixed.message = fixInputMessage(params.message);
-        return this.requestLibrary('crypto.nacl.box', fixed);
+        return this.requestCore('crypto.nacl.box', fixed);
     }
 
     async naclBoxOpen(params: TONNaclBoxParams): Promise<string> {
         const fixed: TONNaclBoxParams = (Object.assign({}, params): any);
         fixed.message = fixInputMessage(params.message);
-        return this.requestLibrary('crypto.nacl.box.open', fixed);
+        return this.requestCore('crypto.nacl.box.open', fixed);
     }
 
     async naclSecretBox(params: TONNaclSecretBoxParams): Promise<string> {
         const fixed: TONNaclBoxParams = (Object.assign({}, params): any);
         fixed.message = fixInputMessage(params.message);
-        return this.requestLibrary('crypto.nacl.secret.box', fixed);
+        return this.requestCore('crypto.nacl.secret.box', fixed);
     }
 
     async naclSecretBoxOpen(params: TONNaclSecretBoxParams): Promise<string> {
         const fixed: TONNaclBoxParams = (Object.assign({}, params): any);
         fixed.message = fixInputMessage(params.message);
-        return this.requestLibrary('crypto.nacl.secret.box.open', fixed);
+        return this.requestCore('crypto.nacl.secret.box.open', fixed);
     }
 
     async naclSign(
@@ -155,7 +179,7 @@ export default class TONCryptoModule extends TONModule {
         key: string,
         outputEncoding: TONOutputEncodingType = TONOutputEncoding.Hex,
     ): Promise<string> {
-        return this.requestLibrary('crypto.nacl.sign', {
+        return this.requestCore('crypto.nacl.sign', {
             message: fixInputMessage(message),
             key,
             outputEncoding,
@@ -167,7 +191,7 @@ export default class TONCryptoModule extends TONModule {
         key: string,
         outputEncoding: TONOutputEncodingType = TONOutputEncoding.Hex,
     ): Promise<string> {
-        return this.requestLibrary('crypto.nacl.sign.open', {
+        return this.requestCore('crypto.nacl.sign.open', {
             message: fixInputMessage(message),
             key,
             outputEncoding,
@@ -179,7 +203,7 @@ export default class TONCryptoModule extends TONModule {
         key: string,
         outputEncoding: TONOutputEncodingType = TONOutputEncoding.Hex,
     ): Promise<string> {
-        return this.requestLibrary('crypto.nacl.sign.detached', {
+        return this.requestCore('crypto.nacl.sign.detached', {
             message: fixInputMessage(message),
             key,
             outputEncoding,
@@ -188,29 +212,33 @@ export default class TONCryptoModule extends TONModule {
 
     // Mnemonic
 
-    async mnemonicWords(): Promise<string> {
-        return this.requestLibrary('crypto.mnemonic.words');
+    async mnemonicWords(params?: TONMnemonicWordsParams): Promise<string> {
+        return this.requestCore('crypto.mnemonic.words', params || {});
     }
 
-    async mnemonicFromRandom(): Promise<string> {
-        return this.requestLibrary('crypto.mnemonic.from.random');
+    async mnemonicFromRandom(params?: TONMnemonicFromRandomParams): Promise<string> {
+        return this.requestCore('crypto.mnemonic.from.random', params || {});
     }
 
-    async mnemonicFromEntropy(entropyHex: string): Promise<string> {
-        return this.requestLibrary(
+    async mnemonicFromEntropy(params: TONMnemonicFromEntropyParams): Promise<string> {
+        return this.requestCore(
             'crypto.mnemonic.from.entropy',
-            { entropy: { hex: entropyHex } },
+            params,
         );
     }
 
-    async mnemonicIsValid(phrase: string): Promise<boolean> {
-        return this.requestLibrary('crypto.mnemonic.verify', { phrase });
+    async mnemonicIsValid(params: TONMnemonicIsValidParams): Promise<boolean> {
+        return this.requestCore('crypto.mnemonic.verify', params);
+    }
+
+    async mnemonicDeriveSignKeys(params: TONMnemonicDeriveSignKeysParams): Promise<TONKeyPairData> {
+        return this.requestCore('crypto.mnemonic.derive.sign.keys', params);
     }
 
     // HDKeys
 
-    async hdkeyXPrvFromMnemonic(phrase: string): Promise<string> {
-        return this.requestLibrary('crypto.hdkey.xprv.from.mnemonic', { phrase });
+    async hdkeyXPrvFromMnemonic(params: TONHDKeyFromMnemonicParams): Promise<string> {
+        return this.requestCore('crypto.hdkey.xprv.from.mnemonic', params);
     }
 
     async hdkeyXPrvDerive(
@@ -219,7 +247,7 @@ export default class TONCryptoModule extends TONModule {
         hardened: boolean,
         compliant: boolean,
     ): Promise<string> {
-        return this.requestLibrary(
+        return this.requestCore(
             'crypto.hdkey.xprv.derive',
             {
                 serialized,
@@ -235,7 +263,7 @@ export default class TONCryptoModule extends TONModule {
         path: string,
         compliant: boolean,
     ): Promise<string> {
-        return this.requestLibrary(
+        return this.requestCore(
             'crypto.hdkey.xprv.derive.path',
             {
                 serialized,
@@ -246,11 +274,11 @@ export default class TONCryptoModule extends TONModule {
     }
 
     async hdkeyXPrvSecret(serialized: string): Promise<string> {
-        return this.requestLibrary('crypto.hdkey.xprv.secret', { serialized });
+        return this.requestCore('crypto.hdkey.xprv.secret', { serialized });
     }
 
     async hdkeyXPrvPublic(serialized: string): Promise<string> {
-        return this.requestLibrary('crypto.hdkey.xprv.public', { serialized });
+        return this.requestCore('crypto.hdkey.xprv.public', { serialized });
     }
 
 }

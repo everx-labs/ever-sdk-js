@@ -39,6 +39,7 @@ export type TONScryptParams = {
     outputEncoding?: TONOutputEncodingType, // default Hex
 }
 
+
 export type TONNaclBoxParams = {
     message: TONInputMessage,
     nonce: string,
@@ -54,6 +55,45 @@ export type TONNaclSecretBoxParams = {
     outputEncoding?: TONOutputEncodingType, // default Hex
 }
 
+export type TONMnemonicDictionaryType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type TONMnemonicWordCountType = 12 | 15 | 18 | 21 | 24;
+
+export type TONMnemonicWordsParams = {
+    dictionary?: TONMnemonicDictionaryType,
+    wordCount?: TONMnemonicWordCountType,
+}
+
+export type TONMnemonicFromRandomParams = {
+    dictionary?: TONMnemonicDictionaryType,
+    wordCount?: TONMnemonicWordCountType,
+}
+
+export type TONMnemonicFromEntropyParams = {
+    dictionary?: TONMnemonicDictionaryType,
+    wordCount?: TONMnemonicWordCountType,
+    entropy: TONInputMessage,
+}
+
+export type TONMnemonicIsValidParams = {
+    dictionary?: TONMnemonicDictionaryType,
+    wordCount?: TONMnemonicWordCountType,
+    phrase: string,
+}
+
+export type TONMnemonicDeriveSignKeysParams = {
+    dictionary?: TONMnemonicDictionaryType,
+    wordCount?: TONMnemonicWordCountType,
+    phrase: string,
+    path?: string,
+    compliant?: boolean,
+}
+
+export type TONHDKeyFromMnemonicParams = {
+    dictionary?: TONMnemonicDictionaryType,
+    wordCount?: TONMnemonicWordCountType,
+    phrase: string,
+}
+
 export interface TONCrypto {
     factorize(challengeHex: string): Promise<TONFactorizeResult>;
 
@@ -62,6 +102,8 @@ export interface TONCrypto {
     randomGenerateBytes(length: number, outputEncoding: TONOutputEncodingType): Promise<string>;
 
     ed25519Keypair(): Promise<TONKeyPairData>;
+
+    publicKeyToString(key: string): Promise<string>;
 
     sha512(message: TONInputMessage, outputEncoding: TONOutputEncodingType): Promise<string>;
 
@@ -91,15 +133,17 @@ export interface TONCrypto {
 
     naclSignDetached(message: TONInputMessage, key: string, outputEncoding: TONOutputEncodingType): Promise<string>;
 
-    mnemonicWords(): Promise<string>;
+    mnemonicWords(params: TONMnemonicWordsParams): Promise<string>;
 
-    mnemonicFromRandom(): Promise<string>;
+    mnemonicFromRandom(params: TONMnemonicFromRandomParams): Promise<string>;
 
-    mnemonicFromEntropy(entropyHex: string): Promise<string>;
+    mnemonicFromEntropy(params: TONMnemonicFromEntropyParams): Promise<string>;
 
-    mnemonicIsValid(phrase: string): Promise<boolean>;
+    mnemonicIsValid(params: TONMnemonicIsValidParams): Promise<boolean>;
 
-    hdkeyXPrvFromMnemonic(phrase: string): Promise<string>;
+    mnemonicDeriveSignKeys(params: TONMnemonicDeriveSignKeysParams): Promise<TONKeyPairData>;
+
+    hdkeyXPrvFromMnemonic(params: TONHDKeyFromMnemonicParams): Promise<string>;
 
     hdkeyXPrvDerive(
         serialized: string,
@@ -457,5 +501,6 @@ export interface TONClient {
     crypto: TONCrypto;
     contracts: TONContracts;
     queries: TONQueries;
+    close(): void;
 }
 

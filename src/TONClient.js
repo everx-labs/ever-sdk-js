@@ -25,7 +25,114 @@ import TONQueriesModule from "./modules/TONQueriesModule";
 import type { TONClientLibrary, TONModuleContext, } from './TONModule';
 import { TONModule } from './TONModule';
 
-export class TONClientError extends Error {
+/**
+ * JavaScript platform specific configuration
+ */
+type TONClientPlatform = {
+    /**
+     * Platform specific `fetch` function
+     */
+    fetch: any,
+    /**
+     * Platform specific `WebSocket` implementation
+     * This implementation must conforms to W3C WebSocket
+     */
+    WebSocket: any,
+    /**
+     * Request creation of the client core
+     */
+    createLibrary: () => Promise<TONClientLibrary>,
+};
+
+/**
+ * Main object provided functionality of the TON Client Library
+ * Each instance of TONClient has own set of TON Client modules
+ * and has own preconfigured client context
+ */
+export class TONClient implements TONModuleContext {
+    static setLibrary(clientPlatform: TONClientPlatform) {
+        TONClient.clientPlatform = clientPlatform;
+    }
+
+
+    // Public
+    config: TONConfigModule;
+    crypto: TONCryptoModule;
+    contracts: TONContractsModule;
+    queries: TONQueriesModule;
+
+    constructor() {
+        this.modules = new Map();
+        this.config = this.getModule(TONConfigModule);
+        this.crypto = this.getModule(TONCryptoModule);
+        this.contracts = this.getModule(TONContractsModule);
+        this.queries = this.getModule(TONQueriesModule);
+    }
+
+    /**
+     * Convenient way to create configured instance of the TON Client
+     * @param {TONConfigData} config
+     * @return {Promise<TONClient>}
+     */
+    static async create(config: TONConfigData): Promise<TONClient> {
+        const client = new TONClient();
+        client.config.setData(config);
+        await client.setup();
+        return client;
+    }
+
+    /**
+     * Set up the client instance
+     * @return {Promise<void>}
+     */
+    async setup(): Promise<void> {
+        if (!TONClient.core) {
+            if (!TONClient.clientPlatform) {
+                return;
+            }
+            TONClient.core = await TONClient.clientPlatform.createLibrary();
+        }
+        const modules: TONModule[] = [...this.modules.values()];
+        for (const module of modules) {
+            await module.setup();
+        }
+    }
+
+    /**
+     * Tear down this client instance.
+     * Note that after you have called this method all future use of this instance will fail
+     * @return {Promise<void>}
+     */
+    async close(): Promise<void> {
+        await this.queries.close();
+    }
+
+    // TONModuleContext
+
+    getCore(): ?TONClientLibrary {
+        return TONClient.core;
+    }
+
+    getModule<T>(ModuleClass: typeof TONModule): T {
+        const name = ModuleClass.moduleName;
+        const existingModule = this.modules.get(name);
+        if (existingModule) {
+            return (existingModule: any);
+        }
+        const module = new ModuleClass(this);
+        this.modules.set(name, module);
+        return (module: any);
+    }
+
+    // Internals
+
+    static clientPlatform: ?TONClientPlatform = null;
+    static core: ?TONClientLibrary = null;
+
+    modules: Map<string, TONModule>;
+}
+
+export class TONClientError {
     static source = {
         CLIENT: 'client',
         NODE: 'node'
@@ -39,12 +146,13 @@ export class TONClientError extends Error {
         QUERY_FAILED: 1005,
     };
 
+    message: string;
     source: string;
     code: number;
     data: any;
 
     constructor(message: string, code: number, source: string, data?: any) {
-        super(message);
+        this.message = message;
         this.code = code;
         this.source = source;
         this.data = data;
@@ -99,92 +207,3 @@ export class TONClientError extends Error {
     }
 }
 
-class ModuleContext implements TONModuleContext {
-    modules: Map<string, TONModule>;
-
-
-    constructor() {
-        this.modules = new Map();
-    }
-
-    optionalLibrary(): ?TONClientLibrary {
-        return TONClient.library;
-    }
-
-    getModule<T>(ModuleClass: typeof TONModule): T {
-        const name = ModuleClass.moduleName;
-        const existingModule = this.modules.get(name);
-        if (existingModule) {
-            return (existingModule: any);
-        }
-        const module = new ModuleClass(this);
-        this.modules.set(name, module);
-        return (module: any);
-    }
-}
-
-
-type TONClientPlatform = {
-    fetch: any,
-    WebSocket: any,
-    createLibrary: () => Promise<TONClientLibrary>,
-};
-
-export class TONClient {
-    static setLibrary(clientPlatform: TONClientPlatform) {
-        TONClient.clientPlatform = clientPlatform;
-    }
-
-
-    // Public
-    config: TONConfigModule;
-    crypto: TONCryptoModule;
-    contracts: TONContractsModule;
-    queries: TONQueriesModule;
-
-
-    constructor() {
-        this.context = new ModuleContext();
-        this.config = this.context.getModule(TONConfigModule);
-        this.crypto = this.context.getModule(TONCryptoModule);
-        this.contracts = this.context.getModule(TONContractsModule);
-        this.queries = this.context.getModule(TONQueriesModule);
-    }
-
-    static async create(config: TONConfigData): Promise<TONClient> {
-        const client = new TONClient();
-        client.config.setData(config);
-        await client.setup();
-        return client;
-    }
-
-    async setup(): Promise<void> {
-        if (!TONClient.library) {
-            if (!TONClient.clientPlatform) {
-                return;
-            }
-            TONClient.library = await TONClient.clientPlatform.createLibrary();
-        }
-        const modules: TONModule[] = [...this.context.modules.values()];
-        for (const module of modules) {
-            await module.setup();
-        }
-    }
-
-    async close(): Promise<void> {
-        await this.queries.close();
-    }
-
-
-    // Modules
-    requiredModule<T>(ModuleClass: typeof TONModule): T {
-        return this.context.getModule<T>(ModuleClass);
-    }
-
-
-    // Internals
-    static clientPlatform: ?TONClientPlatform = null;
-    static library: ?TONClientLibrary = null;
-
-    context: ModuleContext;
-}

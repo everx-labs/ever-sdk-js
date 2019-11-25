@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import TONCryptoModule, { TONOutputEncoding } from "../src/modules/TONCryptoModule";
+import TONCryptoModule, { TONMnemonicDictionary, TONOutputEncoding } from "../src/modules/TONCryptoModule";
 import { tests } from "./_/init-tests";
 
 beforeAll(tests.init);
@@ -162,19 +162,56 @@ test('crypto', async () => {
     const mnemonicWords = await crypto.mnemonicWords();
     expect(mnemonicWords.split(' ').length).toEqual(2048);
 
-    expect((await crypto.mnemonicFromRandom()).split(' ').length).toEqual(12);
+    expect((await crypto.mnemonicFromRandom({
+        dictionary: TONMnemonicDictionary.ENGLISH,
+        wordCount: 12,
+    })).split(' ').length).toEqual(12);
 
-    expect(await crypto.mnemonicFromEntropy('00112233445566778899AABBCCDDEEFF'))
-        .toEqual('abandon math mimic master filter design carbon crystal rookie group knife young');
+    expect(await crypto.mnemonicFromEntropy({
+        entropy: { hex: '00112233445566778899AABBCCDDEEFF' },
+        dictionary: TONMnemonicDictionary.ENGLISH,
+        wordCount: 12,
+    })).toEqual('abandon math mimic master filter design carbon crystal rookie group knife young');
 
-    expect(await crypto.mnemonicIsValid(await crypto.mnemonicFromRandom())).toBeTruthy();
-    expect(await crypto.mnemonicIsValid('one two')).toBeFalsy();
+    expect(await crypto.mnemonicIsValid({
+        dictionary: TONMnemonicDictionary.ENGLISH,
+        wordCount: 12,
+        phrase: await crypto.mnemonicFromRandom({
+            dictionary: TONMnemonicDictionary.ENGLISH,
+            wordCount: 12,
+        }),
+    })).toBeTruthy();
+    expect(await crypto.mnemonicIsValid({ phrase: 'one two' })).toBeFalsy();
+
+    const keys = await crypto.mnemonicDeriveSignKeys({
+        phrase: "unit follow zone decline glare flower crisp vocal adapt magic much mesh cherry teach mechanic rain float vicious solution assume hedgehog rail sort chuckle"
+    });
+
+    const ton_public = await crypto.publicKeyToString(keys.public);
+    expect(ton_public).toEqual('PubDdJkMyss2qHywFuVP1vzww0TpsLxnRNnbifTCcu-XEgW0');
+
+
+    const phrase = await crypto.mnemonicFromRandom();
+    expect(phrase.split(" ").length).toEqual(24);
+
+
+    const entropy = '2199ebe996f14d9e4e2595113ad1e6276bd05e2e147e16c8ab8ad5d47d13b44fcf';
+    const phrase2 = await crypto.mnemonicFromEntropy({
+        entropy: { hex: entropy }
+    });
+    const public2 = (await crypto.mnemonicDeriveSignKeys({
+        phrase: phrase2,
+    })).public;
+    const ton_public2 = await crypto.publicKeyToString(public2);
+    expect(ton_public2).toEqual('PuYGEX9Zreg-CX4Psz5dKehzW9qCs794oBVUKqqFO7aWAOTD');
 
     // HDKeys
 
-    const master = await crypto.hdkeyXPrvFromMnemonic(
-        'abuse boss fly battle rubber wasp afraid hamster guide essence vibrant tattoo'
-    );
+    const master = await crypto.hdkeyXPrvFromMnemonic({
+        dictionary: TONMnemonicDictionary.ENGLISH,
+        wordCount: 12,
+        phrase: 'abuse boss fly battle rubber wasp afraid hamster guide essence vibrant tattoo'
+    });
     expect(master).toEqual('xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC');
     expect(await crypto.hdkeyXPrvSecret(master))
         .toEqual('0c91e53128fa4d67589d63a6c44049c1068ec28a63069a55ca3de30c57f8b365');

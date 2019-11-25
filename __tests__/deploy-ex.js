@@ -102,71 +102,64 @@ const deployer_package: TONContractPackage = {
             {
                 "name": "setContract",
                 "inputs": [
-                    {"name":"_contract","type":"cell"}
+                    { "name": "_contract", "type": "cell" }
                 ],
-                "outputs": [
-                ]
+                "outputs": []
             },
             {
                 "name": "deploy",
                 "inputs": [
-                    {"name":"pubkey","type":"uint256"},
-                    {"name":"gram","type":"uint128"},
-                    {"name":"constuctor_id","type":"uint256"},
-                    {"name":"constuctor_param0","type":"uint32"},
-                    {"name":"constuctor_param1","type":"uint256"}
+                    { "name": "pubkey", "type": "uint256" },
+                    { "name": "gram", "type": "uint128" },
+                    { "name": "constuctor_id", "type": "uint256" },
+                    { "name": "constuctor_param0", "type": "uint32" },
+                    { "name": "constuctor_param1", "type": "uint256" }
                 ],
                 "outputs": [
-                    {"name":"value0","type":"address"}
+                    { "name": "value0", "type": "address" }
                 ]
             },
             {
                 "name": "setCode",
                 "inputs": [
-                    {"name":"_code","type":"cell"}
+                    { "name": "_code", "type": "cell" }
                 ],
-                "outputs": [
-                ]
+                "outputs": []
             },
             {
                 "name": "deploy2",
                 "inputs": [
-                    {"name":"data","type":"cell"},
-                    {"name":"gram","type":"uint128"},
-                    {"name":"constuctor_id","type":"uint256"},
-                    {"name":"constuctor_param0","type":"uint32"},
-                    {"name":"constuctor_param1","type":"uint256"}
+                    { "name": "data", "type": "cell" },
+                    { "name": "gram", "type": "uint128" },
+                    { "name": "constuctor_id", "type": "uint256" },
+                    { "name": "constuctor_param0", "type": "uint32" },
+                    { "name": "constuctor_param1", "type": "uint256" }
                 ],
                 "outputs": [
-                    {"name":"value0","type":"address"}
+                    { "name": "value0", "type": "address" }
                 ]
             },
             {
                 "name": "deploy3",
                 "inputs": [
-                    {"name":"contr","type":"cell"},
-                    {"name":"addr","type":"address"},
-                    {"name":"grams","type":"uint128"},
-                    {"name":"payload","type":"cell"}
+                    { "name": "contr", "type": "cell" },
+                    { "name": "addr", "type": "address" },
+                    { "name": "grams", "type": "uint128" },
+                    { "name": "payload", "type": "cell" }
                 ],
                 "outputs": [
-                    {"name":"value0","type":"address"}
+                    { "name": "value0", "type": "address" }
                 ]
             },
             {
                 "name": "constructor",
-                "inputs": [
-                ],
-                "outputs": [
-                ]
+                "inputs": [],
+                "outputs": []
             }
         ],
-        "events": [
-        ],
-        "data": [
-        ]
-    } 
-    ,
+        "events": [],
+        "data": []
+    },
     imageBase64: "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"
 };
 
@@ -354,11 +347,11 @@ test('Deploy from contract 3', async () => {
         publicKeyHex: keys.public,
     });
 
-    const address = "0:" + deployData.accountId || "";
+    const address = '0:' + (deployData.accountId || '');
 
     const runBody = await contracts.createRunBody({
         abi: deployee_package.abi,
-        function: "constructor",
+        function: 'constructor',
         params: {
             _param1: 1,
             _param2: 2

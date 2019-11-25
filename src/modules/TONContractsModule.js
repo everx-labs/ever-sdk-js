@@ -45,6 +45,7 @@ import type {
     TONContractRunMessage,
     TONContractRunParams,
     TONContractRunResult,
+    TONContracts,
     TONContractUnsignedDeployMessage,
     TONContractUnsignedMessage,
     TONContractUnsignedRunMessage
@@ -188,7 +189,7 @@ export const QBounceType = {
 };
 
 
-export default class TONContractsModule extends TONModule {
+export default class TONContractsModule extends TONModule implements TONContracts {
     config: TONConfigModule;
 
     queries: TONQueriesModule;
@@ -240,7 +241,7 @@ export default class TONContractsModule extends TONModule {
             messageId: string,
             messageIdBase64: string,
             messageBodyBase64: string,
-        } = await this.requestLibrary('contracts.deploy.message', {
+        } = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
@@ -261,7 +262,7 @@ export default class TONContractsModule extends TONModule {
 
     async createRunMessage(params: TONContractRunParams): Promise<TONContractRunMessage> {
         this.config.log('createRunMessage', params);
-        const message = await this.requestLibrary('contracts.run.message', {
+        const message = await this.requestCore('contracts.run.message', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
@@ -279,7 +280,7 @@ export default class TONContractsModule extends TONModule {
         const result: {
             encoded: TONContractUnsignedMessage,
             addressHex: string,
-        } = await this.requestLibrary('contracts.deploy.encode_unsigned_message', {
+        } = await this.requestCore('contracts.deploy.encode_unsigned_message', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
@@ -295,7 +296,7 @@ export default class TONContractsModule extends TONModule {
 
 
     async createUnsignedRunMessage(params: TONContractRunParams): Promise<TONContractUnsignedRunMessage> {
-        const signParams = await this.requestLibrary('contracts.run.encode_unsigned_message', {
+        const signParams = await this.requestCore('contracts.run.encode_unsigned_message', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
@@ -310,7 +311,7 @@ export default class TONContractsModule extends TONModule {
 
 
     async createSignedMessage(params: TONContractCreateSignedMessageParams): Promise<TONContractMessage> {
-        return this.requestLibrary('contracts.encode_message_with_sign', params);
+        return this.requestCore('contracts.encode_message_with_sign', params);
     }
 
 
@@ -339,45 +340,45 @@ export default class TONContractsModule extends TONModule {
     async getCodeFromImage(
         params: TONContractGetCodeFromImageParams
     ): Promise<TONContractGetCodeFromImageResult> {
-        return this.requestLibrary('contracts.image.code', params);
+        return this.requestCore('contracts.image.code', params);
     }
 
     async getDeployData(
         params: TONContractGetDeployDataParams
     ): Promise<TONContractGetDeployDataResult> {
-        return this.requestLibrary('contracts.deploy.data', params);
+        return this.requestCore('contracts.deploy.data', params);
     }
 
     async createRunBody(
         params: TONContractCreateRunBodyParams
     ): Promise<TONContractCreateRunBodyResult> {
-        return this.requestLibrary('contracts.run.body', params);
+        return this.requestCore('contracts.run.body', params);
     }
 
     async getFunctionId(
         params: TONContractGetFunctionIdParams
     ): Promise<TONContractGetFunctionIdResult> {
-        return this.requestLibrary('contracts.function.id', params);
+        return this.requestCore('contracts.function.id', params);
     }
 
     // Message parsing
 
     async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
-        return this.requestLibrary('contracts.run.output', params);
+        return this.requestCore('contracts.run.output', params);
     }
 
 
     async decodeInputMessageBody(
         params: TONContractDecodeMessageBodyParams,
     ): Promise<TONContractDecodeMessageBodyResult> {
-        return this.requestLibrary('contracts.run.unknown.input', params);
+        return this.requestCore('contracts.run.unknown.input', params);
     }
 
 
     async decodeOutputMessageBody(
         params: TONContractDecodeMessageBodyParams,
     ): Promise<TONContractDecodeMessageBodyResult> {
-        return this.requestLibrary('contracts.run.unknown.output', params);
+        return this.requestCore('contracts.run.unknown.output', params);
     }
 
     // Message processing
@@ -505,13 +506,13 @@ export default class TONContractsModule extends TONModule {
     // Address processing
 
     async convertAddress(params: TONContractConvertAddressParams): Promise<TONContractConvertAddressResult> {
-        return this.requestLibrary('contracts.address.convert', params);
+        return this.requestCore('contracts.address.convert', params);
     }
 
     // Internals
 
     async internalDeployNative(params: TONContractDeployParams): Promise<TONContractDeployResult> {
-        return this.requestLibrary('contracts.deploy', {
+        return this.requestCore('contracts.deploy', {
             abi: params.package.abi,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
@@ -522,7 +523,7 @@ export default class TONContractsModule extends TONModule {
 
 
     async internalRunNative(params: TONContractRunParams): Promise<TONContractRunResult> {
-        return await this.requestLibrary('contracts.run', {
+        return await this.requestCore('contracts.run', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
@@ -564,7 +565,7 @@ export default class TONContractsModule extends TONModule {
         );
 
         removeTypeName(account);
-        return this.requestLibrary('contracts.run.local', {
+        return this.requestCore('contracts.run.local', {
             address: params.address,
             account,
             abi: params.abi,
