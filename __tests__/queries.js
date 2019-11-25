@@ -154,4 +154,19 @@ test("Subscribe for failed server", async () => {
     //     setTimeout(resolve, 100_000);
     // })
 });
+const shardHashesQuery = `
+    workchain_id
+    master {
+        shard_hashes {
+          workchain_id
+          shard
+          descr {seq_no}
+        }
+    }
+`;
 
+test('Check shard_hashes greater then 0', async () => {
+    const queryResult = (await tests.client.queries.blocks.query({}, shardHashesQuery));
+    expect(queryResult.length)
+        .toBeGreaterThan(0);
+});
