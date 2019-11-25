@@ -207,9 +207,11 @@ test('crypto', async () => {
 
     // HDKeys
 
-    const master = await crypto.hdkeyXPrvFromMnemonic(
-        'abuse boss fly battle rubber wasp afraid hamster guide essence vibrant tattoo'
-    );
+    const master = await crypto.hdkeyXPrvFromMnemonic({
+        dictionary: TONMnemonicDictionary.ENGLISH,
+        wordCount: 12,
+        phrase: 'abuse boss fly battle rubber wasp afraid hamster guide essence vibrant tattoo'
+    });
     expect(master).toEqual('xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC');
     expect(await crypto.hdkeyXPrvSecret(master))
         .toEqual('0c91e53128fa4d67589d63a6c44049c1068ec28a63069a55ca3de30c57f8b365');
