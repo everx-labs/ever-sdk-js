@@ -4,15 +4,20 @@ import { TONClient } from "../../src/TONClient";
 import type { TONConfigData, TONContractDeployParams, TONContractDeployResult } from "../../types";
 import { ensureBinaries } from "./binaries";
 import { deploy_with_giver, get_grams_from_giver, readGiverKeys } from "./giver";
+import { assertAbstractType } from "graphql";
 
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
-export const nodeSe = false;
+export const nodeSe = !!process.env.NODESE
+    && process.env.NODESE.toLowerCase() !== 'false'
+    && process.env.NODESE !== '0';
 
-const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
+if (!process.env.TONCLIENTJS_SERVERS) throw new Error('Servers list is not specified');
+const serversConfig = process.env.TONCLIENTJS_SERVERS.replace(/ /gi,'').split(',');
 
 
 jest.setTimeout(200_000);
@@ -51,7 +56,7 @@ export const tests: {
 } = {
     config: {
         defaultWorkchain: 0,
-        servers: nodeSe ? serversConfig.local : serversConfig.external,
+        servers: serversConfig,
         log_verbose: false,
     },
     client: new TONClient(),
