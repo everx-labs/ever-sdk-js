@@ -5,7 +5,7 @@ pipeline {
         disableConcurrentBuilds()
         parallelsAlwaysFailFast()
     }
-    stages { 
+    stages {
         stage('Started') {
             steps {
                 echo "Job: ${JOB_NAME}"
