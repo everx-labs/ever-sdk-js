@@ -6,7 +6,7 @@ pipeline {
         parallelsAlwaysFailFast()
         githubPush()
     }
-    stages {
+    stages { 
         stage('Started') {
             steps {
                 echo "Job: ${JOB_NAME}"
