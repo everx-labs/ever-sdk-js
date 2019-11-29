@@ -10,11 +10,6 @@ const path = require('path');
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
-export const nodeSe = true;
-
-const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
-
-
 jest.setTimeout(200_000);
 
 async function init() {
@@ -41,6 +36,9 @@ async function done() {
 }
 
 
+export const nodeSe = false;
+const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
+
 export const tests: {
     config: TONConfigData,
     client: TONClient,
@@ -51,9 +49,7 @@ export const tests: {
 } = {
     config: {
         defaultWorkchain: 0,
-        servers: ['https://net.ton.dev'],
-        // servers: ['https://azt010.tonlabs.io'],
-        // queriesServer: 'http://0.0.0.0:4000/graphql',
+        servers: nodeSe ? serversConfig.local : serversConfig.external,
         log_verbose: true,
     },
     client: new TONClient(),

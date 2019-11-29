@@ -65,11 +65,9 @@ export default class TONQueriesModule extends TONModule {
         let httpUrl = config.queriesHttpUrl();
         let wsUrl = config.queriesWsUrl();
         const fetch = clientPlatform.fetch;
-        const response = await fetch(httpUrl, {
-            redirect: 'manual'
-        });
-        if (response.status === 308) {
-            const location = response.headers.get('Location');
+        const response = await fetch(httpUrl);
+        if (response.redirected) {
+            const location = response.url;
             if (!!location) {
                 httpUrl = location;
                 wsUrl = location
