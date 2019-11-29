@@ -33,6 +33,11 @@ type Subscription = {
     unsubscribe: () => void
 }
 
+export type Request = {
+    id: string,
+    body: string,
+}
+
 export default class TONQueriesModule extends TONModule {
     config: TONConfigModule;
     overrideWsUrl: ?string;
@@ -77,6 +82,29 @@ export default class TONQueriesModule extends TONModule {
             wsUrl,
             fetch,
             WebSocket: clientPlatform.WebSocket,
+        }
+    }
+
+    async postRequests(requests: Request[]): Promise<void> {
+        const ql = `mutation postRequests($requests: [Request]) {
+            postRequests(requests: $requests)
+        }`;
+        const mutation = gql([ql]);
+        const client = await this.ensureClient();
+        try {
+            await client.mutate({
+                mutation,
+                variables: {
+                    requests,
+                },
+            });
+        } catch (error) {
+            const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
+            if (errors) {
+                throw TONClientError.queryFailed(errors);
+            } else {
+                throw error;
+            }
         }
     }
 

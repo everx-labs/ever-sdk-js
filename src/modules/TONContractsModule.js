@@ -383,7 +383,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message processing
 
-    async sendMessage(params: TONContractMessage): Promise<void> {
+    async sendMessageRest(params: TONContractMessage): Promise<void> {
         const { clientPlatform } = TONClient;
         if (!clientPlatform) {
             throw TONClientError.clientDoesNotConfigured();
@@ -415,13 +415,23 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
     }
 
+    async sendMessage(params: TONContractMessage): Promise<void> {
+        await this.queries.postRequests([
+            {
+                id: params.messageIdBase64,
+                body: params.messageBodyBase64,
+            }
+        ]);
+        this.config.log('request posted');
+    }
+
 
     async processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction> {
         let transaction: ?QTransaction = null;
         let retry = true;
         while (retry) {
             retry = false;
-            await this.sendMessage(message);
+            await this.sendMessageRest(message);
             try {
                 transaction = await this.queries.transactions.waitFor({
                     in_msg: { eq: message.messageId },
@@ -697,5 +707,5 @@ const transactionDetails = `
         valid
         result_code
         no_funds
-  	}    
+  	}
    `;
