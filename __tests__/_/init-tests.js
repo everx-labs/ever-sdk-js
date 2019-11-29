@@ -10,11 +10,6 @@ const path = require('path');
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
-export const nodeSe = false;
-
-const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
-
-
 jest.setTimeout(200_000);
 
 async function init() {
@@ -40,6 +35,9 @@ async function done() {
     await tests.client.close();
 }
 
+
+export const nodeSe = true;
+const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
 
 export const tests: {
     config: TONConfigData,
