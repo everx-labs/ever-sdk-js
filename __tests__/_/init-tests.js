@@ -36,7 +36,7 @@ async function done() {
 }
 
 
-export const nodeSe = false;
+export const nodeSe = true;
 const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
 
 export const tests: {
@@ -50,7 +50,7 @@ export const tests: {
     config: {
         defaultWorkchain: 0,
         servers: nodeSe ? serversConfig.local : serversConfig.external,
-        log_verbose: true,
+        log_verbose: false,
     },
     client: new TONClient(),
     init,
