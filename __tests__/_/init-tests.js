@@ -14,6 +14,21 @@ export const nodeSe = process.env.TEST_NODE_SE || false;
 
 const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
 
+const nodeSeAddress = process.env.NODE_SE_ADDRESS || '0.0.0.0';
+const testNetAddress = process.env.TESTNET_ADDRESS || 'testnet.ton.dev';
+
+// const serversConfig = {
+//     "local": [
+//         "http://${nodeSeAddress}"
+//     ],
+//     "external": [
+//         "https://${testNetAddress}"
+//     ]
+// }'
+
+serversConfig.local = ["http://" + nodeSeAddress];
+serversConfig.external = ["https://" + testNetAddress];
+
 
 jest.setTimeout(200_000);
 
