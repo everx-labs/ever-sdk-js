@@ -56,5 +56,6 @@ export const tests: {
     init,
     done,
     get_grams_from_giver,
-    deploy_with_giver
+    deploy_with_giver,
+    nodeSe
 };

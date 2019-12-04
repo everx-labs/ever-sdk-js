@@ -52,9 +52,22 @@ test("RunLocal", async () => {
 
     console.log(`Get (runLocal): ${JSON.stringify(runLocalResponse)}`);
 
-    expect(runLocalResponse).toEqual({
-        output: {
+    expect(runLocalResponse.output).toEqual({
             value0: "0:2222222222222222222222222222222222222222222222222222222222222222"
-        }
     });
+
+    const message = await ton.contracts.createRunMessage({
+        address: packageAddress,
+        abi: SubscriptionContractPackage.abi,
+        functionName: 'getWallet',
+        input: {},
+        keyPair: keys,
+    });
+
+    const runLocalMsgResponse = await ton.contracts.processRunMessageLocal({
+        address: packageAddress,
+        message: message,
+    });
+
+    expect(runLocalResponse).toEqual(runLocalMsgResponse);
 });
