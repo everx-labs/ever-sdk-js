@@ -10,25 +10,19 @@ const path = require('path');
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
-export const nodeSe = process.env.TEST_NODE_SE || false;
-
-const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
-
+export const nodeSe = process.env.USE_NODE_SE === "false" ? false : true;
 const nodeSeAddress = process.env.NODE_SE_ADDRESS || '0.0.0.0';
 const testNetAddress = process.env.TESTNET_ADDRESS || 'testnet.ton.dev';
 
-// const serversConfig = {
-//     "local": [
-//         "http://${nodeSeAddress}"
-//     ],
-//     "external": [
-//         "https://${testNetAddress}"
-//     ]
-// }'
+// const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
+// serversConfig.local = ["http://" + nodeSeAddress];
+// serversConfig.external = ["https://" + testNetAddress];
 
-serversConfig.local = ["http://" + nodeSeAddress];
-serversConfig.external = ["https://" + testNetAddress];
+// console.log("serversConfig:", serversConfig)
 
+const serversConfig = JSON.parse(`{"local": [ "http://${nodeSeAddress}" ], "external": [ "https://${testNetAddress}" ]}`);
+
+console.log("serversConfig:", serversConfig)
 
 jest.setTimeout(200_000);
 
