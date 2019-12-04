@@ -22,7 +22,7 @@ const testNetAddress = process.env.TESTNET_ADDRESS || 'testnet.ton.dev';
 
 const serversConfig = JSON.parse(`{"local": [ "http://${nodeSeAddress}" ], "external": [ "https://${testNetAddress}" ]}`);
 
-console.log("serversConfig:", serversConfig)
+// console.log("serversConfig:", serversConfig)
 
 jest.setTimeout(200_000);
 
