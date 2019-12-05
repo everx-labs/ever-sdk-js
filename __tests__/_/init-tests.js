@@ -18,15 +18,13 @@ console.log("nodeSe:", nodeSe);
 console.log("nodeSeAddress:", nodeSeAddress);
 console.log("testNetAddress:", testNetAddress);
 
-// const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
-// serversConfig.local = ["http://" + nodeSeAddress];
-// serversConfig.external = ["https://" + testNetAddress];
+const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
+serversConfig.local = ["http://" + nodeSeAddress];
+serversConfig.external = ["https://" + testNetAddress];
 
-// console.log("serversConfig:", serversConfig)
+// const serversConfig = JSON.parse(`{"local": [ "http://${nodeSeAddress}" ], "external": [ "https://${testNetAddress}" ]}`);
 
-const serversConfig = JSON.parse(`{"local": [ "http://${nodeSeAddress}" ], "external": [ "https://${testNetAddress}" ]}`);
-
-// console.log("serversConfig:", serversConfig)
+console.log("serversConfig:", serversConfig)
 
 jest.setTimeout(200_000);
 
