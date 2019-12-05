@@ -18,7 +18,16 @@ console.log("nodeSe:", nodeSe);
 console.log("nodeSeAddress:", nodeSeAddress);
 console.log("testNetAddress:", testNetAddress);
 
-const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
+// const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
+const serversConfig = {};
+// const serversConfig = {
+//     "local": [
+//         "http://0.0.0.0"
+//     ],
+//     "external": [
+//         "https://testnet.ton.dev"
+//     ]
+// }
 serversConfig.local = ["http://" + nodeSeAddress];
 serversConfig.external = ["https://" + testNetAddress];
 
