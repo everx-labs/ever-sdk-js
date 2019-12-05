@@ -6,9 +6,23 @@ pipeline {
         parallelsAlwaysFailFast()
     }
     stages {
-        stage('Started') {
+        stage('Run tests') {
             steps {
                 echo "Job: ${JOB_NAME}"
+                def params = [
+                    [
+                        $class: 'StringParameterValue',
+                        name: 'ton_client_js_branch',
+                        value: "${GIT_BRANCH}"
+                    ],
+                    [
+                        $class: 'StringParameterValue',
+                        name: 'ton_client_js_commit',
+                        value: "${GIT_COMMIT}"
+                    ]
+                ] 
+
+                build job: "Integration/sdk-intg-test/feature-add-pipeline", parameters: params
             }
         }
     }
