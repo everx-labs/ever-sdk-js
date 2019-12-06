@@ -9,14 +9,14 @@ require('dotenv').config();
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
-export const nodeSe = !!process.env.NODESE
-    && process.env.NODESE.toLowerCase() !== 'false'
-    && process.env.NODESE !== '0';
+export const nodeSe = !!process.env.USE_NODE_SE
+    && process.env.USE_NODE_SE.toLowerCase() !== 'false'
+    && process.env.USE_NODE_SE !== '0';
 
-if (!process.env.TONCLIENTJS_SERVERS) {
+if (!process.env.TON_NETWORK_ADDRESS) {
     throw new Error('Servers list is not specified');
 }
-const serversConfig = process.env.TONCLIENTJS_SERVERS.replace(/ /gi, '').split(',');
+const serversConfig = process.env.TON_NETWORK_ADDRESS.replace(/ /gi, '').split(',');
 
 
 jest.setTimeout(200_000);
