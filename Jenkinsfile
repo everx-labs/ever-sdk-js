@@ -19,7 +19,8 @@ pipeline {
                         [
                             $class: 'StringParameterValue',
                             name: 'dockerimage_local_node',
-                            value: "tonlabs/local-node:latest"
+                            // value: "tonlabs/local-node:latest"
+                            value: "tonlabs/startup-edition-node:tos-release-candidate"
                         ],
                         [
                             $class: 'StringParameterValue',
@@ -33,6 +34,7 @@ pipeline {
                         ]
                     ] 
 
+                    // build job: "Integration/sdk-intg-test/master", parameters: params
                     build job: "Integration/sdk-intg-test/master", parameters: params
                 }
             }
