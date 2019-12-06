@@ -19,8 +19,7 @@ pipeline {
                         [
                             $class: 'StringParameterValue',
                             name: 'dockerimage_local_node',
-                            // value: "tonlabs/local-node:latest"
-                            value: "tonlabs/startup-edition-node:tos-release-candidate"
+                            value: "tonlabs/local-node:latest"
                         ],
                         [
                             $class: 'StringParameterValue',
