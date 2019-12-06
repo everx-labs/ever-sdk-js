@@ -10,17 +10,11 @@ const path = require('path');
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
-export const nodeSe = process.env.USE_NODE_SE === "false" ? false : true;
-
-const serversConfig = {};
-serversConfig.local = [process.env.NODE_SE_ADDRESS || 'http://0.0.0.0'];
-serversConfig.external = [process.env.TESTNET_ADDRESS || 'https://testnet.ton.dev'];
-
 jest.setTimeout(200_000);
 
 async function init() {
     await ensureBinaries();
-
+    
     //$FlowFixMe
     const library = require('../tonclient.node');
     TONClient.setLibrary({
@@ -40,6 +34,13 @@ async function init() {
 async function done() {
     await tests.client.close();
 }
+
+
+export const nodeSe = process.env.USE_NODE_SE === "false" ? false : true;
+
+const serversConfig = {};
+serversConfig.local = [process.env.NODE_SE_ADDRESS || 'http://0.0.0.0'];
+serversConfig.external = [process.env.TESTNET_ADDRESS || 'https://testnet.ton.dev'];
 
 
 export const tests: {
