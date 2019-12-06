@@ -35,7 +35,7 @@ pipeline {
                     ] 
 
                     // build job: "Integration/sdk-intg-test/master", parameters: params
-                    build job: "Integration/sdk-intg-test/master", parameters: params
+                    build job: "Integration/sdk-intg-test/feature-ci-failfast", parameters: params
                 }
             }
         }
