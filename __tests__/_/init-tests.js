@@ -23,8 +23,8 @@ jest.setTimeout(200_000);
 
 async function init() {
     await ensureBinaries();
-
-    // $FlowFixMe
+    
+    //$FlowFixMe
     const library = require('../tonclient.node');
     TONClient.setLibrary({
         fetch,
