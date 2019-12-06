@@ -11,16 +11,10 @@ const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
 export const nodeSe = process.env.USE_NODE_SE === "false" ? false : true;
-// const nodeSeAddress = process.env.NODE_SE_ADDRESS || 'http://0.0.0.0';
-// const testNetAddress = process.env.TESTNET_ADDRESS || 'https://testnet.ton.dev';
 
 const serversConfig = {};
 serversConfig.local = [process.env.NODE_SE_ADDRESS || 'http://0.0.0.0'];
 serversConfig.external = [process.env.TESTNET_ADDRESS || 'https://testnet.ton.dev'];
-// serversConfig.local = [nodeSeAddress];
-// serversConfig.external = [testNetAddress];
-
-console.log("serversConfig:", serversConfig);
 
 jest.setTimeout(200_000);
 
