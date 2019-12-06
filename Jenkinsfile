@@ -33,7 +33,7 @@ pipeline {
                         ]
                     ] 
 
-                    build job: "Integration/sdk-intg-test/feature-add-pipeline", parameters: params
+                    build job: "Integration/sdk-intg-test/master", parameters: params
                 }
             }
         }
