@@ -1,14 +1,23 @@
 // @flow
 
-import { TONClient } from "../../src/TONClient";
-import type { TONConfigData, TONContractDeployParams, TONContractDeployResult } from "../../types";
-import { ensureBinaries } from "./binaries";
-import { deploy_with_giver, get_grams_from_giver, readGiverKeys } from "./giver";
+import { TONClient } from '../../src/TONClient';
+import type { TONConfigData, TONContractDeployParams, TONContractDeployResult } from '../../types';
+import { ensureBinaries } from './binaries';
+import { deploy_with_giver, get_grams_from_giver, readGiverKeys } from './giver';
 
-const fs = require('fs');
-const path = require('path');
+require('dotenv').config();
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
+
+export const nodeSe = !!process.env.NODESE
+    && process.env.NODESE.toLowerCase() !== 'false'
+    && process.env.NODESE !== '0';
+
+if (!process.env.TONCLIENTJS_SERVERS) {
+    throw new Error('Servers list is not specified');
+}
+const serversConfig = process.env.TONCLIENTJS_SERVERS.replace(/ /gi, '').split(',');
+
 
 jest.setTimeout(200_000);
 
@@ -22,25 +31,18 @@ async function init() {
         WebSocket: WebSocket.w3cwebsocket,
         createLibrary: () => {
             return Promise.resolve(library);
-        }
+        },
     });
     const client: TONClient = await TONClient.create(tests.config);
     tests.client = client;
     console.log('[Init] Created client is connected to: ', client.config.data && client.config.data.servers);
-    //await generateGiverKeys(tests.client);
+    // await generateGiverKeys(tests.client);
     await readGiverKeys();
 }
 
 async function done() {
     await tests.client.close();
 }
-
-
-export const nodeSe = process.env.USE_NODE_SE === "false" ? false : true;
-
-const serversConfig = {};
-serversConfig.local = [process.env.NODE_SE_ADDRESS || 'http://0.0.0.0'];
-serversConfig.external = [process.env.TESTNET_ADDRESS || 'https://testnet.ton.dev'];
 
 
 export const tests: {
@@ -53,12 +55,12 @@ export const tests: {
 } = {
     config: {
         defaultWorkchain: 0,
-        servers: nodeSe ? serversConfig.local : serversConfig.external,
+        servers: serversConfig,
         log_verbose: false,
     },
     client: new TONClient(),
     init,
     done,
     get_grams_from_giver,
-    deploy_with_giver
+    deploy_with_giver,
 };
