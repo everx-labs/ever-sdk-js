@@ -436,7 +436,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 transaction = await this.queries.transactions.waitFor({
                     in_msg: { eq: message.messageId },
                     status: { eq: QTransactionProcessingStatus.finalized },
-                }, resultFields, 10_000);
+                }, resultFields, 40_000);
             } catch (error) {
                 if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
                     this.config.log('Timeout, retrying...');

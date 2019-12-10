@@ -78,11 +78,12 @@ test("Subscribe for transactions with addresses", async () => {
         keyPair: walletKeys,
     });
 
+    console.log('>>>', `Subscribe to transactions on [${message.address}]...`);
     const transactions = [];
     const subscription = (await queries.transactions.subscribe({
         account_addr: { eq: message.address }
     }, 'id', (e, d) => {
-        console.log('>>>', d);
+        console.log('>>> Subscription triggered', d);
         transactions.push(d);
     }));
 
@@ -99,7 +100,7 @@ test("Subscribe for transactions with addresses", async () => {
     await new Promise((resolve) => {
         setTimeout(() => {
             resolve();
-        }, 10_000);
+        }, 40_000);
     });
     subscription.unsubscribe();
     expect(transactions.length).toBeGreaterThan(0);
