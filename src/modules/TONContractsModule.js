@@ -227,7 +227,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.internalRunJs(params);
     }
 
-    async runLocal(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
+    async runLocal(params: TONContractLocalRunParams): Promise<TONContractLocalRunResult> {
 
         return this.internalRunLocalJs(params);
     }
@@ -513,6 +513,20 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
     }
 
+    async processRunMessageLocal(params: TONContractprocessRunMessageLocalParams): Promise<TONContractLocalRunResult> {
+        this.config.log('processRunMessageLocal', params);
+        
+        const account = await this.getAccount(params.address);
+        
+        return this.requestCore('contracts.run.local.msg', {
+            address: params.address,
+            account,
+            abi: params.message.abi,
+            functionName: params.message.functionName,
+            messageBase64: params.message.message.messageBodyBase64
+        });
+    }
+
     // Address processing
 
     async convertAddress(params: TONContractConvertAddressParams): Promise<TONContractConvertAddressResult> {
@@ -554,8 +568,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.processRunMessage(message);
     }
 
-
-    async internalRunLocalJs(params: TONContractLocalRunParams): Promise<TONContractRunResult> {
+    async getAccount(address: string): Promise<QAccount> {
         function removeTypeName(obj: any) {
             if (obj.__typename) {
                 delete obj.__typename;
@@ -568,13 +581,19 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
 
         const account = await this.queries.accounts.waitFor({
-                id: { eq: params.address },
+                id: { eq: address },
                 acc_type: { eq: QAccountType.active },
             },
-            'code data'
+            'id code data balance balance_other { currency value }'
         );
 
         removeTypeName(account);
+        return account;
+    }
+
+    async internalRunLocalJs(params: TONContractLocalRunParams): Promise<TONContractLocalRunResult> {
+        const account = await this.getAccount(params.address);
+
         return this.requestCore('contracts.run.local', {
             address: params.address,
             account,

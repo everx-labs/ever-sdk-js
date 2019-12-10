@@ -23,7 +23,7 @@ jest.setTimeout(200_000);
 
 async function init() {
     await ensureBinaries();
-    
+
     //$FlowFixMe
     const library = require('../tonclient.node');
     TONClient.setLibrary({
@@ -63,4 +63,5 @@ export const tests: {
     done,
     get_grams_from_giver,
     deploy_with_giver,
+    nodeSe
 };

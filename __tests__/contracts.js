@@ -452,3 +452,48 @@ test('Address conversion', async () => {
     });
     expect(convertedAddress.address).toEqual(hex);
 });
+
+test('calc gas fee', async () => {
+    const { contracts, crypto, queries } = tests.client;
+    if (tests.nodeSe) { 
+        console.log("[calc gas fee] Skip test on Node SE");
+        return;
+    }
+    const keys = await crypto.ed25519Keypair();
+
+    const subscriptionAddress = '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+
+    const deployed = await tests.deploy_with_giver({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    const localResult = await contracts.runLocal({
+        address: deployed.address,
+        functionName: 'setSubscriptionAccount',
+        abi: WalletContractPackage.abi,
+        input: {
+            addr: subscriptionAddress
+        },
+        keyPair: keys,
+    });
+
+    const resultNet = await contracts.run({
+        address: deployed.address,
+        functionName: 'setSubscriptionAccount',
+        abi: WalletContractPackage.abi,
+        input: {
+            addr: subscriptionAddress
+        },
+        keyPair: keys,
+    });
+
+    const transaction = await queries.transactions.query({
+            id: { eq: resultNet.transaction.id }
+        },
+        'compute { gas_fees }'
+    );
+
+    expect(localResult.gasFee).toEqual(transaction[0].compute.gas_fees);
+});
