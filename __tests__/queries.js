@@ -15,13 +15,22 @@
  */
 
 import { QTransactionProcessingStatus } from "../src/modules/TONContractsModule";
-import { TONClient } from "../src/TONClient";
 import { get_grams_from_giver } from "./_/giver";
 import { WalletContractPackage } from "./contracts/WalletContract";
 import { tests } from "./_/init-tests";
 
 beforeAll(tests.init);
 afterAll(tests.done);
+
+test('Specialized', async () => {
+    const queries = tests.client.queries;
+    let count = await queries.getAccountsCount();
+    expect(count).toBeGreaterThan(10);
+    count = await queries.getTransactionsCount();
+    expect(count).toBeGreaterThan(10);
+    const totalBalance = BigInt(await queries.getAccountsTotalBalance());
+    expect(totalBalance > BigInt(10)).toBeTruthy();
+});
 
 test('Transaction List', async () => {
     const queries = tests.client.queries;
