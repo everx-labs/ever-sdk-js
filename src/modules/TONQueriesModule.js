@@ -83,19 +83,49 @@ export default class TONQueriesModule extends TONModule {
         }
     }
 
+    async getAccountsCount(): Promise<number> {
+        const result = await this.query('query{getAccountsCount}');
+        return result.data.getAccountsCount;
+    }
+
+    async getTransactionsCount(): Promise<number> {
+        const result = await this.query('query{getTransactionsCount}');
+        return result.data.getTransactionsCount;
+    }
+
+    async getAccountsTotalBalance(): Promise<string> {
+        const result = await this.query('query{getAccountsTotalBalance}');
+        return result.data.getAccountsTotalBalance;
+    }
+
     async postRequests(requests: Request[]): Promise<void> {
-        const ql = `mutation postRequests($requests: [Request]) {
+        return this.mutation(`mutation postRequests($requests: [Request]) {
             postRequests(requests: $requests)
-        }`;
+        }`, {
+            requests,
+        });
+    }
+
+    async mutation(ql: string, variables: { [string]: any } = {}): Promise<any> {
         const mutation = gql([ql]);
+        return this.graphQl(client => client.mutate({
+            mutation,
+            variables,
+        }));
+    }
+
+    async query(ql: string, variables: { [string]: any } = {}): Promise<any> {
+        const mutation = gql([ql]);
+        return this.graphQl(client => client.mutate({
+            mutation,
+            variables,
+        }));
+    }
+
+    async graphQl(request: (client: ApolloClient) => Promise<any>): Promise<any> {
         const client = await this.ensureClient();
         try {
-            await client.mutate({
-                mutation,
-                variables: {
-                    requests,
-                },
-            });
+            return request(client);
         } catch (error) {
             const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
             if (errors) {
@@ -189,28 +219,14 @@ class TONQCollection {
     async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number): Promise<any> {
         const c = this.collectionName;
         const t = this.typeName;
-        const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int) {
-            ${c}(filter: $filter, orderBy: $orderBy, limit: $limit) { ${result} }
-        }`;
-        const query = gql([ql]);
-        const client = await this.module.ensureClient();
-        try {
-            return (await client.query({
-                query,
-                variables: {
-                    filter,
-                    orderBy,
-                    limit
-                },
+        return (await this.module.query(
+            `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int) {
+                    ${c}(filter: $filter, orderBy: $orderBy, limit: $limit) { ${result} }
+                }`, {
+                filter,
+                orderBy,
+                limit
             })).data[c];
-        } catch (error) {
-            const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
-            if (errors) {
-                throw TONClientError.queryFailed(errors);
-            } else {
-                throw error;
-            }
-        }
     }
 
     subscribe(

@@ -15,13 +15,22 @@
  */
 
 import { QTransactionProcessingStatus } from "../src/modules/TONContractsModule";
-import { TONClient } from "../src/TONClient";
 import { get_grams_from_giver } from "./_/giver";
 import { WalletContractPackage } from "./contracts/WalletContract";
 import { tests } from "./_/init-tests";
 
 beforeAll(tests.init);
 afterAll(tests.done);
+
+test('Specialized', async () => {
+    const queries = tests.client.queries;
+    let count = await queries.getAccountsCount();
+    expect(count).toBeGreaterThan(10);
+    count = await queries.getTransactionsCount();
+    expect(count).toBeGreaterThan(10);
+    const totalBalance = BigInt(await queries.getAccountsTotalBalance());
+    expect(totalBalance > BigInt(10)).toBeTruthy();
+});
 
 test('Transaction List', async () => {
     const queries = tests.client.queries;
@@ -78,11 +87,12 @@ test("Subscribe for transactions with addresses", async () => {
         keyPair: walletKeys,
     });
 
+    console.log('>>>', `Subscribe to transactions on [${message.address}]...`);
     const transactions = [];
     const subscription = (await queries.transactions.subscribe({
         account_addr: { eq: message.address }
     }, 'id', (e, d) => {
-        console.log('>>>', d);
+        console.log('>>> Subscription triggered', d);
         transactions.push(d);
     }));
 
@@ -99,7 +109,7 @@ test("Subscribe for transactions with addresses", async () => {
     await new Promise((resolve) => {
         setTimeout(() => {
             resolve();
-        }, 10_000);
+        }, 40_000);
     });
     subscription.unsubscribe();
     expect(transactions.length).toBeGreaterThan(0);

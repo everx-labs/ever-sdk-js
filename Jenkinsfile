@@ -33,7 +33,7 @@ pipeline {
                         ]
                     ] 
 
-                    build job: "Integration/sdk-intg-test/master", parameters: params
+                    build job: "Integration/integration-tests/master", parameters: params
                 }
             }
         }
