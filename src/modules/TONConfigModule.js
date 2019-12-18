@@ -16,6 +16,7 @@
 
 // @flow
 import { TONModule } from '../TONModule';
+const initJaegerTracer = require("jaeger-client").initTracerFromEnv;
 
 export type TONConfigData = {
     defaultWorkchain: ?number,
@@ -24,6 +25,7 @@ export type TONConfigData = {
     queriesServer?: string,
     queriesWsServer?: string,
     log_verbose?: boolean,
+    jaegerEndpoint?: String,
 }
 
 type URLParts = {
@@ -89,6 +91,31 @@ function appendPath(url, path) {
 
 const defaultServer = 'services.tonlabs.io';
 
+function initTracer(serviceName, jaegerEndpoint) {
+  const config = {
+    serviceName: serviceName,
+    sampler: {
+      type: "const",
+      param: 1,
+    },
+    reporter: jaegerEndpoint ? {
+        collectorEndpoint: jaegerEndpoint,
+        logSpans: true,
+      } : {}
+  };
+  const options = {
+    logger: {
+      info(msg) {
+        console.log("INFO ", msg);
+      },
+      error(msg) {
+        console.log("ERROR", msg);
+      },
+    },
+  };
+  return initJaegerTracer(config, options);
+}
+
 export default class TONConfigModule extends TONModule {
     data: ?TONConfigData;
 
@@ -106,6 +133,7 @@ export default class TONConfigModule extends TONModule {
             : replacePrefix(this._queriesHttpUrl, "http://", "ws://");
 
         this._queriesWsUrl = resolveServer(data.queriesWsServer, queriesWsServer);
+        this.tracer = initTracer('ton-client-js', data.jaegerEndpoint);
     }
 
     log(...args: any[]) {
