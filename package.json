@@ -6,7 +6,7 @@
 	"scripts": {
 		"babel": "babel src --out-dir dist --source-maps inline",
 		"flow": "flow",
-		"test": "jest --forceExit --detectOpenHandles",
+		"test": "jest --forceExit --detectOpenHandles --coverage --coverageReporters=text-lcov | coveralls",
 		"test-ci": "jest -b -i --verbose --forceExit --detectOpenHandles",
 		"npm install": "npm install"
 	},
@@ -54,6 +54,7 @@
 		"@babel/preset-react": "^7.7.0",
 		"@babel/runtime": "^7.7.2",
 		"babel-eslint": "^10.0.3",
+		"coveralls": "^3.0.9",
 		"eslint": "^6.6.0",
 		"eslint-config-airbnb": "^18.0.1",
 		"eslint-plugin-import": "^2.18.2",
