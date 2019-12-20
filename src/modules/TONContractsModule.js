@@ -515,9 +515,9 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     async processRunMessageLocal(params: TONContractprocessRunMessageLocalParams): Promise<TONContractLocalRunResult> {
         this.config.log('processRunMessageLocal', params);
-        
+
         const account = await this.getAccount(params.address);
-        
+
         return this.requestCore('contracts.run.local.msg', {
             address: params.address,
             account,
