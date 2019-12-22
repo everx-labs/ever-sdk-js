@@ -3,7 +3,7 @@
 import { TONClient } from '../../src/TONClient';
 import type { TONConfigData, TONContractDeployParams, TONContractDeployResult } from '../../types';
 import { ensureBinaries } from './binaries';
-import { deploy_with_giver, get_grams_from_giver, readGiverKeys } from './giver';
+import { deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address } from './giver';
 
 require('dotenv').config();
 const fetch = require('node-fetch');
@@ -50,8 +50,10 @@ export const tests: {
     client: TONClient,
     init(): Promise<void>,
     done(): Promise<void>,
-    get_grams_from_giver(account: string): Promise<void>,
+    get_grams_from_giver(account: string, amount?: number): Promise<void>,
     deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult>,
+    get_giver_address(): string,
+    nodeSe: bool,
 } = {
     config: {
         defaultWorkchain: 0,
@@ -63,5 +65,6 @@ export const tests: {
     done,
     get_grams_from_giver,
     deploy_with_giver,
+    get_giver_address,
     nodeSe
 };

@@ -32,6 +32,7 @@ import type {
     TONContractDeployMessage,
     TONContractDeployParams,
     TONContractDeployResult,
+    TONContractCalcDeployFeeParams,
     TONContractGetCodeFromImageParams,
     TONContractGetCodeFromImageResult,
     TONContractGetDeployDataParams,
@@ -40,7 +41,10 @@ import type {
     TONContractGetFunctionIdResult,
     TONContractLoadParams,
     TONContractLoadResult,
-    TONContractLocalRunParams,
+    TONContractCalcRunFeeParams,
+    TONContractTransactionFees,
+    TONContractCalcFeeResult,
+    TONContractCalcMsgProcessingFeesParams,
     TONContractMessage,
     TONContractRunMessage,
     TONContractRunParams,
@@ -227,7 +231,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.internalRunJs(params);
     }
 
-    async runLocal(params: TONContractLocalRunParams): Promise<TONContractLocalRunResult> {
+    async runLocal(params: TONContractRunParams): Promise<TONContractRunResult> {
 
         return this.internalRunLocalJs(params);
     }
@@ -513,17 +517,63 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
     }
 
-    async processRunMessageLocal(params: TONContractprocessRunMessageLocalParams): Promise<TONContractLocalRunResult> {
-        this.config.log('processRunMessageLocal', params);
+    // Fee calculation
+
+    bigBalance = "0x10000000000000";
+
+    async calcRunFees(params: TONContractCalcRunFeeParams): Promise<TONContractCalcFeeResult> {
+        this.config.log('calcRunFees', params);
         
         const account = await this.getAccount(params.address);
+
+        if (params.emulateBalance || false) {
+            account.balance = this.bigBalance
+        }
         
-        return this.requestCore('contracts.run.local.msg', {
+        return this.requestCore('contracts.run.fee', {
             address: params.address,
             account,
-            abi: params.message.abi,
-            functionName: params.message.functionName,
-            messageBase64: params.message.message.messageBodyBase64
+            abi: params.abi,
+            functionName: params.functionName,
+            input: params.input,
+            keyPair: params.keyPair,
+        });
+    }
+
+    async calcDeployFees(params: TONContractCalcDeployFeeParams): Promise<TONContractCalcFeeResult> {
+        this.config.log('calcDeployFees', params);
+
+        const message = await this.createDeployMessage(params);
+        
+        return this.calcMsgProcessFees({
+            address: message.address,
+            message: message.message,
+            emulateBalance: params.emulateBalance,
+            newAccount: params.newAccount
+        });
+    }
+
+    async calcMsgProcessFees(params: TONContractCalcMsgProcessingFeesParams): Promise<TONContractCalcFeeResult> {
+        this.config.log('calcMsgProcessFees', params);
+      
+        let account: QAccount = {
+            balance: this.bigBalance,
+            id: params.address,
+            last_paid: Math.floor(Date.now() / 1000)
+        };
+
+        if (!params.newAccount) {
+            account = await this.getAccount(params.address);
+        }
+
+        if (params.emulateBalance || false) {
+            account.balance = this.bigBalance
+        }
+        
+        return this.requestCore('contracts.run.fee.msg', {
+            address: params.address,
+            account,
+            messageBase64: params.message.messageBodyBase64
         });
     }
 
@@ -580,18 +630,21 @@ export default class TONContractsModule extends TONModule implements TONContract
             });
         }
 
-        const account = await this.queries.accounts.waitFor({
-                id: { eq: address },
-                acc_type: { eq: QAccountType.active },
+        const account = await this.queries.accounts.query({
+                id: { eq: address }
             },
-            'id code data balance balance_other { currency value }'
+            'id code data balance balance_other { currency value } last_paid'
         );
 
+        if (account.length != 1) {
+            throw `No account with address ${address} found`;
+        }
+
         removeTypeName(account);
-        return account;
+        return account[0];
     }
 
-    async internalRunLocalJs(params: TONContractLocalRunParams): Promise<TONContractLocalRunResult> {
+    async internalRunLocalJs(params: TONContractRunParams): Promise<TONContractRunResult> {
         const account = await this.getAccount(params.address);
 
         return this.requestCore('contracts.run.local', {
