@@ -303,7 +303,6 @@ export type TONContractCalcFeeResult = {
 
 export type TONContractCalcMsgProcessingFeesParams = {
     address: string,
-    account?: QAccount,
     message: TONContractMessage,
     emulateBalance?: bool,
     newAccount?: bool
