@@ -18,6 +18,7 @@
 
 import { WalletContractPackage } from './contracts/WalletContract';
 import { tests } from './_/init-tests';
+import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -69,27 +70,6 @@ test('Test SDK Errors 1-3', async () => {
         expect(error.message)
             .toMatch('Invalid params: missing field \`abi\`');
     }
-
-
-    /* // TODO TypeError: Cannot read property 'abi' of undefined
-
-     try {
-         await contracts.createDeployMessage({
-             constructorParams: {},
-             keyPair: keys,
-         });
-     } catch (error) {
-         console.log(error);
-         expect(error.source)
-             .toEqual('client');
-         expect(error.code)
-             .toEqual(2);
-         expect(error.data)
-             .toBeNull();
-         expect(error.message)
-             .toMatch('Invalid params: missing field \`package\`');
-     } */
-
 
     try {
         await contracts.createDeployMessage({
@@ -143,7 +123,7 @@ test('Test SDK Errors 1-3', async () => {
 });
 
 test('Test SDK Errors > 2000', async () => {
-    const { contracts} = tests.client;
+    const { contracts, crypto } = tests.client;
     let wrongKeys = {
         'public': '',
         'secret': '6396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83'
@@ -207,38 +187,69 @@ test('Test SDK Errors > 2000', async () => {
         expect(error.message)
             .toMatch('Invalid key');
     }
-    const abi = {
-        'ABI version': 1,
-        'functions': [
-            {
-                'name': 'constructor',
-                'inputs': [],
-                'outputs': []
-            },
-            {
-                'name': 'touch',
-                'inputs': [],
-                'outputs': []
-            },
-            {
-                'name': 'sayHello',
-                'inputs': [],
-                'outputs': [
-                    {
-                        'name': 'value0',
-                        'type': 'uint32'
-                    }
-                ]
-            }
-        ],
-        'events': [],
-        'data': []
-    };
+    try {
+        await crypto.factorize('');
+    } catch (error) {
+        expect(error.source)
+            .toEqual('client');
+        expect(error.code)
+            .toEqual(2007);
+        expect(error.data)
+            .toBeNull();
+        expect(error.message)
+            .toMatch('Invalid factorize challenge: cannot parse integer from empty string');
+    }
+    try {
+        await crypto.factorize('       ');
+    } catch (error) {
+        expect(error.source)
+            .toEqual('client');
+        expect(error.code)
+            .toEqual(2007);
+        expect(error.data)
+            .toBeNull();
+        expect(error.message)
+            .toMatch('Invalid factorize challenge: invalid digit found in string');
+    }
+    try {
+        await crypto.mnemonicFromRandom({
+            dictionary: 255,
+            wordCount: 12,
+        });
+    } catch (error) {
+        expect(error.source)
+            .toEqual('client');
+        expect(error.code)
+            .toEqual(2022);
+        expect(error.data)
+            .toBeNull();
+        expect(error.message)
+            .toMatch('Invalid mnemonic dictionary');
+    }
 
+    for (const dict in TONMnemonicDictionary) {
+        try {
+            await crypto.mnemonicFromRandom({
+                dictionary: TONMnemonicDictionary[dict],
+                wordCount: 1,
+            });
+        } catch (error) {
+            if (TONMnemonicDictionary[dict] !== TONMnemonicDictionary.TON) {
+                expect(error.source)
+                    .toEqual('client');
+                expect(error.code)
+                    .toEqual(2023);
+                expect(error.data)
+                    .toBeNull();
+                expect(error.message)
+                    .toMatch('Invalid mnemonic word count');
+            }
+        }
+    }
 });
 
 test('Test SDK Errors 3000-3020', async () => {
-    const { contracts} = tests.client;
+    const { contracts } = tests.client;
     const body = '';
     try {
         await contracts.decodeOutputMessageBody({
