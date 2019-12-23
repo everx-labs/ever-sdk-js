@@ -143,7 +143,7 @@ test('Test SDK Errors 1-3', async () => {
 });
 
 test('Test SDK Errors > 2000', async () => {
-
+    const { contracts} = tests.client;
     let wrongKeys = {
         'public': '',
         'secret': '6396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83'
@@ -238,6 +238,7 @@ test('Test SDK Errors > 2000', async () => {
 });
 
 test('Test SDK Errors 3000-3020', async () => {
+    const { contracts} = tests.client;
     const body = '';
     try {
         await contracts.decodeOutputMessageBody({
