@@ -453,10 +453,11 @@ export default class TONContractsModule extends TONModule implements TONContract
         if (!transaction) {
             throw TONClientError.internalError('transaction is null');
         }
+        const transactionNow = transaction.now || 0;
         this.config.log('transaction received', {
             id: transaction.id,
             block_id: transaction.block_id,
-            now: `${new Date(transaction.now * 1000).toISOString()} (${transaction.now})`,
+            now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
         });
         return transaction;
     }
@@ -505,7 +506,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
             return this.decodeOutputMessageBody({
                 abi: params.abi,
-                bodyBase64: x.body,
+                bodyBase64: x.body || '',
             });
         }));
         const resultOutput = outputs.find((x: TONContractDecodeMessageBodyResult) => {
@@ -523,13 +524,13 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     async calcRunFees(params: TONContractCalcRunFeeParams): Promise<TONContractCalcFeeResult> {
         this.config.log('calcRunFees', params);
-        
+
         const account = await this.getAccount(params.address);
 
         if (params.emulateBalance || false) {
             account.balance = this.bigBalance
         }
-        
+
         return this.requestCore('contracts.run.fee', {
             address: params.address,
             account,
@@ -544,7 +545,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         this.config.log('calcDeployFees', params);
 
         const message = await this.createDeployMessage(params);
-        
+
         return this.calcMsgProcessFees({
             address: message.address,
             message: message.message,
@@ -555,7 +556,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     async calcMsgProcessFees(params: TONContractCalcMsgProcessingFeesParams): Promise<TONContractCalcFeeResult> {
         this.config.log('calcMsgProcessFees', params);
-      
+
         let account: QAccount = {
             balance: this.bigBalance,
             id: params.address,
@@ -569,7 +570,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         if (params.emulateBalance || false) {
             account.balance = this.bigBalance
         }
-        
+
         return this.requestCore('contracts.run.fee.msg', {
             address: params.address,
             account,
@@ -730,7 +731,7 @@ async function checkTransaction(transaction: QTransaction) {
             if (!compute.success) {
                 throw nodeError(
                     'VM terminated with exception',
-                    compute.exit_code,
+                    compute.exit_code || 0,
                     TONClientTransactionPhase.computeVm
                 );
             }
@@ -744,7 +745,7 @@ async function checkTransaction(transaction: QTransaction) {
                 action.no_funds
                     ? 'Too low balance to send outbound message'
                     : (!action.valid ? 'Outbound message is invalid' : 'Action phase failed'),
-                action.result_code,
+                action.result_code || 0,
                 TONClientTransactionPhase.action
             );
         }
