@@ -142,7 +142,7 @@ test('Test SDK Errors > 2000', async () => {
         expect(error.data)
             .toBeNull();
         expect(error.message)
-            .toMatch('Invalid secret key [PublicKey must be 32 bytes in length]: ');
+            .toMatch('Invalid public key [PublicKey must be 32 bytes in length]');
     }
 
 
