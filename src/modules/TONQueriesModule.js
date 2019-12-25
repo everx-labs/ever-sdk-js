@@ -216,16 +216,17 @@ class TONQCollection {
             collectionName.substr(1, collectionName.length - 2);
     }
 
-    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number): Promise<any> {
+    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number): Promise<any> {
         const c = this.collectionName;
         const t = this.typeName;
         return (await this.module.query(
-            `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int) {
-                    ${c}(filter: $filter, orderBy: $orderBy, limit: $limit) { ${result} }
+            `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
+                    ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
                 }`, {
                 filter,
                 orderBy,
-                limit
+                limit,
+                timeout
             })).data[c];
     }
 
@@ -270,6 +271,12 @@ class TONQCollection {
     }
 
     async waitFor(filter: any, result: string, timeout?: number): Promise<any> {
+        const docs = await this.query(filter, result, undefined, undefined, timeout || 5 * 60_000);
+        if (docs.length > 0) {
+            return docs[0];
+        }
+        throw TONClientError.waitForTimeout();
+        /* TODO:
         const config = this.module.config;
         const existing = await this.query(filter, result);
         if (existing.length > 0) {
@@ -326,6 +333,7 @@ class TONQCollection {
                 setTimeout(rejectOnTimeout, timeout);
             }
         });
+         */
     }
 }
 

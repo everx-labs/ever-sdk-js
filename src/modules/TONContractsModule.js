@@ -231,7 +231,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.internalRunJs(params);
     }
 
-    async runLocal(params: TONContractRunParams): Promise<TONContractRunResult> {
+    async runLocal(params: TONContractLocalRunParams): Promise<TONContractLocalRunResult> {
 
         return this.internalRunLocalJs(params);
     }
@@ -518,6 +518,20 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
     }
 
+    async processRunMessageLocal(params: TONContractprocessRunMessageLocalParams): Promise<TONContractLocalRunResult> {
+        this.config.log('processRunMessageLocal', params);
+
+        const account = await this.getAccount(params.address);
+
+        return this.requestCore('contracts.run.local.msg', {
+            address: params.address,
+            account,
+            abi: params.message.abi,
+            functionName: params.message.functionName,
+            messageBase64: params.message.message.messageBodyBase64
+        });
+    }
+
     // Fee calculation
 
     bigBalance = "0x10000000000000";
@@ -645,7 +659,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return account[0];
     }
 
-    async internalRunLocalJs(params: TONContractRunParams): Promise<TONContractRunResult> {
+    async internalRunLocalJs(params: TONContractLocalRunParams): Promise<TONContractLocalRunResult> {
         const account = await this.getAccount(params.address);
 
         return this.requestCore('contracts.run.local', {
