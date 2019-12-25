@@ -231,8 +231,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.internalRunJs(params);
     }
 
-    async runLocal(params: TONContractLocalRunParams): Promise<TONContractLocalRunResult> {
-
+    async runLocal(params: TONContractRunParams): Promise<TONContractRunResult> {
         return this.internalRunLocalJs(params);
     }
 
@@ -274,6 +273,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             keyPair: params.keyPair,
         });
         return {
+            address: params.address,
             abi: params.abi,
             functionName: params.functionName,
             message
@@ -335,6 +335,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<TONContractRunMessage> {
         const message = await this.createSignedMessage(params.createSignedParams);
         return {
+            address: params.address,
             abi: params.abi,
             functionName: params.functionName,
             message
@@ -518,7 +519,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
     }
 
-    async processRunMessageLocal(params: TONContractprocessRunMessageLocalParams): Promise<TONContractLocalRunResult> {
+    async processRunMessageLocal(params: TONContractRunMessage): Promise<TONContractRunResult> {
         this.config.log('processRunMessageLocal', params);
 
         const account = await this.getAccount(params.address);
@@ -526,9 +527,9 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.requestCore('contracts.run.local.msg', {
             address: params.address,
             account,
-            abi: params.message.abi,
-            functionName: params.message.functionName,
-            messageBase64: params.message.message.messageBodyBase64
+            abi: params.abi,
+            functionName: params.functionName,
+            messageBase64: params.message.messageBodyBase64
         });
     }
 
@@ -541,7 +542,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
         const account = await this.getAccount(params.address);
 
-        if (params.emulateBalance || false) {
+        if (params.emulateBalance) {
             account.balance = this.bigBalance
         }
 
@@ -581,7 +582,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             account = await this.getAccount(params.address);
         }
 
-        if (params.emulateBalance || false) {
+        if (params.emulateBalance) {
             account.balance = this.bigBalance
         }
 
@@ -651,7 +652,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             'id code data balance balance_other { currency value } last_paid'
         );
 
-        if (account.length != 1) {
+        if (account.length !== 1) {
             throw `No account with address ${address} found`;
         }
 
@@ -659,7 +660,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return account[0];
     }
 
-    async internalRunLocalJs(params: TONContractLocalRunParams): Promise<TONContractLocalRunResult> {
+    async internalRunLocalJs(params: TONContractRunParams): Promise<TONContractRunResult> {
         const account = await this.getAccount(params.address);
 
         return this.requestCore('contracts.run.local', {

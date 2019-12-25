@@ -218,7 +218,7 @@ export type TONContractDeployParams = {
     workchainId?: number,
 }
 
-export type TONContractCalcDeployFeeParams = TONContractDeployParams & { 
+export type TONContractCalcDeployFeeParams = TONContractDeployParams & {
     emulateBalance?: bool,
     newAccount?: bool
 }
@@ -256,6 +256,7 @@ export type TONContractDeployMessage = {
 }
 
 export type TONContractRunMessage = {
+    address: string,
     abi: TONContractABI,
     functionName: string,
     message: TONContractMessage;
@@ -273,6 +274,7 @@ export type TONContractCreateSignedDeployMessageParams = {
 }
 
 export type TONContractCreateSignedRunMessageParams = {
+    address: string,
     abi: TONContractABI,
     functionName: string,
     createSignedParams: TONContractCreateSignedMessageParams,
