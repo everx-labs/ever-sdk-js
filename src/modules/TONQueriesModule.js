@@ -27,7 +27,7 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
-import TONConfigModule from './TONConfigModule';
+import TONConfigModule, { URLParts } from './TONConfigModule';
 
 type Subscription = {
     unsubscribe: () => void
@@ -65,9 +65,9 @@ export default class TONQueriesModule extends TONModule {
         let httpUrl = config.queriesHttpUrl();
         let wsUrl = config.queriesWsUrl();
         const fetch = clientPlatform.fetch;
-        const response = await fetch(httpUrl);
+        const response = await fetch(`${httpUrl}?query=%7Binfo%7Bversion%7D%7D`);
         if (response.redirected) {
-            const location = response.url;
+            const location = URLParts.fix(response.url, parts => parts.query = '');
             if (!!location) {
                 httpUrl = location;
                 wsUrl = location
@@ -276,7 +276,8 @@ class TONQCollection {
             return docs[0];
         }
         throw TONClientError.waitForTimeout();
-        /* TODO:
+        /* TODO: below is a legacy code.
+            When new model with server side wait for will have been tested enough we can get rid of this code.
         const config = this.module.config;
         const existing = await this.query(filter, result);
         if (existing.length > 0) {

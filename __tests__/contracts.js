@@ -456,7 +456,7 @@ test('Address conversion', async () => {
 
 test('calc gas fee', async () => {
     const { contracts, crypto, queries } = tests.client;
-    if (tests.nodeSe) { 
+    if (tests.nodeSe) {
         console.log("[calc gas fee] Skip test on Node SE");
         return;
     }
@@ -577,8 +577,8 @@ test('calc gas fee', async () => {
     expect(calcFees.fees.outMsgsFwdFee).toEqual(transaction[0].action.total_fwd_fees);
     // check all fees (with storage fee from real transaction) gives right result
     expect(
-        Number(calcFees.fees.gasFee) + 
-        Number(calcFees.fees.outMsgsFwdFee) + 
+        Number(calcFees.fees.gasFee) +
+        Number(calcFees.fees.outMsgsFwdFee) +
         Number(calcFees.fees.inMsgFwdFee) +
         Number(transaction[0].storage.storage_fees_collected)
     ).toEqual(Number(originalBalance) - Number(sendValue) - Number(endBalance));
