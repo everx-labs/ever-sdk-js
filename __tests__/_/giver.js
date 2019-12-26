@@ -161,13 +161,20 @@ export async function get_grams_from_giver(account: string) {
         });
     }
 
+    const transaction = await queries.transactions.waitFor(
+        {
+            account_addr: { eq: account },
+            status: { eq: 3 },
+        },
+        'lt',
+    );
 
     await queries.accounts.waitFor(
         {
             id: { eq: account },
-            balance: { gt: '0' }
+            last_trans_lt: { ge: transaction.lt },
         },
-        'id balance'
+        'id',
     );
 }
 
