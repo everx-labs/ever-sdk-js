@@ -1,18 +1,22 @@
 // @flow
 
-import { TONClient } from "../../src/TONClient";
-import type { TONConfigData, TONContractDeployParams, TONContractDeployResult } from "../../types";
-import { ensureBinaries } from "./binaries";
-import { deploy_with_giver, get_grams_from_giver, readGiverKeys } from "./giver";
+import { TONClient } from '../../src/TONClient';
+import type { TONConfigData, TONContractDeployParams, TONContractDeployResult } from '../../types';
+import { ensureBinaries } from './binaries';
+import { deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address } from './giver';
 
-const fs = require('fs');
-const path = require('path');
+require('dotenv').config();
 const fetch = require('node-fetch');
 const WebSocket = require('websocket');
 
-export const nodeSe = false;
+export const nodeSe = !!process.env.USE_NODE_SE
+    && process.env.USE_NODE_SE.toLowerCase() !== 'false'
+    && process.env.USE_NODE_SE !== '0';
 
-const serversConfig: any = JSON.parse((fs.readFileSync(path.join(__dirname, '..', 'servers.json')): any));
+if (!process.env.TON_NETWORK_ADDRESS) {
+    throw new Error('Servers list is not specified');
+}
+const serversConfig = process.env.TON_NETWORK_ADDRESS.replace(/ /gi, '').split(',');
 
 
 jest.setTimeout(200_000);
@@ -27,12 +31,12 @@ async function init() {
         WebSocket: WebSocket.w3cwebsocket,
         createLibrary: () => {
             return Promise.resolve(library);
-        }
+        },
     });
     const client: TONClient = await TONClient.create(tests.config);
     tests.client = client;
     console.log('[Init] Created client is connected to: ', client.config.data && client.config.data.servers);
-    //await generateGiverKeys(tests.client);
+    // await generateGiverKeys(tests.client);
     await readGiverKeys();
 }
 
@@ -46,17 +50,21 @@ export const tests: {
     client: TONClient,
     init(): Promise<void>,
     done(): Promise<void>,
-    get_grams_from_giver(account: string): Promise<void>,
+    get_grams_from_giver(account: string, amount?: number): Promise<void>,
     deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult>,
+    get_giver_address(): string,
+    nodeSe: bool,
 } = {
     config: {
         defaultWorkchain: 0,
-        servers: nodeSe ? serversConfig.local : serversConfig.external,
+        servers: serversConfig,
         log_verbose: false,
     },
     client: new TONClient(),
     init,
     done,
     get_grams_from_giver,
-    deploy_with_giver
+    deploy_with_giver,
+    get_giver_address,
+    nodeSe
 };

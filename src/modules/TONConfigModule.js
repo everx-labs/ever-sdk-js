@@ -28,51 +28,74 @@ export type TONConfigData = {
     jaegerEndpoint?: String,
 }
 
-type URLParts = {
-    protocol: string,
-    host: string,
-    path: string,
-    query: string
-}
+export class URLParts {
+    static parse(url: string): URLParts {
+        const protocolSeparatorPos = url.indexOf('://');
+        const protocolEnd = protocolSeparatorPos >= 0 ? protocolSeparatorPos + 3 : 0;
+        const questionPos = url.indexOf('?', protocolEnd);
+        const queryStart = questionPos >= 0 ? questionPos + 1 : url.length;
+        const pathEnd = questionPos >= 0 ? questionPos : url.length;
+        const pathSeparatorPos = url.indexOf('/', protocolEnd);
+        // eslint-disable-next-line no-nested-ternary
+        const pathStart = pathSeparatorPos >= 0
+            ? (pathSeparatorPos < pathEnd ? pathSeparatorPos : pathEnd)
+            : (questionPos >= 0 ? questionPos : url.length);
+        return new URLParts(
+            url.substring(0, protocolEnd),
+            url.substring(protocolEnd, pathStart),
+            url.substring(pathStart, pathEnd),
+            url.substring(queryStart)
+        )
+    }
 
-function parseUrl(url: string): URLParts {
-    const protocolSeparatorPos = url.indexOf('://');
-    const protocolEnd = protocolSeparatorPos >= 0 ? protocolSeparatorPos + 3 : 0;
-    const questionPos = url.indexOf('?', protocolEnd);
-    const queryStart = questionPos >= 0 ? questionPos + 1 : url.length;
-    const pathEnd = questionPos >= 0 ? questionPos : url.length;
-    const pathSeparatorPos = url.indexOf('/', protocolEnd);
-    const pathStart = pathSeparatorPos >= 0
-        ? (pathSeparatorPos < pathEnd ? pathSeparatorPos : pathEnd)
-        : (questionPos >= 0 ? questionPos : url.length);
-    return {
-        protocol: url.substring(0, protocolEnd),
-        host: url.substring(protocolEnd, pathStart),
-        path: url.substring(pathStart, pathEnd),
-        query: url.substring(queryStart),
+    static resolveUrl(baseUrl: string, url: string): string {
+        const baseParts = URLParts.parse(baseUrl);
+        const parts = URLParts.parse(url);
+        parts.protocol = parts.protocol || baseParts.protocol;
+        parts.host = parts.host || baseParts.host;
+        return parts.toString();
+    }
+
+    static fix(url: string, fixParts: (parts: URLParts) => void): string {
+        let parts = URLParts.parse(url);
+        fixParts(parts);
+        return parts.toString();
+    }
+
+
+    static appendPath(url: string, path: string): string {
+        return URLParts.fix(url, (parts) => {
+            parts.path = `${parts.path}/${path}`;
+        });
+    }
+
+    protocol: string;
+    host: string;
+    path: string;
+    query: string;
+
+    constructor(protocol: string, host: string, path: string, query: string) {
+        this.protocol = protocol;
+        this.host = host;
+        this.path = path;
+        this.query = query;
+    }
+
+
+    toString(): string {
+        let { path } = this;
+        while (path.indexOf('//') >= 0) {
+            path = path.replace('//', '/');
+        }
+        if (path !== '' && !path.startsWith('/')) {
+            path = `/${path}`;
+        }
+        return `${this.protocol}${this.host}${path}${this.query !== '' ? '?' : ''}${this.query}`;
     }
 }
-
-function combineUrl(parts: URLParts): string {
-    let path = parts.path;
-    while (path.indexOf('//') >= 0) {
-        path = path.replace('//', '/');
-    }
-    if (path !== '' && !path.startsWith('/')) {
-        path = `/${path}`;
-    }
-    return `${parts.protocol}${parts.host}${path}${parts.query !== '' ? '?' : ''}${parts.query}`;
-}
-
-function fixUrl(url, fixParts) {
-    let parts = parseUrl(url);
-    fixParts(parts);
-    return combineUrl(parts);
-}
-
 
 function resolveServer(configured?: string, def: string): string {
-    return fixUrl(configured || def, (parts) => {
+    return URLParts.fix(configured || def, (parts) => {
         if (parts.protocol === '') {
             parts.protocol = 'https://';
         }
@@ -81,12 +104,6 @@ function resolveServer(configured?: string, def: string): string {
 
 function replacePrefix(s, prefix, newPrefix) {
     return `${newPrefix}${s.substr(prefix.length)}`;
-}
-
-function appendPath(url, path) {
-    return fixUrl(url, (parts) => {
-        parts.path = `${parts.path}/${path}`;
-    });
 }
 
 const defaultServer = 'services.tonlabs.io';
@@ -126,8 +143,8 @@ export default class TONConfigModule extends TONModule {
             servers: [defaultServer],
         };
         let server = resolveServer(data.servers[0], defaultServer);
-        this._requestsUrl = resolveServer(data.requestsServer, appendPath(server, '/topics/requests'));
-        this._queriesHttpUrl = resolveServer(data.queriesServer, appendPath(server, '/graphql'));
+        this._requestsUrl = resolveServer(data.requestsServer, URLParts.appendPath(server, '/topics/requests'));
+        this._queriesHttpUrl = resolveServer(data.queriesServer, URLParts.appendPath(server, '/graphql'));
         const queriesWsServer = this._queriesHttpUrl.startsWith('https://')
             ? replacePrefix(this._queriesHttpUrl, "https://", "wss://")
             : replacePrefix(this._queriesHttpUrl, "http://", "ws://");
