@@ -271,7 +271,7 @@ class TONQCollection {
     }
 
     async waitFor(filter: any, result: string, timeout?: number): Promise<any> {
-        const docs = await this.query(filter, result, undefined, undefined, timeout || 5 * 60_000);
+        const docs = await this.query(filter, result, undefined, undefined, (timeout || 40_000) / 1000);
         if (docs.length > 0) {
             return docs[0];
         }

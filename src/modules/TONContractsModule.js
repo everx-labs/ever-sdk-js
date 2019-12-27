@@ -436,7 +436,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         let retry = true;
         while (retry) {
             retry = false;
-            await this.sendMessageRest(message);
+            await this.sendMessage(message);
             try {
                 transaction = await this.queries.transactions.waitFor({
                     in_msg: { eq: message.messageId },
