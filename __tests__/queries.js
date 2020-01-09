@@ -90,7 +90,7 @@ test("Subscribe for transactions with addresses", async () => {
     console.log('>>>', `Subscribe to transactions on [${message.address}]...`);
     const transactions = [];
     const subscription = (await queries.transactions.subscribe({
-        account_addr: { eq: message.address }
+        in_msg: { eq: message.message.messageId }
     }, 'id', (e, d) => {
         console.log('>>> Subscription triggered', d);
         transactions.push(d);
@@ -100,17 +100,9 @@ test("Subscribe for transactions with addresses", async () => {
     await get_grams_from_giver(message.address);
 
     console.log('>>>', 'Deploying...');
-    await contracts.deploy({
-        package: WalletContractPackage,
-        constructorParams: {},
-        keyPair: walletKeys,
-    });
+    await contracts.processDeployMessage(message);
     console.log('>>>', 'Waiting...');
-    await new Promise((resolve) => {
-        setTimeout(() => {
-            resolve();
-        }, 40_000);
-    });
+    await new Promise(resolve => setTimeout(resolve, 1_000));
     subscription.unsubscribe();
     expect(transactions.length).toBeGreaterThan(0);
 });
@@ -180,3 +172,14 @@ test('Check shard_hashes greater then 0', async () => {
     expect(queryResult.length)
         .toBeGreaterThan(0);
 });
+
+
+test("Subscribe for accounts", async () => {
+    // const { queries } = tests.client;
+    // const subscriptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => queries.accounts.subscribe({}, 'id code data', (e, doc) => {
+    //     console.log(i, doc.id);
+    // }));
+    // await new Promise(resolve => setTimeout(resolve, 1000_000));
+    // subscriptions.forEach(x => x.unsubscribe());
+});
+

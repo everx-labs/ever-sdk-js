@@ -92,6 +92,7 @@ test('Test SDK Errors 1-3', async () => {
         await contracts.createDeployMessage({
             package: WalletContractPackage,
             constructorParams: {},
+            //$FlowFixMe
             keyPair: {},
         });
     } catch (error) {
@@ -108,6 +109,7 @@ test('Test SDK Errors 1-3', async () => {
         await contracts.createDeployMessage({
             package: WalletContractPackage,
             constructorParams: {},
+            //$FlowFixMe
             keyPair: '',
         });
     } catch (error) {
@@ -221,6 +223,7 @@ test('Test SDK Errors > 2000', async () => {
     }
     try {
         await crypto.mnemonicFromRandom({
+            //$FlowFixMe
             dictionary: 255,
             wordCount: 12,
         });
@@ -239,6 +242,7 @@ test('Test SDK Errors > 2000', async () => {
         try {
             await crypto.mnemonicFromRandom({
                 dictionary: TONMnemonicDictionary[dict],
+            //$FlowFixMe
                 wordCount: 1,
             });
         } catch (error) {

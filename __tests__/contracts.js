@@ -406,38 +406,126 @@ test('calc gas fee', async () => {
     }
     const keys = await crypto.ed25519Keypair();
 
-    const subscriptionAddress = '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+    // calculate fees for deploying the contract
+    const deployMessage = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys
+    });
 
-    const deployed = await tests.deploy_with_giver({
+    const deployFees = await contracts.calcDeployFees({
         package: WalletContractPackage,
         constructorParams: {},
         keyPair: keys,
+        newAccount: true
     });
 
-    const localResult = await contracts.runLocal({
+    // use fees to get needed grams value from giver
+    const targetBalance = 500000000;
+
+    await tests.get_grams_from_giver(
+        deployMessage.address,
+        targetBalance + Number(deployFees.fees.totalAccountFees));
+
+    // deploy the contract
+    const deployed = await contracts.processDeployMessage(deployMessage);
+
+    const deployTransaction = (await queries.transactions.query({
+            in_msg: { eq: deployMessage.message.messageId }
+        },
+        'storage {storage_fees_collected}'
+    ))[0];
+
+    const originalBalance = (await queries.accounts.waitFor({
+            id: { eq: deployed.address },
+            code: { gt: "" }
+        },
+        'balance'
+    )).balance;
+
+    // giver sends message with IHR enabled and ihr_fee is added to target account balance
+    const ihrFee = 1500000;
+
+    // check that balance after deploy is the one we expected (except increased storage fee)
+    expect(Number(originalBalance))
+        .toEqual(targetBalance + ihrFee + Number(deployFees.fees.storageFee) - Number(deployTransaction.storage.storage_fees_collected));
+
+    // get fees for transaction to calculate possible send value
+    const runMessage = await contracts.createRunMessage({
         address: deployed.address,
-        functionName: 'setSubscriptionAccount',
+        functionName: 'sendTransaction',
         abi: WalletContractPackage.abi,
         input: {
-            addr: subscriptionAddress,
+            dest: tests.get_giver_address(),
+            value: originalBalance,
+            bounce: false
         },
-        keyPair: keys,
+        keyPair: keys
     });
 
+    const testFees = await contracts.calcMsgProcessFees({
+        address: deployed.address,
+        message: runMessage.message,
+        emulateBalance: true
+    });
+
+    // send almost all balance with reserve for increased storage fee
+    const reserveValue = 100;
+    const sendValue = Number(originalBalance) - Number(testFees.fees.totalAccountFees) - Number(reserveValue);
+
+    // calculate fees for transaction with actual parameters
+    const calcFees = await contracts.calcRunFees({
+        address: deployed.address,
+        functionName: 'sendTransaction',
+        abi: WalletContractPackage.abi,
+        input: {
+            dest: tests.get_giver_address(),
+            value: sendValue,
+            bounce: false
+        },
+        keyPair: keys
+    });
+
+    // perform real transaction
     const resultNet = await contracts.run({
         address: deployed.address,
-        functionName: 'setSubscriptionAccount',
+        functionName: 'sendTransaction',
         abi: WalletContractPackage.abi,
         input: {
-            addr: subscriptionAddress,
+            dest: tests.get_giver_address(),
+            value: sendValue,
+            bounce: false
         },
         keyPair: keys,
     });
 
-    const transaction = await queries.transactions.query({
-            id: { eq: resultNet.transaction.id },
-        }, 'compute { gas_fees }');
+    const endBalance = (await queries.accounts.waitFor({
+            id: { eq: deployed.address },
+            balance: { lt: originalBalance }
+        },
+        'balance'
+    )).balance;
 
-    expect(localResult.gasFee)
-        .toEqual(transaction[0].compute.gas_fees);
+    // check that we send almost all balance without reserved value
+    expect(Number(endBalance) < Number(reserveValue)).toBeTruthy();
+
+    const transaction = await queries.transactions.query({
+            id: { eq: resultNet.transaction.id }
+        },
+        'storage {storage_fees_collected} compute {gas_fees} action {total_fwd_fees} total_fees'
+    );
+
+    // check actual fees
+    expect(calcFees.fees.gasFee).toEqual(transaction[0].compute.gas_fees);
+    //expect(localResult.fees.storageFee).toEqual(transaction[0].storage.storage_fees_collected);
+    expect(calcFees.fees.outMsgsFwdFee).toEqual(transaction[0].action.total_fwd_fees);
+    // check all fees (with storage fee from real transaction) gives right result
+    expect(
+        Number(calcFees.fees.gasFee) +
+        Number(calcFees.fees.outMsgsFwdFee) +
+        Number(calcFees.fees.inMsgFwdFee) +
+        Number(transaction[0].storage.storage_fees_collected)
+    ).toEqual(Number(originalBalance) - Number(sendValue) - Number(endBalance));
+
+    expect(Number(calcFees.fees.totalOutput) === sendValue).toBeTruthy();
 });
