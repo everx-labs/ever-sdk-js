@@ -4,7 +4,7 @@ Shared JavaScript TON Labs Client Library
 See https://docs.ton.dev for documentation
 
 ---
-Copyright 2018-2019 TON DEV SOLUTIONS LTD.
+Copyright 2018-2020 TON DEV SOLUTIONS LTD.
 
 Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
 this file except in compliance with the License.

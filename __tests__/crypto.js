@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 TON DEV SOLUTIONS LTD.
+ * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  *
  * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
  * this file except in compliance with the License.  You may obtain a copy of the
@@ -37,6 +37,9 @@ test('crypto', async () => {
     const result3 = await crypto.randomGenerateBytes(32, TONOutputEncoding.Hex);
     expect(result3.length).toEqual(64);
 
+    const resultHexUppercase= await crypto.randomGenerateBytes(32, TONOutputEncoding.HexUppercase);
+    expect(resultHexUppercase.length).toEqual(64);
+
     const result4 = await crypto.randomGenerateBytes(32, TONOutputEncoding.Base64);
     expect(result4.length).toEqual(44);
 
@@ -45,7 +48,7 @@ test('crypto', async () => {
     const result5 = await crypto.ed25519Keypair();
     expect(result5.public.length).toEqual(64);
     expect(result5.secret.length).toEqual(64);
-
+    expect(result5.public).not.toEqual(result5.secret);
     // sha
 
     const hex1 = await crypto.sha512({ text: 'Message to hash with sha 512' });
@@ -192,7 +195,7 @@ test('crypto', async () => {
 
 
     const phrase = await crypto.mnemonicFromRandom();
-    expect(phrase.split(" ").length).toEqual(24);
+    expect(phrase.split(' ').length).toEqual(24);
 
 
     const entropy = '2199ebe996f14d9e4e2595113ad1e6276bd05e2e147e16c8ab8ad5d47d13b44fcf';
