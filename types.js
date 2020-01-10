@@ -218,6 +218,13 @@ export type TONContractDeployParams = {
     workchainId?: number,
 }
 
+export type TONContractDeployedParams = {
+    address: string,
+    key: TONKeyPairData,
+    abi: TONContractABI,
+    giverAddress: string
+}
+
 export type TONContractCalcDeployFeeParams = TONContractDeployParams & {
     emulateBalance?: bool,
     newAccount?: bool

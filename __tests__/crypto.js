@@ -195,7 +195,7 @@ test('crypto', async () => {
 
 
     const phrase = await crypto.mnemonicFromRandom();
-    expect(phrase.split(" ").length).toEqual(24);
+    expect(phrase.split(' ').length).toEqual(24);
 
 
     const entropy = '2199ebe996f14d9e4e2595113ad1e6276bd05e2e147e16c8ab8ad5d47d13b44fcf';
