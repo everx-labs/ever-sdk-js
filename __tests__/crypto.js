@@ -37,6 +37,9 @@ test('crypto', async () => {
     const result3 = await crypto.randomGenerateBytes(32, TONOutputEncoding.Hex);
     expect(result3.length).toEqual(64);
 
+    const resultHexUppercase= await crypto.randomGenerateBytes(32, TONOutputEncoding.HexUppercase);
+    expect(resultHexUppercase.length).toEqual(64);
+
     const result4 = await crypto.randomGenerateBytes(32, TONOutputEncoding.Base64);
     expect(result4.length).toEqual(44);
 
@@ -45,7 +48,7 @@ test('crypto', async () => {
     const result5 = await crypto.ed25519Keypair();
     expect(result5.public.length).toEqual(64);
     expect(result5.secret.length).toEqual(64);
-
+    expect(result5.public).not.toEqual(result5.secret);
     // sha
 
     const hex1 = await crypto.sha512({ text: 'Message to hash with sha 512' });

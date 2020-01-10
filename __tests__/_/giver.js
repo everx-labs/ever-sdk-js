@@ -133,7 +133,7 @@ async function check_giver() {
     }
 }
 
-export async function get_grams_from_giver(account: string) {
+export async function get_grams_from_giver(account: string, amount: number = giverRequestAmount) {
     const { contracts, queries } = tests.client;
 
     if (nodeSe) {
@@ -143,7 +143,7 @@ export async function get_grams_from_giver(account: string) {
             abi: nodeSeGiverAbi,
             input: {
                 dest: account,
-                amount: giverRequestAmount
+                amount
             },
         });
     } else {
@@ -154,7 +154,7 @@ export async function get_grams_from_giver(account: string) {
             abi: GiverWalletPackage.abi,
             input: {
                 dest: account,
-                value: giverRequestAmount,
+                value: amount,
                 bounce: false
             },
             keyPair: giverWalletKeys,
@@ -177,4 +177,8 @@ export async function deploy_with_giver(params: TONContractDeployParams): Promis
     const message = await contracts.createDeployMessage(params);
     await get_grams_from_giver(message.address);
     return contracts.deploy(params);
+}
+
+export function get_giver_address(): string {
+    return giverWalletAddressHex;
 }

@@ -52,9 +52,7 @@ test("RunLocal", async () => {
 
     console.log(`Get (runLocal): ${JSON.stringify(runLocalResponse)}`);
 
-    expect(runLocalResponse).toEqual({
-        output: {
+    expect(runLocalResponse.output).toEqual({
             value0: "0:2222222222222222222222222222222222222222222222222222222222222222"
-        }
     });
 });
