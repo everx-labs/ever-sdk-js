@@ -26,7 +26,7 @@ import { tests } from './_/init-tests';
 beforeAll(tests.init);
 afterAll(tests.done);
 
-test('Deploy data', async () => {
+test.skip('Deploy data', async () => {
     const { contracts } = tests.client;
 
     const publicKey = '1111111111111111111111111111111111111111111111111111111111111111';
