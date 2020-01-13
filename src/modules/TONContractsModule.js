@@ -33,6 +33,8 @@ import type {
     TONContractDeployParams,
     TONContractDeployResult,
     TONContractCalcDeployFeeParams,
+    TONContractGetBocHashParams,
+    TONContractGetBocHashResult,
     TONContractGetCodeFromImageParams,
     TONContractGetCodeFromImageResult,
     TONContractGetDeployDataParams,

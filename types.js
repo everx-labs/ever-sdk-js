@@ -493,7 +493,7 @@ export interface TONContracts {
 
     decodeOutputMessageBody(params: TONContractDecodeMessageBodyParams,): Promise<TONContractDecodeMessageBodyResult>;
 
-    sendMessage(params: TONContractMessage): Promise<void>;
+    sendMessage(params: TONContractMessage): Promise<string>;
 
     processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction>;
 
