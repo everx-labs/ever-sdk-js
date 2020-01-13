@@ -241,8 +241,7 @@ export type TONContractUnsignedMessage = {
 }
 
 export type TONContractMessage = {
-    messageId: string,
-    messageIdBase64: string,
+    messageId?: string,
     messageBodyBase64: string,
 }
 
@@ -402,6 +401,14 @@ export type TONContractConvertAddressResult = {
     address: string,
 }
 
+export type TONContractGetBocHashParams = {
+    bocBase64: string,
+}
+
+export type TONContractGetBocHashResult = {
+    hash: string,
+}
+
 export type QOtherCurrencyCollection = {
     currency: number,
     value: string,
@@ -486,7 +493,7 @@ export interface TONContracts {
 
     decodeOutputMessageBody(params: TONContractDecodeMessageBodyParams,): Promise<TONContractDecodeMessageBodyResult>;
 
-    sendMessage(params: TONContractMessage): Promise<void>;
+    sendMessage(params: TONContractMessage): Promise<string>;
 
     processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction>;
 

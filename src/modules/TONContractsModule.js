@@ -33,6 +33,8 @@ import type {
     TONContractDeployParams,
     TONContractDeployResult,
     TONContractCalcDeployFeeParams,
+    TONContractGetBocHashParams,
+    TONContractGetBocHashResult,
     TONContractGetCodeFromImageParams,
     TONContractGetCodeFromImageResult,
     TONContractGetDeployDataParams,
@@ -242,7 +244,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         const message: {
             address: string,
             messageId: string,
-            messageIdBase64: string,
             messageBodyBase64: string,
         } = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
@@ -255,7 +256,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         return {
             message: {
                 messageId: message.messageId,
-                messageIdBase64: message.messageIdBase64,
                 messageBodyBase64: message.messageBodyBase64,
             },
             address: message.address
@@ -366,6 +366,12 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.requestCore('contracts.function.id', params);
     }
 
+    async getBocHash(
+        params: TONContractGetBocHashParams
+    ): Promise<TONContractGetBocHashResult> {
+        return this.requestCore('contracts.boc.hash', params);
+    }
+
     // Message parsing
 
     async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
@@ -388,13 +394,18 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message processing
 
-    async sendMessageRest(params: TONContractMessage): Promise<void> {
+    async sendMessageRest(params: TONContractMessage): Promise<string> {
         const { clientPlatform } = TONClient;
         if (!clientPlatform) {
             throw TONClientError.clientDoesNotConfigured();
         }
         const { fetch } = clientPlatform;
         const url = this.config.requestsUrl();
+        const id = params.messageId || 
+            (await this.getBocHash({
+                bocBase64: params.messageBodyBase64
+            })).hash;
+        const idBase64 = Buffer.from(id, 'hex').toString('base64');
         const response = await fetch(url, {
             method: 'POST',
             mode: 'cors',
@@ -408,7 +419,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             body: JSON.stringify({
                 records: [
                     {
-                        key: params.messageIdBase64,
+                        key: idBase64,
                         value: params.messageBodyBase64,
                     },
                 ],
@@ -418,16 +429,23 @@ export default class TONContractsModule extends TONModule implements TONContract
         if (response.status !== 200) {
             throw TONClientError.sendNodeRequestFailed(await response.text());
         }
+        return id;
     }
 
-    async sendMessage(params: TONContractMessage): Promise<void> {
+    async sendMessage(params: TONContractMessage): Promise<string> {
+        const id = params.messageId || 
+            (await this.getBocHash({
+                bocBase64: params.messageBodyBase64
+            })).hash;
+        const idBase64 = Buffer.from(id, 'hex').toString('base64');
         await this.queries.postRequests([
             {
-                id: params.messageIdBase64,
+                id: idBase64,
                 body: params.messageBodyBase64,
             }
         ]);
         this.config.log('request posted');
+        return id;
     }
 
 

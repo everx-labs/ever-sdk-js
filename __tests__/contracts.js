@@ -529,3 +529,34 @@ test('calc gas fee', async () => {
 
     expect(Number(calcFees.fees.totalOutput) === sendValue).toBeTruthy();
 });
+
+test('test boc hash', async () => {
+    const { contracts } = tests.client;
+    const bocBase64 = "te6ccgEBAgEAxgABwYgAti0S4VOMe6uIVNX3nuDd7KSO13EsFEXDsUVaKRzBgdQCwaZuyAAAC3iWFUwMAK22OiKIN+R4x+31/j8LXRIYPh8iJGtncSuZ7FONbFNXAAAAAAAAAAAAAAAAAA9CQEABAMD3EJkJ6DsPCkGnV5lMTt6LIPRS7ViXPZjHMhJizNODUeKekStEXEUgmHS2vmokCRRUpsUhmwgFmkWaCatqe4wIlcBqp0PR+QAN1kt1SY8QavS350RCNNfeZ+ommI9hgd8=";
+    const hash = "adff1e7fd60632bb572b1afe0c2e569d8c68b1169994c48bc1ed92b3515c3b4e";
+
+    const result = await contracts.getBocHash({bocBase64});
+
+    expect(result.hash).toEqual(hash);
+});
+
+test('test send boc', async () => {
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    await tests.get_grams_from_giver(message.address);
+
+    // send message without id - it should be computed inside
+    await contracts.processDeployMessage({
+        address: message.address,
+        message: {
+            messageBodyBase64: message.message.messageBodyBase64
+        }
+    });
+});
