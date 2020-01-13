@@ -241,8 +241,7 @@ export type TONContractUnsignedMessage = {
 }
 
 export type TONContractMessage = {
-    messageId: string,
-    messageIdBase64: string,
+    messageId?: string,
     messageBodyBase64: string,
 }
 
@@ -400,6 +399,14 @@ export type TONContractConvertAddressParams = {
 
 export type TONContractConvertAddressResult = {
     address: string,
+}
+
+export type TONContractGetBocHashParams = {
+    bocBase64: string,
+}
+
+export type TONContractGetBocHashResult = {
+    hash: string,
 }
 
 export type QOtherCurrencyCollection = {
