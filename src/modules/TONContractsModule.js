@@ -454,10 +454,10 @@ export default class TONContractsModule extends TONModule implements TONContract
         let retry = true;
         while (retry) {
             retry = false;
-            await this.sendMessage(message);
+            const messageId = await this.sendMessage(message);
             try {
                 transaction = await this.queries.transactions.waitFor({
-                    in_msg: { eq: message.messageId },
+                    in_msg: { eq: messageId },
                     status: { eq: QTransactionProcessingStatus.finalized },
                 }, resultFields, 40_000);
             } catch (error) {
