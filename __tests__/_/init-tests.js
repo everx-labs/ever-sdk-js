@@ -19,7 +19,7 @@ if (!process.env.TON_NETWORK_ADDRESS) {
 const serversConfig = process.env.TON_NETWORK_ADDRESS.replace(/ /gi, '').split(',');
 
 
-jest.setTimeout(400_000);
+// jest.setTimeout(400_000);
 
 async function init() {
     await ensureBinaries();

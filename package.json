@@ -6,8 +6,8 @@
 	"scripts": {
 		"babel": "babel src --out-dir dist --source-maps inline",
 		"flow": "flow",
-		"test": "jest --forceExit --detectOpenHandles --coverage",
-		"test-ci": "jest -b -i --verbose --forceExit --detectOpenHandles",
+		"test": "jest --forceExit --detectOpenHandles --coverage --testTimeout=400_000",
+		"test-ci": "jest --forceExit --detectOpenHandles --testTimeout=120_000 -b -i --verbose",
 		"npm install": "npm install"
 	},
 	"pre-commit": [],
