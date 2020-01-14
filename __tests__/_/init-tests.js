@@ -19,7 +19,7 @@ if (!process.env.TON_NETWORK_ADDRESS) {
 const serversConfig = process.env.TON_NETWORK_ADDRESS.replace(/ /gi, '').split(',');
 
 
-jest.setTimeout(200_000);
+jest.setTimeout(400_000);
 
 async function init() {
     await ensureBinaries();
@@ -40,25 +40,26 @@ async function init() {
 }
 
 async function done() {
-
+    console.time('Test contract selfdestruct time:');
     for (const i in tests.deployedContracts) {
         const contract = tests.deployedContracts[i];
-        console.log(contract.giverAddress);
+        console.log(`Selfdestruct contract with address ${contract.address}`);
         try {
-            await tests.client.contracts.run({
+            tests.client.contracts.run({
                 address: contract.address,
                 functionName: 'sendAllMoney',
                 abi: contract.abi,
-                input: { dest_addr: contract.giverAddress },
+                input: {dest_addr: contract.giverAddress},
                 keyPair: contract.key,
             });
         } catch (e) {
+            console.log(`Selfdestruct error: ${e}`);
             // ignore exception
         }
     }
+    console.timeEnd('Test contracts selfdestruct time:');
     await tests.client.close();
 }
-
 
 export const tests: {
     config: TONConfigData,
