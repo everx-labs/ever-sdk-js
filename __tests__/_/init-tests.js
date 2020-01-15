@@ -84,5 +84,5 @@ export const tests: {
     deploy_with_giver,
     deployedContracts: [],
     get_giver_address,
-    nodeSe
+    nodeSe,
 };
