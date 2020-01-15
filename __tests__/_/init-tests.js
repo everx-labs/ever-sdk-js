@@ -45,7 +45,7 @@ async function done() {
         const contract = tests.deployedContracts[i];
         console.log(`Selfdestruct contract with address ${contract.address}`);
         try {
-            tests.client.contracts.run({
+            await tests.client.contracts.run({
                 address: contract.address,
                 functionName: 'sendAllMoney',
                 abi: contract.abi,
