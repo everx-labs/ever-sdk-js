@@ -19,7 +19,7 @@ if (!process.env.TON_NETWORK_ADDRESS) {
 const serversConfig = process.env.TON_NETWORK_ADDRESS.replace(/ /gi, '').split(',');
 
 
-jest.setTimeout(400_000);
+// jest.setTimeout(400_000);
 
 async function init() {
     await ensureBinaries();
@@ -45,7 +45,7 @@ async function done() {
         const contract = tests.deployedContracts[i];
         console.log(`Selfdestruct contract with address ${contract.address}`);
         try {
-            tests.client.contracts.run({
+            await tests.client.contracts.run({
                 address: contract.address,
                 functionName: 'sendAllMoney',
                 abi: contract.abi,
@@ -84,5 +84,5 @@ export const tests: {
     deploy_with_giver,
     deployedContracts: [],
     get_giver_address,
-    nodeSe
+    nodeSe,
 };
