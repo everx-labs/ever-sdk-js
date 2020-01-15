@@ -1,6 +1,6 @@
 // @flow
 
-import { QAccountType, TONAddressStringVariant } from '../../src/modules/TONContractsModule';
+import { QAccountType, TONAddressStringVariant, QTransactionProcessingStatus } from '../../src/modules/TONContractsModule';
 import type { TONContractDeployParams, TONContractDeployResult } from '../../types';
 import { nodeSe, tests } from './init-tests';
 
@@ -153,9 +153,11 @@ async function check_giver() {
 
 export async function get_grams_from_giver(account: string, amount: number = giverRequestAmount) {
     const {contracts, queries} = tests.client;
-    console.time(`Get grams from giver to ${account}:`);
+
+    let transaction;
+
     if (nodeSe) {
-        await contracts.run({
+        transaction = (await contracts.run({
             address: nodeSeGiverAddress,
             functionName: 'sendGrams',
             abi: nodeSeGiverAbi,
@@ -163,10 +165,10 @@ export async function get_grams_from_giver(account: string, amount: number = giv
                 dest: account,
                 amount
             },
-        });
+        })).transaction;
     } else {
         await check_giver();
-        await contracts.run({
+        transaction = (await contracts.run({
             address: giverWalletAddressHex,
             functionName: 'sendTransaction',
             abi: GiverWalletPackage.abi,
@@ -176,25 +178,19 @@ export async function get_grams_from_giver(account: string, amount: number = giv
                 bounce: false
             },
             keyPair: giverWalletKeys,
-        });
+        })).transaction;
     }
 
-    const transaction = await queries.transactions.waitFor(
-        {
-            account_addr: {eq: account},
-            status: {eq: 3},
-        },
-        'lt',
-    );
-
-    await queries.accounts.waitFor(
-        {
-            id: {eq: account},
-            last_trans_lt: {ge: transaction.lt},
-        },
-        'id',
-    );
-    console.timeEnd(`Get grams from giver to ${account}:`);
+    for (const i in transaction.out_msgs) {
+        const msg = transaction.out_msgs[i];
+        await queries.transactions.waitFor(
+            {
+                in_msg: { eq: msg },
+                status: { eq: QTransactionProcessingStatus.finalized },
+            },
+            'lt',
+        );
+    }
 }
 
 export async function deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult> {

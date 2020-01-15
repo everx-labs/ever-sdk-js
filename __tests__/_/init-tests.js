@@ -45,13 +45,14 @@ async function done() {
         const contract = tests.deployedContracts[i];
         console.log(`Selfdestruct contract with address ${contract.address}`);
         try {
-            await tests.client.contracts.run({
+            const message = await tests.client.contracts.createRunMessage({
                 address: contract.address,
                 functionName: 'sendAllMoney',
                 abi: contract.abi,
-                input: {dest_addr: contract.giverAddress},
+                input: { dest_addr: contract.giverAddress },
                 keyPair: contract.key,
             });
+            await tests.client.contracts.sendMessage(message.message);
         } catch (e) {
             console.log(`Selfdestruct error: ${e}`);
             // ignore exception
