@@ -66,6 +66,5 @@
 	"events": [
 	],
 	"data": [
-		{"key":100,"name":"mywallet","type":"address"}
 	]
 }
