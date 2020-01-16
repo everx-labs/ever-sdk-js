@@ -78,7 +78,7 @@
 		"dotenv": "^8.2.0",
 		"graphql": "^14.5.8",
 		"graphql-tag": "^2.10.1",
-		"subscriptions-transport-ws": "^0.9.16"
+		"subscriptions-transport-ws": "^0.9.16",
         "apollo-link-context": "latest",
 		"jaeger-client": "^3.17.1"
 	}
