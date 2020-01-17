@@ -454,12 +454,15 @@ export default class TONContractsModule extends TONModule implements TONContract
         let retry = true;
         while (retry) {
             retry = false;
-            const messageId = await this.sendMessage(message);
+            this.config.log('Before send');
+            const messageId = await this.sendMessageRest(message);
+            this.config.log('After send');
             try {
                 transaction = await this.queries.transactions.waitFor({
                     in_msg: { eq: messageId },
                     status: { eq: QTransactionProcessingStatus.finalized },
                 }, resultFields, 40_000);
+                this.config.log('After wait');
             } catch (error) {
                 if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
                     this.config.log('Timeout, retrying...');
@@ -493,6 +496,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             id: { eq: params.address },
             acc_type: { eq: QAccountType.active }
         }, 'id');
+        this.config.log('After wait account');
         return {
             address: params.address,
             alreadyDeployed: false,
@@ -507,21 +511,14 @@ export default class TONContractsModule extends TONModule implements TONContract
             transactionDetails,
         );
         await checkTransaction(transaction);
-        const outputMessageIds = transaction.out_msgs;
-        if (!outputMessageIds || outputMessageIds.length === 0) {
+        const outputMessages = transaction.out_messages;
+        if (!outputMessages || outputMessages.length === 0) {
             return { output: null, transaction };
         }
-        const externalMessages: QMessage[] = (await Promise.all(outputMessageIds.map((id) => {
-            return this.queries.messages.waitFor(
-                {
-                    id: { eq: id },
-                    status: { eq: QMessageProcessingStatus.finalized },
-                },
-                'body msg_type',
-            );
-        }))).filter((x: QMessage) => {
+        const externalMessages: QMessage[] = outputMessages.filter((x: QMessage) => {
             return x.msg_type === QMessageType.extOut;
         });
+        this.config.log('Before messages parse');
         const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
             return this.decodeOutputMessageBody({
                 abi: params.abi,
@@ -531,6 +528,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         const resultOutput = outputs.find((x: TONContractDecodeMessageBodyResult) => {
             return x.function.toLowerCase() === params.functionName.toLowerCase();
         });
+        this.config.log('Run end');
         return {
             output: resultOutput ? resultOutput.output : null,
             transaction
@@ -642,12 +640,14 @@ export default class TONContractsModule extends TONModule implements TONContract
 
 
     async internalDeployJs(params: TONContractDeployParams): Promise<TONContractDeployResult> {
+        this.config.log("Deploy start");
         const message = await this.createDeployMessage(params);
         return this.processDeployMessage(message);
     }
 
 
     async internalRunJs(params: TONContractRunParams): Promise<TONContractRunResult> {
+        this.config.log("Run start");
         const message = await this.createRunMessage(params);
         return this.processRunMessage(message);
     }
@@ -795,6 +795,7 @@ const transactionDetails = `
     id
     tr_type
     status
+    in_msg
     out_msgs
     block_id
     now
@@ -813,5 +814,9 @@ const transactionDetails = `
         valid
         result_code
         no_funds
-  	}
+    }
+    out_messages {
+        msg_type
+        body
+    }
    `;

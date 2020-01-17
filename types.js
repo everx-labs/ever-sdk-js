@@ -452,6 +452,7 @@ export type QTransaction = {
         result_code?: number,
     };
     out_msgs?: string[],
+    out_messages?: QMessage[],
 }
 
 export type QMessage = {
