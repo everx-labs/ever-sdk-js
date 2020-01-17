@@ -30,7 +30,7 @@ import { TONModule } from '../TONModule';
 import TONConfigModule, { URLParts } from './TONConfigModule';
 
 import { setContext } from 'apollo-link-context';
-const { Tags, FORMAT_HTTP_HEADERS, FORMAT_TEXT_MAP } = require('opentracing');
+const { Tags, FORMAT_HTTP_HEADERS, FORMAT_BINARY, FORMAT_TEXT_MAP } = require('opentracing');
 
 type Subscription = {
     unsubscribe: () => void
@@ -119,38 +119,57 @@ export default class TONQueriesModule extends TONModule {
         }));
     }
 
-    async query(ql: string, variables: { [string]: any } = {}): Promise<any> {
+    async query(ql: string, variables: { [string]: any } = {}, rootSpan: any): Promise<any> {
+        const span = await this.tracer.startSpan('TONQueriesModule.js:query', { childOf: await rootSpan.context() });
         const mutation = gql([ql]);
-        return this.graphQl(client => client.mutate({
+        await span.log({
+            event: 'query mutation',
+            value: mutation
+        });
+        const res = this.graphQl(client => client.mutate({
             mutation,
             variables,
-        }));
+        }), span);
+        await span.finish();
+        return res;
     }
 
-    async graphQl(request: (client: ApolloClient) => Promise<any>): Promise<any> {
-        const client = await this.ensureClient();
+    async graphQl(request: (client: ApolloClient) => Promise<any>, rootSpan: any): Promise<any> {
+        const span = await this.tracer.startSpan('TONQueriesModule.js:graphQl', { childOf: await rootSpan.context() });
+        const client = await this.ensureClient(span);
         try {
-            return request(client);
+            const r = request(client);
+            await span.finish();
+            return r;
         } catch (error) {
             const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
             if (errors) {
+                await span.log({
+                    event: 'query failed',
+                    value: errors
+                });
+                await span.finish();
                 throw TONClientError.queryFailed(errors);
             } else {
+                await span.finish();
                 throw error;
             }
         }
     }
 
-    async ensureClient(): ApolloClient {
+    async ensureClient(rootSpan: any): ApolloClient {
+        const span = await this.tracer.startSpan('TONQueriesModule.js:ensureClient', { childOf: await rootSpan.context() });
         if (this._client) {
+            await span.finish();
             return this._client;
         }
+
         const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
         const jaegerLink = await setContext((_, req) => {
             req.headers = {};
-            this.tracer.inject(cspan, FORMAT_TEXT_MAP, req.headers);
+            this.tracer.inject(span, FORMAT_TEXT_MAP, req.headers);
             return {
-                headers: req.headers
+                headers: req.headers,
             };
         });
         this._client = new ApolloClient({
@@ -163,13 +182,13 @@ export default class TONQueriesModule extends TONModule {
                         && definition.operation === 'subscription'
                     );
                 },
-                new WebSocketLink(new SubscriptionClient(
+                new WebSocketLink(jaegerLink.concat(new SubscriptionClient(
                     wsUrl,
                     {
                         reconnect: true
                     },
                     WebSocket
-                )),
+                ))),
                 jaegerLink.concat(new HttpLink({
                     uri: httpUrl,
                     fetch,
@@ -184,7 +203,7 @@ export default class TONQueriesModule extends TONModule {
                 },
             }
         });
-        await cspan.finish();
+        await span.finish();
         return this._client;
     }
 
@@ -231,9 +250,13 @@ class TONQCollection {
     }
 
     async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number): Promise<any> {
+        console.log('first query in');
+        const span = await this.tracer.startSpan('TONQueriesModule.js:query main');
+        await span.setTag(Tags.SPAN_KIND, 'client');
+
         const c = this.collectionName;
         const t = this.typeName;
-        return (await this.module.query(
+        const r = (await this.module.query(
             `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
                     ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
                 }`, {
@@ -241,7 +264,9 @@ class TONQCollection {
                 orderBy,
                 limit,
                 timeout
-            })).data[c];
+            }, span)).data[c];
+        await span.finish();
+        return r;
     }
 
     subscribe(
@@ -250,14 +275,20 @@ class TONQCollection {
         onDocEvent: DocEvent,
         onError?: (err: Error) => void
     ): Subscription {
+        const span = this.tracer.startSpan('TONQueriesModule.js:subscribe ');
+        span.setTag(Tags.SPAN_KIND, 'client');
         const text = `subscription ${this.collectionName}($filter: ${this.typeName}Filter) {
         	${this.collectionName}(filter: $filter) { ${result} }
         }`;
         const query = gql([text]);
+        span.log({
+            event: 'subscription',
+            value: query
+        });
         let subscription = null;
         (async () => {
             try {
-                const client = await this.module.ensureClient();
+                const client = await this.module.ensureClient(span);
                 const observable = client.subscribe({
                     query,
                     variables: {
@@ -269,12 +300,17 @@ class TONQCollection {
                 });
             } catch (error) {
                 if (onError) {
+                    await span.log({
+                        event: 'subscription failed',
+                        value: error
+                    });
                     onError(error);
                 } else {
                     console.error('TON Client subscription error', error);
                 }
             }
         })();
+        span.finish();
         return {
             unsubscribe: () => {
                 if (subscription) {
