@@ -89,17 +89,31 @@ export default class TONQueriesModule extends TONModule {
     }
 
     async getAccountsCount(): Promise<number> {
+        const span = await this.tracer.startSpan('TONQueriesModule.js:getAccountCount');
         const result = await this.query('query{getAccountsCount}');
+        await span.finish();
         return result.data.getAccountsCount;
     }
 
     async getTransactionsCount(): Promise<number> {
-        const result = await this.query('query{getTransactionsCount}');
+        const span = await this.tracer.startSpan('TONQueriesModule.js:getTransactionCount');
+        const result = await this.query('query{getTransactionsCount}', span);
+        await span.log({
+            event: 'query result',
+            value: `${result}`
+        });
+        await span.finish();
         return result.data.getTransactionsCount;
     }
 
     async getAccountsTotalBalance(): Promise<string> {
-        const result = await this.query('query{getAccountsTotalBalance}');
+        const span = await this.tracer.startSpan('TONQueriesModule.js:getAccountsTotalBalance');
+        const result = await this.query('query{getAccountsTotalBalance}', span);
+        await span.log({
+            event: 'query result',
+            value: `${result}`
+        });
+        await span.finish();
         return result.data.getAccountsTotalBalance;
     }
 
@@ -142,12 +156,12 @@ export default class TONQueriesModule extends TONModule {
             await span.finish();
             return r;
         } catch (error) {
+            await span.log({
+                event: 'query failed',
+                value: `${error.message}`
+            });
             const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
             if (errors) {
-                await span.log({
-                    event: 'query failed',
-                    value: errors
-                });
                 await span.finish();
                 throw TONClientError.queryFailed(errors);
             } else {
@@ -172,6 +186,8 @@ export default class TONQueriesModule extends TONModule {
                 headers: req.headers,
             };
         });
+        let subsOptions = this.tracer.inject(span, FORMAT_TEXT_MAP, {});
+        await console.log(subsOptions);
         this._client = new ApolloClient({
             cache: new InMemoryCache({}),
             link: split(
@@ -182,13 +198,16 @@ export default class TONQueriesModule extends TONModule {
                         && definition.operation === 'subscription'
                     );
                 },
-                new WebSocketLink(jaegerLink.concat(new SubscriptionClient(
+                new WebSocketLink(new SubscriptionClient(
                     wsUrl,
                     {
-                        reconnect: true
+                        reconnect: true,
+                        connectionParams: () => ({
+                            headers: subsOptions,
+                        }),
                     },
-                    WebSocket
-                ))),
+                    WebSocket,
+                )),
                 jaegerLink.concat(new HttpLink({
                     uri: httpUrl,
                     fetch,
@@ -249,9 +268,8 @@ class TONQCollection {
         this.tracer = module.config.tracer;
     }
 
-    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number): Promise<any> {
-        console.log('first query in');
-        const span = await this.tracer.startSpan('TONQueriesModule.js:query main');
+    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number, rootSpan: any): Promise<any> {
+        const span = await this.tracer.startSpan('TONQueriesModule.js:query public', {childOf: await rootSpan.context()});
         await span.setTag(Tags.SPAN_KIND, 'client');
 
         const c = this.collectionName;
@@ -299,11 +317,11 @@ class TONQCollection {
                     onDocEvent('insert/update', message.data[this.collectionName]);
                 });
             } catch (error) {
+                await span.log({
+                    event: 'subscription failed',
+                    value: error
+                });
                 if (onError) {
-                    await span.log({
-                        event: 'subscription failed',
-                        value: error
-                    });
                     onError(error);
                 } else {
                     console.error('TON Client subscription error', error);
@@ -321,10 +339,25 @@ class TONQCollection {
     }
 
     async waitFor(filter: any, result: string, timeout?: number): Promise<any> {
-        const docs = await this.query(filter, result, undefined, undefined, timeout || 5 * 60_000);
+        const span = await this.tracer.startSpan('TONQueriesModule.js:waitFor');
+        await span.log({
+            event: 'waitFor',
+            value: `Filter: ${filter} \n Timeout: ${timeout}`
+        });
+        const docs = await this.query(filter, result, undefined, undefined, timeout || 5 * 60_000, span);
         if (docs.length > 0) {
+            await span.log({
+                event: 'waitFor exit',
+                value: `Docs.length - ${docs.length}`
+            });
+            await span.finish();
             return docs[0];
         }
+        await span.log({
+            event: 'waitFor timeout',
+            value: 'exception'
+        });
+        await span.finish();
         throw TONClientError.waitForTimeout();
         /* TODO: below is a legacy code.
             When new model with server side wait for will have been tested enough we can get rid of this code.
