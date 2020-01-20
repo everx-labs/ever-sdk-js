@@ -67,7 +67,9 @@ export default class TONQueriesModule extends TONModule {
         const fetch = clientPlatform.fetch;
         const response = await fetch(`${httpUrl}?query=%7Binfo%7Bversion%7D%7D`);
         if (response.redirected) {
-            const location = URLParts.fix(response.url, parts => { parts.query = '' });
+            const location = URLParts.fix(response.url, parts => {
+                parts.query = ''
+            });
             if (!!location) {
                 httpUrl = location;
                 wsUrl = location
@@ -219,15 +221,18 @@ class TONQCollection {
     async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number): Promise<any> {
         const c = this.collectionName;
         const t = this.typeName;
-        return (await this.module.query(
-            `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
-                    ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
-                }`, {
-                filter,
-                orderBy,
-                limit,
-                timeout
-            })).data[c];
+        const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
+            ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
+        }`;
+        const variables: { [string]: any } = {
+            filter,
+            orderBy,
+            limit,
+        };
+        if (timeout) {
+            variables.timeout = timeout / 1_000;
+        }
+        return (await this.module.query(ql, variables)).data[c];
     }
 
     subscribe(
@@ -271,70 +276,11 @@ class TONQCollection {
     }
 
     async waitFor(filter: any, result: string, timeout?: number): Promise<any> {
-        const docs = await this.query(filter, result, undefined, undefined, (timeout || 40_000) / 1000);
+        const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000);
         if (docs.length > 0) {
             return docs[0];
         }
         throw TONClientError.waitForTimeout();
-        /* TODO: below is a legacy code.
-            When new model with server side wait for will have been tested enough we can get rid of this code.
-        const config = this.module.config;
-        const existing = await this.query(filter, result);
-        if (existing.length > 0) {
-            return existing[0];
-        }
-        return new Promise((resolve, reject) => {
-            const forceCheckTimeout = 10_000;
-            let subscription: any = null;
-            let resolved: boolean = false;
-
-            const doResolve = (doc) => {
-                if (resolved) {
-                    return;
-                }
-                resolved = true;
-                if (subscription) {
-                    subscription.unsubscribe();
-                    subscription = null;
-                }
-                if (doc !== null) {
-                    resolve(doc);
-                } else {
-                    reject(TONClientError.waitForTimeout())
-                }
-            };
-
-            const forceCheck = () => {
-                (async () => {
-                    if (resolved) {
-                        return;
-                    }
-                    config.log('waitFor.forceCheck', this.collectionName, filter);
-                    const existing = await this.query(filter, result);
-                    if (existing.length > 0) {
-                        doResolve(existing[0]);
-                    } else {
-                        setTimeout(forceCheck, forceCheckTimeout);
-                    }
-                })();
-            };
-
-            const rejectOnTimeout = () => {
-                if (!resolved) {
-                    config.log('waitFor rejected on timeout', this.collectionName, filter);
-                    doResolve(null);
-                }
-            };
-
-            subscription = this.subscribe(filter, result, (change, doc) => {
-                doResolve(doc);
-            });
-            setTimeout(forceCheck, forceCheckTimeout);
-            if (timeout) {
-                setTimeout(rejectOnTimeout, timeout);
-            }
-        });
-         */
     }
 }
 

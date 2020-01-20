@@ -1,7 +1,16 @@
 // @flow
 
-import { QAccountType, TONAddressStringVariant, QTransactionProcessingStatus } from '../../src/modules/TONContractsModule';
-import type { TONContractDeployParams, TONContractDeployResult } from '../../types';
+import {
+    QAccountType,
+    TONAddressStringVariant,
+    QTransactionProcessingStatus
+} from '../../src/modules/TONContractsModule';
+import type {
+    TONContractDeployParams,
+    TONContractDeployResult,
+    TONContractRunParams,
+    TONContractRunResult
+} from '../../types';
 import { nodeSe, tests } from './init-tests';
 
 const os = require('os');
@@ -124,7 +133,7 @@ async function check_giver() {
     const ton = tests.client;
 
     const accounts = await ton.queries.accounts.query({
-            id: {eq: giverWalletAddressHex}
+            id: { eq: giverWalletAddressHex }
         },
         'acc_type balance');
 
@@ -152,12 +161,11 @@ async function check_giver() {
 }
 
 export async function get_grams_from_giver(account: string, amount: number = giverRequestAmount) {
-    const {contracts, queries} = tests.client;
+    const { contracts, queries } = tests.client;
 
-    let transaction;
-
+    let params: TONContractRunParams;
     if (nodeSe) {
-        transaction = (await contracts.run({
+        params = {
             address: nodeSeGiverAddress,
             functionName: 'sendGrams',
             abi: nodeSeGiverAbi,
@@ -165,10 +173,10 @@ export async function get_grams_from_giver(account: string, amount: number = giv
                 dest: account,
                 amount
             },
-        })).transaction;
+        };
     } else {
         await check_giver();
-        transaction = (await contracts.run({
+        params = {
             address: giverWalletAddressHex,
             functionName: 'sendTransaction',
             abi: GiverWalletPackage.abi,
@@ -178,11 +186,10 @@ export async function get_grams_from_giver(account: string, amount: number = giv
                 bounce: false
             },
             keyPair: giverWalletKeys,
-        })).transaction;
+        };
     }
-
-    for (const i in transaction.out_msgs) {
-        const msg = transaction.out_msgs[i];
+    const result: TONContractRunResult = await contracts.run(params);
+    for (const msg of (result.transaction.out_msgs || [])) {
         await queries.transactions.waitFor(
             {
                 in_msg: { eq: msg },
@@ -194,7 +201,7 @@ export async function get_grams_from_giver(account: string, amount: number = giv
 }
 
 export async function deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult> {
-    const {contracts} = tests.client;
+    const { contracts } = tests.client;
 
     const message = await contracts.createDeployMessage(params);
     await get_grams_from_giver(message.address);
