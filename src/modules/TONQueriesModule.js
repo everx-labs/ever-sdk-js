@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 TON DEV SOLUTIONS LTD.
+ * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  *
  * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
  * this file except in compliance with the License.  You may obtain a copy of the
@@ -27,7 +27,7 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
-import TONConfigModule from './TONConfigModule';
+import TONConfigModule, { URLParts } from './TONConfigModule';
 
 type Subscription = {
     unsubscribe: () => void
@@ -65,9 +65,11 @@ export default class TONQueriesModule extends TONModule {
         let httpUrl = config.queriesHttpUrl();
         let wsUrl = config.queriesWsUrl();
         const fetch = clientPlatform.fetch;
-        const response = await fetch(httpUrl);
+        const response = await fetch(`${httpUrl}?query=%7Binfo%7Bversion%7D%7D`);
         if (response.redirected) {
-            const location = response.url;
+            const location = URLParts.fix(response.url, parts => {
+                parts.query = ''
+            });
             if (!!location) {
                 httpUrl = location;
                 wsUrl = location
@@ -83,19 +85,49 @@ export default class TONQueriesModule extends TONModule {
         }
     }
 
+    async getAccountsCount(): Promise<number> {
+        const result = await this.query('query{getAccountsCount}');
+        return result.data.getAccountsCount;
+    }
+
+    async getTransactionsCount(): Promise<number> {
+        const result = await this.query('query{getTransactionsCount}');
+        return result.data.getTransactionsCount;
+    }
+
+    async getAccountsTotalBalance(): Promise<string> {
+        const result = await this.query('query{getAccountsTotalBalance}');
+        return result.data.getAccountsTotalBalance;
+    }
+
     async postRequests(requests: Request[]): Promise<void> {
-        const ql = `mutation postRequests($requests: [Request]) {
+        return this.mutation(`mutation postRequests($requests: [Request]) {
             postRequests(requests: $requests)
-        }`;
+        }`, {
+            requests,
+        });
+    }
+
+    async mutation(ql: string, variables: { [string]: any } = {}): Promise<any> {
         const mutation = gql([ql]);
+        return this.graphQl(client => client.mutate({
+            mutation,
+            variables,
+        }));
+    }
+
+    async query(ql: string, variables: { [string]: any } = {}): Promise<any> {
+        const mutation = gql([ql]);
+        return this.graphQl(client => client.mutate({
+            mutation,
+            variables,
+        }));
+    }
+
+    async graphQl(request: (client: ApolloClient) => Promise<any>): Promise<any> {
         const client = await this.ensureClient();
         try {
-            await client.mutate({
-                mutation,
-                variables: {
-                    requests,
-                },
-            });
+            return request(client);
         } catch (error) {
             const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
             if (errors) {
@@ -186,31 +218,21 @@ class TONQCollection {
             collectionName.substr(1, collectionName.length - 2);
     }
 
-    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number): Promise<any> {
+    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number): Promise<any> {
         const c = this.collectionName;
         const t = this.typeName;
-        const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int) {
-            ${c}(filter: $filter, orderBy: $orderBy, limit: $limit) { ${result} }
+        const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
+            ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
         }`;
-        const query = gql([ql]);
-        const client = await this.module.ensureClient();
-        try {
-            return (await client.query({
-                query,
-                variables: {
-                    filter,
-                    orderBy,
-                    limit
-                },
-            })).data[c];
-        } catch (error) {
-            const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
-            if (errors) {
-                throw TONClientError.queryFailed(errors);
-            } else {
-                throw error;
-            }
+        const variables: { [string]: any } = {
+            filter,
+            orderBy,
+            limit,
+        };
+        if (timeout) {
+            variables.timeout = timeout / 1_000;
         }
+        return (await this.module.query(ql, variables)).data[c];
     }
 
     subscribe(
@@ -254,62 +276,11 @@ class TONQCollection {
     }
 
     async waitFor(filter: any, result: string, timeout?: number): Promise<any> {
-        const config = this.module.config;
-        const existing = await this.query(filter, result);
-        if (existing.length > 0) {
-            return existing[0];
+        const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000);
+        if (docs.length > 0) {
+            return docs[0];
         }
-        return new Promise((resolve, reject) => {
-            const forceCheckTimeout = 10_000;
-            let subscription: any = null;
-            let resolved: boolean = false;
-
-            const doResolve = (doc) => {
-                if (resolved) {
-                    return;
-                }
-                resolved = true;
-                if (subscription) {
-                    subscription.unsubscribe();
-                    subscription = null;
-                }
-                if (doc !== null) {
-                    resolve(doc);
-                } else {
-                    reject(TONClientError.waitForTimeout())
-                }
-            };
-
-            const forceCheck = () => {
-                (async () => {
-                    if (resolved) {
-                        return;
-                    }
-                    config.log('waitFor.forceCheck', this.collectionName, filter);
-                    const existing = await this.query(filter, result);
-                    if (existing.length > 0) {
-                        doResolve(existing[0]);
-                    } else {
-                        setTimeout(forceCheck, forceCheckTimeout);
-                    }
-                })();
-            };
-
-            const rejectOnTimeout = () => {
-                if (!resolved) {
-                    config.log('waitFor rejected on timeout', this.collectionName, filter);
-                    doResolve(null);
-                }
-            };
-
-            subscription = this.subscribe(filter, result, (change, doc) => {
-                doResolve(doc);
-            });
-            setTimeout(forceCheck, forceCheckTimeout);
-            if (timeout) {
-                setTimeout(rejectOnTimeout, timeout);
-            }
-        });
+        throw TONClientError.waitForTimeout();
     }
 }
 

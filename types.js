@@ -218,6 +218,11 @@ export type TONContractDeployParams = {
     workchainId?: number,
 }
 
+export type TONContractCalcDeployFeeParams = TONContractDeployParams & {
+    emulateBalance?: bool,
+    newAccount?: bool
+}
+
 export type TONContractDeployResult = {
     address: string,
     alreadyDeployed: boolean,
@@ -229,8 +234,7 @@ export type TONContractUnsignedMessage = {
 }
 
 export type TONContractMessage = {
-    messageId: string,
-    messageIdBase64: string,
+    messageId?: string,
     messageBodyBase64: string,
 }
 
@@ -251,6 +255,7 @@ export type TONContractDeployMessage = {
 }
 
 export type TONContractRunMessage = {
+    address: string,
     abi: TONContractABI,
     functionName: string,
     message: TONContractMessage;
@@ -268,6 +273,7 @@ export type TONContractCreateSignedDeployMessageParams = {
 }
 
 export type TONContractCreateSignedRunMessageParams = {
+    address: string,
     abi: TONContractABI,
     functionName: string,
     createSignedParams: TONContractCreateSignedMessageParams,
@@ -281,12 +287,26 @@ export type TONContractRunParams = {
     keyPair?: TONKeyPairData,
 }
 
-export type TONContractLocalRunParams = {
+export type TONContractCalcRunFeeParams = TONContractRunParams & { emulateBalance?: bool }
+
+export type TONContractTransactionFees = {
+    inMsgFwdFee: string,
+    storageFee: string,
+    gasFee: string,
+    outMsgsFwdFee: string,
+    totalAccountFees: string,
+    totalOutput: string
+}
+
+export type TONContractCalcFeeResult = {
+    fees: TONContractTransactionFees
+}
+
+export type TONContractCalcMsgProcessingFeesParams = {
     address: string,
-    abi: TONContractABI,
-    functionName: string,
-    input: any,
-    keyPair?: TONKeyPairData,
+    message: TONContractMessage,
+    emulateBalance?: bool,
+    newAccount?: bool
 }
 
 export type TONContractDecodeRunOutputParams = {
@@ -374,60 +394,67 @@ export type TONContractConvertAddressResult = {
     address: string,
 }
 
+export type TONContractGetBocHashParams = {
+    bocBase64: string,
+}
+
+export type TONContractGetBocHashResult = {
+    hash: string,
+}
+
 export type QOtherCurrencyCollection = {
     currency: number,
     value: string,
 }[]
 
 export type QAccount = {
-    acc_type: number,
-    addr: string,
-    last_paid: string,
-    due_payment: string,
-    last_trans_lt: string,
-    balance: string,
-    split_depth: number,
-    tick: boolean,
-    tock: boolean,
-    code: string,
-    data: string,
-    library: string,
-
+    acc_type?: number,
+    id?: string,
+    last_paid?: number,
+    due_payment?: string,
+    last_trans_lt?: string,
+    balance?: string,
+    split_depth?: number,
+    tick?: boolean,
+    tock?: boolean,
+    code?: string,
+    data?: string,
+    library?: string,
 }
 
 export type QTransaction = {
-    id: string,
-    tr_type: number,
-    status: number,
-    block_id: string,
-    aborted: boolean,
-    now: number,
-    storage: {
-        status_change: number,
+    id?: string,
+    tr_type?: number,
+    status?: number,
+    block_id?: string,
+    aborted?: boolean,
+    now?: number,
+    storage?: {
+        status_change?: number,
     },
-    compute: {
-        compute_type: number,
-        success: boolean,
-        exit_code: number,
-        skipped_reason: number,
+    compute?: {
+        compute_type?: number,
+        success?: boolean,
+        exit_code?: number,
+        skipped_reason?: number,
     },
-    action: {
-        valid: boolean,
-        no_funds: boolean,
-        success: boolean,
-        result_code: number,
+    action?: {
+        valid?: boolean,
+        no_funds?: boolean,
+        success?: boolean,
+        result_code?: number,
     };
-    out_msgs: string[],
+    out_msgs?: string[],
 }
 
 export type QMessage = {
-    id: string,
-    msg_type: number,
-    status: number,
-    src: string,
-    dst: string,
-    created_at: number,
-    body: string,
+    id?: string,
+    msg_type?: number,
+    status?: number,
+    src?: string,
+    dst?: string,
+    created_at?: number,
+    body?: string,
 }
 
 export interface TONContracts {
@@ -437,7 +464,7 @@ export interface TONContracts {
 
     run(params: TONContractRunParams): Promise<TONContractRunResult>;
 
-    runLocal(params: TONContractLocalRunParams): Promise<TONContractRunResult>;
+    runLocal(params: TONContractRunParams): Promise<TONContractRunResult>;
 
     createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage>;
 
@@ -459,13 +486,19 @@ export interface TONContracts {
 
     decodeOutputMessageBody(params: TONContractDecodeMessageBodyParams,): Promise<TONContractDecodeMessageBodyResult>;
 
-    sendMessage(params: TONContractMessage): Promise<void>;
+    sendMessage(params: TONContractMessage): Promise<string>;
 
     processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction>;
 
     processDeployMessage(params: TONContractDeployMessage): Promise<TONContractDeployResult>;
 
-    processRunMessage(params: TONContractRunMessage): Promise<TONContractRunResult>
+    processRunMessage(params: TONContractRunMessage): Promise<TONContractRunResult>;
+
+    calcRunFees(params: TONContractCalcRunFeeParams): Promise<TONContractCalcFeeResult>;
+
+    calcDeployFees(params: TONContractCalcDeployFeeParams): Promise<TONContractCalcFeeResult>;
+
+    calcMsgProcessFees(params: TONContractCalcMsgProcessingFeesParams): Promise<TONContractCalcFeeResult>
 }
 
 
