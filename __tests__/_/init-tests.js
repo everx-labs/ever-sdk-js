@@ -32,8 +32,6 @@ export type TONContractDeployedParams = {
 }
 
 
-jest.setTimeout(400_000);
-
 async function init() {
     await ensureBinaries();
 
