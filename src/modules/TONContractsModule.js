@@ -58,7 +58,7 @@ import { TONClient, TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule from './TONQueriesModule';
-
+const { FORMAT_TEXT_MAP } = require('opentracing');
 
 export const TONAddressStringVariant = {
     AccountId: 'AccountId',
@@ -204,15 +204,18 @@ export default class TONContractsModule extends TONModule implements TONContract
     }
 
     async load(params: TONContractLoadParams): Promise<TONContractLoadResult> {
+        const span = this.config.tracer.startSpan('TONContractsModule.js:load');
         const accounts: QAccount[] = await this.queries.accounts.query({
             id: { eq: params.address },
-        }, 'balance');
+        }, 'balance', span);
         if (accounts && accounts.length > 0) {
+            await span.finish();
             return {
                 id: params.address,
                 balanceGrams: accounts[0].balance,
             };
         }
+        await span.finish();
         return {
             id: null,
             balanceGrams: null,
@@ -388,21 +391,21 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message processing
 
-    async sendMessageRest(params: TONContractMessage): Promise<void> {
+    async sendMessageRest(params: TONContractMessage, rootSpan:any): Promise<void> {
         const { clientPlatform } = TONClient;
         if (!clientPlatform) {
             throw TONClientError.clientDoesNotConfigured();
         }
+        const span = await this.config.tracer.startSpan('TONContractsModule.js:sendMessageRest', { childOf: rootSpan });
         const { fetch } = clientPlatform;
         const url = this.config.requestsUrl();
+        const tracerHeaders = this.config.tracer.inject(span, FORMAT_TEXT_MAP, { 'Content-Type': 'application/json' });
         const response = await fetch(url, {
             method: 'POST',
             mode: 'cors',
             cache: 'no-cache',
             credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            tracerHeaders,
             redirect: 'follow',
             referrer: 'no-referrer',
             body: JSON.stringify({
@@ -416,27 +419,36 @@ export default class TONContractsModule extends TONModule implements TONContract
         });
         this.config.log('request posted');
         if (response.status !== 200) {
+            await span.log({
+                event: 'send node request',
+                value: 'failed'
+            });
+            await span.finish();
             throw TONClientError.sendNodeRequestFailed(await response.text());
         }
+        await span.finish();
     }
 
     async sendMessage(params: TONContractMessage): Promise<void> {
+        const span = await this.config.tracer.startSpan('TONContractsModule.js:sendMessage');
         await this.queries.postRequests([
             {
                 id: params.messageIdBase64,
                 body: params.messageBodyBase64,
             }
-        ]);
+        ], span);
         this.config.log('request posted');
+        await span.finish();
     }
 
 
     async processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction> {
         let transaction: ?QTransaction = null;
+        const span = await this.config.tracer.startSpan('TONContractsModule.js:processMessage');
         let retry = true;
         while (retry) {
             retry = false;
-            await this.sendMessageRest(message);
+            await this.sendMessageRest(message, span);
             try {
                 transaction = await this.queries.transactions.waitFor({
                     in_msg: { eq: message.messageId },

@@ -117,20 +117,26 @@ export default class TONQueriesModule extends TONModule {
         return result.data.getAccountsTotalBalance;
     }
 
-    async postRequests(requests: Request[]): Promise<void> {
-        return this.mutation(`mutation postRequests($requests: [Request]) {
+    async postRequests(requests: Request[], rootSpan: any): Promise<void> {
+        const span = await this.tracer.startSpan('TONQueriesModule.js:postRequests', { childeOf: rootSpan });
+        const mut = this.mutation(`mutation postRequests($requests: [Request]) {
             postRequests(requests: $requests)
         }`, {
             requests,
-        });
+        }, span);
+        await span.finish();
+        return mut;
     }
 
-    async mutation(ql: string, variables: { [string]: any } = {}): Promise<any> {
+    async mutation(ql: string, variables: { [string]: any } = {}, rootSpan: any): Promise<any> {
+        const span = await this.tracer.startSpan('TONQueriesModule.js:mutation', { childOf: rootSpan });
         const mutation = gql([ql]);
-        return this.graphQl(client => client.mutate({
+        const result = this.graphQl(client => client.mutate({
             mutation,
             variables,
         }));
+        await span.finish();
+        return result;
     }
 
     async query(ql: string, variables: { [string]: any } = {}, rootSpan: any): Promise<any> {
