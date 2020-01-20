@@ -136,12 +136,18 @@ export class TONModule {
      * @param {Object} params Method parameters will be stringified into JSON
      * @return {Promise<Object>}
      */
-    requestCore<Params, Result>(method: string, params?: Params): Promise<Result> {
+    requestCore<Params, Result>(method: string, params?: Params, tracer: any): Promise<Result> {
+        const span = tracer.startSpan('TONModule.js:requestCore');
+        span.log({
+            event: 'core request',
+            value: `Mehtod - ${method} \n Params - ${params}`
+        });
         const core = this.context.getCore();
         if (!core) {
+            span.finish();
             throw new Error('TON SDK JS Library doesn\'t set up');
         }
-        return new Promise((resolve: (Result) => void, reject: (Error) => void) => {
+        const prom = new Promise((resolve: (Result) => void, reject: (Error) => void) => {
             core.request(
                 method,
                 params !== undefined ? (JSON.stringify(params) || '') : '',
@@ -156,5 +162,7 @@ export class TONModule {
                 },
             );
         });
+        span.finish();
+        return prom;
     }
 }
