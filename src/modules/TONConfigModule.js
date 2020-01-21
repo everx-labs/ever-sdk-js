@@ -148,6 +148,10 @@ export default class TONConfigModule extends TONModule {
         this._profilePrev = this._profileStart;
     }
 
+    stopProfile() {
+        this._profileStart = this._profilePrev = 0;
+    }
+
     requestsUrl(): string {
         return this._requestsUrl;
     }

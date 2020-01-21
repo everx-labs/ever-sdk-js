@@ -195,11 +195,12 @@ export async function get_grams_from_giver(account: string, amount: number = giv
         };
     }
     const result: TONContractRunResult = await contracts.run(params);
-    for (const msg of (result.transaction.out_msgs || [])) {
+    for (const msg of (result.transaction.out_messages || [])) {
         if (msg.msg_type === QMessageType.internal) {
+            config.log(`Giver. Wait for ${msg.id || "Empty ID"}`);
             await queries.transactions.waitFor(
                 {
-                    in_msg: { eq: msg },
+                    in_msg: { eq: msg.id },
                     status: { eq: QTransactionProcessingStatus.finalized },
                 },
                 'lt',

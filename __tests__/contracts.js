@@ -588,5 +588,6 @@ test('test deploy lags', async () => {
         }
     });
 
-    config.log("After deploy"); 
+    config.log("After deploy");
+    config.stopProfile();
 });
