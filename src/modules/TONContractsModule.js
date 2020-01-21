@@ -427,7 +427,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 ],
             }),
         });
-        this.config.log('request posted');
+        this.config.log('sendMessageRest. request posted');
         if (response.status !== 200) {
             throw TONClientError.sendNodeRequestFailed(await response.text());
         }
@@ -446,7 +446,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 body: params.messageBodyBase64,
             }
         ]);
-        this.config.log('request posted');
+        this.config.log('sendMessage. Request posted');
         return id;
     }
 
@@ -456,18 +456,17 @@ export default class TONContractsModule extends TONModule implements TONContract
         let retry = true;
         while (retry) {
             retry = false;
-            this.config.log('Before send');
-            const messageId = await this.sendMessageRest(message);
-            this.config.log('After send');
+            this.config.log('processMessage. Before send');
+            const messageId = await this.sendMessage(message);
+            this.config.log('processMessage. After send');
             try {
                 transaction = await this.queries.transactions.waitFor({
                     in_msg: { eq: messageId },
                     status: { eq: QTransactionProcessingStatus.finalized },
                 }, resultFields, 40_000);
-                this.config.log('After wait');
             } catch (error) {
                 if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
-                    this.config.log('Timeout, retrying...');
+                    this.config.log('processMessage. Timeout, retrying...');
                     retry = true;
                 } else {
                     throw error;
@@ -478,7 +477,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             throw TONClientError.internalError('transaction is null');
         }
         const transactionNow = transaction.now || 0;
-        this.config.log('transaction received', {
+        this.config.log('processMessage. transaction received', {
             id: transaction.id,
             block_id: transaction.block_id,
             now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
@@ -494,6 +493,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             transactionDetails,
         );
         await checkTransaction(transaction);
+        this.config.log('processDeployMessage. End');
         return {
             address: params.address,
             alreadyDeployed: false,
@@ -516,7 +516,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         const externalMessages: QMessage[] = outputMessages.filter((x: QMessage) => {
             return x.msg_type === QMessageType.extOut;
         });
-        this.config.log('Before messages parse');
+        this.config.log('processRunMessage. Before messages parse');
         const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
             return this.decodeOutputMessageBody({
                 abi: params.abi,
@@ -526,7 +526,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         const resultOutput = outputs.find((x: TONContractDecodeMessageBodyResult) => {
             return x.function.toLowerCase() === params.functionName.toLowerCase();
         });
-        this.config.log('Run end');
+        this.config.log('processRunMessage. End');
         return {
             output: resultOutput ? resultOutput.output : null,
             transaction

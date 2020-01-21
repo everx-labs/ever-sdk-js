@@ -170,6 +170,9 @@ export default class TONConfigModule extends TONModule {
             await this.requestCore('setup', this.data);
         }
         this._logVerbose = (this.data && this.data.log_verbose) || false;
+        if (this._logVerbose) {
+            this.startProfile();
+        }
     }
 
     _logVerbose: boolean;

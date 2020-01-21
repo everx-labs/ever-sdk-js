@@ -161,7 +161,9 @@ async function check_giver() {
 }
 
 export async function get_grams_from_giver(account: string, amount: number = giverRequestAmount) {
-    const { contracts, queries } = tests.client;
+    const { contracts, queries, config } = tests.client;
+
+    config.log("Giver. Start");
 
     let params: TONContractRunParams;
     if (nodeSe) {
@@ -189,6 +191,7 @@ export async function get_grams_from_giver(account: string, amount: number = giv
         };
     }
     const result: TONContractRunResult = await contracts.run(params);
+    config.log("Giver. After run");
     for (const msg of (result.transaction.out_msgs || [])) {
         await queries.transactions.waitFor(
             {
@@ -198,6 +201,7 @@ export async function get_grams_from_giver(account: string, amount: number = giv
             'lt',
         );
     }
+    config.log("Giver. End");
 }
 
 export async function deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult> {
