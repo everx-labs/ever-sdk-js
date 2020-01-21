@@ -822,6 +822,7 @@ const transactionDetails = `
         no_funds
     }
     out_messages {
+        id
         msg_type
         body
     }

@@ -3,7 +3,8 @@
 import {
     QAccountType,
     TONAddressStringVariant,
-    QTransactionProcessingStatus
+    QTransactionProcessingStatus,
+    QMessageType
 } from '../../src/modules/TONContractsModule';
 import type {
     TONContractDeployParams,
@@ -164,6 +165,7 @@ export async function get_grams_from_giver(account: string, amount: number = giv
     const { contracts, queries, config } = tests.client;
 
     config.log("Giver. Start");
+    console.time(`Get grams from giver to ${account}`);
 
     let params: TONContractRunParams;
     if (nodeSe) {
@@ -177,7 +179,9 @@ export async function get_grams_from_giver(account: string, amount: number = giv
             },
         };
     } else {
+        config.log("Giver. Before check");
         await check_giver();
+        config.log("Giver. After check");
         params = {
             address: giverWalletAddressHex,
             functionName: 'sendTransaction',
@@ -191,17 +195,20 @@ export async function get_grams_from_giver(account: string, amount: number = giv
         };
     }
     const result: TONContractRunResult = await contracts.run(params);
-    config.log("Giver. After run");
     for (const msg of (result.transaction.out_msgs || [])) {
-        await queries.transactions.waitFor(
-            {
-                in_msg: { eq: msg },
-                status: { eq: QTransactionProcessingStatus.finalized },
-            },
-            'lt',
-        );
+        if (msg.msg_type === QMessageType.internal) {
+            await queries.transactions.waitFor(
+                {
+                    in_msg: { eq: msg },
+                    status: { eq: QTransactionProcessingStatus.finalized },
+                },
+                'lt',
+            );
+        }
     }
+
     config.log("Giver. End");
+    console.timeEnd(`Get grams from giver to ${account}`);
 }
 
 export async function deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult> {
