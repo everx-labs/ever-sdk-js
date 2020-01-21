@@ -560,3 +560,34 @@ test('test send boc', async () => {
         }
     });
 });
+
+test('test deploy lags', async () => {
+    const { contracts, crypto, config } = tests.client;
+    config.startProfile();
+
+    config.log("Start");
+    const keys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    config.log("Before giver");
+
+    await tests.get_grams_from_giver(message.address);
+
+    config.log("After giver");
+
+    // send message without id - it should be computed inside
+    await contracts.processDeployMessage({
+        address: message.address,
+        message: {
+            messageBodyBase64: message.message.messageBodyBase64
+        }
+    });
+
+    config.log("After deploy");
+    config.stopProfile();
+});
