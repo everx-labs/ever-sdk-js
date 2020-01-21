@@ -233,6 +233,7 @@ export type TONContractCalcDeployFeeParams = TONContractDeployParams & {
 export type TONContractDeployResult = {
     address: string,
     alreadyDeployed: boolean,
+    transaction: QTransaction,
 }
 
 export type TONContractUnsignedMessage = {
@@ -294,7 +295,16 @@ export type TONContractRunParams = {
     keyPair?: TONKeyPairData,
 }
 
-export type TONContractCalcRunFeeParams = TONContractRunParams & { emulateBalance?: bool }
+export type TONAccountWaitParams = {
+    transactionLt?: string,
+    timeout?: number
+}
+
+export type TONContractCalcRunFeeParams = TONContractRunParams 
+    & { emulateBalance?: bool } 
+    & TONAccountWaitParams
+
+export type TONContractRunLocalParams = TONContractRunParams & TONAccountWaitParams
 
 export type TONContractTransactionFees = {
     inMsgFwdFee: string,
@@ -314,7 +324,7 @@ export type TONContractCalcMsgProcessingFeesParams = {
     message: TONContractMessage,
     emulateBalance?: bool,
     newAccount?: bool
-}
+} & TONAccountWaitParams
 
 export type TONContractDecodeRunOutputParams = {
     abi: TONContractABI,
@@ -436,6 +446,7 @@ export type QTransaction = {
     block_id?: string,
     aborted?: boolean,
     now?: number,
+    lt?: string,
     storage?: {
         status_change?: number,
     },
@@ -471,7 +482,7 @@ export interface TONContracts {
 
     run(params: TONContractRunParams): Promise<TONContractRunResult>;
 
-    runLocal(params: TONContractRunParams): Promise<TONContractRunResult>;
+    runLocal(params: TONContractRunLocalParams): Promise<TONContractRunResult>;
 
     createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage>;
 
