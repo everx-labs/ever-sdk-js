@@ -48,6 +48,7 @@ import type {
     TONContractCalcFeeResult,
     TONContractCalcMsgProcessingFeesParams,
     TONContractMessage,
+    TONContractRunLocalParams,
     TONContractRunMessage,
     TONContractRunParams,
     TONContractRunResult,
@@ -233,7 +234,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.internalRunJs(params);
     }
 
-    async runLocal(params: TONContractRunParams): Promise<TONContractRunResult> {
+    async runLocal(params: TONContractRunLocalParams): Promise<TONContractRunResult> {
         return this.internalRunLocalJs(params);
     }
 
@@ -489,13 +490,10 @@ export default class TONContractsModule extends TONModule implements TONContract
             transactionDetails,
         );
         await checkTransaction(transaction);
-        await this.queries.accounts.waitFor({
-            id: { eq: params.address },
-            acc_type: { eq: QAccountType.active }
-        }, 'id');
         return {
             address: params.address,
             alreadyDeployed: false,
+            transaction
         };
     }
 
@@ -537,10 +535,10 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
     }
 
-    async processRunMessageLocal(params: TONContractRunMessage): Promise<TONContractRunResult> {
+    async processRunMessageLocal(params: TONContractRunMessage, transactionLt?: string, timeout?: number): Promise<TONContractRunResult> {
         this.config.log('processRunMessageLocal', params);
 
-        const account = await this.getAccount(params.address);
+        const account = await this.getAccount(params.address, true, transactionLt, timeout);
 
         return this.requestCore('contracts.run.local.msg', {
             address: params.address,
@@ -558,7 +556,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async calcRunFees(params: TONContractCalcRunFeeParams): Promise<TONContractCalcFeeResult> {
         this.config.log('calcRunFees', params);
 
-        const account = await this.getAccount(params.address);
+        const account = await this.getAccount(params.address, true, params.transactionLt, params.timeout);
 
         if (params.emulateBalance) {
             account.balance = this.bigBalance
@@ -597,7 +595,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
 
         if (!params.newAccount) {
-            account = await this.getAccount(params.address);
+            account = await this.getAccount(params.address, false, params.transactionLt, params.timeout);
         }
 
         if (params.emulateBalance) {
@@ -652,7 +650,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.processRunMessage(message);
     }
 
-    async getAccount(address: string): Promise<QAccount> {
+    async getAccount(address: string, active: bool, lt?: string, timeout?: number): Promise<QAccount> {
         function removeTypeName(obj: any) {
             if (obj.__typename) {
                 delete obj.__typename;
@@ -664,22 +662,30 @@ export default class TONContractsModule extends TONModule implements TONContract
             });
         }
 
-        const account = await this.queries.accounts.query({
-                id: { eq: address }
-            },
-            'id code data balance balance_other { currency value } last_paid'
-        );
-
-        if (account.length !== 1) {
-            throw `No account with address ${address} found`;
+        const filter = {
+            id: { eq: address },
+            last_trans_lt: undefined,
+            acc_type: undefined
+        };
+        if (lt) {
+            filter.last_trans_lt = { ge: lt };
+        }
+        if (active) {
+            filter.acc_type = { eq: QAccountType.active };
         }
 
+        const account = await this.queries.accounts.waitFor(
+            filter,
+            'id code data balance balance_other { currency value } last_paid',
+            timeout
+        );
+
         removeTypeName(account);
-        return account[0];
+        return account;
     }
 
-    async internalRunLocalJs(params: TONContractRunParams): Promise<TONContractRunResult> {
-        const account = await this.getAccount(params.address);
+    async internalRunLocalJs(params: TONContractRunLocalParams): Promise<TONContractRunResult> {
+        const account = await this.getAccount(params.address, true, params.transactionLt, params.timeout);
 
         return this.requestCore('contracts.run.local', {
             address: params.address,
@@ -793,12 +799,14 @@ async function checkTransaction(transaction: QTransaction) {
 
 const transactionDetails = `
     id
+    in_msg
     tr_type
     status
     out_msgs
     block_id
     now
     aborted
+    lt
     storage {
         status_change
     }
