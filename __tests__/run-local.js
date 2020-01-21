@@ -31,7 +31,7 @@ test("RunLocal", async () => {
     const walletAddress = '0:2222222222222222222222222222222222222222222222222222222222222222';
 
     // Deploy custom contract
-    const { address: packageAddress } = (await tests.deploy_with_giver({
+    const { address: packageAddress, transaction } = (await tests.deploy_with_giver({
         package: SubscriptionContractPackage,
         constructorParams: {
             wallet: walletAddress,
@@ -48,11 +48,40 @@ test("RunLocal", async () => {
         functionName: 'getWallet',
         input: {},
         keyPair: keys,
+        timeout: 100_000
     });
-
-    console.log(`Get (runLocal): ${JSON.stringify(runLocalResponse)}`);
 
     expect(runLocalResponse.output).toEqual({
             value0: "0:2222222222222222222222222222222222222222222222222222222222222222"
     });
+
+    const subscriptionParams = {
+        subscriptionId: "0x1111111111111111111111111111111111111111111111111111111111111111",
+        pubkey: "0x2222222222222222222222222222222222222222222222222222222222222222",
+        to: "0:3333333333333333333333333333333333333333333333333333333333333333",
+        value: "0x123",
+        period: "0x456"
+    };
+
+    const subscribeResult = await ton.contracts.run({
+        address: packageAddress,
+        abi: SubscriptionContractPackage.abi,
+        functionName: 'subscribe',
+        input: subscriptionParams,
+        keyPair: keys,
+    });
+
+    const getSubscriptionResult = await ton.contracts.runLocal({
+        address: packageAddress,
+        abi: SubscriptionContractPackage.abi,
+        functionName: 'getSubscription',
+        input: {
+            "subscriptionId": subscriptionParams.subscriptionId
+        },
+        keyPair: keys,
+        transactionLt: subscribeResult.transaction.lt,
+        timeout: 100_000
+    });
+
+    expect(getSubscriptionResult.output.value0.pubkey).toEqual(subscriptionParams.pubkey);
 });

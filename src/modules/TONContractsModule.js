@@ -19,6 +19,7 @@ import type {
     QAccount,
     QMessage,
     QTransaction,
+    TONContractAccountWaitParams,
     TONContractConvertAddressParams,
     TONContractConvertAddressResult,
     TONContractCreateRunBodyParams,
@@ -48,6 +49,7 @@ import type {
     TONContractCalcFeeResult,
     TONContractCalcMsgProcessingFeesParams,
     TONContractMessage,
+    TONContractRunLocalParams,
     TONContractRunMessage,
     TONContractRunParams,
     TONContractRunResult,
@@ -233,7 +235,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.internalRunJs(params);
     }
 
-    async runLocal(params: TONContractRunParams): Promise<TONContractRunResult> {
+    async runLocal(params: TONContractRunLocalParams): Promise<TONContractRunResult> {
         return this.internalRunLocalJs(params);
     }
 
@@ -492,14 +494,10 @@ export default class TONContractsModule extends TONModule implements TONContract
             transactionDetails,
         );
         await checkTransaction(transaction);
-        await this.queries.accounts.waitFor({
-            id: { eq: params.address },
-            acc_type: { eq: QAccountType.active }
-        }, 'id');
-        this.config.log('After wait account');
         return {
             address: params.address,
             alreadyDeployed: false,
+            transaction
         };
     }
 
@@ -535,10 +533,10 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
     }
 
-    async processRunMessageLocal(params: TONContractRunMessage): Promise<TONContractRunResult> {
+    async processRunMessageLocal(params: TONContractRunMessage, waitParams?: TONContractAccountWaitParams): Promise<TONContractRunResult> {
         this.config.log('processRunMessageLocal', params);
 
-        const account = await this.getAccount(params.address);
+        const account = await this.getAccount(params.address, true, waitParams);
 
         return this.requestCore('contracts.run.local.msg', {
             address: params.address,
@@ -556,7 +554,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async calcRunFees(params: TONContractCalcRunFeeParams): Promise<TONContractCalcFeeResult> {
         this.config.log('calcRunFees', params);
 
-        const account = await this.getAccount(params.address);
+        const account = await this.getAccount(params.address, true, params.waitParams);
 
         if (params.emulateBalance) {
             account.balance = this.bigBalance
@@ -595,7 +593,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
 
         if (!params.newAccount) {
-            account = await this.getAccount(params.address);
+            account = await this.getAccount(params.address, false, params.waitParams);
         }
 
         if (params.emulateBalance) {
@@ -652,7 +650,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.processRunMessage(message);
     }
 
-    async getAccount(address: string): Promise<QAccount> {
+    async getAccount(address: string, active: bool, waitParams?: TONContractAccountWaitParams): Promise<QAccount> {
         function removeTypeName(obj: any) {
             if (obj.__typename) {
                 delete obj.__typename;
@@ -664,22 +662,28 @@ export default class TONContractsModule extends TONModule implements TONContract
             });
         }
 
-        const account = await this.queries.accounts.query({
-                id: { eq: address }
-            },
-            'id code data balance balance_other { currency value } last_paid'
-        );
-
-        if (account.length !== 1) {
-            throw `No account with address ${address} found`;
+        const filter: { [string]: any } = {
+            id: { eq: address }
+        };
+        if (waitParams && waitParams.transactionLt) {
+            filter.last_trans_lt = { ge: waitParams.transactionLt };
+        }
+        if (active) {
+            filter.acc_type = { eq: QAccountType.active };
         }
 
+        const account = await this.queries.accounts.waitFor(
+            filter,
+            'id code data balance balance_other { currency value } last_paid',
+            waitParams && waitParams.timeout
+        );
+
         removeTypeName(account);
-        return account[0];
+        return account;
     }
 
-    async internalRunLocalJs(params: TONContractRunParams): Promise<TONContractRunResult> {
-        const account = await this.getAccount(params.address);
+    async internalRunLocalJs(params: TONContractRunLocalParams): Promise<TONContractRunResult> {
+        const account = await this.getAccount(params.address, true, params.waitParams);
 
         return this.requestCore('contracts.run.local', {
             address: params.address,
@@ -793,6 +797,7 @@ async function checkTransaction(transaction: QTransaction) {
 
 const transactionDetails = `
     id
+    in_msg
     tr_type
     status
     in_msg
@@ -800,6 +805,7 @@ const transactionDetails = `
     block_id
     now
     aborted
+    lt
     storage {
         status_change
     }

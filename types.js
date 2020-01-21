@@ -218,13 +218,6 @@ export type TONContractDeployParams = {
     workchainId?: number,
 }
 
-export type TONContractDeployedParams = {
-    address: string,
-    key: TONKeyPairData,
-    abi: TONContractABI,
-    giverAddress: string
-}
-
 export type TONContractCalcDeployFeeParams = TONContractDeployParams & {
     emulateBalance?: bool,
     newAccount?: bool
@@ -233,6 +226,7 @@ export type TONContractCalcDeployFeeParams = TONContractDeployParams & {
 export type TONContractDeployResult = {
     address: string,
     alreadyDeployed: boolean,
+    transaction: QTransaction,
 }
 
 export type TONContractUnsignedMessage = {
@@ -294,7 +288,19 @@ export type TONContractRunParams = {
     keyPair?: TONKeyPairData,
 }
 
-export type TONContractCalcRunFeeParams = TONContractRunParams & { emulateBalance?: bool }
+export type TONContractAccountWaitParams = {
+    transactionLt?: string,
+    timeout?: number
+}
+
+export type TONContractCalcRunFeeParams = TONContractRunParams & {
+    emulateBalance?: bool,
+    waitParams?: TONContractAccountWaitParams
+}
+
+export type TONContractRunLocalParams = TONContractRunParams & {
+    waitParams?: TONContractAccountWaitParams
+}
 
 export type TONContractTransactionFees = {
     inMsgFwdFee: string,
@@ -313,7 +319,8 @@ export type TONContractCalcMsgProcessingFeesParams = {
     address: string,
     message: TONContractMessage,
     emulateBalance?: bool,
-    newAccount?: bool
+    newAccount?: bool,
+    waitParams?: TONContractAccountWaitParams
 }
 
 export type TONContractDecodeRunOutputParams = {
@@ -436,6 +443,7 @@ export type QTransaction = {
     block_id?: string,
     aborted?: boolean,
     now?: number,
+    lt?: string,
     storage?: {
         status_change?: number,
     },
@@ -472,7 +480,7 @@ export interface TONContracts {
 
     run(params: TONContractRunParams): Promise<TONContractRunResult>;
 
-    runLocal(params: TONContractRunParams): Promise<TONContractRunResult>;
+    runLocal(params: TONContractRunLocalParams): Promise<TONContractRunResult>;
 
     createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage>;
 
