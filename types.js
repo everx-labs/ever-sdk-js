@@ -288,16 +288,19 @@ export type TONContractRunParams = {
     keyPair?: TONKeyPairData,
 }
 
-export type TONAccountWaitParams = {
+export type TONContractAccountWaitParams = {
     transactionLt?: string,
     timeout?: number
 }
 
-export type TONContractCalcRunFeeParams = TONContractRunParams 
-    & { emulateBalance?: bool } 
-    & TONAccountWaitParams
+export type TONContractCalcRunFeeParams = TONContractRunParams & {
+    emulateBalance?: bool,
+    waitParams?: TONContractAccountWaitParams
+}
 
-export type TONContractRunLocalParams = TONContractRunParams & TONAccountWaitParams
+export type TONContractRunLocalParams = TONContractRunParams & {
+    waitParams?: TONContractAccountWaitParams
+}
 
 export type TONContractTransactionFees = {
     inMsgFwdFee: string,
@@ -316,8 +319,9 @@ export type TONContractCalcMsgProcessingFeesParams = {
     address: string,
     message: TONContractMessage,
     emulateBalance?: bool,
-    newAccount?: bool
-} & TONAccountWaitParams
+    newAccount?: bool,
+    waitParams?: TONContractAccountWaitParams
+}
 
 export type TONContractDecodeRunOutputParams = {
     abi: TONContractABI,
