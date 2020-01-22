@@ -672,6 +672,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             filter.acc_type = { eq: QAccountType.active };
         }
 
+        this.config.log("getAccount. Filter", filter);
         const account = await this.queries.accounts.waitFor(
             filter,
             'id code data balance balance_other { currency value } last_paid',
@@ -679,6 +680,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         );
 
         removeTypeName(account);
+        this.config.log("getAccount. Account recieved", account);
         return account;
     }
 
