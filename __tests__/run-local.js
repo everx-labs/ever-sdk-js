@@ -48,7 +48,9 @@ test("RunLocal", async () => {
         functionName: 'getWallet',
         input: {},
         keyPair: keys,
-        timeout: 100_000
+        waitParams: {
+            timeout: 100_000
+        }
     });
 
     expect(runLocalResponse.output).toEqual({
@@ -79,8 +81,10 @@ test("RunLocal", async () => {
             "subscriptionId": subscriptionParams.subscriptionId
         },
         keyPair: keys,
-        transactionLt: subscribeResult.transaction.lt,
-        timeout: 100_000
+        waitParams: {
+            transactionLt: subscribeResult.transaction.lt,
+            timeout: 100_000
+        }
     });
 
     expect(getSubscriptionResult.output.value0.pubkey).toEqual(subscriptionParams.pubkey);
