@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 TON DEV SOLUTIONS LTD.
+ * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  *
  * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
  * this file except in compliance with the License.  You may obtain a copy of the
@@ -172,3 +172,14 @@ test('Check shard_hashes greater then 0', async () => {
     expect(queryResult.length)
         .toBeGreaterThan(0);
 });
+
+
+test("Subscribe for accounts", async () => {
+    // const { queries } = tests.client;
+    // const subscriptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => queries.accounts.subscribe({}, 'id code data', (e, doc) => {
+    //     console.log(i, doc.id);
+    // }));
+    // await new Promise(resolve => setTimeout(resolve, 1000_000));
+    // subscriptions.forEach(x => x.unsubscribe());
+});
+

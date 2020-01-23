@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 TON DEV SOLUTIONS LTD.
+ * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  *
  * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
  * this file except in compliance with the License.  You may obtain a copy of the
@@ -19,6 +19,7 @@ import type {
     QAccount,
     QMessage,
     QTransaction,
+    TONContractAccountWaitParams,
     TONContractConvertAddressParams,
     TONContractConvertAddressResult,
     TONContractCreateRunBodyParams,
@@ -33,6 +34,8 @@ import type {
     TONContractDeployParams,
     TONContractDeployResult,
     TONContractCalcDeployFeeParams,
+    TONContractGetBocHashParams,
+    TONContractGetBocHashResult,
     TONContractGetCodeFromImageParams,
     TONContractGetCodeFromImageResult,
     TONContractGetDeployDataParams,
@@ -46,6 +49,7 @@ import type {
     TONContractCalcFeeResult,
     TONContractCalcMsgProcessingFeesParams,
     TONContractMessage,
+    TONContractRunLocalParams,
     TONContractRunMessage,
     TONContractRunParams,
     TONContractRunResult,
@@ -234,7 +238,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.internalRunJs(params);
     }
 
-    async runLocal(params: TONContractRunParams): Promise<TONContractRunResult> {
+    async runLocal(params: TONContractRunLocalParams): Promise<TONContractRunResult> {
         return this.internalRunLocalJs(params);
     }
 
@@ -245,7 +249,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         const message: {
             address: string,
             messageId: string,
-            messageIdBase64: string,
             messageBodyBase64: string,
         } = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
@@ -258,7 +261,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         return {
             message: {
                 messageId: message.messageId,
-                messageIdBase64: message.messageIdBase64,
                 messageBodyBase64: message.messageBodyBase64,
             },
             address: message.address
@@ -369,6 +371,12 @@ export default class TONContractsModule extends TONModule implements TONContract
         return this.requestCore('contracts.function.id', params);
     }
 
+    async getBocHash(
+        params: TONContractGetBocHashParams
+    ): Promise<TONContractGetBocHashResult> {
+        return this.requestCore('contracts.boc.hash', params);
+    }
+
     // Message parsing
 
     async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
@@ -391,7 +399,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message processing
 
-    async sendMessageRest(params: TONContractMessage, rootSpan:any): Promise<void> {
+    async sendMessageRest(params: TONContractMessage, rootSpan: any): Promise<string> {
         const { clientPlatform } = TONClient;
         if (!clientPlatform) {
             throw TONClientError.clientDoesNotConfigured();
@@ -399,6 +407,11 @@ export default class TONContractsModule extends TONModule implements TONContract
         const span = await this.config.tracer.startSpan('TONContractsModule.js:sendMessageRest', { childOf: rootSpan });
         const { fetch } = clientPlatform;
         const url = this.config.requestsUrl();
+        const id = params.messageId ||
+            (await this.getBocHash({
+                bocBase64: params.messageBodyBase64
+            })).hash;
+        const idBase64 = Buffer.from(id, 'hex').toString('base64');
         const tracerHeaders = this.config.tracer.inject(span, FORMAT_TEXT_MAP, { 'Content-Type': 'application/json' });
         const response = await fetch(url, {
             method: 'POST',
@@ -406,18 +419,21 @@ export default class TONContractsModule extends TONModule implements TONContract
             cache: 'no-cache',
             credentials: 'same-origin',
             tracerHeaders,
+            headers: {
+                'Content-Type': 'application/json',
+            },
             redirect: 'follow',
             referrer: 'no-referrer',
             body: JSON.stringify({
                 records: [
                     {
-                        key: params.messageIdBase64,
+                        key: idBase64,
                         value: params.messageBodyBase64,
                     },
                 ],
             }),
         });
-        this.config.log('request posted');
+        this.config.log('sendMessageRest. request posted');
         if (response.status !== 200) {
             await span.log({
                 event: 'send node request',
@@ -427,18 +443,25 @@ export default class TONContractsModule extends TONModule implements TONContract
             throw TONClientError.sendNodeRequestFailed(await response.text());
         }
         await span.finish();
+        return id;
     }
 
-    async sendMessage(params: TONContractMessage): Promise<void> {
+    async sendMessage(params: TONContractMessage): Promise<string> {
+        const id = params.messageId ||
+            (await this.getBocHash({
+                bocBase64: params.messageBodyBase64
+            })).hash;
+        const idBase64 = Buffer.from(id, 'hex').toString('base64');
         const span = await this.config.tracer.startSpan('TONContractsModule.js:sendMessage');
         await this.queries.postRequests([
             {
-                id: params.messageIdBase64,
+                id: idBase64,
                 body: params.messageBodyBase64,
             }
         ], span);
-        this.config.log('request posted');
+        this.config.log('sendMessage. Request posted');
         await span.finish();
+        return id;
     }
 
 
@@ -448,15 +471,17 @@ export default class TONContractsModule extends TONModule implements TONContract
         let retry = true;
         while (retry) {
             retry = false;
-            await this.sendMessageRest(message, span);
+            this.config.log('processMessage. Before send');
+            const messageId = await this.sendMessage(message, span);
+            this.config.log('processMessage. After send');
             try {
                 transaction = await this.queries.transactions.waitFor({
-                    in_msg: { eq: message.messageId },
+                    in_msg: { eq: messageId },
                     status: { eq: QTransactionProcessingStatus.finalized },
                 }, resultFields, 40_000);
             } catch (error) {
                 if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
-                    this.config.log('Timeout, retrying...');
+                    this.config.log('processMessage. Timeout, retrying...');
                     retry = true;
                 } else {
                     throw error;
@@ -467,7 +492,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             throw TONClientError.internalError('transaction is null');
         }
         const transactionNow = transaction.now || 0;
-        this.config.log('transaction received', {
+        this.config.log('processMessage. transaction received', {
             id: transaction.id,
             block_id: transaction.block_id,
             now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
@@ -483,13 +508,11 @@ export default class TONContractsModule extends TONModule implements TONContract
             transactionDetails,
         );
         await checkTransaction(transaction);
-        await this.queries.accounts.waitFor({
-            id: { eq: params.address },
-            acc_type: { eq: QAccountType.active }
-        }, 'id');
+        this.config.log('processDeployMessage. End');
         return {
             address: params.address,
             alreadyDeployed: false,
+            transaction
         };
     }
 
@@ -501,21 +524,14 @@ export default class TONContractsModule extends TONModule implements TONContract
             transactionDetails,
         );
         await checkTransaction(transaction);
-        const outputMessageIds = transaction.out_msgs;
-        if (!outputMessageIds || outputMessageIds.length === 0) {
+        const outputMessages = transaction.out_messages;
+        if (!outputMessages || outputMessages.length === 0) {
             return { output: null, transaction };
         }
-        const externalMessages: QMessage[] = (await Promise.all(outputMessageIds.map((id) => {
-            return this.queries.messages.waitFor(
-                {
-                    id: { eq: id },
-                    status: { eq: QMessageProcessingStatus.finalized },
-                },
-                'body msg_type',
-            );
-        }))).filter((x: QMessage) => {
+        const externalMessages: QMessage[] = outputMessages.filter((x: QMessage) => {
             return x.msg_type === QMessageType.extOut;
         });
+        this.config.log('processRunMessage. Before messages parse');
         const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
             return this.decodeOutputMessageBody({
                 abi: params.abi,
@@ -525,16 +541,17 @@ export default class TONContractsModule extends TONModule implements TONContract
         const resultOutput = outputs.find((x: TONContractDecodeMessageBodyResult) => {
             return x.function.toLowerCase() === params.functionName.toLowerCase();
         });
+        this.config.log('processRunMessage. End');
         return {
             output: resultOutput ? resultOutput.output : null,
             transaction
         };
     }
 
-    async processRunMessageLocal(params: TONContractRunMessage): Promise<TONContractRunResult> {
+    async processRunMessageLocal(params: TONContractRunMessage, waitParams?: TONContractAccountWaitParams): Promise<TONContractRunResult> {
         this.config.log('processRunMessageLocal', params);
 
-        const account = await this.getAccount(params.address);
+        const account = await this.getAccount(params.address, true, waitParams);
 
         return this.requestCore('contracts.run.local.msg', {
             address: params.address,
@@ -552,7 +569,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async calcRunFees(params: TONContractCalcRunFeeParams): Promise<TONContractCalcFeeResult> {
         this.config.log('calcRunFees', params);
 
-        const account = await this.getAccount(params.address);
+        const account = await this.getAccount(params.address, true, params.waitParams);
 
         if (params.emulateBalance) {
             account.balance = this.bigBalance
@@ -591,7 +608,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
 
         if (!params.newAccount) {
-            account = await this.getAccount(params.address);
+            account = await this.getAccount(params.address, false, params.waitParams);
         }
 
         if (params.emulateBalance) {
@@ -636,17 +653,19 @@ export default class TONContractsModule extends TONModule implements TONContract
 
 
     async internalDeployJs(params: TONContractDeployParams): Promise<TONContractDeployResult> {
+        this.config.log("Deploy start");
         const message = await this.createDeployMessage(params);
         return this.processDeployMessage(message);
     }
 
 
     async internalRunJs(params: TONContractRunParams): Promise<TONContractRunResult> {
+        this.config.log("Run start");
         const message = await this.createRunMessage(params);
         return this.processRunMessage(message);
     }
 
-    async getAccount(address: string): Promise<QAccount> {
+    async getAccount(address: string, active: bool, waitParams?: TONContractAccountWaitParams): Promise<QAccount> {
         function removeTypeName(obj: any) {
             if (obj.__typename) {
                 delete obj.__typename;
@@ -658,22 +677,30 @@ export default class TONContractsModule extends TONModule implements TONContract
             });
         }
 
-        const account = await this.queries.accounts.query({
-                id: { eq: address }
-            },
-            'id code data balance balance_other { currency value } last_paid'
-        );
-
-        if (account.length !== 1) {
-            throw `No account with address ${address} found`;
+        const filter: { [string]: any } = {
+            id: { eq: address }
+        };
+        if (waitParams && waitParams.transactionLt) {
+            filter.last_trans_lt = { ge: waitParams.transactionLt };
+        }
+        if (active) {
+            filter.acc_type = { eq: QAccountType.active };
         }
 
+        this.config.log("getAccount. Filter", filter);
+        const account = await this.queries.accounts.waitFor(
+            filter,
+            'id code data balance balance_other { currency value } last_paid',
+            waitParams && waitParams.timeout
+        );
+
         removeTypeName(account);
-        return account[0];
+        this.config.log("getAccount. Account recieved", account);
+        return account;
     }
 
-    async internalRunLocalJs(params: TONContractRunParams): Promise<TONContractRunResult> {
-        const account = await this.getAccount(params.address);
+    async internalRunLocalJs(params: TONContractRunLocalParams): Promise<TONContractRunResult> {
+        const account = await this.getAccount(params.address, true, params.waitParams);
 
         return this.requestCore('contracts.run.local', {
             address: params.address,
@@ -787,12 +814,15 @@ async function checkTransaction(transaction: QTransaction) {
 
 const transactionDetails = `
     id
+    in_msg
     tr_type
     status
+    in_msg
     out_msgs
     block_id
     now
     aborted
+    lt
     storage {
         status_change
     }
@@ -807,5 +837,10 @@ const transactionDetails = `
         valid
         result_code
         no_funds
-  	}
+    }
+    out_messages {
+        id
+        msg_type
+        body
+    }
    `;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 TON DEV SOLUTIONS LTD.
+ * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  *
  * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
  * this file except in compliance with the License.  You may obtain a copy of the
@@ -58,7 +58,6 @@ export default class TONQueriesModule extends TONModule {
         this.blocks = new TONQCollection(this, 'blocks');
         this.accounts = new TONQCollection(this, 'accounts');
         this.tracer = this.config.tracer;
-        console.log('Using config:', this.config);
     }
 
     async getClientConfig() {
@@ -72,7 +71,9 @@ export default class TONQueriesModule extends TONModule {
         const fetch = clientPlatform.fetch;
         const response = await fetch(`${httpUrl}?query=%7Binfo%7Bversion%7D%7D`);
         if (response.redirected) {
-            const location = URLParts.fix(response.url, parts => parts.query = '');
+            const location = URLParts.fix(response.url, parts => {
+                parts.query = ''
+            });
             if (!!location) {
                 httpUrl = location;
                 wsUrl = location
@@ -178,12 +179,11 @@ export default class TONQueriesModule extends TONModule {
     }
 
     async ensureClient(rootSpan: any): ApolloClient {
-        const span = await this.tracer.startSpan('TONQueriesModule.js:ensureClient', { childOf: await rootSpan.context() });
         if (this._client) {
-            await span.finish();
             return this._client;
         }
 
+        const span = await this.tracer.startSpan('TONQueriesModule.js:ensureClient', { childOf: await rootSpan.context() });
         const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
         const jaegerLink = await setContext((_, req) => {
             req.headers = {};
@@ -280,15 +280,18 @@ class TONQCollection {
 
         const c = this.collectionName;
         const t = this.typeName;
-        const r = (await this.module.query(
-            `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
-                    ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
-                }`, {
-                filter,
-                orderBy,
-                limit,
-                timeout
-            }, span)).data[c];
+        const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
+            ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
+        }`;
+        const variables: { [string]: any } = {
+            filter,
+            orderBy,
+            limit,
+        };
+        if (timeout) {
+            variables.timeout = timeout;
+        }
+        const r = (await this.module.query(ql, variables, span)).data[c];
         await span.finish();
         return r;
     }
@@ -334,11 +337,11 @@ class TONQCollection {
                 }
             }
         })();
-        span.finish();
         return {
             unsubscribe: () => {
                 if (subscription) {
                     subscription.unsubscribe();
+                    span.finish();
                 }
             },
         };
@@ -350,7 +353,7 @@ class TONQCollection {
             event: 'waitFor',
             value: `Filter: ${filter} \n Timeout: ${timeout}`
         });
-        const docs = await this.query(filter, result, undefined, undefined, timeout || 5 * 60_000, span);
+        const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000, span);
         if (docs.length > 0) {
             await span.log({
                 event: 'waitFor exit',
@@ -365,65 +368,6 @@ class TONQCollection {
         });
         await span.finish();
         throw TONClientError.waitForTimeout();
-        /* TODO: below is a legacy code.
-            When new model with server side wait for will have been tested enough we can get rid of this code.
-        const config = this.module.config;
-        const existing = await this.query(filter, result);
-        if (existing.length > 0) {
-            return existing[0];
-        }
-        return new Promise((resolve, reject) => {
-            const forceCheckTimeout = 10_000;
-            let subscription: any = null;
-            let resolved: boolean = false;
-
-            const doResolve = (doc) => {
-                if (resolved) {
-                    return;
-                }
-                resolved = true;
-                if (subscription) {
-                    subscription.unsubscribe();
-                    subscription = null;
-                }
-                if (doc !== null) {
-                    resolve(doc);
-                } else {
-                    reject(TONClientError.waitForTimeout())
-                }
-            };
-
-            const forceCheck = () => {
-                (async () => {
-                    if (resolved) {
-                        return;
-                    }
-                    config.log('waitFor.forceCheck', this.collectionName, filter);
-                    const existing = await this.query(filter, result);
-                    if (existing.length > 0) {
-                        doResolve(existing[0]);
-                    } else {
-                        setTimeout(forceCheck, forceCheckTimeout);
-                    }
-                })();
-            };
-
-            const rejectOnTimeout = () => {
-                if (!resolved) {
-                    config.log('waitFor rejected on timeout', this.collectionName, filter);
-                    doResolve(null);
-                }
-            };
-
-            subscription = this.subscribe(filter, result, (change, doc) => {
-                doResolve(doc);
-            });
-            setTimeout(forceCheck, forceCheckTimeout);
-            if (timeout) {
-                setTimeout(rejectOnTimeout, timeout);
-            }
-        });
-         */
     }
 }
 

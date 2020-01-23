@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 TON DEV SOLUTIONS LTD.
+ * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  *
  * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
  * this file except in compliance with the License.  You may obtain a copy of the
@@ -15,17 +15,19 @@
  */
 
 // @flow
-
+import { tests } from './_/init-tests';
 import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
-import { TONOutputEncoding } from "../src/modules/TONCryptoModule";
+import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
 import { WalletContractPackage } from './contracts/WalletContract';
-import { tests } from "./_/init-tests";
-import { SubscriptionContractPackage } from "./contracts/SubscriptionContract";
+import { SubscriptionContractPackage } from './contracts/SubscriptionContract';
+import { SetCodePackage } from './contracts/SetCodeContract';
+import { EventsPackage } from './contracts/EventsContract';
+
 
 import type {
     TONContractLoadResult,
-    TONContractPackage
-} from "../types";
+} from '../types';
+import { binariesVersion } from './_/binaries';
 
 
 beforeAll(tests.init);
@@ -38,14 +40,22 @@ const walletKeys = {
 
 const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
 
+test('basic', async () => {
+    const version = await tests.client.config.getVersion();
+    expect(version).toEqual(binariesVersion);
+    console.log(`Get client and binaries version: ${version}`);
+});
+
 test('load', async () => {
     const { contracts } = tests.client;
     const contract = await contracts.load({
         address: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
         includeImage: false,
     });
-    expect(contract.id).toBeNull();
-    expect(contract.balanceGrams).toBeNull();
+    expect(contract.id)
+        .toBeNull();
+    expect(contract.balanceGrams)
+        .toBeNull();
 
     await tests.get_grams_from_giver(walletAddress);
 
@@ -53,12 +63,14 @@ test('load', async () => {
         address: walletAddress,
         includeImage: false,
     });
-    expect(w.id).toEqual(walletAddress);
-    expect(Number.parseInt(w.balanceGrams || '')).toBeGreaterThan(0);
+    expect(w.id)
+        .toEqual(walletAddress);
+    expect(Number.parseInt(w.balanceGrams || ''))
+        .toBeGreaterThan(0);
 });
 
-test('deploy_new', async () => {
-    const { crypto } = tests.client;
+test('Run aborted transaction', async () => {
+    const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const address = await tests.deploy_with_giver({
@@ -66,52 +78,48 @@ test('deploy_new', async () => {
         constructorParams: {},
         keyPair: keys,
     });
-    console.log(address.address);
-});
-
-test('Run aborted transaction', async () => {
-    const { contracts, crypto } = tests.client;
-    const keys = await crypto.ed25519Keypair();
-
-    const address =  await tests.deploy_with_giver({
-        package: WalletContractPackage,
-        constructorParams: {},
-        keyPair: keys,
-    });
 
     try {
         await contracts.run({
             address: address.address,
             abi: WalletContractPackage.abi,
-            functionName: "sendTransaction",
+            functionName: 'sendTransaction',
             input: {
-                dest: "0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+                dest: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
                 value: 0,
-                bounce: false
+                bounce: false,
             },
-            keyPair: keys
+            keyPair: keys,
         });
     } catch (error) {
-        expect(error.source).toEqual('node');
-        expect(error.code).toEqual(102);
-        expect(error.message).toEqual('VM terminated with exception (102) at computeVm');
-        expect(error.data.phase).toEqual('computeVm');
-        expect(error.data.transaction_id).toBeTruthy();
+        expect(error.source)
+            .toEqual('node');
+        expect(error.code)
+            .toEqual(102);
+        expect(error.message)
+            .toEqual('VM terminated with exception (102) at computeVm');
+        expect(error.data.phase)
+            .toEqual('computeVm');
+        expect(error.data.transaction_id)
+            .toBeTruthy();
     }
 
     try {
         await contracts.run({
             address: address.address,
             abi: WalletContractPackage.abi,
-            functionName: "sendTransaction",
+            functionName: 'sendTransaction',
             input: {},
-            keyPair: keys
+            keyPair: keys,
         });
     } catch (error) {
-        //console.log(error);
-        expect(error.source).toEqual('client');
-        expect(error.code).toEqual(3012);
-        expect(error.data).toBeNull();
+        // console.log(error);
+        expect(error.source)
+            .toEqual('client');
+        expect(error.code)
+            .toEqual(3012);
+        expect(error.data)
+            .toBeNull();
     }
 });
 
@@ -121,70 +129,28 @@ test('decodeInputMessageBody', async () => {
 
     const result = await contracts.decodeInputMessageBody({
         abi: SubscriptionContractPackage.abi,
-        bodyBase64: body
+        bodyBase64: body,
     });
 
-    expect(result.function).toEqual('subscribe');
-    expect(result.output).toEqual({
-        period: '0x1c8',
-        pubkey: '0x217c65c25ae31062440e1c77742dd69507992b3b806010ce27cfa0ec033e124e',
-        subscriptionId: '0x1111111111111111111111111111111111111111111111111111111111111111',
-        to: '0:bc7a369f2a1e04488140ba443dc31704f22e89ff07274106158e47038c6ea50e',
-        value: '0x7b'
-    });
+    expect(result.function)
+        .toEqual('subscribe');
+    expect(result.output)
+        .toEqual({
+            period: '0x1c8',
+            pubkey: '0x217c65c25ae31062440e1c77742dd69507992b3b806010ce27cfa0ec033e124e',
+            subscriptionId: '0x1111111111111111111111111111111111111111111111111111111111111111',
+            to: '0:bc7a369f2a1e04488140ba443dc31704f22e89ff07274106158e47038c6ea50e',
+            value: '0x7b',
+        });
 });
 
-const events_package: TONContractPackage = {
-    abi: {
-        "ABI version": 1,
-        "functions": [
-            {
-                "name": "constructor",
-                "inputs": [
-                ],
-                "outputs": [
-                ]
-            },
-            {
-                "name": "emitValue",
-                "inputs": [
-                    {"name":"id","type":"uint256"}
-                ],
-                "outputs": [
-                ]
-            },
-            {
-                "name": "returnValue",
-                "inputs": [
-                    {"name":"id","type":"uint256"}
-                ],
-                "outputs": [
-                    {"name":"value0","type":"uint256"}
-                ]
-            }
-        ],
-        "events": [
-            {
-                "name": "EventThrown",
-                "inputs": [
-                    {"name":"id","type":"uint256"}
-                ],
-                "outputs": [
-                ]
-            }
-        ],
-        "data": [
-        ]
-    },
-    imageBase64: "te6ccgECKQEABb0AAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KATBwEK9KQg9KEIAgPNQBAJAgFiCwoAB9GG2YQCASAPDAIBIA4NADs+ADIghBFty4OghB/////sM8LHyHPC//wFCAx2zCAANT4AMiCEEW3Lg6CEH////+wzwsfIc8L//AUMIAABuAIBahIRADXX9+ALmytzIvsrw6L7a5s5B8EvwUeAg4fYAYQAjdf36AsTq0tjIvsrw6L7a5s+Q554WAkOeLOGeFgJFnhZ+4Z4WPuGeFgBBnmpJnmLjQXks456AR54vKuOegkebxEGSCL4JtmEAgEgGhQB4P/+/QFtYWluX2V4dGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYMSEVAfiOdf7+AWdldF9tc2dfcHVia2V5IMcCjhb+/wFnZXRfbXNnX3B1YmtleTFwMdsw4NUgxwGOF/7/AWdldF9tc2dfcHVia2V5MnAxMdsw4CCBAgDXIdcL/yL5ASIi+RDyqP7/AWdldF9tc2dfcHVia2V5MyADXwPbMNgixwKzFgHGlCLUMTPeJCIi/vkBc3RvcmVfc2lnbwAhb4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwGOE/78AW1zZ19pc19lbXB0eV8G2zDgItMfNCPTPzUgFwF2joDYji/+/gFtYWluX2V4dGVybmFsMiQiVXFfCPFAAf7+AW1haW5fZXh0ZXJuYWwzXwjbMOCAfPLwXwgYAf7++wFyZXBsYXlfcHJvdHBwcO1E0CD0BDI0IIEAgNdFmiDTPzIzINM/MjKWgggbd0Ay4iIluSX4I4ED6KgkoLmwjinIJAH0ACXPCz8izws/Ic8WIMntVP78AXJlcGxheV9wcm90Mn8GXwbbMOD+/AFyZXBsYXlfcHJvdDNwBV8FGQAE2zACASAeGwIBSB0cAA+5j9xA5htmEAANuLblwdtmEAIBICAfAK+6Qlje3T/zDwI8iCECQlje2CEIAAAACxzwsfIc8L//AU/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UdvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwLbMIAgEgJCEBCbiJACdQIgH+/v0BY29uc3RyX3Byb3RfMHBwgggbd0DtRNAg9AQyNCCBAIDXRY4UINI/MjMg0j8yMiBx10WUgHvy8N7eyCQB9AAjzws/Is8LP3HPQSHPFiDJ7VT+/QFjb25zdHJfcHJvdF8xXwX4ADDwIf78AXB1c2hwZGM3dG9jNO1E0PQByCMARO1HbxIB9AAhzxYgye1U/v0BcHVzaHBkYzd0b2M0MF8C2zACAWImJQCAsulhfNP/MPAi/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UdvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwLbMAEC2ScB/v79AW1haW5faW50ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgkIXD++QFzdG9yZV9zaWdvACEoAPxvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAI4cIXC6jhIighBcfuIHVVFfBvFAAV8G2zDgXwbbMOD+/gFtYWluX2ludGVybmFsMSLTHzQicbqeIIAkVWFfB/FAAV8H2zDgIyFVYV8H8UABXwc="
-};
 
 test('filterOutput', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const deployed = await tests.deploy_with_giver({
-        package: events_package,
+        package: EventsPackage,
         constructorParams: {},
         keyPair: keys,
     });
@@ -192,30 +158,31 @@ test('filterOutput', async () => {
     await contracts.run({
         address: deployed.address,
         functionName: 'emitValue',
-        abi: events_package.abi,
-        input: { id: "0" },
+        abi: EventsPackage.abi,
+        input: { id: '0' },
         keyPair: keys,
     });
 
     const resultReturn = await contracts.run({
         address: deployed.address,
         functionName: 'returnValue',
-        abi: events_package.abi,
-        input: { id: "0" },
+        abi: EventsPackage.abi,
+        input: { id: '0' },
         keyPair: keys,
     });
-    expect(JSON.stringify(resultReturn.output)).toEqual(`{"value0":"0x0"}`);
+    expect(JSON.stringify(resultReturn.output))
+        .toEqual('{"value0":"0x0"}');
 });
 
 test('External Signing', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const contract_package = events_package;
-    contract_package.abi["setTime"] = false;
+    const contractPackage = EventsPackage;
+    contractPackage.abi.setTime = false;
 
     const deployParams = {
-        package: contract_package,
+        package: contractPackage,
         constructorParams: {},
         keyPair: keys,
     };
@@ -228,13 +195,14 @@ test('External Signing', async () => {
         address: unsignedMessage.address,
         createSignedParams: {
             publicKeyHex: keys.public,
-            signBytesBase64: signBytesBase64,
+            signBytesBase64,
             unsignedBytesBase64: unsignedMessage.signParams.unsignedBytesBase64,
-        }
+        },
     });
 
     const message = await contracts.createDeployMessage(deployParams);
-    expect(signed.message.messageBodyBase64).toEqual(message.message.messageBodyBase64);
+    expect(signed.message.messageBodyBase64)
+        .toEqual(message.message.messageBodyBase64);
 });
 
 test('changeInitState', async () => {
@@ -249,7 +217,7 @@ test('changeInitState', async () => {
         constructorParams: {},
         initParams: {
             subscription: subscriptionAddress1,
-            owner: "0x" + keys.public
+            owner: `0x${keys.public}`,
         },
         keyPair: keys,
     });
@@ -259,18 +227,20 @@ test('changeInitState', async () => {
         constructorParams: {},
         initParams: {
             subscription: subscriptionAddress2,
-            owner: "0x" + keys.public
+            owner: `0x${keys.public}`,
         },
         keyPair: keys,
     });
 
-    expect(deployed1.address).not.toEqual(deployed2.address);
+    expect(deployed1.address)
+        .not
+        .toEqual(deployed2.address);
 
     const result1 = await contracts.runLocal({
         address: deployed1.address,
         functionName: 'getSubscriptionAccount',
         abi: WalletContractPackage.abi,
-        input: { },
+        input: {},
         keyPair: keys,
     });
 
@@ -278,60 +248,22 @@ test('changeInitState', async () => {
         address: deployed2.address,
         functionName: 'getSubscriptionAccount',
         abi: WalletContractPackage.abi,
-        input: { },
+        input: {},
         keyPair: keys,
     });
 
-    expect(result1.output).toEqual({ value0: subscriptionAddress1 });
-    expect(result2.output).toEqual({ value0: subscriptionAddress2 });
+    expect(result1.output)
+        .toEqual({ value0: subscriptionAddress1 });
+    expect(result2.output)
+        .toEqual({ value0: subscriptionAddress2 });
 });
-
-const setCode1_package: TONContractPackage = {
-    abi: {
-        "ABI version": 1,
-        "functions": [
-            {
-                "name": "main",
-                "inputs": [
-                    {"name":"newcode","type":"cell"}
-                ],
-                "outputs": [
-                    {"name":"value0","type":"uint256"}
-                ]
-            },
-            {
-                "name": "getVersion",
-                "inputs": [
-                ],
-                "outputs": [
-                    {"name":"value0","type":"uint256"}
-                ]
-            },
-            {
-                "name": "constructor",
-                "inputs": [
-                ],
-                "outputs": [
-                ]
-            }
-        ],
-        "events": [
-        ],
-        "data": [
-        ]
-    } ,
-    imageBase64: "te6ccgECJQEABSUAAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KARBwEK9KQg9KEIAgPNQA4JAgFiCwoAB9GG2YQCAVgNDAALPgAcdswgABM+AAg+wRwMdswgAgFqEA8ANdf34AubK3Mi+yvDovtrmzkHwS/BR4CDh9gBhACN1/foCxOrS2Mi+yvDovtrmz5DnnhYCQ54s4Z4WAkWeFn7hnhY+4Z4WAEGeakmeYuNBeSzjnoBHni8q456CR5vEQZIIvgm2YQCASAYEgHg//79AW1haW5fZXh0ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgxIRMB+I51/v4BZ2V0X21zZ19wdWJrZXkgxwKOFv7/AWdldF9tc2dfcHVia2V5MXAx2zDg1SDHAY4X/v8BZ2V0X21zZ19wdWJrZXkycDEx2zDgIIECANch1wv/IvkBIiL5EPKo/v8BZ2V0X21zZ19wdWJrZXkzIANfA9sw2CLHArMUAcaUItQxM94kIiL++QFzdG9yZV9zaWdvACFvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAY4T/vwBbXNnX2lzX2VtcHR5XwbbMOAi0x80I9M/NSAVAXaOgNiOL/7+AW1haW5fZXh0ZXJuYWwyJCJVcV8I8UAB/v4BbWFpbl9leHRlcm5hbDNfCNsw4IB88vBfCBYB/v77AXJlcGxheV9wcm90cHBw7UTQIPQEMjQggQCA10WaINM/MjMg0z8yMpaCCBt3QDLiIiW5JfgjgQPoqCSgubCOKcgkAfQAJc8LPyLPCz8hzxYgye1U/vwBcmVwbGF5X3Byb3QyfwZfBtsw4P78AXJlcGxheV9wcm90M3AFXwUXAATbMAIBIB4ZAgEgGxoAQ7qOEp69Qw8CLIghBo4SnrghCAAAAAsc8LHyHPC//wFNswgCAVgdHAAPtx+4gcw2zCAAQbdr4C3MPAjyIIQVa+At4IQgAAAALHPCx8hzwv/8BTbMIAIBSCIfAQm4iQAnUCAB/v79AWNvbnN0cl9wcm90XzBwcIIIG3dA7UTQIPQEMjQggQCA10WOFCDSPzIzINI/MjIgcddFlIB78vDe3sgkAfQAI88LPyLPCz9xz0EhzxYgye1U/v0BY29uc3RyX3Byb3RfMV8F+AAw/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UchADxvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwIBAtwjAf7+/QFtYWluX2ludGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYJCFw/vkBc3RvcmVfc2lnbwAhJAD8b4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwCOHCFwuo4SIoIQXH7iB1VRXwbxQAFfBtsw4F8G2zDg/v4BbWFpbl9pbnRlcm5hbDEi0x80InG6niCAJFVhXwfxQAFfB9sw4CMhVWFfB/FAAV8H"
-};
-
-const setCode2_imageBase64 = 'te6ccgECJQEABSUAAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KARBwEK9KQg9KEIAgPNQA4JAgFiCwoAB9GG2YQCAVgNDAALPgActswgABM+AAg+wRwMdswgAgFqEA8ANdf34AubK3Mi+yvDovtrmzkHwS/BR4CDh9gBhACN1/foCxOrS2Mi+yvDovtrmz5DnnhYCQ54s4Z4WAkWeFn7hnhY+4Z4WAEGeakmeYuNBeSzjnoBHni8q456CR5vEQZIIvgm2YQCASAYEgHg//79AW1haW5fZXh0ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgxIRMB+I51/v4BZ2V0X21zZ19wdWJrZXkgxwKOFv7/AWdldF9tc2dfcHVia2V5MXAx2zDg1SDHAY4X/v8BZ2V0X21zZ19wdWJrZXkycDEx2zDgIIECANch1wv/IvkBIiL5EPKo/v8BZ2V0X21zZ19wdWJrZXkzIANfA9sw2CLHArMUAcaUItQxM94kIiL++QFzdG9yZV9zaWdvACFvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAY4T/vwBbXNnX2lzX2VtcHR5XwbbMOAi0x80I9M/NSAVAXaOgNiOL/7+AW1haW5fZXh0ZXJuYWwyJCJVcV8I8UAB/v4BbWFpbl9leHRlcm5hbDNfCNsw4IB88vBfCBYB/v77AXJlcGxheV9wcm90cHBw7UTQIPQEMjQggQCA10WaINM/MjMg0z8yMpaCCBt3QDLiIiW5JfgjgQPoqCSgubCOKcgkAfQAJc8LPyLPCz8hzxYgye1U/vwBcmVwbGF5X3Byb3QyfwZfBtsw4P78AXJlcGxheV9wcm90M3AFXwUXAATbMAIBIB4ZAgEgGxoAQ7qOEp69Qw8CLIghBo4SnrghCAAAAAsc8LHyHPC//wFNswgCAVgdHAAPtx+4gcw2zCAAQbdr4C3MPAjyIIQVa+At4IQgAAAALHPCx8hzwv/8BTbMIAIBSCIfAQm4iQAnUCAB/v79AWNvbnN0cl9wcm90XzBwcIIIG3dA7UTQIPQEMjQggQCA10WOFCDSPzIzINI/MjIgcddFlIB78vDe3sgkAfQAI88LPyLPCz9xz0EhzxYgye1U/v0BY29uc3RyX3Byb3RfMV8F+AAw/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UchADxvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwIBAtwjAf7+/QFtYWluX2ludGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYJCFw/vkBc3RvcmVfc2lnbwAhJAD8b4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwCOHCFwuo4SIoIQXH7iB1VRXwbxQAFfBtsw4F8G2zDg/v4BbWFpbl9pbnRlcm5hbDEi0x80InG6niCAJFVhXwfxQAFfB9sw4CMhVWFfB/FAAV8H';
-
 
 test('testSetCode', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const deployed = await tests.deploy_with_giver({
-        package: setCode1_package,
+        package: SetCodePackage,
         constructorParams: {},
         keyPair: keys,
     });
@@ -339,19 +271,20 @@ test('testSetCode', async () => {
     const version1 = await contracts.run({
         address: deployed.address,
         functionName: 'getVersion',
-        abi: setCode1_package.abi,
-        input: { },
+        abi: SetCodePackage.abi,
+        input: {},
         keyPair: keys,
     });
+    const setCode2ImageBase64 = 'te6ccgECJQEABSUAAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KARBwEK9KQg9KEIAgPNQA4JAgFiCwoAB9GG2YQCAVgNDAALPgActswgABM+AAg+wRwMdswgAgFqEA8ANdf34AubK3Mi+yvDovtrmzkHwS/BR4CDh9gBhACN1/foCxOrS2Mi+yvDovtrmz5DnnhYCQ54s4Z4WAkWeFn7hnhY+4Z4WAEGeakmeYuNBeSzjnoBHni8q456CR5vEQZIIvgm2YQCASAYEgHg//79AW1haW5fZXh0ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgxIRMB+I51/v4BZ2V0X21zZ19wdWJrZXkgxwKOFv7/AWdldF9tc2dfcHVia2V5MXAx2zDg1SDHAY4X/v8BZ2V0X21zZ19wdWJrZXkycDEx2zDgIIECANch1wv/IvkBIiL5EPKo/v8BZ2V0X21zZ19wdWJrZXkzIANfA9sw2CLHArMUAcaUItQxM94kIiL++QFzdG9yZV9zaWdvACFvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAY4T/vwBbXNnX2lzX2VtcHR5XwbbMOAi0x80I9M/NSAVAXaOgNiOL/7+AW1haW5fZXh0ZXJuYWwyJCJVcV8I8UAB/v4BbWFpbl9leHRlcm5hbDNfCNsw4IB88vBfCBYB/v77AXJlcGxheV9wcm90cHBw7UTQIPQEMjQggQCA10WaINM/MjMg0z8yMpaCCBt3QDLiIiW5JfgjgQPoqCSgubCOKcgkAfQAJc8LPyLPCz8hzxYgye1U/vwBcmVwbGF5X3Byb3QyfwZfBtsw4P78AXJlcGxheV9wcm90M3AFXwUXAATbMAIBIB4ZAgEgGxoAQ7qOEp69Qw8CLIghBo4SnrghCAAAAAsc8LHyHPC//wFNswgCAVgdHAAPtx+4gcw2zCAAQbdr4C3MPAjyIIQVa+At4IQgAAAALHPCx8hzwv/8BTbMIAIBSCIfAQm4iQAnUCAB/v79AWNvbnN0cl9wcm90XzBwcIIIG3dA7UTQIPQEMjQggQCA10WOFCDSPzIzINI/MjIgcddFlIB78vDe3sgkAfQAI88LPyLPCz9xz0EhzxYgye1U/v0BY29uc3RyX3Byb3RfMV8F+AAw/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UchADxvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwIBAtwjAf7+/QFtYWluX2ludGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYJCFw/vkBc3RvcmVfc2lnbwAhJAD8b4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwCOHCFwuo4SIoIQXH7iB1VRXwbxQAFfBtsw4F8G2zDg/v4BbWFpbl9pbnRlcm5hbDEi0x80InG6niCAJFVhXwfxQAFfB9sw4CMhVWFfB/FAAV8H';
 
     const code = await contracts.getCodeFromImage({
-        imageBase64: setCode2_imageBase64
+        imageBase64: setCode2ImageBase64,
     });
 
     await contracts.run({
         address: deployed.address,
         functionName: 'main',
-        abi: setCode1_package.abi,
+        abi: SetCodePackage.abi,
         input: { newcode: code.codeBase64 },
         keyPair: keys,
     });
@@ -359,12 +292,14 @@ test('testSetCode', async () => {
     const version2 = await contracts.run({
         address: deployed.address,
         functionName: 'getVersion',
-        abi: setCode1_package.abi,
-        input: { },
+        abi: SetCodePackage.abi,
+        input: {},
         keyPair: keys,
     });
 
-    expect(version1).not.toEqual(version2);
+    expect(version1)
+        .not
+        .toEqual(version2);
 });
 
 test('testRunBody', async () => {
@@ -374,8 +309,8 @@ test('testRunBody', async () => {
 
     const result = await contracts.createRunBody({
         abi: SubscriptionContractPackage.abi,
-        function: "constructor",
-        params: {wallet: walletAddress},
+        function: 'constructor',
+        params: { wallet: walletAddress },
         keyPair: walletKeys,
     });
 
@@ -384,13 +319,15 @@ test('testRunBody', async () => {
         bodyBase64: result.bodyBase64,
     });
 
-    expect(parseResult.function).toEqual('constructor');
-    expect(parseResult.output).toEqual({wallet: walletAddress});
+    expect(parseResult.function)
+        .toEqual('constructor');
+    expect(parseResult.output)
+        .toEqual({ wallet: walletAddress });
 
     const resultInternal = await contracts.createRunBody({
         abi: SubscriptionContractPackage.abi,
-        function: "constructor",
-        params: {wallet: walletAddress},
+        function: 'constructor',
+        params: { wallet: walletAddress },
         internal: true,
     });
 
@@ -400,30 +337,34 @@ test('testRunBody', async () => {
         internal: true,
     });
 
-    expect(parseResultInternal.function).toEqual('constructor');
-    expect(parseResultInternal.output).toEqual({wallet: walletAddress});
+    expect(parseResultInternal.function)
+        .toEqual('constructor');
+    expect(parseResultInternal.output)
+        .toEqual({ wallet: walletAddress });
 });
 
 test('Address conversion', async () => {
     const { contracts } = tests.client;
 
-    const accountId = "fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
-    const hex = "-1:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
-    const hexWorkchain0 = "0:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260";
-    const base64 = "Uf/8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15+KsQHFLbKSMiYG+9";
-    const base64_url = "kf_8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15-KsQHFLbKSMiYIny";
+    const accountId = 'fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260';
+    const hex = '-1:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260';
+    const hexWorkchain0 = '0:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260';
+    const base64 = 'Uf/8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15+KsQHFLbKSMiYG+9';
+    const base64Url = 'kf_8uRo6OBbQ97jCx2EIuKm8Wmt6Vb15-KsQHFLbKSMiYIny';
 
     let convertedAddress = await contracts.convertAddress({
         address: accountId,
-        convertTo: TONAddressStringVariant.Hex
+        convertTo: TONAddressStringVariant.Hex,
     });
-    expect(convertedAddress.address).toEqual(hexWorkchain0);
+    expect(convertedAddress.address)
+        .toEqual(hexWorkchain0);
 
     convertedAddress = await contracts.convertAddress({
         address: hex,
-        convertTo: TONAddressStringVariant.AccountId
+        convertTo: TONAddressStringVariant.AccountId,
     });
-    expect(convertedAddress.address).toEqual(accountId);
+    expect(convertedAddress.address)
+        .toEqual(accountId);
 
     convertedAddress = await contracts.convertAddress({
         address: hex,
@@ -431,10 +372,11 @@ test('Address conversion', async () => {
         base64Params: {
             test: false,
             bounce: false,
-            url: false
-        }
+            url: false,
+        },
     });
-    expect(convertedAddress.address).toEqual(base64);
+    expect(convertedAddress.address)
+        .toEqual(base64);
 
     convertedAddress = await contracts.convertAddress({
         address: base64,
@@ -442,22 +384,24 @@ test('Address conversion', async () => {
         base64Params: {
             test: true,
             bounce: true,
-            url: true
-        }
+            url: true,
+        },
     });
-    expect(convertedAddress.address).toEqual(base64_url);
+    expect(convertedAddress.address)
+        .toEqual(base64Url);
 
     convertedAddress = await contracts.convertAddress({
-        address: base64_url,
-        convertTo: TONAddressStringVariant.Hex
+        address: base64Url,
+        convertTo: TONAddressStringVariant.Hex,
     });
-    expect(convertedAddress.address).toEqual(hex);
+    expect(convertedAddress.address)
+        .toEqual(hex);
 });
 
 test('calc gas fee', async () => {
     const { contracts, crypto, queries } = tests.client;
     if (tests.nodeSe) {
-        console.log("[calc gas fee] Skip test on Node SE");
+        console.log('[calc gas fee] Skip test on Node SE');
         return;
     }
     const keys = await crypto.ed25519Keypair();
@@ -584,4 +528,66 @@ test('calc gas fee', async () => {
     ).toEqual(Number(originalBalance) - Number(sendValue) - Number(endBalance));
 
     expect(Number(calcFees.fees.totalOutput) === sendValue).toBeTruthy();
+});
+
+test('test boc hash', async () => {
+    const { contracts } = tests.client;
+    const bocBase64 = "te6ccgEBAgEAxgABwYgAti0S4VOMe6uIVNX3nuDd7KSO13EsFEXDsUVaKRzBgdQCwaZuyAAAC3iWFUwMAK22OiKIN+R4x+31/j8LXRIYPh8iJGtncSuZ7FONbFNXAAAAAAAAAAAAAAAAAA9CQEABAMD3EJkJ6DsPCkGnV5lMTt6LIPRS7ViXPZjHMhJizNODUeKekStEXEUgmHS2vmokCRRUpsUhmwgFmkWaCatqe4wIlcBqp0PR+QAN1kt1SY8QavS350RCNNfeZ+ommI9hgd8=";
+    const hash = "adff1e7fd60632bb572b1afe0c2e569d8c68b1169994c48bc1ed92b3515c3b4e";
+
+    const result = await contracts.getBocHash({bocBase64});
+
+    expect(result.hash).toEqual(hash);
+});
+
+test('test send boc', async () => {
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    await tests.get_grams_from_giver(message.address);
+
+    // send message without id - it should be computed inside
+    await contracts.processDeployMessage({
+        address: message.address,
+        message: {
+            messageBodyBase64: message.message.messageBodyBase64
+        }
+    });
+});
+
+test('test deploy lags', async () => {
+    const { contracts, crypto, config } = tests.client;
+    config.startProfile();
+
+    config.log("Start");
+    const keys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    config.log("Before giver");
+
+    await tests.get_grams_from_giver(message.address);
+
+    config.log("After giver");
+
+    // send message without id - it should be computed inside
+    await contracts.processDeployMessage({
+        address: message.address,
+        message: {
+            messageBodyBase64: message.message.messageBodyBase64
+        }
+    });
+
+    config.log("After deploy");
+    config.stopProfile();
 });

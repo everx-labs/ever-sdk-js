@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 TON DEV SOLUTIONS LTD.
+ * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  *
  * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
  * this file except in compliance with the License.  You may obtain a copy of the
@@ -195,7 +195,7 @@ test('crypto', async () => {
 
 
     const phrase = await crypto.mnemonicFromRandom();
-    expect(phrase.split(" ").length).toEqual(24);
+    expect(phrase.split(' ').length).toEqual(24);
 
 
     const entropy = '2199ebe996f14d9e4e2595113ad1e6276bd05e2e147e16c8ab8ad5d47d13b44fcf';
