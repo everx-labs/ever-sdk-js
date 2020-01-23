@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Waiting for account update moved from deploy to local run functions.
 - More detailed verbose log.
 - Check internal messages from giver (in tests).
+- Functions running contracts locally (`runLocal`, `calcRunFees`, `calcMsgProcessFees`) have new parameters for waiting particular account state to run.
 
 ### Fixed
 - FIX: set query timeout measurement in ms (was sec) to supports GraphQL 0.21.0.
