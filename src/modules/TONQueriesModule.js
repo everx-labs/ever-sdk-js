@@ -230,7 +230,7 @@ class TONQCollection {
             limit,
         };
         if (timeout) {
-            variables.timeout = timeout / 1_000;
+            variables.timeout = timeout;
         }
         return (await this.module.query(ql, variables)).data[c];
     }
