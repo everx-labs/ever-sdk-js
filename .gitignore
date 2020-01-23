@@ -9,3 +9,5 @@ package-lock.json
 /__tests__/*.dylib
 /__tests__/*.node
 /coverage/
+Jenkinsfile
+./reinstall.sh

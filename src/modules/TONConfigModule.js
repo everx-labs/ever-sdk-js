@@ -126,9 +126,30 @@ export default class TONConfigModule extends TONModule {
     }
 
     log(...args: any[]) {
-        if (this._logVerbose) {
-            console.log(`[${Date.now()}]`, ...args);
+        const profile = (this._profileStart || 0) != 0;
+        if (profile) {
+            const current = Date.now() / 1000;
+            const timeString = String(current.toFixed(3)) + " " +
+                String((current - this._profileStart).toFixed(3)) + " " +
+                String((current - this._profilePrev).toFixed(3));
+            if (this._logVerbose) {
+                console.log(`[${timeString}]\n`, ...args);
+            } else {
+                console.log(`[${timeString}]\n`, args[0]);
+            }
+            this._profilePrev = current;
+        } else if (this._logVerbose) {
+            console.log(`[${Date.now() / 1000}]`, ...args);
         }
+    }
+
+    startProfile() {
+        this._profileStart = Date.now() / 1000;
+        this._profilePrev = this._profileStart;
+    }
+
+    stopProfile() {
+        this._profileStart = this._profilePrev = 0;
     }
 
     requestsUrl(): string {
@@ -153,12 +174,17 @@ export default class TONConfigModule extends TONModule {
             await this.requestCore('setup', this.data);
         }
         this._logVerbose = (this.data && this.data.log_verbose) || false;
+        if (this._logVerbose) {
+            this.startProfile();
+        }
     }
 
     _logVerbose: boolean;
     _requestsUrl: string;
     _queriesHttpUrl: string;
     _queriesWsUrl: string;
+    _profileStart: number;
+    _profilePrev: number;
 }
 
 TONConfigModule.moduleName = 'TONConfigModule';
