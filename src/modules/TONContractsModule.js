@@ -446,13 +446,14 @@ export default class TONContractsModule extends TONModule implements TONContract
         return id;
     }
 
-    async sendMessage(params: TONContractMessage): Promise<string> {
+    async sendMessage(params: TONContractMessage, rootSpan: any): Promise<string> {
         const id = params.messageId ||
             (await this.getBocHash({
                 bocBase64: params.messageBodyBase64
             })).hash;
         const idBase64 = Buffer.from(id, 'hex').toString('base64');
-        const span = await this.config.tracer.startSpan('TONContractsModule.js:sendMessage');
+        const span = await this.config.tracer.startSpan('TONContractsModule.js:sendMessage',
+            { childOf: await rootSpan.context() });
         await this.queries.postRequests([
             {
                 id: idBase64,
@@ -471,9 +472,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         let retry = true;
         while (retry) {
             retry = false;
-            this.config.log('processMessage. Before send');
             const messageId = await this.sendMessage(message, span);
-            this.config.log('processMessage. After send');
             try {
                 transaction = await this.queries.transactions.waitFor({
                     in_msg: { eq: messageId },

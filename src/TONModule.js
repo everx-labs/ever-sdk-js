@@ -138,9 +138,10 @@ export class TONModule {
      */
     requestCore<Params, Result>(method: string, params?: Params, tracer: any): Promise<Result> {
         const span = tracer.startSpan('TONModule.js:requestCore');
+        const p = params !== undefined ? (JSON.stringify(params) || '') : '';
         span.log({
             event: 'core request',
-            value: `Mehtod - ${method} \n Params - ${params}`
+            value: `Mehtod - ${method} \n Params - ${p}`
         });
         const core = this.context.getCore();
         if (!core) {

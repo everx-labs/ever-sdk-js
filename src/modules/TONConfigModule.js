@@ -16,7 +16,8 @@
 
 // @flow
 import { TONModule } from '../TONModule';
-const initJaegerTracer = require("jaeger-client").initTracerFromEnv;
+import { JaegerTracer } from 'jaeger-client';
+const initJaegerTracer = require('jaeger-client').initTracerFromEnv;
 
 export type TONConfigData = {
     defaultWorkchain: ?number,
@@ -44,8 +45,8 @@ export class URLParts {
             url.substring(0, protocolEnd),
             url.substring(protocolEnd, pathStart),
             url.substring(pathStart, pathEnd),
-            url.substring(queryStart)
-        )
+            url.substring(queryStart),
+        );
     }
 
     static resolveUrl(baseUrl: string, url: string): string {
@@ -57,7 +58,7 @@ export class URLParts {
     }
 
     static fix(url: string, fixParts: (parts: URLParts) => void): string {
-        let parts = URLParts.parse(url);
+        const parts = URLParts.parse(url);
         fixParts(parts);
         return parts.toString();
     }
@@ -70,8 +71,11 @@ export class URLParts {
     }
 
     protocol: string;
+
     host: string;
+
     path: string;
+
     query: string;
 
     constructor(protocol: string, host: string, path: string, query: string) {
@@ -109,45 +113,45 @@ function replacePrefix(s, prefix, newPrefix) {
 const defaultServer = 'services.tonlabs.io';
 
 function initTracer(serviceName, jaegerEndpoint) {
-  const config = {
-    serviceName: serviceName,
-    sampler: {
-      type: "const",
-      param: 1,
-    },
-    reporter: jaegerEndpoint ? {
-        collectorEndpoint: jaegerEndpoint,
-        logSpans: true,
-      } : {}
-  };
-  const options = {
-    logger: {
-      info(msg) {
-        console.log("INFO ", msg);
-      },
-      error(msg) {
-        console.log("ERROR", msg);
-      },
-    },
-  };
-  return initJaegerTracer(config, options);
+    const config = {
+        serviceName,
+        sampler: {
+            type: 'const',
+            param: 1,
+        },
+        reporter: jaegerEndpoint ? {
+            collectorEndpoint: jaegerEndpoint,
+            logSpans: true,
+        } : {},
+    };
+    const options = {
+        logger: {
+            info(msg) {
+                console.log('INFO ', msg);
+            },
+            error(msg) {
+                console.log('ERROR', msg);
+            },
+        },
+    };
+    return initJaegerTracer(config, options);
 }
 
 export default class TONConfigModule extends TONModule {
     data: ?TONConfigData;
+    tracer: JaegerTracer;
 
 
     setData(data: TONConfigData) {
-
         this.data = data || {
             servers: [defaultServer],
         };
-        let server = resolveServer(data.servers[0], defaultServer);
+        const server = resolveServer(data.servers[0], defaultServer);
         this._requestsUrl = resolveServer(data.requestsServer, URLParts.appendPath(server, '/topics/requests'));
         this._queriesHttpUrl = resolveServer(data.queriesServer, URLParts.appendPath(server, '/graphql'));
         const queriesWsServer = this._queriesHttpUrl.startsWith('https://')
-            ? replacePrefix(this._queriesHttpUrl, "https://", "wss://")
-            : replacePrefix(this._queriesHttpUrl, "http://", "ws://");
+            ? replacePrefix(this._queriesHttpUrl, 'https://', 'wss://')
+            : replacePrefix(this._queriesHttpUrl, 'http://', 'ws://');
 
         this._queriesWsUrl = resolveServer(data.queriesWsServer, queriesWsServer);
         this.tracer = initTracer('ton-client-js', data.jaegerEndpoint);
@@ -157,9 +161,9 @@ export default class TONConfigModule extends TONModule {
         const profile = (this._profileStart || 0) != 0;
         if (profile) {
             const current = Date.now() / 1000;
-            const timeString = String(current.toFixed(3)) + " " +
-                String((current - this._profileStart).toFixed(3)) + " " +
-                String((current - this._profilePrev).toFixed(3));
+            const timeString = `${String(current.toFixed(3))} ${
+                String((current - this._profileStart).toFixed(3))} ${
+                String((current - this._profilePrev).toFixed(3))}`;
             if (this._logVerbose) {
                 console.log(`[${timeString}]\n`, ...args);
             } else {
@@ -208,10 +212,15 @@ export default class TONConfigModule extends TONModule {
     }
 
     _logVerbose: boolean;
+
     _requestsUrl: string;
+
     _queriesHttpUrl: string;
+
     _queriesWsUrl: string;
+
     _profileStart: number;
+
     _profilePrev: number;
 }
 

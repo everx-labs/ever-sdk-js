@@ -87,6 +87,7 @@ export const tests: {
         defaultWorkchain: 0,
         servers: serversConfig,
         log_verbose: false,
+        jaegerEndpoint: '',
     },
     client: new TONClient(),
     init,
