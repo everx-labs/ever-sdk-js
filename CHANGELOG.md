@@ -1,6 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.19.1 - January 28, 2020
+
+### Fixed
+- FIX: stability improvements (WS connection timeouts was increased)
+
 ## 0.19.0 - January 23, 2020
 
 ### New
