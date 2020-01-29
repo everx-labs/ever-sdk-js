@@ -143,6 +143,14 @@ export default class TONQueriesModule extends TONModule {
             return this._client;
         }
         const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
+        const subscriptionClient = new SubscriptionClient(
+            wsUrl,
+            {
+                reconnect: true
+            },
+            WebSocket
+        );
+        subscriptionClient.maxConnectTimeGenerator.duration = () => subscriptionClient.maxConnectTimeGenerator.max;
         this._client = new ApolloClient({
             cache: new InMemoryCache({}),
             link: split(
@@ -153,13 +161,7 @@ export default class TONQueriesModule extends TONModule {
                         && definition.operation === 'subscription'
                     );
                 },
-                new WebSocketLink(new SubscriptionClient(
-                    wsUrl,
-                    {
-                        reconnect: true
-                    },
-                    WebSocket
-                )),
+                new WebSocketLink(subscriptionClient),
                 new HttpLink({
                     uri: httpUrl,
                     fetch,
