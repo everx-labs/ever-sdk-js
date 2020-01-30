@@ -43,7 +43,7 @@ const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec5
 test('basic', async () => {
     const version = await tests.client.config.getVersion();
     expect(version).toEqual(binariesVersion);
-    console.log(`Get client and binaries version: ${version}`);
+    console.log(`Client uses expected binaries version: ${version}`);
 });
 
 test('load', async () => {
