@@ -185,6 +185,17 @@ export default class TONQueriesModule extends TONModule {
 
         const span = await this.config.tracer.startSpan('TONQueriesModule.js:ensureClient', { childOf: await rootSpan.context() });
         const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
+        const subscriptionClient = new SubscriptionClient(
+            wsUrl,
+            {
+                reconnect: true,
+                connectionParams: () => ({
+                            headers: subsOptions,
+                        }),
+            },
+            WebSocket
+        );
+        subscriptionClient.maxConnectTimeGenerator.duration = () => subscriptionClient.maxConnectTimeGenerator.max;
         const jaegerLink = await setContext((_, req) => {
             req.headers = {};
             this.config.tracer.inject(span, FORMAT_TEXT_MAP, req.headers);
@@ -204,16 +215,7 @@ export default class TONQueriesModule extends TONModule {
                         && definition.operation === 'subscription'
                     );
                 },
-                new WebSocketLink(new SubscriptionClient(
-                    wsUrl,
-                    {
-                        reconnect: true,
-                        connectionParams: () => ({
-                            headers: subsOptions,
-                        }),
-                    },
-                    WebSocket,
-                )),
+                new WebSocketLink(subscriptionClient),
                 jaegerLink.concat(new HttpLink({
                     uri: httpUrl,
                     fetch,
