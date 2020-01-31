@@ -15,19 +15,10 @@
  */
 
 // @flow
+import type { TONConfigData } from "../../types";
 import { TONModule } from '../TONModule';
-import { JaegerTracer } from 'jaeger-client';
-const initJaegerTracer = require('jaeger-client').initTracerFromEnv;
-
-export type TONConfigData = {
-    defaultWorkchain: ?number,
-    servers: string[],
-    requestsServer?: string,
-    queriesServer?: string,
-    queriesWsServer?: string,
-    log_verbose?: boolean,
-    jaegerEndpoint?: String,
-}
+import { Tracer } from 'opentracing';
+import { initTracerFromEnv as initJaegerTracer } from'jaeger-client';
 
 export class URLParts {
     static parse(url: string): URLParts {
@@ -139,7 +130,7 @@ function initTracer(serviceName, jaegerEndpoint) {
 
 export default class TONConfigModule extends TONModule {
     data: ?TONConfigData;
-    tracer: JaegerTracer;
+    tracer: Tracer;
 
 
     setData(data: TONConfigData) {

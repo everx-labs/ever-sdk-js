@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { Span } from "opentracing";
 // @flow
 import { tests } from './_/init-tests';
 import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
@@ -48,25 +49,30 @@ test('basic', async () => {
 
 test('load', async () => {
     const { contracts } = tests.client;
-    const contract = await contracts.load({
-        address: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
-        includeImage: false,
-    });
-    expect(contract.id)
-        .toBeNull();
-    expect(contract.balanceGrams)
-        .toBeNull();
+    await tests.client.trace('root', async (rspan: Span) => {
+        await tests.client.trace('client-tests.load', async (span: Span) => {
+            const contract = await contracts.load({
+                address: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
+                includeImage: false,
+            }, span.context());
+            expect(contract.id)
+                .toBeNull();
+            expect(contract.balanceGrams)
+                .toBeNull();
 
-    await tests.get_grams_from_giver(walletAddress);
+            await tests.get_grams_from_giver(walletAddress, undefined, span.context());
 
-    const w: TONContractLoadResult = await contracts.load({
-        address: walletAddress,
-        includeImage: false,
+            const w: TONContractLoadResult = await contracts.load({
+                address: walletAddress,
+                includeImage: false,
+            }, span.context());
+            expect(w.id)
+                .toEqual(walletAddress);
+            expect(Number.parseInt(w.balanceGrams || ''))
+                .toBeGreaterThan(0);
+
+        }, rspan);
     });
-    expect(w.id)
-        .toEqual(walletAddress);
-    expect(Number.parseInt(w.balanceGrams || ''))
-        .toBeGreaterThan(0);
 });
 
 test('Run aborted transaction', async () => {
@@ -535,7 +541,7 @@ test('test boc hash', async () => {
     const bocBase64 = "te6ccgEBAgEAxgABwYgAti0S4VOMe6uIVNX3nuDd7KSO13EsFEXDsUVaKRzBgdQCwaZuyAAAC3iWFUwMAK22OiKIN+R4x+31/j8LXRIYPh8iJGtncSuZ7FONbFNXAAAAAAAAAAAAAAAAAA9CQEABAMD3EJkJ6DsPCkGnV5lMTt6LIPRS7ViXPZjHMhJizNODUeKekStEXEUgmHS2vmokCRRUpsUhmwgFmkWaCatqe4wIlcBqp0PR+QAN1kt1SY8QavS350RCNNfeZ+ommI9hgd8=";
     const hash = "adff1e7fd60632bb572b1afe0c2e569d8c68b1169994c48bc1ed92b3515c3b4e";
 
-    const result = await contracts.getBocHash({bocBase64});
+    const result = await contracts.getBocHash({ bocBase64 });
 
     expect(result.hash).toEqual(hash);
 });

@@ -18,6 +18,8 @@
 /* eslint-disable class-methods-use-this, no-use-before-define, no-undef */
 
 // Deprecated: TONClientCore v0.17.0
+import { Span, SpanContext, SpanOptions, Tracer } from "opentracing";
+
 export interface TONClientLibrary {
     request(
         method: string,
@@ -94,6 +96,12 @@ export interface TONModuleContext {
     getCore(): ?TONClientLibrary,
 
     getModule<T>(ModuleClass: typeof TONModule): T,
+
+    trace<T>(
+        name: string,
+        f: (span: Span) => Promise<T>,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<T>,
 }
 
 /**
@@ -136,19 +144,13 @@ export class TONModule {
      * @param {Object} params Method parameters will be stringified into JSON
      * @return {Promise<Object>}
      */
-    requestCore<Params, Result>(method: string, params?: Params, tracer: any): Promise<Result> {
-        const span = tracer.startSpan('TONModule.js:requestCore');
+    requestCore<Params, Result>(method: string, params?: Params): Promise<Result> {
         const p = params !== undefined ? (JSON.stringify(params) || '') : '';
-        span.log({
-            event: 'core request',
-            value: `Mehtod - ${method} \n Params - ${p}`
-        });
         const core = this.context.getCore();
         if (!core) {
-            span.finish();
             throw new Error('TON SDK JS Library doesn\'t set up');
         }
-        const prom = new Promise((resolve: (Result) => void, reject: (Error) => void) => {
+        return new Promise((resolve: (Result) => void, reject: (Error) => void) => {
             core.request(
                 method,
                 params !== undefined ? (JSON.stringify(params) || '') : '',
@@ -163,7 +165,5 @@ export class TONModule {
                 },
             );
         });
-        span.finish();
-        return prom;
     }
 }

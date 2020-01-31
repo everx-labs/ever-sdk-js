@@ -30,8 +30,7 @@ import { TONModule } from '../TONModule';
 import TONConfigModule, { URLParts } from './TONConfigModule';
 
 import { setContext } from 'apollo-link-context';
-import { JaegerTracer } from 'jaeger-client';
-const { Tags, FORMAT_HTTP_HEADERS, FORMAT_BINARY, FORMAT_TEXT_MAP } = require('opentracing');
+import { FORMAT_TEXT_MAP, Tags, Span, SpanContext } from 'opentracing';
 
 type Subscription = {
     unsubscribe: () => void
@@ -89,122 +88,104 @@ export default class TONQueriesModule extends TONModule {
         }
     }
 
-    async getAccountsCount(): Promise<number> {
-        const span = await this.config.tracer.startSpan('TONQueriesModule.js:getAccountCount');
-        const result = await this.query('query{getAccountsCount}');
-        await span.finish();
+    async getAccountsCount(parentSpan?: (Span | SpanContext)): Promise<number> {
+        const result = await this.query('query{getAccountsCount}', undefined, parentSpan);
         return result.data.getAccountsCount;
     }
 
-    async getTransactionsCount(): Promise<number> {
-        const span = await this.config.tracer.startSpan('TONQueriesModule.js:getTransactionCount');
-        const result = await this.query('query{getTransactionsCount}', span);
-        await span.log({
-            event: 'query result',
-            value: `${result}`
-        });
-        await span.finish();
+    async getTransactionsCount(parentSpan?: (Span | SpanContext)): Promise<number> {
+        const result = await this.query('query{getTransactionsCount}', undefined, parentSpan);
         return result.data.getTransactionsCount;
     }
 
-    async getAccountsTotalBalance(): Promise<string> {
-        const span = await this.config.tracer.startSpan('TONQueriesModule.js:getAccountsTotalBalance');
-        const result = await this.query('query{getAccountsTotalBalance}', span);
-        await span.log({
-            event: 'query result',
-            value: `${result}`
-        });
-        await span.finish();
+    async getAccountsTotalBalance(parentSpan?: (Span | SpanContext)): Promise<string> {
+        const result = await this.query('query{getAccountsTotalBalance}', undefined, parentSpan);
         return result.data.getAccountsTotalBalance;
     }
 
-    async postRequests(requests: Request[], rootSpan: any): Promise<void> {
-        const span = await this.config.tracer.startSpan('TONQueriesModule.js:postRequests', { childeOf: rootSpan });
-        const mut = this.mutation(`mutation postRequests($requests: [Request]) {
-            postRequests(requests: $requests)
-        }`, {
+    async postRequests(requests: Request[], parentSpan?: (Span | SpanContext)): Promise<any> {
+        return this.mutation(`mutation postRequests($requests: [Request]) {
+                postRequests(requests: $requests)
+            }`, {
             requests,
-        }, span);
-        await span.finish();
-        return mut;
+        }, parentSpan);
     }
 
-    async mutation(ql: string, variables: { [string]: any } = {}, rootSpan: any): Promise<any> {
-        const span = await this.config.tracer.startSpan('TONQueriesModule.js:mutation', { childOf: rootSpan });
-        const mutation = gql([ql]);
-        const result = this.graphQl(client => client.mutate({
-            mutation,
-            variables,
-        }));
-        await span.finish();
-        return result;
+    async mutation(ql: string, variables: { [string]: any } = {}, parentSpan?: (Span | SpanContext)): Promise<any> {
+        return this.context.trace('TONQueriesModule.js:mutation', async (span: Span) => {
+            const mutation = gql([ql]);
+            span.logEvent('params', {
+                mutation: ql,
+                variables,
+            });
+            return this._graphQl(client => client.mutate({
+                mutation,
+                variables,
+                context: {
+                    traceSpan: span,
+                }
+            }));
+        }, parentSpan);
     }
 
-    async query(ql: string, variables: { [string]: any } = {}, rootSpan: any): Promise<any> {
-        const span = await this.config.tracer.startSpan('TONQueriesModule.js:query', { childOf: await rootSpan.context() });
-        const mutation = gql([ql]);
-        await span.log({
-            event: 'query mutation',
-            value: mutation
-        });
-        const res = this.graphQl(client => client.mutate({
-            mutation,
-            variables,
-        }), span);
-        await span.finish();
-        return res;
+    async query(ql: string, variables: { [string]: any } = {}, parentSpan?: (Span | SpanContext)): Promise<any> {
+        return this.context.trace('TONQueriesModule.js:query', async (span: Span) => {
+            const query = gql([ql]);
+            span.logEvent('params', {
+                query: ql,
+                variables,
+            });
+            return this._graphQl(client => client.query({
+                query,
+                variables,
+                context: {
+                    traceSpan: span,
+                }
+            }), span);
+
+        }, parentSpan);
     }
 
-    async graphQl(request: (client: ApolloClient) => Promise<any>, rootSpan: any): Promise<any> {
-        const span = await this.config.tracer.startSpan('TONQueriesModule.js:graphQl', { childOf: await rootSpan.context() });
+    async _graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {
         const client = await this.ensureClient(span);
         try {
-            const r = request(client);
-            await span.finish();
-            return r;
+            return request(client);
         } catch (error) {
-            await span.log({
-                event: 'query failed',
-                value: `${error.message}`
-            });
             const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
             if (errors) {
-                await span.finish();
                 throw TONClientError.queryFailed(errors);
             } else {
-                await span.finish();
                 throw error;
             }
         }
     }
 
-    async ensureClient(rootSpan: any): ApolloClient {
+    async ensureClient(span: Span): ApolloClient {
         if (this._client) {
             return this._client;
         }
-
-        const span = await this.config.tracer.startSpan('TONQueriesModule.js:ensureClient', { childOf: await rootSpan.context() });
+        span.logEvent('setup client');
         const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
+        let subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
         const subscriptionClient = new SubscriptionClient(
             wsUrl,
             {
                 reconnect: true,
                 connectionParams: () => ({
-                            headers: subsOptions,
-                        }),
+                    headers: subsOptions,
+                }),
             },
             WebSocket
         );
         subscriptionClient.maxConnectTimeGenerator.duration = () => subscriptionClient.maxConnectTimeGenerator.max;
-        const jaegerLink = await setContext((_, req) => {
+        const tracerLink = await setContext((qlReq, req) => {
+            const resolvedSpan = (qlReq.context && qlReq.context.traceSpan) || span;
             req.headers = {};
-            this.config.tracer.inject(span, FORMAT_TEXT_MAP, req.headers);
+            this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
             return {
                 headers: req.headers,
             };
         });
-        let subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
-        await console.log(subsOptions);
         this._client = new ApolloClient({
             cache: new InMemoryCache({}),
             link: split(
@@ -216,7 +197,7 @@ export default class TONQueriesModule extends TONModule {
                     );
                 },
                 new WebSocketLink(subscriptionClient),
-                jaegerLink.concat(new HttpLink({
+                tracerLink.concat(new HttpLink({
                     uri: httpUrl,
                     fetch,
                 })),
@@ -230,7 +211,7 @@ export default class TONQueriesModule extends TONModule {
                 },
             }
         });
-        await span.finish();
+        span.logEvent('setup client complete');
         return this._client;
     }
 
@@ -267,21 +248,15 @@ class TONQCollection {
 
     collectionName: string;
     typeName: string;
-    tracer: JaegerTracer;
 
     constructor(module: TONQueriesModule, collectionName: string) {
         this.module = module;
         this.collectionName = collectionName;
         this.typeName = collectionName.substr(0, 1).toUpperCase() +
             collectionName.substr(1, collectionName.length - 2);
-        this.tracer = this.module.config.tracer;
     }
 
-    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number, rootSpan: any): Promise<any> {
-        const span = await this.tracer.startSpan('TONQueriesModule.js:query public',
-            {childOf: await rootSpan.context()});
-        await span.setTag(Tags.SPAN_KIND, 'client');
-
+    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number, parentSpan?: (Span | SpanContext)): Promise<any> {
         const c = this.collectionName;
         const t = this.typeName;
         const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
@@ -295,9 +270,7 @@ class TONQCollection {
         if (timeout) {
             variables.timeout = timeout;
         }
-        const r = (await this.module.query(ql, variables, span)).data[c];
-        await span.finish();
-        return r;
+        return (await this.module.query(ql, variables, parentSpan)).data[c];
     }
 
     subscribe(
@@ -306,7 +279,7 @@ class TONQCollection {
         onDocEvent: DocEvent,
         onError?: (err: Error) => void
     ): Subscription {
-        const span = this.tracer.startSpan('TONQueriesModule.js:subscribe ');
+        const span = this.module.config.tracer.startSpan('TONQueriesModule.js:subscribe ');
         span.setTag(Tags.SPAN_KIND, 'client');
         const text = `subscription ${this.collectionName}($filter: ${this.typeName}Filter) {
         	${this.collectionName}(filter: $filter) { ${result} }
@@ -351,26 +324,11 @@ class TONQCollection {
         };
     }
 
-    async waitFor(filter: any, result: string, timeout?: number): Promise<any> {
-        const span = await this.tracer.startSpan('TONQueriesModule.js:waitFor');
-        await span.log({
-            event: 'waitFor',
-            value: `Filter: ${filter} \n Timeout: ${timeout !== undefined ? timeout : 'undefined'}`
-        });
-        const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000, span);
+    async waitFor(filter: any, result: string, timeout?: number, parentSpan?: (Span | SpanContext)): Promise<any> {
+        const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000, parentSpan);
         if (docs.length > 0) {
-            await span.log({
-                event: 'waitFor exit',
-                value: `Docs.length - ${docs.length}`
-            });
-            await span.finish();
             return docs[0];
         }
-        await span.log({
-            event: 'waitFor timeout',
-            value: 'exception'
-        });
-        await span.finish();
         throw TONClientError.waitForTimeout();
     }
 }

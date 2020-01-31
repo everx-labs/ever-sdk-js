@@ -1,5 +1,6 @@
 // @flow
 
+import { Span } from "opentracing";
 import { TONClient } from '../../src/TONClient';
 import type {
     TONConfigData,
@@ -72,13 +73,15 @@ async function done() {
     await tests.client.close();
 }
 
+jest.setTimeout(100000);
+
 export const tests: {
     config: TONConfigData,
     client: TONClient,
     init(): Promise<void>,
     done(): Promise<void>,
-    get_grams_from_giver(account: string, amount?: number): Promise<void>,
-    deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult>,
+    get_grams_from_giver(account: string, amount?: number, parentSpan?: Span): Promise<void>,
+    deploy_with_giver(params: TONContractDeployParams, parentSpan?: Span): Promise<TONContractDeployResult>,
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
     nodeSe: bool,
@@ -87,7 +90,7 @@ export const tests: {
         defaultWorkchain: 0,
         servers: serversConfig,
         log_verbose: false,
-        jaegerEndpoint: '',
+        jaegerEndpoint: 'http://abf0140091aad11eabdba060f2430c03-49953081.us-west-2.elb.amazonaws.com:14268/api/traces',
     },
     client: new TONClient(),
     init,

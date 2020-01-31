@@ -15,7 +15,8 @@
  */
 // @flow
 
-import type { TONConfigData } from "./modules/TONConfigModule";
+import { Tags, Span, SpanContext } from "opentracing";
+import type { TONConfigData } from "../types";
 import TONConfigModule from './modules/TONConfigModule';
 import TONContractsModule from './modules/TONContractsModule';
 import TONCryptoModule from './modules/TONCryptoModule';
@@ -122,6 +123,33 @@ export class TONClient implements TONModuleContext {
         const module = new ModuleClass(this);
         this.modules.set(name, module);
         return (module: any);
+    }
+
+    async trace<T>(
+        name: string,
+        f: (span: Span) => Promise<T>,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<T> {
+        let span;
+        if (parentSpan) {
+            span = this.config.tracer.startSpan(name, { childOf: parentSpan });
+        } else {
+            console.log('>>>', 'root');
+            span = this.config.tracer.startSpan(name);
+        }
+        try {
+            span.setTag(Tags.SPAN_KIND, 'client');
+            const result = await f(span);
+            if (result !== undefined) {
+                span.log({ event: `result`, value: `${(result: any)}` });
+            }
+            span.finish();
+            return result;
+        } catch (error) {
+            span.logEvent(`failed`, error);
+            span.finish();
+            throw error;
+        }
     }
 
     // Internals
