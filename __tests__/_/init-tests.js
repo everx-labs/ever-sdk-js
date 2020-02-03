@@ -1,6 +1,6 @@
 // @flow
 
-import { TONClient } from '../../src/TONClient';
+import {TONClient} from '../../src/TONClient';
 import type {
     TONConfigData,
     TONContractABI,
@@ -8,8 +8,8 @@ import type {
     TONContractDeployResult,
     TONKeyPairData
 } from '../../types';
-import { ensureBinaries } from './binaries';
-import { deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address } from './giver';
+import {ensureBinaries} from './binaries';
+import {deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address} from './giver';
 
 require('dotenv').config();
 const fetch = require('node-fetch');
@@ -30,7 +30,15 @@ export type TONContractDeployedParams = {
     abi: TONContractABI,
     giverAddress: string
 }
+const fs = require('fs');
+const path = require('path');
 
+export const loadPackage = (name) => {
+    const contract = {};
+    contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.abi.json`), 'utf8'));
+    contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.tvc`)).toString('base64');
+    return contract;
+};
 
 async function init() {
     await ensureBinaries();
@@ -59,7 +67,7 @@ async function done() {
                 address: contract.address,
                 functionName: 'sendAllMoney',
                 abi: contract.abi,
-                input: { dest_addr: contract.giverAddress },
+                input: {dest_addr: contract.giverAddress},
                 keyPair: contract.key,
             });
             await tests.client.contracts.sendMessage(message.message);
@@ -81,7 +89,8 @@ export const tests: {
     deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult>,
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
-    nodeSe: bool,
+    nodeSe: boolean,
+    loadPackage(name: string): Promise<JSON>,
 } = {
     config: {
         defaultWorkchain: 0,
@@ -96,4 +105,5 @@ export const tests: {
     deployedContracts: [],
     get_giver_address,
     nodeSe,
+    loadPackage,
 };
