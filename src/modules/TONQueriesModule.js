@@ -59,6 +59,23 @@ export default class TONQueriesModule extends TONModule {
         this.accounts = new TONQCollection(this, 'accounts');
     }
 
+    async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {
+        const response = await fetch(sourceUrl);
+        if (response.redirected === true) {
+            return response.url;
+        }
+        if (response.redirected === false) {
+            return '';
+        }
+        const sourceLocation = URLParts.fix(sourceUrl, parts => {
+            parts.query = ''
+        }).toLowerCase();
+        const responseLocation = URLParts.fix(response.url, parts => {
+            parts.query = ''
+        }).toLowerCase();
+        return responseLocation !== sourceLocation ? response.url : '';
+    }
+
     async getClientConfig() {
         const config = this.config;
         const { clientPlatform } = TONClient;
@@ -68,9 +85,9 @@ export default class TONQueriesModule extends TONModule {
         let httpUrl = config.queriesHttpUrl();
         let wsUrl = config.queriesWsUrl();
         const fetch = clientPlatform.fetch;
-        const response = await fetch(`${httpUrl}?query=%7Binfo%7Bversion%7D%7D`);
-        if (response.redirected) {
-            const location = URLParts.fix(response.url, parts => {
+        const redirected = await this.detectRedirect(fetch, `${httpUrl}?query=%7Binfo%7Bversion%7D%7D`);
+        if (redirected !== '') {
+            const location = URLParts.fix(redirected, parts => {
                 parts.query = ''
             });
             if (!!location) {

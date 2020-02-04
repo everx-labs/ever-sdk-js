@@ -31,7 +31,15 @@ export type TONContractDeployedParams = {
     abi: TONContractABI,
     giverAddress: string
 }
+const fs = require('fs');
+const path = require('path');
 
+export const loadPackage = (name) => {
+    const contract = {};
+    contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.abi.json`), 'utf8'));
+    contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.tvc`)).toString('base64');
+    return contract;
+};
 
 async function init() {
     await ensureBinaries();
@@ -74,8 +82,6 @@ async function done() {
     await tests.client.close();
 }
 
-jest.setTimeout(100000);
-
 export const tests: {
     config: TONConfigData,
     client: TONClient,
@@ -85,7 +91,8 @@ export const tests: {
     deploy_with_giver(params: TONContractDeployParams, parentSpan?: Span): Promise<TONContractDeployResult>,
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
-    nodeSe: bool,
+    nodeSe: boolean,
+    loadPackage(name: string): Promise<JSON>,
 } = {
     config: {
         defaultWorkchain: 0,
@@ -101,4 +108,5 @@ export const tests: {
     deployedContracts: [],
     get_giver_address,
     nodeSe,
+    loadPackage,
 };

@@ -16,9 +16,10 @@
 
 // @flow
 
-import { WalletContractPackage } from './contracts/WalletContract';
 import { tests } from './_/init-tests';
 import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
+
+const WalletContractPackage = tests.loadPackage('WalletContract');
 
 beforeAll(tests.init);
 afterAll(tests.done);

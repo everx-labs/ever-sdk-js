@@ -20,16 +20,19 @@ import { Tags, Span } from "opentracing";
 import { tests } from './_/init-tests';
 import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
-import { WalletContractPackage } from './contracts/WalletContract';
-import { SubscriptionContractPackage } from './contracts/SubscriptionContract';
-import { SetCodePackage } from './contracts/SetCodeContract';
-import { EventsPackage } from './contracts/EventsContract';
 
 
 import type {
     TONContractLoadResult,
 } from '../types';
 import { binariesVersion } from './_/binaries';
+
+
+const WalletContractPackage = tests.loadPackage('WalletContract');
+const HelloContractPackage = tests.loadPackage('Hello');
+const SubscriptionContractPackage = tests.loadPackage('Subscription');
+const SetCodePackage = tests.loadPackage('Setcode');
+const EventsPackage = tests.loadPackage('Events');
 
 
 beforeAll(tests.init);
@@ -72,6 +75,44 @@ test('load', async () => {
             .toBeGreaterThan(0);
 
     });
+});
+
+test('Test hello contract from docs.ton.dev', async () => {
+    const {contracts, crypto} = tests.client;
+    const helloKeys = await crypto.ed25519Keypair();
+
+    const contractData = await tests.deploy_with_giver({
+        package: HelloContractPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    });
+
+    const response = await contracts.run({
+        address: contractData.address,
+        abi: HelloContractPackage.abi,
+        functionName: 'touch',
+        input: {},
+        keyPair: helloKeys,
+    });
+
+    expect(response.transaction.status).toEqual(3);
+
+    const localResponse = await contracts.runLocal({
+        address: contractData.address,
+        abi: HelloContractPackage.abi,
+        functionName: 'sayHello',
+        input: {},
+        keyPair: helloKeys,
+    });
+
+    const localResponse2 = await contracts.runLocal({
+        address: contractData.address,
+        abi: HelloContractPackage.abi,
+        functionName: 'sayHello',
+        input: {},
+        keyPair: helloKeys,
+    });
+    expect(localResponse.output.value0).toEqual((localResponse2.output.value0));
 });
 
 test('Run aborted transaction', async () => {
