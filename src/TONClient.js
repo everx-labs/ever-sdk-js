@@ -125,28 +125,23 @@ export class TONClient implements TONModuleContext {
         return (module: any);
     }
 
+
     async trace<T>(
         name: string,
         f: (span: Span) => Promise<T>,
         parentSpan?: (Span | SpanContext)
     ): Promise<T> {
-        let span;
-        if (parentSpan) {
-            span = this.config.tracer.startSpan(name, { childOf: parentSpan });
-        } else {
-            console.log('>>>', 'root');
-            span = this.config.tracer.startSpan(name);
-        }
+        const span = this.config.tracer.startSpan(name, { childOf: parentSpan });
         try {
             span.setTag(Tags.SPAN_KIND, 'client');
             const result = await f(span);
             if (result !== undefined) {
-                span.log({ event: `result`, value: `${(result: any)}` });
+                span.setTag('result', result);
             }
             span.finish();
             return result;
         } catch (error) {
-            span.logEvent(`failed`, error);
+            span.logEvent('failed', error);
             span.finish();
             throw error;
         }

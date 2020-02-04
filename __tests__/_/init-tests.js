@@ -70,6 +70,7 @@ async function done() {
         }
     }
     console.timeEnd('Test contracts selfdestruct time:');
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await tests.client.close();
 }
 
@@ -90,7 +91,7 @@ export const tests: {
         defaultWorkchain: 0,
         servers: serversConfig,
         log_verbose: false,
-        jaegerEndpoint: 'http://abf0140091aad11eabdba060f2430c03-49953081.us-west-2.elb.amazonaws.com:14268/api/traces',
+        jaegerEndpoint: '',
     },
     client: new TONClient(),
     init,

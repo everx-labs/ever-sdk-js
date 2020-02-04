@@ -227,20 +227,23 @@ export default class TONContractsModule extends TONModule implements TONContract
     // Facade functions
 
     async deploy(params: TONContractDeployParams, parentSpan?: (Span | SpanContext)): Promise<TONContractDeployResult> {
-        return this.context.trace('TONClient.deploy', async(span: Span) => {
+        return this.context.trace('contracts.deploy', async(span: Span) => {
+            span.setTag('params', params);
             return this.internalDeployJs(params, span);
         }, parentSpan);
     }
 
 
     async run(params: TONContractRunParams, parentSpan?: (Span | SpanContext)): Promise<TONContractRunResult> {
-        return this.context.trace('TONClient.run', async(span: Span) => {
+        return this.context.trace('contracts.run', async(span: Span) => {
+            span.setTag('params', params);
             return this.internalRunJs(params, span);
         }, parentSpan);
     }
 
     async runLocal(params: TONContractRunLocalParams, parentSpan?: (Span | SpanContext)): Promise<TONContractRunResult> {
-        return this.context.trace('TONClient.runLocal', async(span: Span) => {
+        return this.context.trace('contracts.runLocal', async(span: Span) => {
+            span.setTag('params', params);
             return this.internalRunLocalJs(params, span);
         }, parentSpan);
     }

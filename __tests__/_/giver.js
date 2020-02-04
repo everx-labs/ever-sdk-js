@@ -230,7 +230,7 @@ export async function deploy_with_giver(
     parentSpan?: Span,
 ): Promise<TONContractDeployResult> {
     const { contracts } = tests.client;
-    return tests.client.trace('', async(span: Span) => {
+    return tests.client.trace('deploy_with_giver', async(span: Span) => {
         const message = await contracts.createDeployMessage(params);
         await get_grams_from_giver(message.address, giverRequestAmount, span);
         console.log(`Deployed test contract address ${message.address}`);

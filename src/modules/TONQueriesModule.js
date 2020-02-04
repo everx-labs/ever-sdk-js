@@ -104,46 +104,55 @@ export default class TONQueriesModule extends TONModule {
     }
 
     async postRequests(requests: Request[], parentSpan?: (Span | SpanContext)): Promise<any> {
-        return this.mutation(`mutation postRequests($requests: [Request]) {
+        return this.context.trace('queries.postRequests', async (span) => {
+            return this._mutation(`mutation postRequests($requests: [Request]) {
                 postRequests(requests: $requests)
             }`, {
-            requests,
+                requests,
+            }, span);
         }, parentSpan);
     }
 
     async mutation(ql: string, variables: { [string]: any } = {}, parentSpan?: (Span | SpanContext)): Promise<any> {
-        return this.context.trace('TONQueriesModule.js:mutation', async (span: Span) => {
-            const mutation = gql([ql]);
-            span.logEvent('params', {
+        return this.context.trace('queries.mutation', async (span: Span) => {
+            span.setTag('params', {
                 mutation: ql,
                 variables,
             });
-            return this._graphQl(client => client.mutate({
-                mutation,
-                variables,
-                context: {
-                    traceSpan: span,
-                }
-            }));
+            return this._mutation(ql, variables, span);
         }, parentSpan);
     }
 
     async query(ql: string, variables: { [string]: any } = {}, parentSpan?: (Span | SpanContext)): Promise<any> {
-        return this.context.trace('TONQueriesModule.js:query', async (span: Span) => {
-            const query = gql([ql]);
-            span.logEvent('params', {
+        return this.context.trace('queries.query', async (span: Span) => {
+            span.setTag('params', {
                 query: ql,
                 variables,
             });
-            return this._graphQl(client => client.query({
-                query,
-                variables,
-                context: {
-                    traceSpan: span,
-                }
-            }), span);
-
+            return this._query(ql, variables, span);
         }, parentSpan);
+    }
+
+    async _mutation(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
+        const mutation = gql([ql]);
+        return this._graphQl(client => client.mutate({
+            mutation,
+            variables,
+            context: {
+                traceSpan: span,
+            }
+        }));
+    }
+
+    async _query(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
+        const query = gql([ql]);
+        return this._graphQl(client => client.query({
+            query,
+            variables,
+            context: {
+                traceSpan: span,
+            }
+        }), span);
     }
 
     async _graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {
@@ -160,58 +169,58 @@ export default class TONQueriesModule extends TONModule {
         }
     }
 
-    async ensureClient(span: Span): ApolloClient {
+    async ensureClient(span: Span): Promise<ApolloClient> {
         if (this._client) {
             return this._client;
         }
-        span.logEvent('setup client');
-        const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
-        let subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
-        const subscriptionClient = new SubscriptionClient(
-            wsUrl,
-            {
-                reconnect: true,
-                connectionParams: () => ({
-                    headers: subsOptions,
-                }),
-            },
-            WebSocket
-        );
-        subscriptionClient.maxConnectTimeGenerator.duration = () => subscriptionClient.maxConnectTimeGenerator.max;
-        const tracerLink = await setContext((qlReq, req) => {
-            const resolvedSpan = (qlReq.context && qlReq.context.traceSpan) || span;
-            req.headers = {};
-            this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
-            return {
-                headers: req.headers,
-            };
-        });
-        this._client = new ApolloClient({
-            cache: new InMemoryCache({}),
-            link: split(
-                ({ query }) => {
-                    const definition = getMainDefinition(query);
-                    return (
-                        definition.kind === 'OperationDefinition'
-                        && definition.operation === 'subscription'
-                    );
+        await this.context.trace('setup client', async (span) => {
+            const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
+            let subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
+            const subscriptionClient = new SubscriptionClient(
+                wsUrl,
+                {
+                    reconnect: true,
+                    connectionParams: () => ({
+                        headers: subsOptions,
+                    }),
                 },
-                new WebSocketLink(subscriptionClient),
-                tracerLink.concat(new HttpLink({
-                    uri: httpUrl,
-                    fetch,
-                })),
-            ),
-            defaultOptions: {
-                watchQuery: {
-                    fetchPolicy: 'no-cache',
-                },
-                query: {
-                    fetchPolicy: 'no-cache',
-                },
-            }
-        });
-        span.logEvent('setup client complete');
+                WebSocket
+            );
+            subscriptionClient.maxConnectTimeGenerator.duration = () => subscriptionClient.maxConnectTimeGenerator.max;
+            const tracerLink = await setContext((_, req) => {
+                const resolvedSpan = (req && req.traceSpan) || span;
+                req.headers = {};
+                this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
+                return {
+                    headers: req.headers,
+                };
+            });
+            this._client = new ApolloClient({
+                cache: new InMemoryCache({}),
+                link: split(
+                    ({ query }) => {
+                        const definition = getMainDefinition(query);
+                        return (
+                            definition.kind === 'OperationDefinition'
+                            && definition.operation === 'subscription'
+                        );
+                    },
+                    new WebSocketLink(subscriptionClient),
+                    tracerLink.concat(new HttpLink({
+                        uri: httpUrl,
+                        fetch,
+                    })),
+                ),
+                defaultOptions: {
+                    watchQuery: {
+                        fetchPolicy: 'no-cache',
+                    },
+                    query: {
+                        fetchPolicy: 'no-cache',
+                    },
+                }
+            });
+        }, span);
         return this._client;
     }
 
@@ -257,20 +266,25 @@ class TONQCollection {
     }
 
     async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number, parentSpan?: (Span | SpanContext)): Promise<any> {
-        const c = this.collectionName;
-        const t = this.typeName;
-        const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
-            ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
-        }`;
-        const variables: { [string]: any } = {
-            filter,
-            orderBy,
-            limit,
-        };
-        if (timeout) {
-            variables.timeout = timeout;
-        }
-        return (await this.module.query(ql, variables, parentSpan)).data[c];
+        return this.module.context.trace(`${this.collectionName}.query`, async (span) => {
+            span.setTag('params', {
+                filter, result, orderBy, limit, timeout
+            });
+            const c = this.collectionName;
+            const t = this.typeName;
+            const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
+                ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
+            }`;
+            const variables: { [string]: any } = {
+                filter,
+                orderBy,
+                limit,
+            };
+            if (timeout) {
+                variables.timeout = timeout;
+            }
+            return (await this.module._query(ql, variables, span)).data[c];
+        }, parentSpan);
     }
 
     subscribe(
@@ -285,10 +299,6 @@ class TONQCollection {
         	${this.collectionName}(filter: $filter) { ${result} }
         }`;
         const query = gql([text]);
-        span.log({
-            event: 'subscription',
-            value: query
-        });
         let subscription = null;
         (async () => {
             try {
@@ -303,10 +313,7 @@ class TONQCollection {
                     onDocEvent('insert/update', message.data[this.collectionName]);
                 });
             } catch (error) {
-                await span.log({
-                    event: 'subscription failed',
-                    value: error
-                });
+                span.logEvent('failed', error);
                 if (onError) {
                     onError(error);
                 } else {

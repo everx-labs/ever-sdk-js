@@ -18,7 +18,9 @@
 import type { TONConfigData } from "../../types";
 import { TONModule } from '../TONModule';
 import { Tracer } from 'opentracing';
-import { initTracerFromEnv as initJaegerTracer } from'jaeger-client';
+import { tracer as noopTracer } from "opentracing/lib/noop";
+
+import { initTracer as initJaegerTracer } from 'jaeger-client';
 
 export class URLParts {
     static parse(url: string): URLParts {
@@ -145,7 +147,9 @@ export default class TONConfigModule extends TONModule {
             : replacePrefix(this._queriesHttpUrl, 'http://', 'ws://');
 
         this._queriesWsUrl = resolveServer(data.queriesWsServer, queriesWsServer);
-        this.tracer = initTracer('ton-client-js', data.jaegerEndpoint);
+        this.tracer = data.jaegerEndpoint
+            ? initTracer('ton-client-js', data.jaegerEndpoint)
+            : noopTracer;
     }
 
     log(...args: any[]) {
