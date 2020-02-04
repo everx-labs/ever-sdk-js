@@ -7,6 +7,7 @@ import type {
     TONContractABI,
     TONContractDeployParams,
     TONContractDeployResult,
+    TONContractPackage,
     TONKeyPairData
 } from '../../types';
 import { ensureBinaries } from './binaries';
@@ -34,12 +35,12 @@ export type TONContractDeployedParams = {
 const fs = require('fs');
 const path = require('path');
 
-export const loadPackage = (name) => {
+export function loadPackage(name: string): TONContractPackage {
     const contract = {};
     contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.abi.json`), 'utf8'));
     contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.tvc`)).toString('base64');
     return contract;
-};
+}
 
 async function init() {
     await ensureBinaries();
@@ -60,7 +61,7 @@ async function init() {
 }
 
 async function done() {
-    console.time('Test contract selfdestruct time:');
+    console.time('Test contract self destruct time:');
     for (const contract of tests.deployedContracts) {
         console.log(`Self destruct contract with address ${contract.address}`);
         try {
@@ -77,7 +78,7 @@ async function done() {
             // ignore exception
         }
     }
-    console.timeEnd('Test contracts selfdestruct time:');
+    console.timeEnd('Test contracts self destruct time:');
     await new Promise(resolve => setTimeout(resolve, 1000));
     await tests.client.close();
 }
@@ -92,7 +93,7 @@ export const tests: {
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
     nodeSe: boolean,
-    loadPackage(name: string): Promise<JSON>,
+    loadPackage(name: string): TONContractPackage,
 } = {
     config: {
         defaultWorkchain: 0,
