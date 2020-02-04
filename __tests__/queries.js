@@ -16,8 +16,9 @@
 
 import { QTransactionProcessingStatus } from "../src/modules/TONContractsModule";
 import { get_grams_from_giver } from "./_/giver";
-import { WalletContractPackage } from "./contracts/WalletContract";
 import { tests } from "./_/init-tests";
+
+const WalletContractPackage = tests.loadPackage('WalletContract');
 
 beforeAll(tests.init);
 afterAll(tests.done);

@@ -17,11 +17,12 @@
 // @flow
 
 
-import type { TONContractGetDeployDataResult, TONContractPackage } from '../types';
-import { WalletContractPackage } from './contracts/WalletContract';
-import {DeployerPackage} from './contracts/DeployerContract';
-import {DeployeePackage} from './contracts/DeployeeContract';
+import type { TONContractGetDeployDataResult} from '../types';
 import { tests } from './_/init-tests';
+
+const DeployerPackage = tests.loadPackage('Deployer');
+const DeployeePackage = tests.loadPackage('Deployee');
+const WalletContractPackage = tests.loadPackage('WalletContract');
 
 beforeAll(tests.init);
 afterAll(tests.done);
