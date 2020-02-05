@@ -208,6 +208,10 @@ export default class TONQueriesModule extends TONModule {
                 const resolvedSpan = (req && req.traceSpan) || span;
                 req.headers = {};
                 this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
+                const authToken = this.config.data && this.config.data.authorization;
+                if (authToken) {
+                    req.headers.authorization = authToken;
+                }
                 return {
                     headers: req.headers,
                 };

@@ -8,6 +8,7 @@ export type TONConfigData = {
     queriesWsServer?: string,
     log_verbose?: boolean,
     jaegerEndpoint?: string,
+    authorization?: string,
 }
 
 // Crypto
