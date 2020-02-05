@@ -18,6 +18,8 @@
 /* eslint-disable class-methods-use-this, no-use-before-define, no-undef */
 
 // Deprecated: TONClientCore v0.17.0
+import { Span, SpanContext, SpanOptions, Tracer } from "opentracing";
+
 export interface TONClientLibrary {
     request(
         method: string,
@@ -94,6 +96,12 @@ export interface TONModuleContext {
     getCore(): ?TONClientLibrary,
 
     getModule<T>(ModuleClass: typeof TONModule): T,
+
+    trace<T>(
+        name: string,
+        f: (span: Span) => Promise<T>,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<T>,
 }
 
 /**
@@ -137,6 +145,7 @@ export class TONModule {
      * @return {Promise<Object>}
      */
     requestCore<Params, Result>(method: string, params?: Params): Promise<Result> {
+        const p = params !== undefined ? (JSON.stringify(params) || '') : '';
         const core = this.context.getCore();
         if (!core) {
             throw new Error('TON SDK JS Library doesn\'t set up');

@@ -62,7 +62,7 @@ import { TONClient, TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule from './TONQueriesModule';
-
+import tracing, { Span, SpanContext } from 'opentracing';
 
 export const TONAddressStringVariant = {
     AccountId: 'AccountId',
@@ -207,10 +207,10 @@ export default class TONContractsModule extends TONModule implements TONContract
         this.queries = this.context.getModule(TONQueriesModule);
     }
 
-    async load(params: TONContractLoadParams): Promise<TONContractLoadResult> {
+    async load(params: TONContractLoadParams, parentSpan?: (Span | SpanContext)): Promise<TONContractLoadResult> {
         const accounts: QAccount[] = await this.queries.accounts.query({
             id: { eq: params.address },
-        }, 'balance');
+        }, 'balance', undefined, undefined, undefined, parentSpan);
         if (accounts && accounts.length > 0) {
             return {
                 id: params.address,
@@ -226,17 +226,26 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Facade functions
 
-    async deploy(params: TONContractDeployParams): Promise<TONContractDeployResult> {
-        return this.internalDeployJs(params);
+    async deploy(params: TONContractDeployParams, parentSpan?: (Span | SpanContext)): Promise<TONContractDeployResult> {
+        return this.context.trace('contracts.deploy', async(span: Span) => {
+            span.setTag('params', params);
+            return this.internalDeployJs(params, span);
+        }, parentSpan);
     }
 
 
-    async run(params: TONContractRunParams): Promise<TONContractRunResult> {
-        return this.internalRunJs(params);
+    async run(params: TONContractRunParams, parentSpan?: (Span | SpanContext)): Promise<TONContractRunResult> {
+        return this.context.trace('contracts.run', async(span: Span) => {
+            span.setTag('params', params);
+            return this.internalRunJs(params, span);
+        }, parentSpan);
     }
 
-    async runLocal(params: TONContractRunLocalParams): Promise<TONContractRunResult> {
-        return this.internalRunLocalJs(params);
+    async runLocal(params: TONContractRunLocalParams, parentSpan?: (Span | SpanContext)): Promise<TONContractRunResult> {
+        return this.context.trace('contracts.runLocal', async(span: Span) => {
+            span.setTag('params', params);
+            return this.internalRunLocalJs(params, span);
+        }, parentSpan);
     }
 
     // Message creation
@@ -396,46 +405,8 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message processing
 
-    async sendMessageRest(params: TONContractMessage): Promise<string> {
-        const { clientPlatform } = TONClient;
-        if (!clientPlatform) {
-            throw TONClientError.clientDoesNotConfigured();
-        }
-        const { fetch } = clientPlatform;
-        const url = this.config.requestsUrl();
-        const id = params.messageId || 
-            (await this.getBocHash({
-                bocBase64: params.messageBodyBase64
-            })).hash;
-        const idBase64 = Buffer.from(id, 'hex').toString('base64');
-        const response = await fetch(url, {
-            method: 'POST',
-            mode: 'cors',
-            cache: 'no-cache',
-            credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            redirect: 'follow',
-            referrer: 'no-referrer',
-            body: JSON.stringify({
-                records: [
-                    {
-                        key: idBase64,
-                        value: params.messageBodyBase64,
-                    },
-                ],
-            }),
-        });
-        this.config.log('sendMessageRest. request posted');
-        if (response.status !== 200) {
-            throw TONClientError.sendNodeRequestFailed(await response.text());
-        }
-        return id;
-    }
-
-    async sendMessage(params: TONContractMessage): Promise<string> {
-        const id = params.messageId || 
+    async sendMessage(params: TONContractMessage, parentSpan?: (Span | SpanContext)): Promise<string> {
+        const id = params.messageId ||
             (await this.getBocHash({
                 bocBase64: params.messageBodyBase64
             })).hash;
@@ -445,25 +416,23 @@ export default class TONContractsModule extends TONModule implements TONContract
                 id: idBase64,
                 body: params.messageBodyBase64,
             }
-        ]);
+        ], parentSpan);
         this.config.log('sendMessage. Request posted');
         return id;
     }
 
 
-    async processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction> {
+    async processMessage(message: TONContractMessage, resultFields: string, parentSpan?: (Span | SpanContext)): Promise<QTransaction> {
         let transaction: ?QTransaction = null;
         let retry = true;
         while (retry) {
             retry = false;
-            this.config.log('processMessage. Before send');
-            const messageId = await this.sendMessage(message);
-            this.config.log('processMessage. After send');
+            const messageId = await this.sendMessage(message, parentSpan);
             try {
                 transaction = await this.queries.transactions.waitFor({
                     in_msg: { eq: messageId },
                     status: { eq: QTransactionProcessingStatus.finalized },
-                }, resultFields, 40_000);
+                }, resultFields, 40_000, parentSpan);
             } catch (error) {
                 if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
                     this.config.log('processMessage. Timeout, retrying...');
@@ -486,11 +455,12 @@ export default class TONContractsModule extends TONModule implements TONContract
     }
 
 
-    async processDeployMessage(params: TONContractDeployMessage): Promise<TONContractDeployResult> {
+    async processDeployMessage(params: TONContractDeployMessage, parentSpan?: (Span | SpanContext)): Promise<TONContractDeployResult> {
         this.config.log('processDeployMessage', params);
         const transaction = await this.processMessage(
             params.message,
             transactionDetails,
+            parentSpan,
         );
         await checkTransaction(transaction);
         this.config.log('processDeployMessage. End');
@@ -502,11 +472,12 @@ export default class TONContractsModule extends TONModule implements TONContract
     }
 
 
-    async processRunMessage(params: TONContractRunMessage): Promise<TONContractRunResult> {
+    async processRunMessage(params: TONContractRunMessage, parentSpan?: (Span | SpanContext)): Promise<TONContractRunResult> {
         this.config.log('processRunMessage', params);
         const transaction = await this.processMessage(
             params.message,
             transactionDetails,
+            parentSpan,
         );
         await checkTransaction(transaction);
         const outputMessages = transaction.out_messages;
@@ -533,10 +504,14 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
     }
 
-    async processRunMessageLocal(params: TONContractRunMessage, waitParams?: TONContractAccountWaitParams): Promise<TONContractRunResult> {
+    async processRunMessageLocal(
+        params: TONContractRunMessage,
+        waitParams?: TONContractAccountWaitParams,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<TONContractRunResult> {
         this.config.log('processRunMessageLocal', params);
 
-        const account = await this.getAccount(params.address, true, waitParams);
+        const account = await this.getAccount(params.address, true, waitParams, parentSpan);
 
         return this.requestCore('contracts.run.local.msg', {
             address: params.address,
@@ -551,10 +526,10 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     bigBalance = "0x10000000000000";
 
-    async calcRunFees(params: TONContractCalcRunFeeParams): Promise<TONContractCalcFeeResult> {
+    async calcRunFees(params: TONContractCalcRunFeeParams, parentSpan?: (Span | SpanContext)): Promise<TONContractCalcFeeResult> {
         this.config.log('calcRunFees', params);
 
-        const account = await this.getAccount(params.address, true, params.waitParams);
+        const account = await this.getAccount(params.address, true, params.waitParams, parentSpan);
 
         if (params.emulateBalance) {
             account.balance = this.bigBalance
@@ -570,7 +545,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         });
     }
 
-    async calcDeployFees(params: TONContractCalcDeployFeeParams): Promise<TONContractCalcFeeResult> {
+    async calcDeployFees(params: TONContractCalcDeployFeeParams, parentSpan?: (Span | SpanContext)): Promise<TONContractCalcFeeResult> {
         this.config.log('calcDeployFees', params);
 
         const message = await this.createDeployMessage(params);
@@ -580,10 +555,13 @@ export default class TONContractsModule extends TONModule implements TONContract
             message: message.message,
             emulateBalance: params.emulateBalance,
             newAccount: params.newAccount
-        });
+        }, parentSpan);
     }
 
-    async calcMsgProcessFees(params: TONContractCalcMsgProcessingFeesParams): Promise<TONContractCalcFeeResult> {
+    async calcMsgProcessFees(
+        params: TONContractCalcMsgProcessingFeesParams,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<TONContractCalcFeeResult> {
         this.config.log('calcMsgProcessFees', params);
 
         let account: QAccount = {
@@ -593,7 +571,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
 
         if (!params.newAccount) {
-            account = await this.getAccount(params.address, false, params.waitParams);
+            account = await this.getAccount(params.address, false, params.waitParams, parentSpan);
         }
 
         if (params.emulateBalance) {
@@ -637,20 +615,20 @@ export default class TONContractsModule extends TONModule implements TONContract
     }
 
 
-    async internalDeployJs(params: TONContractDeployParams): Promise<TONContractDeployResult> {
+    async internalDeployJs(params: TONContractDeployParams, parentSpan?: (Span | SpanContext)): Promise<TONContractDeployResult> {
         this.config.log("Deploy start");
         const message = await this.createDeployMessage(params);
-        return this.processDeployMessage(message);
+        return this.processDeployMessage(message, parentSpan);
     }
 
 
-    async internalRunJs(params: TONContractRunParams): Promise<TONContractRunResult> {
+    async internalRunJs(params: TONContractRunParams, parentSpan?: (Span | SpanContext)): Promise<TONContractRunResult> {
         this.config.log("Run start");
         const message = await this.createRunMessage(params);
-        return this.processRunMessage(message);
+        return this.processRunMessage(message, parentSpan);
     }
 
-    async getAccount(address: string, active: bool, waitParams?: TONContractAccountWaitParams): Promise<QAccount> {
+    async getAccount(address: string, active: bool, waitParams?: TONContractAccountWaitParams, parentSpan?: (Span | SpanContext)): Promise<QAccount> {
         function removeTypeName(obj: any) {
             if (obj.__typename) {
                 delete obj.__typename;
@@ -676,7 +654,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         const account = await this.queries.accounts.waitFor(
             filter,
             'id code data balance balance_other { currency value } last_paid',
-            waitParams && waitParams.timeout
+            waitParams && waitParams.timeout,
+            parentSpan
         );
 
         removeTypeName(account);
@@ -684,8 +663,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         return account;
     }
 
-    async internalRunLocalJs(params: TONContractRunLocalParams): Promise<TONContractRunResult> {
-        const account = await this.getAccount(params.address, true, params.waitParams);
+    async internalRunLocalJs(params: TONContractRunLocalParams, parentSpan?: (Span | SpanContext)): Promise<TONContractRunResult> {
+        const account = await this.getAccount(params.address, true, params.waitParams, parentSpan);
 
         return this.requestCore('contracts.run.local', {
             address: params.address,

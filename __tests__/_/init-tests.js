@@ -1,15 +1,17 @@
 // @flow
 
-import {TONClient} from '../../src/TONClient';
+import { Span } from "opentracing";
+import { TONClient } from '../../src/TONClient';
 import type {
     TONConfigData,
     TONContractABI,
     TONContractDeployParams,
     TONContractDeployResult,
+    TONContractPackage,
     TONKeyPairData
 } from '../../types';
-import {ensureBinaries} from './binaries';
-import {deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address} from './giver';
+import { ensureBinaries } from './binaries';
+import { deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address } from './giver';
 
 require('dotenv').config();
 const fetch = require('node-fetch');
@@ -33,12 +35,12 @@ export type TONContractDeployedParams = {
 const fs = require('fs');
 const path = require('path');
 
-export const loadPackage = (name) => {
+export function loadPackage(name: string): TONContractPackage {
     const contract = {};
     contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.abi.json`), 'utf8'));
     contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.tvc`)).toString('base64');
     return contract;
-};
+}
 
 async function init() {
     await ensureBinaries();
@@ -59,7 +61,7 @@ async function init() {
 }
 
 async function done() {
-    console.time('Test contract selfdestruct time:');
+    console.time('Test contract self destruct time:');
     for (const contract of tests.deployedContracts) {
         console.log(`Self destruct contract with address ${contract.address}`);
         try {
@@ -67,7 +69,7 @@ async function done() {
                 address: contract.address,
                 functionName: 'sendAllMoney',
                 abi: contract.abi,
-                input: {dest_addr: contract.giverAddress},
+                input: { dest_addr: contract.giverAddress },
                 keyPair: contract.key,
             });
             await tests.client.contracts.sendMessage(message.message);
@@ -76,7 +78,8 @@ async function done() {
             // ignore exception
         }
     }
-    console.timeEnd('Test contracts selfdestruct time:');
+    console.timeEnd('Test contracts self destruct time:');
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await tests.client.close();
 }
 
@@ -85,17 +88,18 @@ export const tests: {
     client: TONClient,
     init(): Promise<void>,
     done(): Promise<void>,
-    get_grams_from_giver(account: string, amount?: number): Promise<void>,
-    deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult>,
+    get_grams_from_giver(account: string, amount?: number, parentSpan?: Span): Promise<void>,
+    deploy_with_giver(params: TONContractDeployParams, parentSpan?: Span): Promise<TONContractDeployResult>,
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
     nodeSe: boolean,
-    loadPackage(name: string): Promise<JSON>,
+    loadPackage(name: string): TONContractPackage,
 } = {
     config: {
         defaultWorkchain: 0,
         servers: serversConfig,
         log_verbose: false,
+        jaegerEndpoint: '',
     },
     client: new TONClient(),
     init,

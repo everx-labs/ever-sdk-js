@@ -1,5 +1,6 @@
 // @flow
 
+import { Span } from "opentracing";
 import {
     QAccountType,
     TONAddressStringVariant,
@@ -130,13 +131,17 @@ const GiverWalletPackage = {
 };
 const giverRequestAmount = 500_000_000;
 
-async function check_giver() {
+async function check_giver(parentSpan?: Span) {
     const ton = tests.client;
 
     const accounts = await ton.queries.accounts.query({
             id: { eq: giverWalletAddressHex }
         },
-        'acc_type balance');
+        'acc_type balance',
+        undefined,
+        undefined,
+        undefined,
+        parentSpan);
 
     if (accounts.length === 0) {
         throw `Giver wallet does not exist. Send some grams to ${giverWalletAddressHex} (${giverWalletAddressBase64})`;
@@ -155,76 +160,88 @@ async function check_giver() {
             package: GiverWalletPackage,
             constructorParams: {},
             keyPair: giverWalletKeys,
-        });
+        }, parentSpan);
 
         console.log('Giver deployed');
     }
 }
 
-export async function get_grams_from_giver(account: string, amount: number = giverRequestAmount) {
+export async function get_grams_from_giver(
+    account: string,
+    amount: number = giverRequestAmount,
+    parentSpan?: Span,
+) {
     const { contracts, queries, config } = tests.client;
 
-    config.log("Giver. Start");
-    console.time(`Get grams from giver to ${account}`);
+    return tests.client.trace('client-tests.get_grams_from_giver', async (span: Span) => {
+        config.log("Giver. Start");
+        console.time(`Get grams from giver to ${account}`);
 
-    let params: TONContractRunParams;
-    if (nodeSe) {
-        params = {
-            address: nodeSeGiverAddress,
-            functionName: 'sendGrams',
-            abi: nodeSeGiverAbi,
-            input: {
-                dest: account,
-                amount
-            },
-        };
-    } else {
-        config.log("Giver. Before check");
-        await check_giver();
-        config.log("Giver. After check");
-        params = {
-            address: giverWalletAddressHex,
-            functionName: 'sendTransaction',
-            abi: GiverWalletPackage.abi,
-            input: {
-                dest: account,
-                value: amount,
-                bounce: false
-            },
-            keyPair: giverWalletKeys,
-        };
-    }
-    const result: TONContractRunResult = await contracts.run(params);
-    for (const msg of (result.transaction.out_messages || [])) {
-        if (msg.msg_type === QMessageType.internal) {
-            config.log(`Giver. Wait for ${msg.id || "Empty ID"}`);
-            await queries.transactions.waitFor(
-                {
-                    in_msg: { eq: msg.id },
-                    status: { eq: QTransactionProcessingStatus.finalized },
+        let params: TONContractRunParams;
+        if (nodeSe) {
+            params = {
+                address: nodeSeGiverAddress,
+                functionName: 'sendGrams',
+                abi: nodeSeGiverAbi,
+                input: {
+                    dest: account,
+                    amount
                 },
-                'lt',
-            );
+            };
+        } else {
+            config.log("Giver. Before check");
+            await check_giver(span);
+            config.log("Giver. After check");
+            params = {
+                address: giverWalletAddressHex,
+                functionName: 'sendTransaction',
+                abi: GiverWalletPackage.abi,
+                input: {
+                    dest: account,
+                    value: amount,
+                    bounce: false
+                },
+                keyPair: giverWalletKeys,
+            };
         }
-    }
+        const result: TONContractRunResult = await contracts.run(params, span);
+        for (const msg of (result.transaction.out_messages || [])) {
+            if (msg.msg_type === QMessageType.internal) {
+                config.log(`Giver. Wait for ${msg.id || "Empty ID"}`);
+                await queries.transactions.waitFor(
+                    {
+                        in_msg: { eq: msg.id },
+                        status: { eq: QTransactionProcessingStatus.finalized },
+                    },
+                    'lt',
+                    undefined,
+                    span
+                );
+            }
+        }
 
-    config.log("Giver. End");
-    console.timeEnd(`Get grams from giver to ${account}`);
+        config.log("Giver. End");
+        console.timeEnd(`Get grams from giver to ${account}`);
+    }, parentSpan);
 }
 
-export async function deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult> {
+export async function deploy_with_giver(
+    params: TONContractDeployParams,
+    parentSpan?: Span,
+): Promise<TONContractDeployResult> {
     const { contracts } = tests.client;
-
-    const message = await contracts.createDeployMessage(params);
-    await get_grams_from_giver(message.address);
-    console.log(`Deployed test contract address ${message.address}`);
-    tests.deployedContracts.push({
-        key: params.keyPair,
-        address: message.address,
-        abi: params.package.abi,
-        giverAddress: nodeSe ? nodeSeGiverAddress : giverWalletAddressHex,
-    });
-    return contracts.deploy(params);
+    return tests.client.trace('deploy_with_giver', async(span: Span) => {
+        const message = await contracts.createDeployMessage(params);
+        await get_grams_from_giver(message.address, giverRequestAmount, span);
+        console.log(`Deployed test contract address ${message.address}`);
+        tests.deployedContracts.push({
+            key: params.keyPair,
+            address: message.address,
+            abi: params.package.abi,
+            giverAddress: nodeSe ? nodeSeGiverAddress : giverWalletAddressHex,
+        });
+        return contracts.deploy(params, span);
+    }, parentSpan);
 }
 
 export function get_giver_address(): string {

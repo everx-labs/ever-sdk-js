@@ -15,16 +15,17 @@
  */
 
 // @flow
-import {tests} from './_/init-tests';
-import {TONAddressStringVariant} from '../src/modules/TONContractsModule';
-import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
 
+import { Tags, Span } from "opentracing";
+import { tests } from './_/init-tests';
+import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
+import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
 
 
 import type {
     TONContractLoadResult,
 } from '../types';
-import {binariesVersion} from './_/binaries';
+import { binariesVersion } from './_/binaries';
 
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -51,26 +52,29 @@ test('basic', async () => {
 });
 
 test('load', async () => {
-    const {contracts} = tests.client;
-    const contract = await contracts.load({
-        address: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
-        includeImage: false,
-    });
-    expect(contract.id)
-        .toBeNull();
-    expect(contract.balanceGrams)
-        .toBeNull();
+    const { contracts } = tests.client;
+    await tests.client.trace('tests.contracts.load', async (span: Span) => {
+        const contract = await contracts.load({
+            address: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
+            includeImage: false,
+        }, span);
+        expect(contract.id)
+            .toBeNull();
+        expect(contract.balanceGrams)
+            .toBeNull();
 
-    await tests.get_grams_from_giver(walletAddress);
+        await tests.get_grams_from_giver(walletAddress, undefined, span);
 
-    const w: TONContractLoadResult = await contracts.load({
-        address: walletAddress,
-        includeImage: false,
+        const w: TONContractLoadResult = await contracts.load({
+            address: walletAddress,
+            includeImage: false,
+        }, span);
+        expect(w.id)
+            .toEqual(walletAddress);
+        expect(Number.parseInt(w.balanceGrams || ''))
+            .toBeGreaterThan(0);
+
     });
-    expect(w.id)
-        .toEqual(walletAddress);
-    expect(Number.parseInt(w.balanceGrams || ''))
-        .toBeGreaterThan(0);
 });
 
 test('Test hello contract from docs.ton.dev', async () => {
@@ -112,61 +116,63 @@ test('Test hello contract from docs.ton.dev', async () => {
 });
 
 test('Run aborted transaction', async () => {
-    const {contracts, crypto} = tests.client;
-    const keys = await crypto.ed25519Keypair();
+    const { contracts, crypto } = tests.client;
+    await tests.client.trace('tests.contracts.run-aborted-transaction', async (span: Span) => {
+        const keys = await crypto.ed25519Keypair();
 
-    const address = await tests.deploy_with_giver({
-        package: WalletContractPackage,
-        constructorParams: {},
-        keyPair: keys,
+        const address = await tests.deploy_with_giver({
+            package: WalletContractPackage,
+            constructorParams: {},
+            keyPair: keys,
+        }, span);
+
+        try {
+            await contracts.run({
+                address: address.address,
+                abi: WalletContractPackage.abi,
+                functionName: 'sendTransaction',
+                input: {
+                    dest: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
+                    value: 0,
+                    bounce: false,
+                },
+                keyPair: keys,
+            }, span);
+        } catch (error) {
+            expect(error.source)
+                .toEqual('node');
+            expect(error.code)
+                .toEqual(102);
+            expect(error.message)
+                .toEqual('VM terminated with exception (102) at computeVm');
+            expect(error.data.phase)
+                .toEqual('computeVm');
+            expect(error.data.transaction_id)
+                .toBeTruthy();
+        }
+
+        try {
+            await contracts.run({
+                address: address.address,
+                abi: WalletContractPackage.abi,
+                functionName: 'sendTransaction',
+                input: {},
+                keyPair: keys,
+            }, span);
+        } catch (error) {
+            // console.log(error);
+            expect(error.source)
+                .toEqual('client');
+            expect(error.code)
+                .toEqual(3012);
+            expect(error.data)
+                .toBeNull();
+        }
     });
-
-    try {
-        await contracts.run({
-            address: address.address,
-            abi: WalletContractPackage.abi,
-            functionName: 'sendTransaction',
-            input: {
-                dest: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
-                value: 0,
-                bounce: false,
-            },
-            keyPair: keys,
-        });
-    } catch (error) {
-        expect(error.source)
-            .toEqual('node');
-        expect(error.code)
-            .toEqual(102);
-        expect(error.message)
-            .toEqual('VM terminated with exception (102) at computeVm');
-        expect(error.data.phase)
-            .toEqual('computeVm');
-        expect(error.data.transaction_id)
-            .toBeTruthy();
-    }
-
-    try {
-        await contracts.run({
-            address: address.address,
-            abi: WalletContractPackage.abi,
-            functionName: 'sendTransaction',
-            input: {},
-            keyPair: keys,
-        });
-    } catch (error) {
-        // console.log(error);
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(3012);
-        expect(error.data)
-            .toBeNull();
-    }
 });
 
 test('decodeInputMessageBody', async () => {
-    const {contracts} = tests.client;
+    const { contracts } = tests.client;
     const body = 'te6ccgEBAgEA3wAB8y88h10AAAFuW6FWJBERERERERERERERERERERERERERERERERERERERERERIXxlwlrjEGJEDhx3dC3WlQeZKzuAYBDOJ8+g7AM+Ek6AF49G0+VDwIkQKBdIh7hi4J5F0T/g5OggwrHI4HGN1KHAAAAAAAAAD2AAADkQAQDADBiSeQ1t5j0LwYo9dx7wefpnCQ3KrYOeAhX9ZUux62yIxWdQdUHJGCXXcoLbrDDduL9sgKSZT3TzYpRKi8YqASF8ZcJa4xBiRA4cd3Qt1pUHmSs7gGAQzifPoOwDPhJO';
 
     const result = await contracts.decodeInputMessageBody({
@@ -188,7 +194,7 @@ test('decodeInputMessageBody', async () => {
 
 
 test('filterOutput', async () => {
-    const {contracts, crypto} = tests.client;
+    const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const deployed = await tests.deploy_with_giver({
@@ -201,7 +207,7 @@ test('filterOutput', async () => {
         address: deployed.address,
         functionName: 'emitValue',
         abi: EventsPackage.abi,
-        input: {id: '0'},
+        input: { id: '0' },
         keyPair: keys,
     });
 
@@ -209,7 +215,7 @@ test('filterOutput', async () => {
         address: deployed.address,
         functionName: 'returnValue',
         abi: EventsPackage.abi,
-        input: {id: '0'},
+        input: { id: '0' },
         keyPair: keys,
     });
     expect(JSON.stringify(resultReturn.output))
@@ -217,7 +223,7 @@ test('filterOutput', async () => {
 });
 
 test('External Signing', async () => {
-    const {contracts, crypto} = tests.client;
+    const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const contractPackage = EventsPackage;
@@ -248,7 +254,7 @@ test('External Signing', async () => {
 });
 
 test('changeInitState', async () => {
-    const {contracts, crypto} = tests.client;
+    const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const subscriptionAddress1 = '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
@@ -295,13 +301,13 @@ test('changeInitState', async () => {
     });
 
     expect(result1.output)
-        .toEqual({value0: subscriptionAddress1});
+        .toEqual({ value0: subscriptionAddress1 });
     expect(result2.output)
-        .toEqual({value0: subscriptionAddress2});
+        .toEqual({ value0: subscriptionAddress2 });
 });
 
 test('testSetCode', async () => {
-    const {contracts, crypto} = tests.client;
+    const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const deployed = await tests.deploy_with_giver({
@@ -327,7 +333,7 @@ test('testSetCode', async () => {
         address: deployed.address,
         functionName: 'main',
         abi: SetCodePackage.abi,
-        input: {newcode: code.codeBase64},
+        input: { newcode: code.codeBase64 },
         keyPair: keys,
     });
 
@@ -345,14 +351,14 @@ test('testSetCode', async () => {
 });
 
 test('testRunBody', async () => {
-    const {contracts} = tests.client;
+    const { contracts } = tests.client;
 
     const walletAddress = '0:2222222222222222222222222222222222222222222222222222222222222222';
 
     const result = await contracts.createRunBody({
         abi: SubscriptionContractPackage.abi,
         function: 'constructor',
-        params: {wallet: walletAddress},
+        params: { wallet: walletAddress },
         keyPair: walletKeys,
     });
 
@@ -364,12 +370,12 @@ test('testRunBody', async () => {
     expect(parseResult.function)
         .toEqual('constructor');
     expect(parseResult.output)
-        .toEqual({wallet: walletAddress});
+        .toEqual({ wallet: walletAddress });
 
     const resultInternal = await contracts.createRunBody({
         abi: SubscriptionContractPackage.abi,
         function: 'constructor',
-        params: {wallet: walletAddress},
+        params: { wallet: walletAddress },
         internal: true,
     });
 
@@ -382,11 +388,11 @@ test('testRunBody', async () => {
     expect(parseResultInternal.function)
         .toEqual('constructor');
     expect(parseResultInternal.output)
-        .toEqual({wallet: walletAddress});
+        .toEqual({ wallet: walletAddress });
 });
 
 test('Address conversion', async () => {
-    const {contracts} = tests.client;
+    const { contracts } = tests.client;
 
     const accountId = 'fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260';
     const hex = '-1:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260';
@@ -441,7 +447,7 @@ test('Address conversion', async () => {
 });
 
 test('calc gas fee', async () => {
-    const {contracts, crypto, queries} = tests.client;
+    const { contracts, crypto, queries } = tests.client;
     if (tests.nodeSe) {
         console.log('[calc gas fee] Skip test on Node SE');
         return;
@@ -473,14 +479,14 @@ test('calc gas fee', async () => {
     const deployed = await contracts.processDeployMessage(deployMessage);
 
     const deployTransaction = (await queries.transactions.query({
-            in_msg: {eq: deployMessage.message.messageId}
+            in_msg: { eq: deployMessage.message.messageId }
         },
         'storage {storage_fees_collected}'
     ))[0];
 
     const originalBalance = (await queries.accounts.waitFor({
-            id: {eq: deployed.address},
-            code: {gt: ""}
+            id: { eq: deployed.address },
+            code: { gt: "" }
         },
         'balance'
     )).balance;
@@ -542,8 +548,8 @@ test('calc gas fee', async () => {
     });
 
     const endBalance = (await queries.accounts.waitFor({
-            id: {eq: deployed.address},
-            balance: {lt: originalBalance}
+            id: { eq: deployed.address },
+            balance: { lt: originalBalance }
         },
         'balance'
     )).balance;
@@ -552,7 +558,7 @@ test('calc gas fee', async () => {
     expect(Number(endBalance) < Number(reserveValue)).toBeTruthy();
 
     const transaction = await queries.transactions.query({
-            id: {eq: resultNet.transaction.id}
+            id: { eq: resultNet.transaction.id }
         },
         'storage {storage_fees_collected} compute {gas_fees} action {total_fwd_fees} total_fees'
     );
@@ -573,17 +579,17 @@ test('calc gas fee', async () => {
 });
 
 test('test boc hash', async () => {
-    const {contracts} = tests.client;
+    const { contracts } = tests.client;
     const bocBase64 = "te6ccgEBAgEAxgABwYgAti0S4VOMe6uIVNX3nuDd7KSO13EsFEXDsUVaKRzBgdQCwaZuyAAAC3iWFUwMAK22OiKIN+R4x+31/j8LXRIYPh8iJGtncSuZ7FONbFNXAAAAAAAAAAAAAAAAAA9CQEABAMD3EJkJ6DsPCkGnV5lMTt6LIPRS7ViXPZjHMhJizNODUeKekStEXEUgmHS2vmokCRRUpsUhmwgFmkWaCatqe4wIlcBqp0PR+QAN1kt1SY8QavS350RCNNfeZ+ommI9hgd8=";
     const hash = "adff1e7fd60632bb572b1afe0c2e569d8c68b1169994c48bc1ed92b3515c3b4e";
 
-    const result = await contracts.getBocHash({bocBase64});
+    const result = await contracts.getBocHash({ bocBase64 });
 
     expect(result.hash).toEqual(hash);
 });
 
 test('test send boc', async () => {
-    const {contracts, crypto} = tests.client;
+    const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const message = await contracts.createDeployMessage({
@@ -604,7 +610,7 @@ test('test send boc', async () => {
 });
 
 test('test deploy lags', async () => {
-    const {contracts, crypto, config} = tests.client;
+    const { contracts, crypto, config } = tests.client;
     config.startProfile();
 
     config.log("Start");

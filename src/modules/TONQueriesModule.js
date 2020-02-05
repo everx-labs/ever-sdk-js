@@ -29,6 +29,9 @@ import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import TONConfigModule, { URLParts } from './TONConfigModule';
 
+import { setContext } from 'apollo-link-context';
+import { FORMAT_TEXT_MAP, Tags, Span, SpanContext } from 'opentracing';
+
 type Subscription = {
     unsubscribe: () => void
 }
@@ -102,47 +105,75 @@ export default class TONQueriesModule extends TONModule {
         }
     }
 
-    async getAccountsCount(): Promise<number> {
-        const result = await this.query('query{getAccountsCount}');
+    async getAccountsCount(parentSpan?: (Span | SpanContext)): Promise<number> {
+        const result = await this.query('query{getAccountsCount}', undefined, parentSpan);
         return result.data.getAccountsCount;
     }
 
-    async getTransactionsCount(): Promise<number> {
-        const result = await this.query('query{getTransactionsCount}');
+    async getTransactionsCount(parentSpan?: (Span | SpanContext)): Promise<number> {
+        const result = await this.query('query{getTransactionsCount}', undefined, parentSpan);
         return result.data.getTransactionsCount;
     }
 
-    async getAccountsTotalBalance(): Promise<string> {
-        const result = await this.query('query{getAccountsTotalBalance}');
+    async getAccountsTotalBalance(parentSpan?: (Span | SpanContext)): Promise<string> {
+        const result = await this.query('query{getAccountsTotalBalance}', undefined, parentSpan);
         return result.data.getAccountsTotalBalance;
     }
 
-    async postRequests(requests: Request[]): Promise<void> {
-        return this.mutation(`mutation postRequests($requests: [Request]) {
-            postRequests(requests: $requests)
-        }`, {
-            requests,
-        });
+    async postRequests(requests: Request[], parentSpan?: (Span | SpanContext)): Promise<any> {
+        return this.context.trace('queries.postRequests', async (span) => {
+            return this._mutation(`mutation postRequests($requests: [Request]) {
+                postRequests(requests: $requests)
+            }`, {
+                requests,
+            }, span);
+        }, parentSpan);
     }
 
-    async mutation(ql: string, variables: { [string]: any } = {}): Promise<any> {
+    async mutation(ql: string, variables: { [string]: any } = {}, parentSpan?: (Span | SpanContext)): Promise<any> {
+        return this.context.trace('queries.mutation', async (span: Span) => {
+            span.setTag('params', {
+                mutation: ql,
+                variables,
+            });
+            return this._mutation(ql, variables, span);
+        }, parentSpan);
+    }
+
+    async query(ql: string, variables: { [string]: any } = {}, parentSpan?: (Span | SpanContext)): Promise<any> {
+        return this.context.trace('queries.query', async (span: Span) => {
+            span.setTag('params', {
+                query: ql,
+                variables,
+            });
+            return this._query(ql, variables, span);
+        }, parentSpan);
+    }
+
+    async _mutation(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
         const mutation = gql([ql]);
-        return this.graphQl(client => client.mutate({
+        return this._graphQl(client => client.mutate({
             mutation,
             variables,
+            context: {
+                traceSpan: span,
+            }
         }));
     }
 
-    async query(ql: string, variables: { [string]: any } = {}): Promise<any> {
-        const mutation = gql([ql]);
-        return this.graphQl(client => client.mutate({
-            mutation,
+    async _query(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
+        const query = gql([ql]);
+        return this._graphQl(client => client.query({
+            query,
             variables,
-        }));
+            context: {
+                traceSpan: span,
+            }
+        }), span);
     }
 
-    async graphQl(request: (client: ApolloClient) => Promise<any>): Promise<any> {
-        const client = await this.ensureClient();
+    async _graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {
+        const client = await this.ensureClient(span);
         try {
             return request(client);
         } catch (error) {
@@ -155,44 +186,58 @@ export default class TONQueriesModule extends TONModule {
         }
     }
 
-    async ensureClient(): ApolloClient {
+    async ensureClient(span: Span): Promise<ApolloClient> {
         if (this._client) {
             return this._client;
         }
-        const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
-        const subscriptionClient = new SubscriptionClient(
-            wsUrl,
-            {
-                reconnect: true
-            },
-            WebSocket
-        );
-        subscriptionClient.maxConnectTimeGenerator.duration = () => subscriptionClient.maxConnectTimeGenerator.max;
-        this._client = new ApolloClient({
-            cache: new InMemoryCache({}),
-            link: split(
-                ({ query }) => {
-                    const definition = getMainDefinition(query);
-                    return (
-                        definition.kind === 'OperationDefinition'
-                        && definition.operation === 'subscription'
-                    );
+        await this.context.trace('setup client', async (span) => {
+            const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
+            let subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
+            const subscriptionClient = new SubscriptionClient(
+                wsUrl,
+                {
+                    reconnect: true,
+                    connectionParams: () => ({
+                        headers: subsOptions,
+                    }),
                 },
-                new WebSocketLink(subscriptionClient),
-                new HttpLink({
-                    uri: httpUrl,
-                    fetch,
-                }),
-            ),
-            defaultOptions: {
-                watchQuery: {
-                    fetchPolicy: 'no-cache',
-                },
-                query: {
-                    fetchPolicy: 'no-cache',
-                },
-            }
-        });
+                WebSocket
+            );
+            subscriptionClient.maxConnectTimeGenerator.duration = () => subscriptionClient.maxConnectTimeGenerator.max;
+            const tracerLink = await setContext((_, req) => {
+                const resolvedSpan = (req && req.traceSpan) || span;
+                req.headers = {};
+                this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
+                return {
+                    headers: req.headers,
+                };
+            });
+            this._client = new ApolloClient({
+                cache: new InMemoryCache({}),
+                link: split(
+                    ({ query }) => {
+                        const definition = getMainDefinition(query);
+                        return (
+                            definition.kind === 'OperationDefinition'
+                            && definition.operation === 'subscription'
+                        );
+                    },
+                    new WebSocketLink(subscriptionClient),
+                    tracerLink.concat(new HttpLink({
+                        uri: httpUrl,
+                        fetch,
+                    })),
+                ),
+                defaultOptions: {
+                    watchQuery: {
+                        fetchPolicy: 'no-cache',
+                    },
+                    query: {
+                        fetchPolicy: 'no-cache',
+                    },
+                }
+            });
+        }, span);
         return this._client;
     }
 
@@ -237,21 +282,26 @@ class TONQCollection {
             collectionName.substr(1, collectionName.length - 2);
     }
 
-    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number): Promise<any> {
-        const c = this.collectionName;
-        const t = this.typeName;
-        const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
-            ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
-        }`;
-        const variables: { [string]: any } = {
-            filter,
-            orderBy,
-            limit,
-        };
-        if (timeout) {
-            variables.timeout = timeout;
-        }
-        return (await this.module.query(ql, variables)).data[c];
+    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number, parentSpan?: (Span | SpanContext)): Promise<any> {
+        return this.module.context.trace(`${this.collectionName}.query`, async (span) => {
+            span.setTag('params', {
+                filter, result, orderBy, limit, timeout
+            });
+            const c = this.collectionName;
+            const t = this.typeName;
+            const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
+                ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
+            }`;
+            const variables: { [string]: any } = {
+                filter,
+                orderBy,
+                limit,
+            };
+            if (timeout) {
+                variables.timeout = timeout;
+            }
+            return (await this.module._query(ql, variables, span)).data[c];
+        }, parentSpan);
     }
 
     subscribe(
@@ -260,6 +310,8 @@ class TONQCollection {
         onDocEvent: DocEvent,
         onError?: (err: Error) => void
     ): Subscription {
+        const span = this.module.config.tracer.startSpan('TONQueriesModule.js:subscribe ');
+        span.setTag(Tags.SPAN_KIND, 'client');
         const text = `subscription ${this.collectionName}($filter: ${this.typeName}Filter) {
         	${this.collectionName}(filter: $filter) { ${result} }
         }`;
@@ -267,7 +319,7 @@ class TONQCollection {
         let subscription = null;
         (async () => {
             try {
-                const client = await this.module.ensureClient();
+                const client = await this.module.ensureClient(span);
                 const observable = client.subscribe({
                     query,
                     variables: {
@@ -278,6 +330,7 @@ class TONQCollection {
                     onDocEvent('insert/update', message.data[this.collectionName]);
                 });
             } catch (error) {
+                span.logEvent('failed', error);
                 if (onError) {
                     onError(error);
                 } else {
@@ -289,13 +342,14 @@ class TONQCollection {
             unsubscribe: () => {
                 if (subscription) {
                     subscription.unsubscribe();
+                    span.finish();
                 }
             },
         };
     }
 
-    async waitFor(filter: any, result: string, timeout?: number): Promise<any> {
-        const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000);
+    async waitFor(filter: any, result: string, timeout?: number, parentSpan?: (Span | SpanContext)): Promise<any> {
+        const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000, parentSpan);
         if (docs.length > 0) {
             return docs[0];
         }
