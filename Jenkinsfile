@@ -1,5 +1,12 @@
+G_giturl = "git@github.com:tonlabs/ton-client-js.git"
+G_gitcred = 'TonJenSSH'
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:10-buster' 
+        }
+    }
+ 
     options { 
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')
         disableConcurrentBuilds()
@@ -44,6 +51,38 @@ pipeline {
                     ] 
 
                     build job: "Integration/integration-tests/master", parameters: params
+                }
+            }
+        }
+        stage('publish to npm') { 
+            when {
+                expression {
+                    GIT_BRANCH == 'master' 
+                }
+            }
+            steps {    
+                script {
+                    ton_directory = "~/workdir/ton-client-js-npm"
+                    sh '[ -d ~/.ssh ] || mkdir -v ~/.ssh'
+                    sh 'ssh-keyscan github.com >> ~/.ssh/known_hosts'
+                    sshagent([G_gitcred]) {
+                        sh """
+                            rm -rf $ton_directory
+                            mkdir -pv $ton_directory
+                            git clone $G_giturl $ton_directory --single-branch
+                        """
+                    }      
+                    withCredentials([string(
+                                credentialsId: 'npmJS_token',
+                                variable: 'NPM_TOKEN')]) {
+                        sh """
+                            cd $ton_directory
+                            echo //registry.npmjs.org/:_authToken=${env.NPM_TOKEN} > .npmrc
+                            npm install
+                            npm run babel
+                            npm publish
+                        """
+                    }      
                 }
             }
         }
