@@ -1,10 +1,39 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.20.0 - Feb 4, 2020
+
+### New
+- Open Tracing (jaeger) integration:
+    1) Optional `tracer` config parameter was added. If specified, must point to opentracing.Tracer object. If not specified then opentracing `noop` tracer will be used. 
+    2) TONClient.trace method to encapsulate some user code into open trace span:
+        ```javascript
+        async function foo(..., parentSpan) {
+            return client.trace('Foo', async (fooSpan) => {
+                fooSpan.setTag('params', ...);
+                ...
+                await client.deploy(..., fooSpan);
+                ...
+                await client.run(..., fooSpan);
+                ...
+            }, parentSpan);
+        }
+        async function bar(..., parentSpan) {
+            return client.trace('Bar', async (barSpan) => {
+                barSpan.setTag('params', ...);
+                ...
+                await client.deploy(..., barSpan);
+                ...
+                await foo(..., barSpan);
+                ...
+            }, parentSpan);
+        }
+        ````
+    3) Example of creating jaeger tracer can be found in `init-tests.js` file.
 ## 0.19.1 - January 28, 2020
 
 ### Fixed
-- FIX: stability improvements (WS connection timeouts was increased)
+- stability improvements (WS connection timeouts was increased)
 
 ## 0.19.0 - January 23, 2020
 

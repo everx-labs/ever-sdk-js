@@ -1,6 +1,6 @@
 {
 	"name": "ton-client-js",
-	"version": "0.19.2",
+	"version": "0.20.0",
 	"description": "TON Client for Java Script",
 	"main": "index.js",
 	"scripts": {
@@ -64,7 +64,8 @@
 		"jest": "^24.9.0",
 		"node-fetch": "^2.6.0",
 		"pre-commit": "^1.2.2",
-		"websocket": "^1.0.30"
+		"websocket": "^1.0.30",
+		"jaeger-client": "^3.17.1"
 	},
 	"peerDependencies": {},
 	"dependencies": {
@@ -78,6 +79,8 @@
 		"dotenv": "^8.2.0",
 		"graphql": "^14.5.8",
 		"graphql-tag": "^2.10.1",
-		"subscriptions-transport-ws": "^0.9.16"
+		"subscriptions-transport-ws": "^0.9.16",
+		"apollo-link-context": "^1.0.19",
+		"opentracing": "^0.14.4"
 	}
 }

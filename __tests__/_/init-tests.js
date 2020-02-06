@@ -1,15 +1,18 @@
 // @flow
 
+import { Span, Tracer } from "opentracing";
 import { TONClient } from '../../src/TONClient';
 import type {
     TONConfigData,
     TONContractABI,
     TONContractDeployParams,
     TONContractDeployResult,
+    TONContractPackage,
     TONKeyPairData
 } from '../../types';
 import { ensureBinaries } from './binaries';
 import { deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address } from './giver';
+import { initTracer as initJaegerTracer } from 'jaeger-client';
 
 require('dotenv').config();
 const fetch = require('node-fetch');
@@ -30,7 +33,15 @@ export type TONContractDeployedParams = {
     abi: TONContractABI,
     giverAddress: string
 }
+const fs = require('fs');
+const path = require('path');
 
+export function loadPackage(name: string): TONContractPackage {
+    const contract = {};
+    contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.abi.json`), 'utf8'));
+    contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.tvc`)).toString('base64');
+    return contract;
+}
 
 async function init() {
     await ensureBinaries();
@@ -51,7 +62,7 @@ async function init() {
 }
 
 async function done() {
-    console.time('Test contract selfdestruct time:');
+    console.time('Test contract self destruct time:');
     for (const contract of tests.deployedContracts) {
         console.log(`Self destruct contract with address ${contract.address}`);
         try {
@@ -64,12 +75,39 @@ async function done() {
             });
             await tests.client.contracts.sendMessage(message.message);
         } catch (e) {
-            console.log(`Selfdestruct error: ${e}`);
+            console.log(`Self destruct error: ${e}`);
             // ignore exception
         }
     }
-    console.timeEnd('Test contracts selfdestruct time:');
+    console.timeEnd('Test contracts self destruct time:');
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await tests.client.close();
+}
+
+function createJaegerTracer(endpoint: string): ?Tracer {
+    if (!endpoint) {
+        return null;
+    }
+    return initJaegerTracer({
+        serviceName: 'ton-client-js',
+        sampler: {
+            type: 'const',
+            param: 1,
+        },
+        reporter: {
+            collectorEndpoint: endpoint,
+            logSpans: true,
+        },
+    }, {
+        logger: {
+            info(msg) {
+                console.log('INFO ', msg);
+            },
+            error(msg) {
+                console.log('ERROR', msg);
+            },
+        },
+    });
 }
 
 export const tests: {
@@ -77,16 +115,18 @@ export const tests: {
     client: TONClient,
     init(): Promise<void>,
     done(): Promise<void>,
-    get_grams_from_giver(account: string, amount?: number): Promise<void>,
-    deploy_with_giver(params: TONContractDeployParams): Promise<TONContractDeployResult>,
+    get_grams_from_giver(account: string, amount?: number, parentSpan?: Span): Promise<void>,
+    deploy_with_giver(params: TONContractDeployParams, parentSpan?: Span): Promise<TONContractDeployResult>,
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
-    nodeSe: bool,
+    nodeSe: boolean,
+    loadPackage(name: string): TONContractPackage,
 } = {
     config: {
         defaultWorkchain: 0,
         servers: serversConfig,
         log_verbose: false,
+        tracer: createJaegerTracer(''),
     },
     client: new TONClient(),
     init,
@@ -96,4 +136,5 @@ export const tests: {
     deployedContracts: [],
     get_giver_address,
     nodeSe,
+    loadPackage,
 };
