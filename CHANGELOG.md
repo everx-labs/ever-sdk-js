@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### New
 - Open Tracing (jaeger) integration:
-    1) `jaegerEndpoint` config parameter.
+    1) Optional `tracer` config parameter was added. If specified, must point to opentracing.Tracer object. If not specified then opentracing `noop` tracer will be used. 
     2) TONClient.trace method to encapsulate some user code into open trace span:
         ```javascript
         async function foo(..., parentSpan) {
@@ -29,7 +29,7 @@ All notable changes to this project will be documented in this file.
             }, parentSpan);
         }
         ````
-
+    3) Example of creating jaeger tracer can be found in `init-tests.js` file.
 ## 0.19.1 - January 28, 2020
 
 ### Fixed

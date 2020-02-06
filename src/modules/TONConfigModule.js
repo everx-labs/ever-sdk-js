@@ -20,8 +20,6 @@ import { TONModule } from '../TONModule';
 import { Tracer } from 'opentracing';
 import { tracer as noopTracer } from "opentracing/lib/noop";
 
-import { initTracer as initJaegerTracer } from 'jaeger-client';
-
 export class URLParts {
     static parse(url: string): URLParts {
         const protocolSeparatorPos = url.indexOf('://');
@@ -105,31 +103,6 @@ function replacePrefix(s, prefix, newPrefix) {
 
 const defaultServer = 'services.tonlabs.io';
 
-function initTracer(serviceName, jaegerEndpoint) {
-    const config = {
-        serviceName,
-        sampler: {
-            type: 'const',
-            param: 1,
-        },
-        reporter: jaegerEndpoint ? {
-            collectorEndpoint: jaegerEndpoint,
-            logSpans: true,
-        } : {},
-    };
-    const options = {
-        logger: {
-            info(msg) {
-                console.log('INFO ', msg);
-            },
-            error(msg) {
-                console.log('ERROR', msg);
-            },
-        },
-    };
-    return initJaegerTracer(config, options);
-}
-
 export default class TONConfigModule extends TONModule {
     data: ?TONConfigData;
     tracer: Tracer;
@@ -147,9 +120,7 @@ export default class TONConfigModule extends TONModule {
             : replacePrefix(this._queriesHttpUrl, 'http://', 'ws://');
 
         this._queriesWsUrl = resolveServer(data.queriesWsServer, queriesWsServer);
-        this.tracer = data.jaegerEndpoint
-            ? initTracer('ton-client-js', data.jaegerEndpoint)
-            : noopTracer;
+        this.tracer = data.tracer || noopTracer;
     }
 
     log(...args: any[]) {

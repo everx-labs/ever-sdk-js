@@ -7,7 +7,7 @@ export type TONConfigData = {
     queriesServer?: string,
     queriesWsServer?: string,
     log_verbose?: boolean,
-    jaegerEndpoint?: string,
+    tracer?: ?Object, // opentracing.Tracer
 }
 
 // Crypto
