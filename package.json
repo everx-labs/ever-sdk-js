@@ -64,7 +64,8 @@
 		"jest": "^24.9.0",
 		"node-fetch": "^2.6.0",
 		"pre-commit": "^1.2.2",
-		"websocket": "^1.0.30"
+		"websocket": "^1.0.30",
+		"jaeger-client": "^3.17.1"
 	},
 	"peerDependencies": {},
 	"dependencies": {
@@ -80,7 +81,6 @@
 		"graphql-tag": "^2.10.1",
 		"subscriptions-transport-ws": "^0.9.16",
 		"apollo-link-context": "^1.0.19",
-		"jaeger-client": "^3.17.1",
 		"opentracing": "^0.14.4"
 	}
 }

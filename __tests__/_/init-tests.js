@@ -1,6 +1,6 @@
 // @flow
 
-import { Span } from "opentracing";
+import { Span, Tracer } from "opentracing";
 import { TONClient } from '../../src/TONClient';
 import type {
     TONConfigData,
@@ -12,6 +12,7 @@ import type {
 } from '../../types';
 import { ensureBinaries } from './binaries';
 import { deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address } from './giver';
+import { initTracer as initJaegerTracer } from 'jaeger-client';
 
 require('dotenv').config();
 const fetch = require('node-fetch');
@@ -74,13 +75,39 @@ async function done() {
             });
             await tests.client.contracts.sendMessage(message.message);
         } catch (e) {
-            console.log(`Selfdestruct error: ${e}`);
+            console.log(`Self destruct error: ${e}`);
             // ignore exception
         }
     }
     console.timeEnd('Test contracts self destruct time:');
     await new Promise(resolve => setTimeout(resolve, 1000));
     await tests.client.close();
+}
+
+function createJaegerTracer(endpoint: string): ?Tracer {
+    if (!endpoint) {
+        return null;
+    }
+    return initJaegerTracer({
+        serviceName: 'ton-client-js',
+        sampler: {
+            type: 'const',
+            param: 1,
+        },
+        reporter: {
+            collectorEndpoint: endpoint,
+            logSpans: true,
+        },
+    }, {
+        logger: {
+            info(msg) {
+                console.log('INFO ', msg);
+            },
+            error(msg) {
+                console.log('ERROR', msg);
+            },
+        },
+    });
 }
 
 export const tests: {
@@ -99,7 +126,7 @@ export const tests: {
         defaultWorkchain: 0,
         servers: serversConfig,
         log_verbose: false,
-        jaegerEndpoint: '',
+        tracer: createJaegerTracer(''),
     },
     client: new TONClient(),
     init,
