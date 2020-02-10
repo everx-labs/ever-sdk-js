@@ -1,12 +1,12 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.21.0 - Feb 6, 2020
+## 0.20.1 - Feb 10, 2020
 ### Featured
 - SDK Authorization support
 
 ### New
-- `authorization` config parameter used to specify SDK auth token.
+- `authorization` config parameter used to specify SDK access key.
 
 ## 0.20.0 - Feb 4, 2020
 
