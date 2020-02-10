@@ -141,7 +141,7 @@ export class TONClient implements TONModuleContext {
             span.finish();
             return result;
         } catch (error) {
-            span.logEvent('failed', error);
+            span.log({ event: 'failed', payload: error });
             span.finish();
             throw error;
         }

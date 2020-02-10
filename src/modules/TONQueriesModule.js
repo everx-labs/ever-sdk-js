@@ -334,7 +334,7 @@ class TONQCollection {
                     onDocEvent('insert/update', message.data[this.collectionName]);
                 });
             } catch (error) {
-                span.logEvent('failed', error);
+                span.log({ event: 'failed', payload: error });
                 if (onError) {
                     onError(error);
                 } else {
