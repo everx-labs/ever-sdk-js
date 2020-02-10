@@ -16,14 +16,22 @@
 // @flow
 
 import { Tags, Span, SpanContext } from "opentracing";
-import type { TONConfigData } from "../types";
+import type {
+    ITONClient,
+    TONConfigData,
+    TONContracts,
+    TONCrypto,
+    TONKeyPairData,
+    TONQueries,
+} from "../types";
+
 import TONConfigModule from './modules/TONConfigModule';
 import TONContractsModule from './modules/TONContractsModule';
 import TONCryptoModule from './modules/TONCryptoModule';
 /* eslint-disable class-methods-use-this, no-use-before-define */
 import TONQueriesModule from "./modules/TONQueriesModule";
 
-import type { TONClientLibrary, TONModuleContext, } from './TONModule';
+import type { TONClientLibrary, TONModuleContext } from './TONModule';
 import { TONModule } from './TONModule';
 
 /**
@@ -50,7 +58,7 @@ type TONClientPlatform = {
  * Each instance of TONClient has own set of TON Client modules
  * and has own preconfigured client context
  */
-export class TONClient implements TONModuleContext {
+export class TONClient implements TONModuleContext, ITONClient {
     static setLibrary(clientPlatform: TONClientPlatform) {
         TONClient.clientPlatform = clientPlatform;
     }
@@ -58,16 +66,18 @@ export class TONClient implements TONModuleContext {
 
     // Public
     config: TONConfigModule;
-    crypto: TONCryptoModule;
-    contracts: TONContractsModule;
-    queries: TONQueriesModule;
+    crypto: TONCrypto;
+    contracts: TONContracts;
+    queries: TONQueries;
+    _queries: TONQueriesModule;
 
     constructor() {
         this.modules = new Map();
         this.config = this.getModule(TONConfigModule);
         this.crypto = this.getModule(TONCryptoModule);
         this.contracts = this.getModule(TONContractsModule);
-        this.queries = this.getModule(TONQueriesModule);
+        this._queries = this.getModule(TONQueriesModule);
+        this.queries = this._queries;
     }
 
     /**
@@ -125,6 +135,53 @@ export class TONClient implements TONModuleContext {
         return (module: any);
     }
 
+
+    async getManagementAccessKey(): Promise<string> {
+        const result = await this._queries.query('query{getManagementAccessKey}');
+        return result.data.getManagementAccessKey;
+    }
+
+    async registerAccessKeys(
+        account: string,
+        keys: string[],
+        accountKeys: TONKeyPairData,
+    ): Promise<number> {
+        const managementAccessKey = await this.getManagementAccessKey();
+        const signedManagementAccessKey = await this.crypto.naclSign(
+            { text: managementAccessKey },
+            `${accountKeys.secret}${accountKeys.public}`,
+            'Hex');
+        const result = await this._queries.mutation(
+            `mutation registerAccessKeys($account: String, $keys: [String], $signedManagementAccessKey: String) {
+                    registerAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)
+                }`, {
+                account,
+                keys,
+                signedManagementAccessKey,
+            });
+        return result.data.registerAccessKeys;
+    }
+
+    async revokeAccessKeys(
+        account: string,
+        keys: string[],
+        accountKeys: TONKeyPairData,
+    ): Promise<number> {
+        const managementAccessKey = await this.getManagementAccessKey();
+        const signedManagementAccessKey = await this.crypto.naclSign(
+            { text: managementAccessKey },
+            `${accountKeys.secret}${accountKeys.public}`,
+            'Hex');
+        const result = await this._queries.mutation(
+            `mutation revokeAccessKeys($account: String, $keys: [String], $signedManagementAccessKey: String) {
+                    registerAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)
+                }`, {
+                account,
+                keys,
+                signedManagementAccessKey,
+            });
+        return result.data.revokeAccessKeys;
+    }
 
     async trace<T>(
         name: string,

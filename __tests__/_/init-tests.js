@@ -61,6 +61,10 @@ async function init() {
     await readGiverKeys();
 }
 
+async function createClient(config: { authorization?: string }): Promise<TONClient> {
+    return TONClient.create(Object.assign({}, tests.config, config));
+}
+
 async function done() {
     console.time('Test contract self destruct time:');
     for (const contract of tests.deployedContracts) {
@@ -110,8 +114,10 @@ function createJaegerTracer(endpoint: string): ?Tracer {
     });
 }
 
+jest.setTimeout(10000);
 export const tests: {
     config: TONConfigData,
+    createClient(config: { authorization?: string }): Promise<TONClient>,
     client: TONClient,
     init(): Promise<void>,
     done(): Promise<void>,
@@ -128,6 +134,7 @@ export const tests: {
         log_verbose: false,
         tracer: createJaegerTracer(''),
     },
+    createClient,
     client: new TONClient(),
     init,
     done,

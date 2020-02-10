@@ -16,7 +16,7 @@
 
 // @flow
 
-import { Tags, Span } from "opentracing";
+import { Span } from "opentracing";
 import { tests } from './_/init-tests';
 import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
