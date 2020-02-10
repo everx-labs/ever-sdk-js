@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
         }
         ````
     3) Example of creating jaeger tracer can be found in `init-tests.js` file.
+    4) All SDK functions now have hexademical address representation length check.
 ## 0.19.1 - January 28, 2020
 
 ### Fixed
