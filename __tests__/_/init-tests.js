@@ -114,7 +114,6 @@ function createJaegerTracer(endpoint: string): ?Tracer {
     });
 }
 
-jest.setTimeout(10000);
 export const tests: {
     config: TONConfigData,
     createClient(config: { authorization?: string }): Promise<TONClient>,
