@@ -52,7 +52,7 @@ test('Unauthorized', async () => {
 });
 
 
-test('Register Access Keys', async () => {
+test.skip('Register Access Keys', async () => {
     const managementClient = await tests.createClient({ authorization: '' });
     await managementClient.registerAccessKeys(surfAccount, ['Foo'], accountKeys);
     const client = await tests.createClient({ authorization: 'Foo' });
