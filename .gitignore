@@ -10,4 +10,5 @@ package-lock.json
 /__tests__/*.node
 /coverage/
 Jenkinsfile
-./reinstall.sh
+/reinstall.sh
+/uninstall.sh

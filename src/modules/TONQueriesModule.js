@@ -24,6 +24,13 @@ import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 import gql from 'graphql-tag';
 import { SubscriptionClient } from "subscriptions-transport-ws";
+import type {
+    TONQueries,
+    TONQCollection,
+    Subscription,
+    DocEvent,
+    OrderBy
+} from "../../types";
 import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
@@ -32,16 +39,12 @@ import TONConfigModule, { URLParts } from './TONConfigModule';
 import { setContext } from 'apollo-link-context';
 import { FORMAT_TEXT_MAP, Tags, Span, SpanContext } from 'opentracing';
 
-type Subscription = {
-    unsubscribe: () => void
-}
-
 export type Request = {
     id: string,
     body: string,
 }
 
-export default class TONQueriesModule extends TONModule {
+export default class TONQueriesModule extends TONModule implements TONQueries {
     config: TONConfigModule;
     overrideWsUrl: ?string;
 
@@ -53,10 +56,10 @@ export default class TONQueriesModule extends TONModule {
 
     async setup() {
         this.config = this.context.getModule(TONConfigModule);
-        this.transactions = new TONQCollection(this, 'transactions');
-        this.messages = new TONQCollection(this, 'messages');
-        this.blocks = new TONQCollection(this, 'blocks');
-        this.accounts = new TONQCollection(this, 'accounts');
+        this.transactions = new TONQueriesModuleCollection(this, 'transactions');
+        this.messages = new TONQueriesModuleCollection(this, 'messages');
+        this.blocks = new TONQueriesModuleCollection(this, 'blocks');
+        this.accounts = new TONQueriesModuleCollection(this, 'accounts');
     }
 
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {
@@ -175,8 +178,17 @@ export default class TONQueriesModule extends TONModule {
     async _graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {
         const client = await this.ensureClient(span);
         try {
-            return request(client);
+            return await request(client);
         } catch (error) {
+            const gqlErr = error.graphQLErrors && error.graphQLErrors[0];
+            if (gqlErr) {
+                const clientErr = new Error(gqlErr.message);
+                const gqlExc = gqlErr.extensions && gqlErr.extensions.exception || {};
+                (clientErr: any).number = gqlExc.code || 0;
+                (clientErr: any).code = gqlExc.code || 0;
+                (clientErr: any).source = gqlExc.source || 'client';
+                throw clientErr;
+            }
             const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
             if (errors) {
                 throw TONClientError.queryFailed(errors);
@@ -208,6 +220,10 @@ export default class TONQueriesModule extends TONModule {
                 const resolvedSpan = (req && req.traceSpan) || span;
                 req.headers = {};
                 this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
+                const authToken = this.config.data && this.config.data.authorization;
+                if (authToken) {
+                    req.headers.authorization = authToken;
+                }
                 return {
                     headers: req.headers,
                 };
@@ -262,14 +278,7 @@ export default class TONQueriesModule extends TONModule {
 }
 
 
-type DocEvent = (changeType: string, doc: any) => void;
-
-type OrderBy = {
-    path: string,
-    direction: 'ASC' | 'DESC'
-}
-
-class TONQCollection {
+class TONQueriesModuleCollection implements TONQCollection {
     module: TONQueriesModule;
 
     collectionName: string;
@@ -282,7 +291,14 @@ class TONQCollection {
             collectionName.substr(1, collectionName.length - 2);
     }
 
-    async query(filter: any, result: string, orderBy?: OrderBy[], limit?: number, timeout?: number, parentSpan?: (Span | SpanContext)): Promise<any> {
+    async query(
+        filter: any,
+        result: string,
+        orderBy?: OrderBy[],
+        limit?: number,
+        timeout?: number,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<any> {
         return this.module.context.trace(`${this.collectionName}.query`, async (span) => {
             span.setTag('params', {
                 filter, result, orderBy, limit, timeout
@@ -330,7 +346,7 @@ class TONQCollection {
                     onDocEvent('insert/update', message.data[this.collectionName]);
                 });
             } catch (error) {
-                span.logEvent('failed', error);
+                span.log({ event: 'failed', payload: error });
                 if (onError) {
                     onError(error);
                 } else {
@@ -348,7 +364,12 @@ class TONQCollection {
         };
     }
 
-    async waitFor(filter: any, result: string, timeout?: number, parentSpan?: (Span | SpanContext)): Promise<any> {
+    async waitFor(
+        filter: any,
+        result: string,
+        timeout?: number,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<any> {
         const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000, parentSpan);
         if (docs.length > 0) {
             return docs[0];

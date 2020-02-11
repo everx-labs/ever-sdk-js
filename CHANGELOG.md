@@ -1,6 +1,18 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.20.1 - Feb 10, 2020
+### Featured
+- SDK Authorization support
+
+### New
+- `authorization` config parameter to specify SDK access key.
+- `registerAccessKey` customer account management function.
+- `revokeAccessKey` customer account management function.
+
+### Fixed
+- flow type definitions `types.js` have actualized.
+
 ## 0.20.0 - Feb 4, 2020
 
 ### New

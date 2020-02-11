@@ -8,7 +8,11 @@ export type TONConfigData = {
     queriesWsServer?: string,
     log_verbose?: boolean,
     tracer?: ?Object, // opentracing.Tracer
+    authorization?: string,
 }
+
+import { Span, SpanContext } from 'opentracing';
+import type { Request } from "./src/modules/TONQueriesModule";
 
 // Crypto
 
@@ -98,17 +102,31 @@ export type TONHDKeyFromMnemonicParams = {
 export interface TONCrypto {
     factorize(challengeHex: string): Promise<TONFactorizeResult>;
 
-    modularPower(baseHex: string, exponentHex: string, modulusHex: string): Promise<string>;
+    modularPower(
+        baseHex: string,
+        exponentHex: string,
+        modulusHex: string,
+    ): Promise<string>;
 
-    randomGenerateBytes(length: number, outputEncoding: TONOutputEncodingType): Promise<string>;
+    randomGenerateBytes(
+        length: number,
+        outputEncoding?: TONOutputEncodingType,
+    ): Promise<string>;
+
 
     ed25519Keypair(): Promise<TONKeyPairData>;
 
     publicKeyToString(key: string): Promise<string>;
 
-    sha512(message: TONInputMessage, outputEncoding: TONOutputEncodingType): Promise<string>;
+    sha512(
+        message: TONInputMessage,
+        outputEncoding?: TONOutputEncodingType,
+    ): Promise<string>;
 
-    sha256(message: TONInputMessage, outputEncoding: TONOutputEncodingType): Promise<string>;
+    sha256(
+        message: TONInputMessage,
+        outputEncoding?: TONOutputEncodingType,
+    ): Promise<string>;
 
     scrypt(params: TONScryptParams): Promise<string>;
 
@@ -128,21 +146,37 @@ export interface TONCrypto {
 
     naclSecretBoxOpen(params: TONNaclSecretBoxParams): Promise<string>;
 
-    naclSign(message: TONInputMessage, key: string, outputEncoding: TONOutputEncodingType): Promise<string>;
+    naclSign(
+        message: TONInputMessage,
+        key: string,
+        outputEncoding?: TONOutputEncodingType,
+    ): Promise<string>;
 
-    naclSignOpen(message: TONInputMessage, key: string, outputEncoding: TONOutputEncodingType): Promise<string>;
+    naclSignOpen(
+        message: TONInputMessage,
+        key: string,
+        outputEncoding?: TONOutputEncodingType,
+    ): Promise<string>;
 
-    naclSignDetached(message: TONInputMessage, key: string, outputEncoding: TONOutputEncodingType): Promise<string>;
+    naclSignDetached(
+        message: TONInputMessage,
+        key: string,
+        outputEncoding?: TONOutputEncodingType,
+    ): Promise<string>;
 
-    mnemonicWords(params: TONMnemonicWordsParams): Promise<string>;
+    // Mnemonic
 
-    mnemonicFromRandom(params: TONMnemonicFromRandomParams): Promise<string>;
+    mnemonicWords(params?: TONMnemonicWordsParams): Promise<string>;
+
+    mnemonicFromRandom(params?: TONMnemonicFromRandomParams): Promise<string>;
 
     mnemonicFromEntropy(params: TONMnemonicFromEntropyParams): Promise<string>;
 
     mnemonicIsValid(params: TONMnemonicIsValidParams): Promise<boolean>;
 
     mnemonicDeriveSignKeys(params: TONMnemonicDeriveSignKeysParams): Promise<TONKeyPairData>;
+
+    // HDKeys
 
     hdkeyXPrvFromMnemonic(params: TONHDKeyFromMnemonicParams): Promise<string>;
 
@@ -475,13 +509,17 @@ export type QMessage = {
 }
 
 export interface TONContracts {
-    load(params: TONContractLoadParams): Promise<TONContractLoadResult>;
+    load(params: TONContractLoadParams, parentSpan?: (Span | SpanContext)): Promise<TONContractLoadResult>;
 
-    deploy(params: TONContractDeployParams): Promise<TONContractDeployResult>;
+    // Facade functions
 
-    run(params: TONContractRunParams): Promise<TONContractRunResult>;
+    deploy(params: TONContractDeployParams, parentSpan?: (Span | SpanContext)): Promise<TONContractDeployResult>;
 
-    runLocal(params: TONContractRunLocalParams): Promise<TONContractRunResult>;
+    run(params: TONContractRunParams, parentSpan?: (Span | SpanContext)): Promise<TONContractRunResult>;
+
+    runLocal(params: TONContractRunLocalParams, parentSpan?: (Span | SpanContext)): Promise<TONContractRunResult>;
+
+    // Message creation
 
     createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage>;
 
@@ -497,60 +535,169 @@ export interface TONContracts {
 
     createSignedRunMessage(params: TONContractCreateSignedRunMessageParams): Promise<TONContractRunMessage>;
 
+    getCodeFromImage(params: TONContractGetCodeFromImageParams): Promise<TONContractGetCodeFromImageResult>;
+
+    getDeployData(params: TONContractGetDeployDataParams): Promise<TONContractGetDeployDataResult>;
+
+    createRunBody(params: TONContractCreateRunBodyParams): Promise<TONContractCreateRunBodyResult>;
+
+    getFunctionId(params: TONContractGetFunctionIdParams): Promise<TONContractGetFunctionIdResult>;
+
+    getBocHash(params: TONContractGetBocHashParams): Promise<TONContractGetBocHashResult>;
+
+    // Message parsing
+
     decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult>;
 
-    decodeInputMessageBody(params: TONContractDecodeMessageBodyParams,): Promise<TONContractDecodeMessageBodyResult>;
+    decodeInputMessageBody(
+        params: TONContractDecodeMessageBodyParams
+    ): Promise<TONContractDecodeMessageBodyResult>;
 
-    decodeOutputMessageBody(params: TONContractDecodeMessageBodyParams,): Promise<TONContractDecodeMessageBodyResult>;
+    decodeOutputMessageBody(
+        params: TONContractDecodeMessageBodyParams
+    ): Promise<TONContractDecodeMessageBodyResult>;
 
-    sendMessage(params: TONContractMessage): Promise<string>;
+    // Message processing
 
-    processMessage(message: TONContractMessage, resultFields: string): Promise<QTransaction>;
+    sendMessage(params: TONContractMessage, parentSpan?: (Span | SpanContext)): Promise<string>;
 
-    processDeployMessage(params: TONContractDeployMessage): Promise<TONContractDeployResult>;
+    processMessage(
+        message: TONContractMessage,
+        resultFields: string,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<QTransaction>;
 
-    processRunMessage(params: TONContractRunMessage): Promise<TONContractRunResult>;
+    processDeployMessage(
+        params: TONContractDeployMessage,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<TONContractDeployResult>;
 
-    calcRunFees(params: TONContractCalcRunFeeParams): Promise<TONContractCalcFeeResult>;
+    processRunMessage(
+        params: TONContractRunMessage,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<TONContractRunResult>;
 
-    calcDeployFees(params: TONContractCalcDeployFeeParams): Promise<TONContractCalcFeeResult>;
+    processRunMessageLocal(
+        params: TONContractRunMessage,
+        waitParams?: TONContractAccountWaitParams,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<TONContractRunResult>;
 
-    calcMsgProcessFees(params: TONContractCalcMsgProcessingFeesParams): Promise<TONContractCalcFeeResult>
+    // Fee calculation
+
+    calcRunFees(
+        params: TONContractCalcRunFeeParams,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<TONContractCalcFeeResult>;
+
+    calcDeployFees(
+        params: TONContractCalcDeployFeeParams,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<TONContractCalcFeeResult>;
+
+    calcMsgProcessFees(
+        params: TONContractCalcMsgProcessingFeesParams,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<TONContractCalcFeeResult>;
+
+    // Address processing
+
+    convertAddress(params: TONContractConvertAddressParams): Promise<TONContractConvertAddressResult>;
+
+    // Internals
+
+    getAccount(
+        address: string,
+        active: bool,
+        waitParams?: TONContractAccountWaitParams,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<QAccount>;
 }
 
 
-interface TONQueries {
+export interface TONQueries {
     transactions: TONQCollection;
     messages: TONQCollection;
     blocks: TONQCollection;
     accounts: TONQCollection;
+
+    getAccountsCount(parentSpan?: (Span | SpanContext)): Promise<number>;
+
+    getTransactionsCount(parentSpan?: (Span | SpanContext)): Promise<number>;
+
+    getAccountsTotalBalance(parentSpan?: (Span | SpanContext)): Promise<string>;
+
+    postRequests(requests: Request[], parentSpan?: (Span | SpanContext)): Promise<any>;
+
+    close(): Promise<void>;
 }
 
 
-type DocEvent = (changeType: string, doc: any) => void;
+export type DocEvent = (changeType: string, doc: any) => void;
 
-type OrderBy = {
+export type OrderBy = {
     path: string,
     sort: 'ASC' | 'DESC'
 }
 
-type Subscription = {
+export type Subscription = {
     unsubscribe: () => void
 }
 
 export interface TONQCollection {
-    query(filter: any, result: string, orderBy?: OrderBy[], limit?: number): Promise<any>;
+    query(
+        filter: any,
+        result: string,
+        orderBy?: OrderBy[],
+        limit?: number,
+        timeout?: number,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<any>;
 
-    subscribe(filter: any, result: string, onDocEvent: DocEvent): Subscription;
+    subscribe(
+        filter: any,
+        result: string,
+        onDocEvent: DocEvent,
+        onError?: (err: Error) => void
+    ): Subscription;
 
-    waitFor(filter: any, result: string): Promise<any>;
+    waitFor(
+        filter: any,
+        result: string,
+        timeout?: number,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<any>;
 }
 
+// Client
 
-export interface TONClient {
+export interface ITONClient {
     crypto: TONCrypto;
     contracts: TONContracts;
     queries: TONQueries;
-    close(): void;
+
+    trace<T>(
+        name: string,
+        f: (span: Span) => Promise<T>,
+        parentSpan?: (Span | SpanContext)
+    ): Promise<T>;
+
+    getManagementAccessKey(): Promise<string>;
+
+    registerAccessKeys(
+        account: string,
+        keys: string[],
+        accountKeys: TONKeyPairData,
+    ): Promise<number>;
+
+    revokeAccessKeys(
+        account: string,
+        keys: string[],
+        accountKeys: TONKeyPairData,
+    ): Promise<number>;
+
+    close(): Promise<void>;
 }
+
+export type TONClient = ITONClient;
 
