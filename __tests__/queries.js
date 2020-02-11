@@ -33,7 +33,8 @@ test('Specialized', async () => {
     expect(totalBalance > BigInt(10)).toBeTruthy();
 });
 
-test('Transaction List', async () => {
+// Skipped explicitly due to no expect
+test.skip('Transaction List', async () => {
     const queries = tests.client.queries;
     const transaction = await queries.transactions.query({
         id: { eq: 'e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465' },
@@ -48,7 +49,8 @@ test('All Accounts', async () => {
     expect(docs.length).toBeGreaterThan(0);
 });
 
-test('Message', async () => {
+// Skipped explicitly due to no expect
+test.skip('Message', async () => {
     const queries = tests.client.queries;
     const messages = await queries.messages.query({
         id: { eq: '3a8e38b419a452fe7a0073e71c083f926055d0f249485ab9f8ca6e9825c20b8c' }
@@ -143,7 +145,8 @@ test("Transactions with addresses", async () => {
 });
 
 
-test("Subscribe for failed server", async () => {
+// Skipped explicitly as disabled
+test.skip("Subscribe for failed server", async () => {
     // console.log('>>>', 'Subscribed');
     // tests.client.queries.accounts.subscribe(
     //     {
@@ -175,7 +178,8 @@ test('Check shard_hashes greater then 0', async () => {
 });
 
 
-test("Subscribe for accounts", async () => {
+// Skipped explicitly as disabled
+test.skip("Subscribe for accounts", async () => {
     // const { queries } = tests.client;
     // const subscriptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => queries.accounts.subscribe({}, 'id code data', (e, doc) => {
     //     console.log(i, doc.id);
