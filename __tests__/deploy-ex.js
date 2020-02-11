@@ -27,7 +27,8 @@ const WalletContractPackage = tests.loadPackage('WalletContract');
 beforeAll(tests.init);
 afterAll(tests.done);
 
-test.skip('Deploy data', async () => {
+// test.skip('Deploy data', async () => {
+test('Deploy data', async () => {
     const { contracts } = tests.client;
 
     const publicKey = '1111111111111111111111111111111111111111111111111111111111111111';
