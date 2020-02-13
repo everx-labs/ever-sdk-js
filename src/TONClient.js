@@ -18,11 +18,13 @@
 import { Tags, Span, SpanContext } from "opentracing";
 import type {
     ITONClient,
+    TONAccessKeysManagementParams,
     TONConfigData,
     TONContracts,
     TONCrypto,
-    TONKeyPairData,
     TONQueries,
+    TONRegisterAccessKeysParams,
+    TONRevokeAccessKeysParams,
 } from "../types";
 
 import TONConfigModule from './modules/TONConfigModule';
@@ -141,43 +143,47 @@ export class TONClient implements TONModuleContext, ITONClient {
         return result.data.getManagementAccessKey;
     }
 
+
+    async _resolveSignedManagementAccessKey(params: TONAccessKeysManagementParams): Promise<string> {
+        if (params.signedManagementAccessKey) {
+            return params.signedManagementAccessKey;
+        }
+        const signKeys = params.accountKeys;
+        if (signKeys) {
+            const managementAccessKey = await this.getManagementAccessKey();
+            return this.crypto.naclSign(
+                { text: managementAccessKey },
+                `${signKeys.secret}${signKeys.public}`,
+                'Hex');
+        }
+        return '';
+    }
+
     async registerAccessKeys(
-        account: string,
-        keys: string[],
-        accountKeys: TONKeyPairData,
+        params: TONRegisterAccessKeysParams
     ): Promise<number> {
-        const managementAccessKey = await this.getManagementAccessKey();
-        const signedManagementAccessKey = await this.crypto.naclSign(
-            { text: managementAccessKey },
-            `${accountKeys.secret}${accountKeys.public}`,
-            'Hex');
+        const signedManagementAccessKey = await this._resolveSignedManagementAccessKey(params);
         const result = await this._queries.mutation(
-            `mutation registerAccessKeys($account: String, $keys: [String], $signedManagementAccessKey: String) {
+            `mutation registerAccessKeys($account: String, $keys: [AccessKey], $signedManagementAccessKey: String) {
                     registerAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)
                 }`, {
-                account,
-                keys,
+                account: params.account,
+                keys: params.keys,
                 signedManagementAccessKey,
             });
         return result.data.registerAccessKeys;
     }
 
     async revokeAccessKeys(
-        account: string,
-        keys: string[],
-        accountKeys: TONKeyPairData,
+        params: TONRevokeAccessKeysParams
     ): Promise<number> {
-        const managementAccessKey = await this.getManagementAccessKey();
-        const signedManagementAccessKey = await this.crypto.naclSign(
-            { text: managementAccessKey },
-            `${accountKeys.secret}${accountKeys.public}`,
-            'Hex');
+        const signedManagementAccessKey = await this._resolveSignedManagementAccessKey(params);
         const result = await this._queries.mutation(
             `mutation revokeAccessKeys($account: String, $keys: [String], $signedManagementAccessKey: String) {
                     registerAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)
                 }`, {
-                account,
-                keys,
+                account: params.account,
+                keys: params.keys,
                 signedManagementAccessKey,
             });
         return result.data.revokeAccessKeys;

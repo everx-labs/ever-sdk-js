@@ -55,10 +55,18 @@ test('Unauthorized', async () => {
 // not implemented yet
 test.skip('Register Access Keys', async () => {
     const managementClient = await tests.createClient({ authorization: '' });
-    await managementClient.registerAccessKeys(surfAccount, ['Foo'], accountKeys);
+    await managementClient.registerAccessKeys({
+        account: surfAccount,
+        keys: [{ key: 'Foo' }],
+        accountKeys
+    });
     const client = await tests.createClient({ authorization: 'Foo' });
     await client.queries.accounts.query({}, 'id', undefined, 1);
-    await managementClient.revokeAccessKeys(surfAccount, ['Foo'], accountKeys);
+    await managementClient.revokeAccessKeys({
+        account: surfAccount,
+        keys: ['Foo'],
+        accountKeys
+    });
     try {
         await client.queries.accounts.query({}, 'id', undefined, 1);
     } catch (error) {
