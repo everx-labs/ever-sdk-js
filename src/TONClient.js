@@ -180,7 +180,7 @@ export class TONClient implements TONModuleContext, ITONClient {
         const signedManagementAccessKey = await this._resolveSignedManagementAccessKey(params);
         const result = await this._queries.mutation(
             `mutation revokeAccessKeys($account: String, $keys: [String], $signedManagementAccessKey: String) {
-                    registerAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)
+                    revokeAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)
                 }`, {
                 account: params.account,
                 keys: params.keys,
