@@ -61,7 +61,7 @@ test('Register Access Keys', async () => {
         accountKeys
     });
     const client = await tests.createClient({ authorization: 'Foo' });
-    await client.queries.accounts.query({}, 'id', undefined, 1);
+    const accounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
     await managementClient.revokeAccessKeys({
         account: surfAccount,
         keys: ['Foo'],
@@ -75,6 +75,17 @@ test('Register Access Keys', async () => {
         expect(error.code)
             .toEqual(401);
     }
+    console.log('>>>', accounts);
+    await managementClient.registerAccessKeys({
+        account: surfAccount,
+        keys: [{ key: 'Foo', restrictToAccounts: [accounts[0].id] }],
+        accountKeys
+    });
+    const restrictedAccounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
+    expect(restrictedAccounts.length).toEqual(1);
+    expect(restrictedAccounts[0]).toEqual(accounts[0]);
+
+    const restrictedBlocks = (await client.queries.accounts.query({}, 'id', undefined, 10));
 });
 
 
