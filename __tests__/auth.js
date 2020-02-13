@@ -75,7 +75,6 @@ test('Register Access Keys', async () => {
         expect(error.code)
             .toEqual(401);
     }
-    console.log('>>>', accounts);
     await managementClient.registerAccessKeys({
         account: surfAccount,
         keys: [{ key: 'Foo', restrictToAccounts: [accounts[0].id] }],
@@ -84,8 +83,20 @@ test('Register Access Keys', async () => {
     const restrictedAccounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
     expect(restrictedAccounts.length).toEqual(1);
     expect(restrictedAccounts[0]).toEqual(accounts[0]);
-
-    const restrictedBlocks = (await client.queries.accounts.query({}, 'id', undefined, 10));
+    const restrictedBlocks = (await client.queries.blocks.query(
+        {},
+        'id',
+        undefined,
+        10));
+    expect(restrictedBlocks.length).toEqual(0);
+    const restrictedTransactions = (await client.queries.transactions.query({}, 'id account_addr', undefined, 10));
+    for (const tr of restrictedTransactions) {
+        expect(tr.account_addr).toEqual(accounts[0].id);
+    }
+    const restrictedMessages = (await client.queries.messages.query({}, 'id src dst', undefined, 10));
+    for (const msg of restrictedMessages) {
+        expect(msg.src === accounts[0].id || msg.dst === accounts[0].id).toBeTruthy();
+    }
 });
 
 
