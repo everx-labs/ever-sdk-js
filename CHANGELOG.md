@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.20.3 - Feb 13, 2020
+### New
+- `restrictToAccounts` parameter to `registerAccessKey`.
+
 ## 0.20.1 - Feb 10, 2020
 ### Featured
 - SDK Authorization support
