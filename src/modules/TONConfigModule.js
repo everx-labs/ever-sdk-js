@@ -169,7 +169,9 @@ export default class TONConfigModule extends TONModule {
 
     async setup(): Promise<void> {
         if (this.data) {
-            await this.requestCore('setup', this.data);
+            const coreConfig = Object.assign({}, this.data);
+            delete coreConfig.tracer;
+            await this.requestCore('setup', coreConfig);
         }
         this._logVerbose = (this.data && this.data.log_verbose) || false;
         if (this._logVerbose) {
