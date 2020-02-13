@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 - `registerAccessKey` parameters passed as structure. 
 - `restrictToAccounts` option for access keys.
 
+## 0.20.2 - Feb 12, 2020
+### Fixed
+- `tracer` config parameter caused setup error (circular JSON).
+
 ## 0.20.1 - Feb 10, 2020
 ### Featured
 - SDK Authorization support
