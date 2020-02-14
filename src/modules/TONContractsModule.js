@@ -19,6 +19,7 @@ import type {
     QAccount,
     QMessage,
     QTransaction,
+    TONContractABI,
     TONContractAccountWaitParams,
     TONContractConvertAddressParams,
     TONContractConvertAddressResult,
@@ -270,6 +271,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             messageBodyBase64: string,
         } = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
+            constructorHeader: params.constructorHeader,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
@@ -280,6 +282,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             message: {
                 messageId: message.messageId,
                 messageBodyBase64: message.messageBodyBase64,
+                expire: params.constructorHeader?.expire
             },
             address: message.address
         }
@@ -292,9 +295,11 @@ export default class TONContractsModule extends TONModule implements TONContract
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
+            header: params.header,
             input: params.input,
             keyPair: params.keyPair,
         });
+        message.expire = params.header?.expire;
         return {
             address: params.address,
             abi: params.abi,
@@ -311,6 +316,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             addressHex: string,
         } = await this.requestCore('contracts.deploy.encode_unsigned_message', {
             abi: params.package.abi,
+            constructorHeader: params.constructorHeader,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
@@ -329,6 +335,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
+            header: params.header,
             input: params.input,
         });
         return {
@@ -442,24 +449,31 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext)
     ): Promise<QTransaction> {
         let transaction: ?QTransaction = null;
-        let retry = true;
-        while (retry) {
-            retry = false;
-            const messageId = await this.sendMessage(message, parentSpan);
-            try {
-                transaction = await this.queries.transactions.waitFor({
-                    in_msg: { eq: messageId },
-                    status: { eq: QTransactionProcessingStatus.finalized },
-                }, resultFields, 40_000, parentSpan);
-            } catch (error) {
-                if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
-                    this.config.log('processMessage. Timeout, retrying...');
-                    retry = true;
-                } else {
-                    throw error;
-                }
-            }
+        const expire = Number(message.expire || 0xffffffff);
+        // calculate timeout according to `expire` value (in seconds)
+        // add 10 seconds as block validation time
+        const timeout = Math.min(2147483647, expire * 1000 - Date.now() + 10000);
+
+        if (timeout <= 0) {
+            throw TONClientError.sendNodeRequestFailed("Message already expired");
         }
+
+        const messageId = await this.sendMessage(message, parentSpan);
+        try {
+            transaction = await this.queries.transactions.waitFor({
+                in_msg: { eq: messageId },
+                status: { eq: QTransactionProcessingStatus.finalized },
+            }, resultFields, timeout, parentSpan);
+        } catch (error) {
+            if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
+                this.config.log('processMessage. Timeout, retrying...');
+            } else {
+                throw error;
+            }
+
+            // TODO wait for block
+        }
+
         if (!transaction) {
             throw TONClientError.internalError('transaction is null');
         }
@@ -626,6 +640,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async internalDeployNative(params: TONContractDeployParams): Promise<TONContractDeployResult> {
         return this.requestCore('contracts.deploy', {
             abi: params.package.abi,
+            constructorHeader: params.constructorHeader,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
@@ -639,17 +654,29 @@ export default class TONContractsModule extends TONModule implements TONContract
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
+            header: params.header,
             input: params.input,
             keyPair: params.keyPair,
         });
     }
 
+    makeHeader(abi: TONContractABI, userHeader?: any): any {
+        const timeout = this.config.data?.transactionTimeout || 0;
+        if (abi.header && abi.header.includes("expire") && timeout > 0){
+            let header = userHeader || {};
+            header.expire = Math.floor((Date.now() + timeout) / 1000) + 1;
+            return header;
+        } else {
+            return userHeader;
+        }
+    }
 
     async internalDeployJs(
         params: TONContractDeployParams,
         parentSpan?: (Span | SpanContext)
     ): Promise<TONContractDeployResult> {
         this.config.log("Deploy start");
+        params.constructorHeader = this.makeHeader(params.package.abi, params.constructorHeader);
         const message = await this.createDeployMessage(params);
         return this.processDeployMessage(message, parentSpan);
     }
@@ -660,6 +687,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext)
     ): Promise<TONContractRunResult> {
         this.config.log("Run start");
+        params.header = this.makeHeader(params.abi, params.header);
         const message = await this.createRunMessage(params);
         return this.processRunMessage(message, parentSpan);
     }

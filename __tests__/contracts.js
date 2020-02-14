@@ -242,6 +242,7 @@ test('External Signing', async () => {
     const signed = await contracts.createSignedDeployMessage({
         address: unsignedMessage.address,
         createSignedParams: {
+            abi: contractPackage.abi,
             publicKeyHex: keys.public,
             signBytesBase64,
             unsignedBytesBase64: unsignedMessage.signParams.unsignedBytesBase64,

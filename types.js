@@ -9,6 +9,7 @@ export type TONConfigData = {
     log_verbose?: boolean,
     tracer?: ?Object, // opentracing.Tracer
     authorization?: string,
+    transactionTimeout?: number,
 }
 
 import { Span, SpanContext } from 'opentracing';
@@ -225,6 +226,7 @@ export type TONContractABIEvent = {
 export type TONContractABI = {
     'ABI version': number,
     setTime?: boolean,
+    header?: string[],
     functions: TONContractABIFunction[],
     events: TONContractABIEvent[],
     data: TONContractABIDataItem[],
@@ -247,6 +249,7 @@ export type TONContractLoadResult = {
 
 export type TONContractDeployParams = {
     package: TONContractPackage,
+    constructorHeader?: any,
     constructorParams: any,
     initParams?: any,
     keyPair: TONKeyPairData,
@@ -267,11 +270,13 @@ export type TONContractDeployResult = {
 export type TONContractUnsignedMessage = {
     unsignedBytesBase64: string,
     bytesToSignBase64: string,
+    expire?: number,
 }
 
 export type TONContractMessage = {
     messageId?: string,
     messageBodyBase64: string,
+    expire?: number,
 }
 
 export type TONContractUnsignedDeployMessage = {
@@ -298,6 +303,7 @@ export type TONContractRunMessage = {
 }
 
 export type TONContractCreateSignedMessageParams = {
+    abi: TONContractABI,
     unsignedBytesBase64: string,
     signBytesBase64: string,
     publicKeyHex: string,
@@ -319,6 +325,7 @@ export type TONContractRunParams = {
     address: string,
     abi: TONContractABI,
     functionName: string,
+    header?: any,
     input: any,
     keyPair?: TONKeyPairData,
 }
@@ -406,6 +413,7 @@ export type TONContractGetCodeFromImageResult = {
 export type TONContractCreateRunBodyParams = {
     abi: TONContractABI,
     function: string,
+    header?: any,
     params: any,
     internal?: boolean,
     keyPair?: TONKeyPairData,
