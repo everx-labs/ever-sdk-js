@@ -16,22 +16,23 @@
 
 // @flow
 
-import { Span } from "opentracing";
-import { tests } from './_/init-tests';
-import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
-import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
+import {Span} from "opentracing";
+import {tests} from './_/init-tests';
+import {TONAddressStringVariant} from '../src/modules/TONContractsModule';
+import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
 
 
 import type {
     TONContractLoadResult,
 } from '../types';
-import { binariesVersion } from './_/binaries';
+import {binariesVersion} from './_/binaries';
 
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 const HelloContractPackage = tests.loadPackage('Hello');
 const SubscriptionContractPackage = tests.loadPackage('Subscription');
 const SetCodePackage = tests.loadPackage('Setcode');
+const SetCode2Package = tests.loadPackage('Setcode2');
 const EventsPackage = tests.loadPackage('Events');
 
 
@@ -52,7 +53,7 @@ test('basic', async () => {
 });
 
 test('load', async () => {
-    const { contracts } = tests.client;
+    const {contracts} = tests.client;
     await tests.client.trace('tests.contracts.load', async (span: Span) => {
         const contract = await contracts.load({
             address: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
@@ -116,7 +117,7 @@ test('Test hello contract from docs.ton.dev', async () => {
 });
 
 test('Run aborted transaction', async () => {
-    const { contracts, crypto } = tests.client;
+    const {contracts, crypto} = tests.client;
     await tests.client.trace('tests.contracts.run-aborted-transaction', async (span: Span) => {
         const keys = await crypto.ed25519Keypair();
 
@@ -172,7 +173,7 @@ test('Run aborted transaction', async () => {
 });
 
 test('decodeInputMessageBody', async () => {
-    const { contracts } = tests.client;
+    const {contracts} = tests.client;
     const body = 'te6ccgEBAgEA3wAB8y88h10AAAFuW6FWJBERERERERERERERERERERERERERERERERERERERERERIXxlwlrjEGJEDhx3dC3WlQeZKzuAYBDOJ8+g7AM+Ek6AF49G0+VDwIkQKBdIh7hi4J5F0T/g5OggwrHI4HGN1KHAAAAAAAAAD2AAADkQAQDADBiSeQ1t5j0LwYo9dx7wefpnCQ3KrYOeAhX9ZUux62yIxWdQdUHJGCXXcoLbrDDduL9sgKSZT3TzYpRKi8YqASF8ZcJa4xBiRA4cd3Qt1pUHmSs7gGAQzifPoOwDPhJO';
 
     const result = await contracts.decodeInputMessageBody({
@@ -194,7 +195,7 @@ test('decodeInputMessageBody', async () => {
 
 
 test('filterOutput', async () => {
-    const { contracts, crypto } = tests.client;
+    const {contracts, crypto} = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const deployed = await tests.deploy_with_giver({
@@ -207,7 +208,7 @@ test('filterOutput', async () => {
         address: deployed.address,
         functionName: 'emitValue',
         abi: EventsPackage.abi,
-        input: { id: '0' },
+        input: {id: '0'},
         keyPair: keys,
     });
 
@@ -215,7 +216,7 @@ test('filterOutput', async () => {
         address: deployed.address,
         functionName: 'returnValue',
         abi: EventsPackage.abi,
-        input: { id: '0' },
+        input: {id: '0'},
         keyPair: keys,
     });
     expect(JSON.stringify(resultReturn.output))
@@ -223,7 +224,7 @@ test('filterOutput', async () => {
 });
 
 test('External Signing', async () => {
-    const { contracts, crypto } = tests.client;
+    const {contracts, crypto} = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const contractPackage = EventsPackage;
@@ -254,7 +255,7 @@ test('External Signing', async () => {
 });
 
 test('changeInitState', async () => {
-    const { contracts, crypto } = tests.client;
+    const {contracts, crypto} = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const subscriptionAddress1 = '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
@@ -301,13 +302,13 @@ test('changeInitState', async () => {
     });
 
     expect(result1.output)
-        .toEqual({ value0: subscriptionAddress1 });
+        .toEqual({value0: subscriptionAddress1});
     expect(result2.output)
-        .toEqual({ value0: subscriptionAddress2 });
+        .toEqual({value0: subscriptionAddress2});
 });
 
 test('testSetCode', async () => {
-    const { contracts, crypto } = tests.client;
+    const {contracts, crypto} = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const deployed = await tests.deploy_with_giver({
@@ -323,9 +324,9 @@ test('testSetCode', async () => {
         input: {},
         keyPair: keys,
     });
-    const setCode2ImageBase64 = 'te6ccgECJQEABSUAAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KARBwEK9KQg9KEIAgPNQA4JAgFiCwoAB9GG2YQCAVgNDAALPgActswgABM+AAg+wRwMdswgAgFqEA8ANdf34AubK3Mi+yvDovtrmzkHwS/BR4CDh9gBhACN1/foCxOrS2Mi+yvDovtrmz5DnnhYCQ54s4Z4WAkWeFn7hnhY+4Z4WAEGeakmeYuNBeSzjnoBHni8q456CR5vEQZIIvgm2YQCASAYEgHg//79AW1haW5fZXh0ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgxIRMB+I51/v4BZ2V0X21zZ19wdWJrZXkgxwKOFv7/AWdldF9tc2dfcHVia2V5MXAx2zDg1SDHAY4X/v8BZ2V0X21zZ19wdWJrZXkycDEx2zDgIIECANch1wv/IvkBIiL5EPKo/v8BZ2V0X21zZ19wdWJrZXkzIANfA9sw2CLHArMUAcaUItQxM94kIiL++QFzdG9yZV9zaWdvACFvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAY4T/vwBbXNnX2lzX2VtcHR5XwbbMOAi0x80I9M/NSAVAXaOgNiOL/7+AW1haW5fZXh0ZXJuYWwyJCJVcV8I8UAB/v4BbWFpbl9leHRlcm5hbDNfCNsw4IB88vBfCBYB/v77AXJlcGxheV9wcm90cHBw7UTQIPQEMjQggQCA10WaINM/MjMg0z8yMpaCCBt3QDLiIiW5JfgjgQPoqCSgubCOKcgkAfQAJc8LPyLPCz8hzxYgye1U/vwBcmVwbGF5X3Byb3QyfwZfBtsw4P78AXJlcGxheV9wcm90M3AFXwUXAATbMAIBIB4ZAgEgGxoAQ7qOEp69Qw8CLIghBo4SnrghCAAAAAsc8LHyHPC//wFNswgCAVgdHAAPtx+4gcw2zCAAQbdr4C3MPAjyIIQVa+At4IQgAAAALHPCx8hzwv/8BTbMIAIBSCIfAQm4iQAnUCAB/v79AWNvbnN0cl9wcm90XzBwcIIIG3dA7UTQIPQEMjQggQCA10WOFCDSPzIzINI/MjIgcddFlIB78vDe3sgkAfQAI88LPyLPCz9xz0EhzxYgye1U/v0BY29uc3RyX3Byb3RfMV8F+AAw/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UchADxvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwIBAtwjAf7+/QFtYWluX2ludGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYJCFw/vkBc3RvcmVfc2lnbwAhJAD8b4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwCOHCFwuo4SIoIQXH7iB1VRXwbxQAFfBtsw4F8G2zDg/v4BbWFpbl9pbnRlcm5hbDEi0x80InG6niCAJFVhXwfxQAFfB9sw4CMhVWFfB/FAAV8H';
+    let setCode2ImageBase64 = 'te6ccgECJQEABSUAAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KARBwEK9KQg9KEIAgPNQA4JAgFiCwoAB9GG2YQCAVgNDAALPgActswgABM+AAg+wRwMdswgAgFqEA8ANdf34AubK3Mi+yvDovtrmzkHwS/BR4CDh9gBhACN1/foCxOrS2Mi+yvDovtrmz5DnnhYCQ54s4Z4WAkWeFn7hnhY+4Z4WAEGeakmeYuNBeSzjnoBHni8q456CR5vEQZIIvgm2YQCASAYEgHg//79AW1haW5fZXh0ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgxIRMB+I51/v4BZ2V0X21zZ19wdWJrZXkgxwKOFv7/AWdldF9tc2dfcHVia2V5MXAx2zDg1SDHAY4X/v8BZ2V0X21zZ19wdWJrZXkycDEx2zDgIIECANch1wv/IvkBIiL5EPKo/v8BZ2V0X21zZ19wdWJrZXkzIANfA9sw2CLHArMUAcaUItQxM94kIiL++QFzdG9yZV9zaWdvACFvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAY4T/vwBbXNnX2lzX2VtcHR5XwbbMOAi0x80I9M/NSAVAXaOgNiOL/7+AW1haW5fZXh0ZXJuYWwyJCJVcV8I8UAB/v4BbWFpbl9leHRlcm5hbDNfCNsw4IB88vBfCBYB/v77AXJlcGxheV9wcm90cHBw7UTQIPQEMjQggQCA10WaINM/MjMg0z8yMpaCCBt3QDLiIiW5JfgjgQPoqCSgubCOKcgkAfQAJc8LPyLPCz8hzxYgye1U/vwBcmVwbGF5X3Byb3QyfwZfBtsw4P78AXJlcGxheV9wcm90M3AFXwUXAATbMAIBIB4ZAgEgGxoAQ7qOEp69Qw8CLIghBo4SnrghCAAAAAsc8LHyHPC//wFNswgCAVgdHAAPtx+4gcw2zCAAQbdr4C3MPAjyIIQVa+At4IQgAAAALHPCx8hzwv/8BTbMIAIBSCIfAQm4iQAnUCAB/v79AWNvbnN0cl9wcm90XzBwcIIIG3dA7UTQIPQEMjQggQCA10WOFCDSPzIzINI/MjIgcddFlIB78vDe3sgkAfQAI88LPyLPCz9xz0EhzxYgye1U/v0BY29uc3RyX3Byb3RfMV8F+AAw/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UchADxvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwIBAtwjAf7+/QFtYWluX2ludGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYJCFw/vkBc3RvcmVfc2lnbwAhJAD8b4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwCOHCFwuo4SIoIQXH7iB1VRXwbxQAFfBtsw4F8G2zDg/v4BbWFpbl9pbnRlcm5hbDEi0x80InG6niCAJFVhXwfxQAFfB9sw4CMhVWFfB/FAAV8H';
 
-    const code = await contracts.getCodeFromImage({
+    let code = await contracts.getCodeFromImage({
         imageBase64: setCode2ImageBase64,
     });
 
@@ -333,7 +334,7 @@ test('testSetCode', async () => {
         address: deployed.address,
         functionName: 'main',
         abi: SetCodePackage.abi,
-        input: { newcode: code.codeBase64 },
+        input: {newcode: code.codeBase64},
         keyPair: keys,
     });
 
@@ -348,17 +349,37 @@ test('testSetCode', async () => {
     expect(version1)
         .not
         .toEqual(version2);
+
+    code = await contracts.getCodeFromImage({
+        imageBase64: SetCode2Package.imageBase64,
+    });
+    await contracts.run({
+        address: deployed.address,
+        functionName: 'main',
+        abi: SetCodePackage.abi,
+        input: {newcode: code.codeBase64},
+        keyPair: keys,
+    });
+    const newVersion = await contracts.run({
+        address: deployed.address,
+        functionName: 'getNewVersion',
+        abi: SetCode2Package.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    expect(newVersion.output.value0).toEqual('0x2');
 });
 
 test('testRunBody', async () => {
-    const { contracts } = tests.client;
+    const {contracts} = tests.client;
 
     const walletAddress = '0:2222222222222222222222222222222222222222222222222222222222222222';
 
     const result = await contracts.createRunBody({
         abi: SubscriptionContractPackage.abi,
         function: 'constructor',
-        params: { wallet: walletAddress },
+        params: {wallet: walletAddress},
         keyPair: walletKeys,
     });
 
@@ -370,12 +391,12 @@ test('testRunBody', async () => {
     expect(parseResult.function)
         .toEqual('constructor');
     expect(parseResult.output)
-        .toEqual({ wallet: walletAddress });
+        .toEqual({wallet: walletAddress});
 
     const resultInternal = await contracts.createRunBody({
         abi: SubscriptionContractPackage.abi,
         function: 'constructor',
-        params: { wallet: walletAddress },
+        params: {wallet: walletAddress},
         internal: true,
     });
 
@@ -388,11 +409,11 @@ test('testRunBody', async () => {
     expect(parseResultInternal.function)
         .toEqual('constructor');
     expect(parseResultInternal.output)
-        .toEqual({ wallet: walletAddress });
+        .toEqual({wallet: walletAddress});
 });
 
 test('Address conversion', async () => {
-    const { contracts } = tests.client;
+    const {contracts} = tests.client;
 
     const accountId = 'fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260';
     const hex = '-1:fcb91a3a3816d0f7b8c2c76108b8a9bc5a6b7a55bd79f8ab101c52db29232260';
@@ -447,7 +468,7 @@ test('Address conversion', async () => {
 });
 
 test('calc gas fee', async () => {
-    const { contracts, crypto, queries } = tests.client;
+    const {contracts, crypto, queries} = tests.client;
     if (tests.nodeSe) {
         console.log('[calc gas fee] Skip test on Node SE');
         return;
@@ -479,14 +500,14 @@ test('calc gas fee', async () => {
     const deployed = await contracts.processDeployMessage(deployMessage);
 
     const deployTransaction = (await queries.transactions.query({
-            in_msg: { eq: deployMessage.message.messageId }
+            in_msg: {eq: deployMessage.message.messageId}
         },
         'storage {storage_fees_collected}'
     ))[0];
 
     const originalBalance = (await queries.accounts.waitFor({
-            id: { eq: deployed.address },
-            code: { gt: "" }
+            id: {eq: deployed.address},
+            code: {gt: ""}
         },
         'balance'
     )).balance;
@@ -548,8 +569,8 @@ test('calc gas fee', async () => {
     });
 
     const endBalance = (await queries.accounts.waitFor({
-            id: { eq: deployed.address },
-            balance: { lt: originalBalance }
+            id: {eq: deployed.address},
+            balance: {lt: originalBalance}
         },
         'balance'
     )).balance;
@@ -558,7 +579,7 @@ test('calc gas fee', async () => {
     expect(Number(endBalance) < Number(reserveValue)).toBeTruthy();
 
     const transaction = await queries.transactions.query({
-            id: { eq: resultNet.transaction.id }
+            id: {eq: resultNet.transaction.id}
         },
         'storage {storage_fees_collected} compute {gas_fees} action {total_fwd_fees} total_fees'
     );
@@ -579,17 +600,17 @@ test('calc gas fee', async () => {
 });
 
 test('test boc hash', async () => {
-    const { contracts } = tests.client;
+    const {contracts} = tests.client;
     const bocBase64 = "te6ccgEBAgEAxgABwYgAti0S4VOMe6uIVNX3nuDd7KSO13EsFEXDsUVaKRzBgdQCwaZuyAAAC3iWFUwMAK22OiKIN+R4x+31/j8LXRIYPh8iJGtncSuZ7FONbFNXAAAAAAAAAAAAAAAAAA9CQEABAMD3EJkJ6DsPCkGnV5lMTt6LIPRS7ViXPZjHMhJizNODUeKekStEXEUgmHS2vmokCRRUpsUhmwgFmkWaCatqe4wIlcBqp0PR+QAN1kt1SY8QavS350RCNNfeZ+ommI9hgd8=";
     const hash = "adff1e7fd60632bb572b1afe0c2e569d8c68b1169994c48bc1ed92b3515c3b4e";
 
-    const result = await contracts.getBocHash({ bocBase64 });
+    const result = await contracts.getBocHash({bocBase64});
 
     expect(result.hash).toEqual(hash);
 });
 
 test('test send boc', async () => {
-    const { contracts, crypto } = tests.client;
+    const {contracts, crypto} = tests.client;
     const keys = await crypto.ed25519Keypair();
 
     const message = await contracts.createDeployMessage({
@@ -610,7 +631,7 @@ test('test send boc', async () => {
 });
 
 test('test deploy lags', async () => {
-    const { contracts, crypto, config } = tests.client;
+    const {contracts, crypto, config} = tests.client;
     config.startProfile();
 
     config.log("Start");

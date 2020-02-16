@@ -18,14 +18,6 @@
 			]
 		},
 		{
-			"name": "getVersion",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"value0","type":"uint256"}
-			]
-		},
-		{
 			"name": "getNewVersion",
 			"inputs": [
 			],
