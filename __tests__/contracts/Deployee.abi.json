@@ -36,9 +36,5 @@
 		}
 	],
 	"events": [
-	],
-	"data": [
-		{"key":100,"name":"param1","type":"uint32"},
-		{"key":101,"name":"param2","type":"uint256"}
 	]
 }
