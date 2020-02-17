@@ -29,7 +29,7 @@ const accountKeys: TONKeyPairData = {
     "secret": "7ad5917b5e499890cc930a895d53d2c2044b217e203b6245e5daa715e200e84d"
 };
 
-test('Unauthorized', async () => {
+test.skip('Unauthorized', async () => {
     let client;
     try {
         client = await tests.createClient({ authorization: '' });
@@ -53,7 +53,7 @@ test('Unauthorized', async () => {
 
 
 // not implemented yet
-test('Register Access Keys', async () => {
+test.skip('Register Access Keys', async () => {
     const managementClient = await tests.createClient({ authorization: '111111' });
     await managementClient.registerAccessKeys({
         account: surfAccount,
