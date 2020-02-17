@@ -143,9 +143,9 @@ test('Run aborted transaction', async () => {
             expect(error.source)
                 .toEqual('node');
             expect(error.code)
-                .toEqual(102);
+                .toEqual(101);
             expect(error.message)
-                .toEqual('VM terminated with exception (102) at computeVm');
+                .toEqual('VM terminated with exception (101) at computeVm');
             expect(error.data.phase)
                 .toEqual('computeVm');
             expect(error.data.transaction_id)
@@ -254,7 +254,7 @@ test('External Signing', async () => {
         .toEqual(message.message.messageBodyBase64);
 });
 
-test('changeInitState', async () => {
+test.skip('changeInitState', async () => {
     const {contracts, crypto} = tests.client;
     const keys = await crypto.ed25519Keypair();
 
