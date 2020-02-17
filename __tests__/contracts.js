@@ -639,3 +639,21 @@ test('test deploy lags', async () => {
     config.log("After deploy");
     config.stopProfile();
 });
+
+test('test parse message', async () => {
+    const { contracts, crypto } = tests.client;
+    
+    const keys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    const parsedMsg = await contracts.parseMessage({
+        bocBase64: message.message.messageBodyBase64
+    });
+
+    expect(parsedMsg.dst).toEqual(message.address);
+});
