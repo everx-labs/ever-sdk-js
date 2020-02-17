@@ -512,7 +512,7 @@ export type TONContractConvertAddressResult = {
     address: string,
 }
 
-export type TONContractGetBocHashParams = {
+export type TONContractBoc = {
     bocBase64: string,
 }
 
@@ -610,9 +610,9 @@ export interface TONContracts {
         params: TONContractGetFunctionIdParams
     ): Promise<TONContractGetFunctionIdResult>;
 
-    getBocHash(
-        params: TONContractGetBocHashParams
-    ): Promise<TONContractGetBocHashResult>;
+    getBocHash(params: TONContractBoc): Promise<TONContractGetBocHashResult>;
+
+    parseMessage(params: TONContractBoc): Promise<QMessage>;
 
     // Message parsing
 
