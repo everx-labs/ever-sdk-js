@@ -702,7 +702,32 @@ export type Subscription = {
     unsubscribe: () => void
 }
 
+export type TONQueryParams = {
+    filter: any,
+    result: string,
+    orderBy?: OrderBy[],
+    limit?: number,
+    timeout?: number,
+    parentSpan?: (Span | SpanContext),
+}
+
+export type TONWaitForParams = {
+    filter: any,
+    result: string,
+    timeout?: number,
+    parentSpan?: (Span | SpanContext),
+}
+
+export type TONSubscribeParams = {
+    filter: any,
+    result: string,
+    onDocEvent: DocEvent,
+    onError?: (err: Error) => void,
+}
+
 export interface TONQCollection {
+    query(params: TONQueryParams): Promise<any>;
+
     query(
         filter: any,
         result: string,
@@ -712,12 +737,16 @@ export interface TONQCollection {
         parentSpan?: (Span | SpanContext),
     ): Promise<any>;
 
+    subscribe(params: TONSubscribeParams): Subscription;
+
     subscribe(
         filter: any,
         result: string,
         onDocEvent: DocEvent,
         onError?: (err: Error) => void,
     ): Subscription;
+
+    waitFor(params: TONWaitForParams): Promise<any>;
 
     waitFor(
         filter: any,
