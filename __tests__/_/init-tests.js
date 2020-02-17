@@ -132,6 +132,7 @@ export const tests: {
         servers: serversConfig,
         log_verbose: false,
         tracer: createJaegerTracer(''),
+        authorization: 'bypass',
     },
     createClient,
     client: new TONClient(),

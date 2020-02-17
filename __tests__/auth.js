@@ -53,17 +53,17 @@ test.skip('Unauthorized', async () => {
 
 
 // not implemented yet
-test.skip('Register Access Keys', async () => {
-    const managementClient = await tests.createClient({ authorization: '111111' });
+test('Register Access Keys', async () => {
+    const managementClient = await tests.createClient({ authorization: 'bypass' });
     await managementClient.registerAccessKeys({
-        account: surfAccount,
+        account: 'bypass',
         keys: [{ key: 'Foo' }],
         accountKeys
     });
     const client = await tests.createClient({ authorization: 'Foo' });
     const accounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
     await managementClient.revokeAccessKeys({
-        account: surfAccount,
+        account: 'bypass',
         keys: ['Foo'],
         accountKeys
     });
@@ -76,7 +76,7 @@ test.skip('Register Access Keys', async () => {
             .toEqual(401);
     }
     await managementClient.registerAccessKeys({
-        account: surfAccount,
+        account: 'bypass',
         keys: [{ key: 'Foo', restrictToAccounts: [accounts[0].id] }],
         accountKeys
     });
@@ -89,14 +89,71 @@ test.skip('Register Access Keys', async () => {
         undefined,
         10));
     expect(restrictedBlocks.length).toEqual(0);
-    const restrictedTransactions = (await client.queries.transactions.query({}, 'id account_addr', undefined, 10));
+    const restrictedTransactions = (await client.queries.transactions.query(
+        {},
+        'id account_addr',
+        undefined,
+        10));
     for (const tr of restrictedTransactions) {
         expect(tr.account_addr).toEqual(accounts[0].id);
     }
-    const restrictedMessages = (await client.queries.messages.query({}, 'id src dst', undefined, 10));
+    const restrictedMessages = (await client.queries.messages.query(
+        {},
+        'id src dst',
+        undefined,
+        10));
     for (const msg of restrictedMessages) {
         expect(msg.src === accounts[0].id || msg.dst === accounts[0].id).toBeTruthy();
     }
+});
+
+
+test('Subscription restricted to accounts', async () => {
+    // const managementClient = await tests.createClient({ authorization: 'bypass' });
+    // const giver = tests.get_giver_address();
+    // const accounts = (await managementClient.queries.accounts.query(
+    //     { id: { notIn: [giver] } },
+    //     'id',
+    //     undefined,
+    //     10
+    // )).map(x => x.id);
+    // await managementClient.registerAccessKeys({
+    //     account: 'bypass',
+    //     keys: [{ key: 'Foo', restrictToAccounts: [accounts[0]] }],
+    //     accountKeys
+    // });
+    // await managementClient.registerAccessKeys({
+    //     account: 'bypass',
+    //     keys: [{ key: 'Bar', restrictToAccounts: [accounts[1]] }],
+    //     accountKeys
+    // });
+    const client0 = await tests.createClient({ authorization: 'Foo' });
+    const client1 = await tests.createClient({ authorization: 'Bar' });
+    const events0 = [];
+    const events1 = [];
+    client0.queries.transactions.subscribe({
+        filter: {},
+        result: 'id account_addr',
+        onDocEvent(e, d) {
+            events0.push(d);
+        }
+    });
+    client1.queries.transactions.subscribe({
+        filter: {},
+        result: 'id account_addr',
+        onDocEvent(e, d) {
+            events1.push(d);
+        }
+    });
+    // await tests.get_grams_from_giver(accounts[0], 1000000000);
+    // await tests.get_grams_from_giver(accounts[1], 1000000000);
+    // await new Promise(resolve => setTimeout(resolve, 1000));
+    // for (const e of events0) {
+    //     expect(e.account_addr).toEqual(accounts[0]);
+    // }
+    // for (const e of events1) {
+    //     expect(e.account_addr).toEqual(accounts[1]);
+    // }
 });
 
 
