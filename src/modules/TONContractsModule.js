@@ -34,7 +34,7 @@ import type {
     TONContractDeployParams,
     TONContractDeployResult,
     TONContractCalcDeployFeeParams,
-    TONContractGetBocHashParams,
+    TONContractBoc,
     TONContractGetBocHashResult,
     TONContractGetCodeFromImageParams,
     TONContractGetCodeFromImageResult,
@@ -392,9 +392,15 @@ export default class TONContractsModule extends TONModule implements TONContract
     }
 
     async getBocHash(
-        params: TONContractGetBocHashParams
+        params: TONContractBoc
     ): Promise<TONContractGetBocHashResult> {
         return this.requestCore('contracts.boc.hash', params);
+    }
+
+    async parseMessage(
+        params: TONContractBoc
+    ): Promise<QMessage> {
+        return this.requestCore('contracts.parse.message', params);
     }
 
     // Message parsing
