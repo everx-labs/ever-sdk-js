@@ -1,10 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.20.3 - Feb 13, 2020
+## 0.20.100 - Feb 17, 2020
 ### New
 - `registerAccessKey` parameters passed as structure. 
 - `restrictToAccounts` option for access keys.
+- `parseMessage` function for parsing message BOC into JSON.
 
 ## 0.20.2 - Feb 12, 2020
 ### Fixed
