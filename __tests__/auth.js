@@ -29,7 +29,7 @@ const accountKeys: TONKeyPairData = {
     "secret": "7ad5917b5e499890cc930a895d53d2c2044b217e203b6245e5daa715e200e84d"
 };
 
-test('Unauthorized', async () => {
+test.skip('Unauthorized', async () => {
     let client;
     try {
         client = await tests.createClient({ authorization: '' });
@@ -54,11 +54,19 @@ test('Unauthorized', async () => {
 
 // not implemented yet
 test.skip('Register Access Keys', async () => {
-    const managementClient = await tests.createClient({ authorization: '' });
-    await managementClient.registerAccessKeys(surfAccount, ['Foo'], accountKeys);
+    const managementClient = await tests.createClient({ authorization: '111111' });
+    await managementClient.registerAccessKeys({
+        account: surfAccount,
+        keys: [{ key: 'Foo' }],
+        accountKeys
+    });
     const client = await tests.createClient({ authorization: 'Foo' });
-    await client.queries.accounts.query({}, 'id', undefined, 1);
-    await managementClient.revokeAccessKeys(surfAccount, ['Foo'], accountKeys);
+    const accounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
+    await managementClient.revokeAccessKeys({
+        account: surfAccount,
+        keys: ['Foo'],
+        accountKeys
+    });
     try {
         await client.queries.accounts.query({}, 'id', undefined, 1);
     } catch (error) {
@@ -66,6 +74,28 @@ test.skip('Register Access Keys', async () => {
             .toEqual('graphql');
         expect(error.code)
             .toEqual(401);
+    }
+    await managementClient.registerAccessKeys({
+        account: surfAccount,
+        keys: [{ key: 'Foo', restrictToAccounts: [accounts[0].id] }],
+        accountKeys
+    });
+    const restrictedAccounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
+    expect(restrictedAccounts.length).toEqual(1);
+    expect(restrictedAccounts[0]).toEqual(accounts[0]);
+    const restrictedBlocks = (await client.queries.blocks.query(
+        {},
+        'id',
+        undefined,
+        10));
+    expect(restrictedBlocks.length).toEqual(0);
+    const restrictedTransactions = (await client.queries.transactions.query({}, 'id account_addr', undefined, 10));
+    for (const tr of restrictedTransactions) {
+        expect(tr.account_addr).toEqual(accounts[0].id);
+    }
+    const restrictedMessages = (await client.queries.messages.query({}, 'id src dst', undefined, 10));
+    for (const msg of restrictedMessages) {
+        expect(msg.src === accounts[0].id || msg.dst === accounts[0].id).toBeTruthy();
     }
 });
 

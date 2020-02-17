@@ -233,7 +233,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractDeployParams,
         parentSpan?: (Span | SpanContext)
     ): Promise<TONContractDeployResult> {
-        return this.context.trace('contracts.deploy', async(span: Span) => {
+        return this.context.trace('contracts.deploy', async (span: Span) => {
             span.setTag('params', params);
             return this.internalDeployJs(params, span);
         }, parentSpan);
@@ -244,7 +244,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunParams,
         parentSpan?: (Span | SpanContext)
     ): Promise<TONContractRunResult> {
-        return this.context.trace('contracts.run', async(span: Span) => {
+        return this.context.trace('contracts.run', async (span: Span) => {
             span.setTag('params', params);
             return this.internalRunJs(params, span);
         }, parentSpan);
@@ -254,7 +254,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext)
     ): Promise<TONContractRunResult> {
-        return this.context.trace('contracts.runLocal', async(span: Span) => {
+        return this.context.trace('contracts.runLocal', async (span: Span) => {
             span.setTag('params', params);
             return this.internalRunLocalJs(params, span);
         }, parentSpan);
@@ -447,28 +447,11 @@ export default class TONContractsModule extends TONModule implements TONContract
         resultFields: string,
         parentSpan?: (Span | SpanContext)
     ): Promise<QTransaction> {
-        let transaction: ?QTransaction = null;
-        let retry = true;
-        while (retry) {
-            retry = false;
-            const messageId = await this.sendMessage(message, parentSpan);
-            try {
-                transaction = await this.queries.transactions.waitFor({
-                    in_msg: { eq: messageId },
-                    status: { eq: QTransactionProcessingStatus.finalized },
-                }, resultFields, 40_000, parentSpan);
-            } catch (error) {
-                if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
-                    this.config.log('processMessage. Timeout, retrying...');
-                    retry = true;
-                } else {
-                    throw error;
-                }
-            }
-        }
-        if (!transaction) {
-            throw TONClientError.internalError('transaction is null');
-        }
+        const messageId = await this.sendMessage(message, parentSpan);
+        const transaction: QTransaction = await this.queries.transactions.waitFor({
+            in_msg: { eq: messageId },
+            status: { eq: QTransactionProcessingStatus.finalized },
+        }, resultFields, 40_000, parentSpan);
         const transactionNow = transaction.now || 0;
         this.config.log('processMessage. transaction received', {
             id: transaction.id,
