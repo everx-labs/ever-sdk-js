@@ -692,7 +692,7 @@ test('Test expire', async () => {
 
     // SDK will wait for message processing using modified `expire` value, but message was created
     // already expired so contract won't accept it
-    expect(await contracts.processRunMessage(runMsg)).toThrow();
+    expect(async () => await contracts.processRunMessage(runMsg)).toThrow();
 
     // check that expired message wasn't processed by the contract
     const ltExpire = (await queries.accounts.query({

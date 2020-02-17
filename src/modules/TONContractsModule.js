@@ -451,30 +451,36 @@ export default class TONContractsModule extends TONModule implements TONContract
         let transaction: ?QTransaction = null;
         const expire = Number(message.expire || 0xffffffff);
         // calculate timeout according to `expire` value (in seconds)
-        // add 10 seconds as block validation time
-        const timeout = Math.min(2147483647, expire * 1000 - Date.now() + 10000);
+        // add 20 seconds as block validation time
+        const timeout = Math.min(2147483647, expire * 1000 - Date.now() + 20_000);
 
         if (timeout <= 0) {
             throw TONClientError.sendNodeRequestFailed("Message already expired");
         }
 
         const messageId = await this.sendMessage(message, parentSpan);
-        try {
-            transaction = await this.queries.transactions.waitFor({
-                in_msg: { eq: messageId },
-                status: { eq: QTransactionProcessingStatus.finalized },
-            }, resultFields, timeout, parentSpan);
-        } catch (error) {
-            if (error.code && error.code === TONClientError.code.WAIT_FOR_TIMEOUT) {
-                this.config.log('processMessage. Timeout, retrying...');
-            } else {
-                throw error;
-            }
-
-            // TODO wait for block
-        }
-
-        if (!transaction) {
+        // wait for message processing transaction
+        const waitTransaction = this.queries.transactions.waitFor({
+            in_msg: { eq: messageId },
+            status: { eq: QTransactionProcessingStatus.finalized },
+        }, resultFields, timeout, parentSpan);
+        // wait for block, produced after `expire` to guarantee that message is rejected
+        const waitBlock = this.queries.blocks.waitFor({
+            workchain_id: { eq: -1 },
+            master: {
+                shard_hashes: {
+                    all: {
+                        descr: { 
+                            gen_utime : { ge: expire }
+                        }
+                    }
+                }
+            },
+        }, 'id', timeout, parentSpan);
+        
+        transaction = await Promise.race([waitTransaction, waitBlock]);
+        
+        if (transaction?.in_msg !== messageId) {
             throw TONClientError.internalError('transaction is null');
         }
         const transactionNow = transaction.now || 0;
