@@ -17,8 +17,8 @@
 // @flow
 
 
-import type { TONContractGetDeployDataResult} from '../types';
-import { tests } from './_/init-tests';
+import type {TONContractGetDeployDataResult} from '../types';
+import {tests} from './_/init-tests';
 
 const DeployerPackage = tests.loadPackage('Deployer');
 const DeployeePackage = tests.loadPackage('Deployee');
