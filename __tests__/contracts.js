@@ -640,3 +640,66 @@ test('test deploy lags', async () => {
     config.log("After deploy");
     config.stopProfile();
 });
+
+test('Test expire', async () => {
+    const {contracts, crypto, queries} = tests.client;
+    const helloKeys = await crypto.ed25519Keypair();
+
+    const contractData = await tests.deploy_with_giver({
+        package: HelloContractPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    });
+
+    const ltDeploy = (await queries.accounts.query({
+            id: { eq: contractData.address }
+        },
+        'last_trans_lt'
+    ))[0].last_trans_lt;
+
+    await contracts.run({
+        address: contractData.address,
+        abi: HelloContractPackage.abi,
+        functionName: 'touch',
+        input: {},
+        keyPair: helloKeys,
+    });
+
+    const ltRun = (await queries.accounts.query({
+            id: { eq: contractData.address }
+        },
+        'last_trans_lt'
+    ))[0].last_trans_lt;
+
+    expect(ltRun).not.toEqual(ltDeploy);
+
+    // to check message expiration we have to make some trick with `expire` value, because
+    // SDK can not send already expired message
+
+    // we create expired message
+    let runMsg = await contracts.createRunMessage({
+        address: contractData.address,
+        abi: HelloContractPackage.abi,
+        functionName: 'touch',
+        header: {
+            expire: Math.floor(Date.now() / 1000) - 1
+        },
+        input: {},
+        keyPair: helloKeys,
+    });
+    // and then change `expire` to correct value in order to send it properly
+    runMsg.message.expire = Math.floor(Date.now() / 1000) + 10;
+
+    // SDK will wait for message processing using modified `expire` value, but message was created
+    // already expired so contract won't accept it
+    expect(await contracts.processRunMessage(runMsg)).toThrow();
+
+    // check that expired message wasn't processed by the contract
+    const ltExpire = (await queries.accounts.query({
+            id: { eq: contractData.address }
+        },
+        'last_trans_lt'
+    ))[0].last_trans_lt;
+
+    expect(ltExpire).toEqual(ltRun);
+});
