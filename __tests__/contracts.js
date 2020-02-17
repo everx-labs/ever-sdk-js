@@ -254,6 +254,40 @@ test('External Signing', async () => {
         .toEqual(message.message.messageBodyBase64);
 });
 
+// TODO: take ABI v2 contract
+test('External Signing on ABI v2', async () => {
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+
+    const contractPackage = EventsPackage;
+
+    const deployParams = {
+        package: contractPackage,
+        constructorHeader: {
+            pubkey: keys.public
+        },
+        constructorParams: {},
+        keyPair: keys,
+    };
+    const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
+    const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
+    const signBytesBase64 = await crypto.naclSignDetached({
+        base64: unsignedMessage.signParams.bytesToSignBase64,
+    }, signKey.secret, TONOutputEncoding.Base64);
+    const signed = await contracts.createSignedDeployMessage({
+        address: unsignedMessage.address,
+        createSignedParams: {
+            abi: contractPackage.abi,
+            signBytesBase64,
+            unsignedBytesBase64: unsignedMessage.signParams.unsignedBytesBase64,
+        },
+    });
+
+    const message = await contracts.createDeployMessage(deployParams);
+    expect(signed.message.messageBodyBase64)
+        .toEqual(message.message.messageBodyBase64);
+});
+
 test('changeInitState', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
