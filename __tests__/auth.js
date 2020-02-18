@@ -120,36 +120,3 @@ test.skip('Register Access Keys', async () => {
     });
 });
 
-function removeProps(obj: {}, path: string): {} {
-    const dotPos = path.indexOf('.');
-    if (dotPos < 0) {
-        if (!(path in obj)) {
-            return obj;
-        }
-        const clone = { ...obj };
-        delete clone[path];
-        return clone;
-    }
-    const name = path.substr(0, dotPos);
-    const child = obj[name];
-    if (child) {
-        const reducedChild = removeProps(child, path.substr(dotPos + 1));
-        return reducedChild === child ? obj : {
-            ...obj,
-            [name]: reducedChild,
-        };
-    }
-    return obj;
-}
-
-test('t', () => {
-    const params = {
-        keyPair: {
-            public: 'public',
-            secret: 'secret',
-        },
-    };
-    const reduced = removeProps(params, 'keyPair.secret');
-    expect(reduced)
-        .toEqual({ keyPair: { public: 'public' } });
-});

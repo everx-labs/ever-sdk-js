@@ -196,7 +196,7 @@ export const QBounceType = {
     ok: 2,
 };
 
-function removeProps(obj: {}, path: string): {} {
+export function removeProps(obj: {}, path: string): {} {
     const dotPos = path.indexOf('.');
     if (dotPos < 0) {
         if (!(path in obj)) {
