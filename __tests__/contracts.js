@@ -253,7 +253,7 @@ test('External Signing', async () => {
     expect(signed.message.messageBodyBase64)
         .toEqual(message.message.messageBodyBase64);
 });
-
+// TODO return test when data[] will fix in compilers
 test.skip('changeInitState', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
