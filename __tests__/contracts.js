@@ -657,3 +657,24 @@ test('test parse message', async () => {
 
     expect(parsedMsg.dst).toEqual(message.address);
 });
+
+test('Check deployed', async () => {
+    const { contracts, crypto } = tests.client;
+    const helloKeys = await crypto.ed25519Keypair();
+
+    const deployed = await tests.deploy_with_giver({
+        package: HelloContractPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    });
+
+    expect(deployed.alreadyDeployed).toBeFalsy();
+
+    const checked = await contracts.deploy({
+        package: HelloContractPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    });
+    
+    expect(checked.alreadyDeployed).toBeTruthy();
+});

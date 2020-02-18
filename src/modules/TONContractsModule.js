@@ -492,6 +492,22 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractDeployResult> {
         this.config.log('processDeployMessage', params);
+        // check that account is already deployed
+        const account = await this.queries.accounts.query({
+            filter: {
+                id: { eq: params.address },
+                acc_type: { eq: QAccountType.active },
+            },
+            result: 'id',
+            parentSpan
+        });
+        if (account.length > 0) {
+            return {
+                address: params.address,
+                alreadyDeployed: true,
+            };
+        }
+
         const transaction = await this.processMessage(
             params.message,
             transactionDetails,
