@@ -196,26 +196,30 @@ export const QBounceType = {
     ok: 2,
 };
 
-export function removeProps(obj: {}, path: string): {} {
-    const dotPos = path.indexOf('.');
-    if (dotPos < 0) {
-        if (!(path in obj)) {
-            return obj;
+export function removeProps(obj: {}, paths: string[]): {} {
+    let result = obj;
+    paths.forEach((path) => {
+        const dotPos = path.indexOf('.');
+        if (dotPos < 0) {
+            if (path in result) {
+                result = { ...result };
+                delete result[path];
+            }
+        } else {
+            const name = path.substr(0, dotPos);
+            const child = result[name];
+            if (child) {
+                const reducedChild = removeProps(child, [path.substr(dotPos + 1)]);
+                if (reducedChild !== child) {
+                    result = {
+                        ...result,
+                        [name]: reducedChild,
+                    };
+                }
+            }
         }
-        const clone = { ...obj };
-        delete clone[path];
-        return clone;
-    }
-    const name = path.substr(0, dotPos);
-    const child = obj[name];
-    if (child) {
-        const reducedChild = removeProps(child, path.substr(dotPos + 1));
-        return reducedChild === child ? obj : {
-            ...obj,
-            [name]: reducedChild,
-        };
-    }
-    return obj;
+    });
+    return result;
 }
 
 export default class TONContractsModule extends TONModule implements TONContracts {
@@ -255,7 +259,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractDeployResult> {
         return this.context.trace('contracts.deploy', async (span: Span) => {
-            span.setTag('params', removeProps(params, 'keyPair.secret'));
+            span.setTag('params', removeProps(params, ['keyPair.secret']));
             return this.internalDeployJs(params, span);
         }, parentSpan);
     }
@@ -266,7 +270,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
         return this.context.trace('contracts.run', async (span: Span) => {
-            span.setTag('params', removeProps(params, 'keyPair.secret'));
+            span.setTag('params', removeProps(params, ['keyPair.secret']));
             return this.internalRunJs(params, span);
         }, parentSpan);
     }
@@ -276,7 +280,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
         return this.context.trace('contracts.runLocal', async (span: Span) => {
-            span.setTag('params', removeProps(params, 'keyPair.secret'));
+            span.setTag('params', removeProps(params, ['keyPair.secret']));
             return this.internalRunLocalJs(params, span);
         }, parentSpan);
     }

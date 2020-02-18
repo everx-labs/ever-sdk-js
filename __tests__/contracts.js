@@ -54,12 +54,19 @@ test('removeProps', () => {
             public: 'public',
             secret: 'secret',
         },
+        foo: {
+            bar: 'bar',
+            baz: 'baz',
+        }
     };
-    const reduced = removeProps(params, 'keyPair.secret');
+    const reduced = removeProps(params, ['keyPair.secret', 'foo.bar']);
     expect(reduced)
         .toEqual({
             keyPair: {
                 public: 'public'
+            },
+            foo: {
+                baz: 'baz'
             }
         });
 });
@@ -694,6 +701,6 @@ test('Check deployed', async () => {
         constructorParams: {},
         keyPair: helloKeys,
     });
-    
+
     expect(checked.alreadyDeployed).toBeTruthy();
 });
