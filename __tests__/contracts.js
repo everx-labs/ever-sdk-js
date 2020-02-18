@@ -16,22 +16,23 @@
 
 // @flow
 
-import { Span } from "opentracing";
-import { tests } from './_/init-tests';
-import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
-import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
+import {Span} from "opentracing";
+import {tests} from './_/init-tests';
+import {TONAddressStringVariant} from '../src/modules/TONContractsModule';
+import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
 
 
 import type {
     TONContractLoadResult,
 } from '../types';
-import { binariesVersion } from './_/binaries';
+import {binariesVersion} from './_/binaries';
 
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 const HelloContractPackage = tests.loadPackage('Hello');
 const SubscriptionContractPackage = tests.loadPackage('Subscription');
 const SetCodePackage = tests.loadPackage('Setcode');
+const SetCode2Package = tests.loadPackage('Setcode2');
 const EventsPackage = tests.loadPackage('Events');
 
 
@@ -78,7 +79,7 @@ test('load', async () => {
 });
 
 test('Test hello contract from docs.ton.dev', async () => {
-    const {contracts, crypto} = tests.client;
+    const { contracts, crypto } = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
 
     const contractData = await tests.deploy_with_giver({
@@ -142,9 +143,9 @@ test('Run aborted transaction', async () => {
             expect(error.source)
                 .toEqual('node');
             expect(error.code)
-                .toEqual(102);
+                .toEqual(101);
             expect(error.message)
-                .toEqual('VM terminated with exception (102) at computeVm');
+                .toEqual('VM terminated with exception (101) at computeVm');
             expect(error.data.phase)
                 .toEqual('computeVm');
             expect(error.data.transaction_id)
@@ -252,8 +253,8 @@ test('External Signing', async () => {
     expect(signed.message.messageBodyBase64)
         .toEqual(message.message.messageBodyBase64);
 });
-
-test('changeInitState', async () => {
+// TODO return test when data[] will fix in compilers
+test.skip('changeInitState', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
@@ -323,12 +324,10 @@ test('testSetCode', async () => {
         input: {},
         keyPair: keys,
     });
-    const setCode2ImageBase64 = 'te6ccgECJQEABSUAAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIo/wAgwAH0pCBYkvSg4YrtU1gw9KARBwEK9KQg9KEIAgPNQA4JAgFiCwoAB9GG2YQCAVgNDAALPgActswgABM+AAg+wRwMdswgAgFqEA8ANdf34AubK3Mi+yvDovtrmzkHwS/BR4CDh9gBhACN1/foCxOrS2Mi+yvDovtrmz5DnnhYCQ54s4Z4WAkWeFn7hnhY+4Z4WAEGeakmeYuNBeSzjnoBHni8q456CR5vEQZIIvgm2YQCASAYEgHg//79AW1haW5fZXh0ZXJuYWwhjln+/AFnZXRfc3JjX2FkZHIg0CDTADJwvY4a/v0BZ2V0X3NyY19hZGRyMHDIydBVEV8C2zDgIHLXITEg0wAyIfpAM/79AWdldF9zcmNfYWRkcjEhIVUxXwTbMNgxIRMB+I51/v4BZ2V0X21zZ19wdWJrZXkgxwKOFv7/AWdldF9tc2dfcHVia2V5MXAx2zDg1SDHAY4X/v8BZ2V0X21zZ19wdWJrZXkycDEx2zDgIIECANch1wv/IvkBIiL5EPKo/v8BZ2V0X21zZ19wdWJrZXkzIANfA9sw2CLHArMUAcaUItQxM94kIiL++QFzdG9yZV9zaWdvACFvjCJvjCNvjO1HIW+M7UTQ9AVvjCDtV/79AXN0b3JlX3NpZ19lbmRfBSLHAY4T/vwBbXNnX2lzX2VtcHR5XwbbMOAi0x80I9M/NSAVAXaOgNiOL/7+AW1haW5fZXh0ZXJuYWwyJCJVcV8I8UAB/v4BbWFpbl9leHRlcm5hbDNfCNsw4IB88vBfCBYB/v77AXJlcGxheV9wcm90cHBw7UTQIPQEMjQggQCA10WaINM/MjMg0z8yMpaCCBt3QDLiIiW5JfgjgQPoqCSgubCOKcgkAfQAJc8LPyLPCz8hzxYgye1U/vwBcmVwbGF5X3Byb3QyfwZfBtsw4P78AXJlcGxheV9wcm90M3AFXwUXAATbMAIBIB4ZAgEgGxoAQ7qOEp69Qw8CLIghBo4SnrghCAAAAAsc8LHyHPC//wFNswgCAVgdHAAPtx+4gcw2zCAAQbdr4C3MPAjyIIQVa+At4IQgAAAALHPCx8hzwv/8BTbMIAIBSCIfAQm4iQAnUCAB/v79AWNvbnN0cl9wcm90XzBwcIIIG3dA7UTQIPQEMjQggQCA10WOFCDSPzIzINI/MjIgcddFlIB78vDe3sgkAfQAI88LPyLPCz9xz0EhzxYgye1U/v0BY29uc3RyX3Byb3RfMV8F+AAw/vwBcHVzaHBkYzd0b2M07UTQ9AHI7UchADxvEgH0ACHPFiDJ7VT+/QFwdXNocGRjN3RvYzQwXwIBAtwjAf7+/QFtYWluX2ludGVybmFsIY5Z/vwBZ2V0X3NyY19hZGRyINAg0wAycL2OGv79AWdldF9zcmNfYWRkcjBwyMnQVRFfAtsw4CBy1yExINMAMiH6QDP+/QFnZXRfc3JjX2FkZHIxISFVMV8E2zDYJCFw/vkBc3RvcmVfc2lnbwAhJAD8b4wib4wjb4ztRyFvjO1E0PQFb4wg7Vf+/QFzdG9yZV9zaWdfZW5kXwUixwCOHCFwuo4SIoIQXH7iB1VRXwbxQAFfBtsw4F8G2zDg/v4BbWFpbl9pbnRlcm5hbDEi0x80InG6niCAJFVhXwfxQAFfB9sw4CMhVWFfB/FAAV8H';
-
+    expect(version1.output.value0).toEqual('0x1');
     const code = await contracts.getCodeFromImage({
-        imageBase64: setCode2ImageBase64,
+        imageBase64: SetCode2Package.imageBase64,
     });
-
     await contracts.run({
         address: deployed.address,
         functionName: 'main',
@@ -336,18 +335,15 @@ test('testSetCode', async () => {
         input: { newcode: code.codeBase64 },
         keyPair: keys,
     });
-
-    const version2 = await contracts.run({
+    const newVersion = await contracts.run({
         address: deployed.address,
-        functionName: 'getVersion',
-        abi: SetCodePackage.abi,
+        functionName: 'getNewVersion',
+        abi: SetCode2Package.abi,
         input: {},
         keyPair: keys,
     });
 
-    expect(version1)
-        .not
-        .toEqual(version2);
+    expect(newVersion.output.value0).toEqual('0x2');
 });
 
 test('testRunBody', async () => {
