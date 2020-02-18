@@ -23,7 +23,6 @@ import { tests } from './_/init-tests';
 beforeAll(tests.init);
 afterAll(tests.done);
 
-const surfAccount = '0:b9d488d7f68444d11de600b149325fc83f0d93117403b92ddbe4de41f6632fff';
 const accountKeys: TONKeyPairData = {
     public: '05fe74606e1b0d01188303f8dc80671e21fabb8735df052f97a0b9c6659bd373',
     secret: '7ad5917b5e499890cc930a895d53d2c2044b217e203b6245e5daa715e200e84d',
@@ -53,7 +52,7 @@ test.skip('Unauthorized', async () => {
 
 
 // not implemented yet
-test('Register Access Keys', async () => {
+test.skip('Register Access Keys', async () => {
     const managementClient = await tests.createClient({ accessKey: 'bypass' });
     await managementClient.registerAccessKeys({
         account: 'bypass',
@@ -115,7 +114,7 @@ test('Register Access Keys', async () => {
     });
 });
 
-test('Subscription restricted to accounts', async () => {
+test.skip('Subscription restricted to accounts', async () => {
     const managementClient = await tests.createClient({ accessKey: 'bypass' });
     const giver = tests.get_giver_address();
     const accounts = (await managementClient.queries.accounts.query(
@@ -162,5 +161,3 @@ test('Subscription restricted to accounts', async () => {
         expect(e.account_addr).toEqual(accounts[1]);
     }
 });
-
-
