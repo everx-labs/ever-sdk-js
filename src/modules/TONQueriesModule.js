@@ -215,6 +215,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 {
                     reconnect: true,
                     connectionParams: () => ({
+                        accessKey: this.config.data && this.config.data.accessKey,
                         headers: subsOptions,
                     }),
                 },
@@ -225,9 +226,9 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 const resolvedSpan = (req && req.traceSpan) || span;
                 req.headers = {};
                 this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
-                const authToken = this.config.data && this.config.data.authorization;
-                if (authToken) {
-                    req.headers.authorization = authToken;
+                const accessKey = this.config.data && this.config.data.accessKey;
+                if (accessKey) {
+                    req.headers.accessKey = accessKey;
                 }
                 return {
                     headers: req.headers,
@@ -243,7 +244,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                             && definition.operation === 'subscription'
                         );
                     },
-                    new WebSocketLink(subscriptionClient),
+                    tracerLink.concat(new WebSocketLink(subscriptionClient)),
                     tracerLink.concat(new HttpLink({
                         uri: httpUrl,
                         fetch,
@@ -309,7 +310,7 @@ class TONQueriesModuleCollection implements TONQCollection {
     ): Promise<any> {
         const params = findParams<TONQueryParams>(args, 'filter');
         const filter = params ? params.filter : args[0];
-        const result: string = params ? params.result : (args[1]:any);
+        const result: string = params ? params.result : (args[1]: any);
         const orderBy = params ? params.orderBy : args[2];
         const limit = params ? params.limit : args[3];
         const timeout = params ? params.timeout : args[4];

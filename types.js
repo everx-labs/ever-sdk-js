@@ -11,7 +11,7 @@ export type TONConfigData = {
     queriesWsServer?: string,
     log_verbose?: boolean,
     tracer?: ?Object, // opentracing.Tracer
-    authorization?: string,
+    accessKey?: string,
 }
 
 // Crypto

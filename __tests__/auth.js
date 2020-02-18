@@ -23,7 +23,6 @@ import { tests } from './_/init-tests';
 beforeAll(tests.init);
 afterAll(tests.done);
 
-const surfAccount = '0:b9d488d7f68444d11de600b149325fc83f0d93117403b92ddbe4de41f6632fff';
 const accountKeys: TONKeyPairData = {
     public: '05fe74606e1b0d01188303f8dc80671e21fabb8735df052f97a0b9c6659bd373',
     secret: '7ad5917b5e499890cc930a895d53d2c2044b217e203b6245e5daa715e200e84d',
@@ -32,7 +31,7 @@ const accountKeys: TONKeyPairData = {
 test.skip('Unauthorized', async () => {
     let client;
     try {
-        client = await tests.createClient({ authorization: '' });
+        client = await tests.createClient({ accessKey: '' });
         await client.queries.accounts.query({}, 'id', undefined, 1);
     } catch (error) {
         expect(error.source)
@@ -41,7 +40,7 @@ test.skip('Unauthorized', async () => {
             .toEqual(401);
     }
     try {
-        client = await tests.createClient({ authorization: 'Foo' });
+        client = await tests.createClient({ accessKey: 'Foo' });
         await client.queries.accounts.query({}, 'id', undefined, 1);
     } catch (error) {
         expect(error.source)
@@ -54,16 +53,16 @@ test.skip('Unauthorized', async () => {
 
 // not implemented yet
 test.skip('Register Access Keys', async () => {
-    const managementClient = await tests.createClient({ authorization: '111111' });
+    const managementClient = await tests.createClient({ accessKey: 'bypass' });
     await managementClient.registerAccessKeys({
-        account: surfAccount,
+        account: 'bypass',
         keys: [{ key: 'Foo' }],
         accountKeys,
     });
-    const client = await tests.createClient({ authorization: 'Foo' });
+    const client = await tests.createClient({ accessKey: 'Foo' });
     const accounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
     await managementClient.revokeAccessKeys({
-        account: surfAccount,
+        account: 'bypass',
         keys: ['Foo'],
         accountKeys,
     });
@@ -76,14 +75,9 @@ test.skip('Register Access Keys', async () => {
             .toEqual(401);
     }
     await managementClient.registerAccessKeys({
-        account: surfAccount,
-        keys: [
-            {
-                key: 'Foo',
-                restrictToAccounts: [accounts[0].id],
-            },
-        ],
-        accountKeys,
+        account: 'bypass',
+        keys: [{ key: 'Foo', restrictToAccounts: [accounts[0].id] }],
+        accountKeys
     });
     const restrictedAccounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
     expect(restrictedAccounts.length)
@@ -120,3 +114,50 @@ test.skip('Register Access Keys', async () => {
     });
 });
 
+test.skip('Subscription restricted to accounts', async () => {
+    const managementClient = await tests.createClient({ accessKey: 'bypass' });
+    const giver = tests.get_giver_address();
+    const accounts = (await managementClient.queries.accounts.query(
+        { id: { notIn: [giver] } },
+        'id',
+        undefined,
+        10
+    )).map(x => x.id);
+    await managementClient.registerAccessKeys({
+        account: 'bypass',
+        keys: [{ key: 'Foo', restrictToAccounts: [accounts[0]] }],
+        accountKeys
+    });
+    await managementClient.registerAccessKeys({
+        account: 'bypass',
+        keys: [{ key: 'Bar', restrictToAccounts: [accounts[1]] }],
+        accountKeys
+    });
+    const client0 = await tests.createClient({ accessKey: 'Foo' });
+    const client1 = await tests.createClient({ accessKey: 'Bar' });
+    const events0 = [];
+    const events1 = [];
+    client0.queries.transactions.subscribe({
+        filter: {},
+        result: 'id account_addr',
+        onDocEvent(e, d) {
+            events0.push(d);
+        }
+    });
+    client1.queries.transactions.subscribe({
+        filter: {},
+        result: 'id account_addr',
+        onDocEvent(e, d) {
+            events1.push(d);
+        }
+    });
+    await tests.get_grams_from_giver(accounts[0], 1000000000);
+    await tests.get_grams_from_giver(accounts[1], 1000000000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    for (const e of events0) {
+        expect(e.account_addr).toEqual(accounts[0]);
+    }
+    for (const e of events1) {
+        expect(e.account_addr).toEqual(accounts[1]);
+    }
+});
