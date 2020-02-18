@@ -32,7 +32,7 @@ const accountKeys: TONKeyPairData = {
 test.skip('Unauthorized', async () => {
     let client;
     try {
-        client = await tests.createClient({ authorization: '' });
+        client = await tests.createClient({ accessKey: '' });
         await client.queries.accounts.query({}, 'id', undefined, 1);
     } catch (error) {
         expect(error.source)
@@ -41,7 +41,7 @@ test.skip('Unauthorized', async () => {
             .toEqual(401);
     }
     try {
-        client = await tests.createClient({ authorization: 'Foo' });
+        client = await tests.createClient({ accessKey: 'Foo' });
         await client.queries.accounts.query({}, 'id', undefined, 1);
     } catch (error) {
         expect(error.source)
@@ -54,13 +54,13 @@ test.skip('Unauthorized', async () => {
 
 // not implemented yet
 test('Register Access Keys', async () => {
-    const managementClient = await tests.createClient({ authorization: 'bypass' });
+    const managementClient = await tests.createClient({ accessKey: 'bypass' });
     await managementClient.registerAccessKeys({
         account: 'bypass',
         keys: [{ key: 'Foo' }],
         accountKeys
     });
-    const client = await tests.createClient({ authorization: 'Foo' });
+    const client = await tests.createClient({ accessKey: 'Foo' });
     const accounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
     await managementClient.revokeAccessKeys({
         account: 'bypass',
@@ -109,26 +109,26 @@ test('Register Access Keys', async () => {
 
 
 test('Subscription restricted to accounts', async () => {
-    // const managementClient = await tests.createClient({ authorization: 'bypass' });
-    // const giver = tests.get_giver_address();
-    // const accounts = (await managementClient.queries.accounts.query(
-    //     { id: { notIn: [giver] } },
-    //     'id',
-    //     undefined,
-    //     10
-    // )).map(x => x.id);
-    // await managementClient.registerAccessKeys({
-    //     account: 'bypass',
-    //     keys: [{ key: 'Foo', restrictToAccounts: [accounts[0]] }],
-    //     accountKeys
-    // });
-    // await managementClient.registerAccessKeys({
-    //     account: 'bypass',
-    //     keys: [{ key: 'Bar', restrictToAccounts: [accounts[1]] }],
-    //     accountKeys
-    // });
-    const client0 = await tests.createClient({ authorization: 'Foo' });
-    const client1 = await tests.createClient({ authorization: 'Bar' });
+    const managementClient = await tests.createClient({ accessKey: 'bypass' });
+    const giver = tests.get_giver_address();
+    const accounts = (await managementClient.queries.accounts.query(
+        { id: { notIn: [giver] } },
+        'id',
+        undefined,
+        10
+    )).map(x => x.id);
+    await managementClient.registerAccessKeys({
+        account: 'bypass',
+        keys: [{ key: 'Foo', restrictToAccounts: [accounts[0]] }],
+        accountKeys
+    });
+    await managementClient.registerAccessKeys({
+        account: 'bypass',
+        keys: [{ key: 'Bar', restrictToAccounts: [accounts[1]] }],
+        accountKeys
+    });
+    const client0 = await tests.createClient({ accessKey: 'Foo' });
+    const client1 = await tests.createClient({ accessKey: 'Bar' });
     const events0 = [];
     const events1 = [];
     client0.queries.transactions.subscribe({
@@ -145,15 +145,15 @@ test('Subscription restricted to accounts', async () => {
             events1.push(d);
         }
     });
-    // await tests.get_grams_from_giver(accounts[0], 1000000000);
-    // await tests.get_grams_from_giver(accounts[1], 1000000000);
-    // await new Promise(resolve => setTimeout(resolve, 1000));
-    // for (const e of events0) {
-    //     expect(e.account_addr).toEqual(accounts[0]);
-    // }
-    // for (const e of events1) {
-    //     expect(e.account_addr).toEqual(accounts[1]);
-    // }
+    await tests.get_grams_from_giver(accounts[0], 1000000000);
+    await tests.get_grams_from_giver(accounts[1], 1000000000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    for (const e of events0) {
+        expect(e.account_addr).toEqual(accounts[0]);
+    }
+    for (const e of events1) {
+        expect(e.account_addr).toEqual(accounts[1]);
+    }
 });
 
 

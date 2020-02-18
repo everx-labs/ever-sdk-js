@@ -215,7 +215,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 {
                     reconnect: true,
                     connectionParams: () => ({
-                        accessKey: this.config.data.authorization,
+                        accessKey: this.config.data.accessKey,
                         headers: subsOptions,
                     }),
                 },
@@ -226,7 +226,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 const resolvedSpan = (req && req.traceSpan) || span;
                 req.headers = {};
                 this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
-                const accessKey = this.config.data && this.config.data.authorization;
+                const accessKey = this.config.data && this.config.data.accessKey;
                 if (accessKey) {
                     req.headers.accessKey = accessKey;
                 }
