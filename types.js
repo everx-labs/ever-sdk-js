@@ -244,6 +244,7 @@ export type QMessage = {
 
 export type QTransaction = {
     id?: string,
+    account_addr?: string,
     tr_type?: number,
     status?: number,
     block_id?: string,
@@ -330,7 +331,7 @@ export type TONContractCalcDeployFeeParams = TONContractDeployParams & {
 export type TONContractDeployResult = {
     address: string,
     alreadyDeployed: boolean,
-    transaction: QTransaction,
+    transaction?: QTransaction,
 }
 
 export type TONContractUnsignedMessage = {
@@ -398,7 +399,7 @@ export type TONContractAccountWaitParams = {
 }
 
 export type TONContractCalcRunFeeParams = TONContractRunParams & {
-    emulateBalance?: bool,
+    emulateBalance?: boolean,
     waitParams?: TONContractAccountWaitParams
 }
 
@@ -422,8 +423,8 @@ export type TONContractCalcFeeResult = {
 export type TONContractCalcMsgProcessingFeesParams = {
     address: string,
     message: TONContractMessage,
-    emulateBalance?: bool,
-    newAccount?: bool,
+    emulateBalance?: boolean,
+    newAccount?: boolean,
     waitParams?: TONContractAccountWaitParams
 }
 
