@@ -1,3 +1,4 @@
+G_gitcred = 'TonJenSSH'
 def getVar(Gvar) {
     return Gvar
 }
@@ -75,47 +76,6 @@ pipeline {
                 }
             }
         }
-        stage('Run tests') {
-            steps {
-                echo "Job: ${JOB_NAME}"
-                script {
-                    def params = [
-                        // [
-                        //     $class: 'StringParameterValue',
-                        //     name: 'dockerimage_compilers',
-                        //     value: "tonlabs/compilers:latest"
-                        // ],
-                        // [
-                        //     $class: 'StringParameterValue',
-                        //     name: 'dockerimage_local_node',
-                        //     value: "tonlabs/local-node:latest"
-                        // ],
-                        [
-                            $class: 'StringParameterValue',
-                            name: 'ton_client_js_branch',
-                            value: "${GIT_BRANCH}"
-                        ],
-                        [
-                            $class: 'StringParameterValue',
-                            name: 'ton_client_js_commit',
-                            value: "${GIT_COMMIT}"
-                        ],
-                        [
-                            $class: 'BooleanParameterValue',
-                            name: 'RUN_TESTS_ALL',
-                            value: false
-                        ],
-                        [
-                            $class: 'BooleanParameterValue',
-                            name: 'RUN_TESTS_TON_CLIENT_JS',
-                            value: true
-                        ],
-                    ] 
-
-                    build job: "Integration/integration-tests/master", parameters: params
-                }
-            }
-        }
         stage('Check branch in ton-client-node-js') {
             agent any
             when {
@@ -159,6 +119,47 @@ pipeline {
                     sshagent (credentials: [G_gitcred]) {
                         checkAndCreateBranch("git@github.com:tonlabs/ton-client-react-native-js.git")
                     }
+                }
+            }
+        }
+        stage('Run tests') {
+            steps {
+                echo "Job: ${JOB_NAME}"
+                script {
+                    def params = [
+                        // [
+                        //     $class: 'StringParameterValue',
+                        //     name: 'dockerimage_compilers',
+                        //     value: "tonlabs/compilers:latest"
+                        // ],
+                        // [
+                        //     $class: 'StringParameterValue',
+                        //     name: 'dockerimage_local_node',
+                        //     value: "tonlabs/local-node:latest"
+                        // ],
+                        [
+                            $class: 'StringParameterValue',
+                            name: 'ton_client_js_branch',
+                            value: "${GIT_BRANCH}"
+                        ],
+                        [
+                            $class: 'StringParameterValue',
+                            name: 'ton_client_js_commit',
+                            value: "${GIT_COMMIT}"
+                        ],
+                        [
+                            $class: 'BooleanParameterValue',
+                            name: 'RUN_TESTS_ALL',
+                            value: false
+                        ],
+                        [
+                            $class: 'BooleanParameterValue',
+                            name: 'RUN_TESTS_TON_CLIENT_JS',
+                            value: true
+                        ],
+                    ] 
+
+                    build job: "Integration/integration-tests/master", parameters: params
                 }
             }
         }
