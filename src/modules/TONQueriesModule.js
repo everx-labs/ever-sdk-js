@@ -215,7 +215,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 {
                     reconnect: true,
                     connectionParams: () => ({
-                        accessKey: this.config.data.accessKey,
+                        accessKey: this.config.data && this.config.data.accessKey,
                         headers: subsOptions,
                     }),
                 },
