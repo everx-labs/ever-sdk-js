@@ -330,7 +330,7 @@ export type TONContractCalcDeployFeeParams = TONContractDeployParams & {
 export type TONContractDeployResult = {
     address: string,
     alreadyDeployed: boolean,
-    transaction: QTransaction,
+    transaction?: QTransaction,
 }
 
 export type TONContractUnsignedMessage = {
