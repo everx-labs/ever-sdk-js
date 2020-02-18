@@ -18,7 +18,10 @@
 
 import { Span } from "opentracing";
 import { tests } from './_/init-tests';
-import { TONAddressStringVariant } from '../src/modules/TONContractsModule';
+import {
+    removeProps,
+    TONAddressStringVariant
+} from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
 
 
@@ -44,6 +47,29 @@ const walletKeys = {
 };
 
 const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
+
+test('removeProps', () => {
+    const params = {
+        keyPair: {
+            public: 'public',
+            secret: 'secret',
+        },
+        foo: {
+            bar: 'bar',
+            baz: 'baz',
+        }
+    };
+    const reduced = removeProps(params, ['keyPair.secret', 'foo.bar']);
+    expect(reduced)
+        .toEqual({
+            keyPair: {
+                public: 'public'
+            },
+            foo: {
+                baz: 'baz'
+            }
+        });
+});
 
 test('basic', async () => {
     const version = await tests.client.config.getVersion();
@@ -78,7 +104,7 @@ test('load', async () => {
 });
 
 test('Test hello contract from docs.ton.dev', async () => {
-    const {contracts, crypto} = tests.client;
+    const { contracts, crypto } = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
 
     const contractData = await tests.deploy_with_giver({
@@ -642,7 +668,7 @@ test('test deploy lags', async () => {
 
 test('test parse message', async () => {
     const { contracts, crypto } = tests.client;
-    
+
     const keys = await crypto.ed25519Keypair();
 
     const message = await contracts.createDeployMessage({
@@ -675,6 +701,6 @@ test('Check deployed', async () => {
         constructorParams: {},
         keyPair: helloKeys,
     });
-    
+
     expect(checked.alreadyDeployed).toBeTruthy();
 });

@@ -16,7 +16,7 @@
 
 // @flow
 
-import type { TONKeyPairData } from "../types";
+import type { QTransaction, TONKeyPairData } from '../types';
 import { tests } from './_/init-tests';
 
 
@@ -25,8 +25,8 @@ afterAll(tests.done);
 
 const surfAccount = '0:b9d488d7f68444d11de600b149325fc83f0d93117403b92ddbe4de41f6632fff';
 const accountKeys: TONKeyPairData = {
-    "public": "05fe74606e1b0d01188303f8dc80671e21fabb8735df052f97a0b9c6659bd373",
-    "secret": "7ad5917b5e499890cc930a895d53d2c2044b217e203b6245e5daa715e200e84d"
+    public: '05fe74606e1b0d01188303f8dc80671e21fabb8735df052f97a0b9c6659bd373',
+    secret: '7ad5917b5e499890cc930a895d53d2c2044b217e203b6245e5daa715e200e84d',
 };
 
 test.skip('Unauthorized', async () => {
@@ -58,14 +58,14 @@ test.skip('Register Access Keys', async () => {
     await managementClient.registerAccessKeys({
         account: surfAccount,
         keys: [{ key: 'Foo' }],
-        accountKeys
+        accountKeys,
     });
     const client = await tests.createClient({ authorization: 'Foo' });
     const accounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
     await managementClient.revokeAccessKeys({
         account: surfAccount,
         keys: ['Foo'],
-        accountKeys
+        accountKeys,
     });
     try {
         await client.queries.accounts.query({}, 'id', undefined, 1);
@@ -77,26 +77,46 @@ test.skip('Register Access Keys', async () => {
     }
     await managementClient.registerAccessKeys({
         account: surfAccount,
-        keys: [{ key: 'Foo', restrictToAccounts: [accounts[0].id] }],
-        accountKeys
+        keys: [
+            {
+                key: 'Foo',
+                restrictToAccounts: [accounts[0].id],
+            },
+        ],
+        accountKeys,
     });
     const restrictedAccounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
-    expect(restrictedAccounts.length).toEqual(1);
-    expect(restrictedAccounts[0]).toEqual(accounts[0]);
+    expect(restrictedAccounts.length)
+        .toEqual(1);
+    expect(restrictedAccounts[0])
+        .toEqual(accounts[0]);
     const restrictedBlocks = (await client.queries.blocks.query(
         {},
         'id',
         undefined,
-        10));
-    expect(restrictedBlocks.length).toEqual(0);
-    const restrictedTransactions = (await client.queries.transactions.query({}, 'id account_addr', undefined, 10));
-    for (const tr of restrictedTransactions) {
-        expect(tr.account_addr).toEqual(accounts[0].id);
-    }
-    const restrictedMessages = (await client.queries.messages.query({}, 'id src dst', undefined, 10));
-    for (const msg of restrictedMessages) {
-        expect(msg.src === accounts[0].id || msg.dst === accounts[0].id).toBeTruthy();
-    }
+        10,
+    ));
+    expect(restrictedBlocks.length)
+        .toEqual(0);
+    const restrictedTransactions = (await client.queries.transactions.query(
+        {},
+        'id account_addr',
+        undefined,
+        10,
+    ));
+    restrictedTransactions.forEach((tr: QTransaction) => {
+        expect(tr.account_addr)
+            .toEqual(accounts[0].id);
+    });
+    const restrictedMessages = (await client.queries.messages.query(
+        {},
+        'id src dst',
+        undefined,
+        10,
+    ));
+    restrictedMessages.forEach((msg) => {
+        expect(msg.src === accounts[0].id || msg.dst === accounts[0].id)
+            .toBeTruthy();
+    });
 });
-
 
