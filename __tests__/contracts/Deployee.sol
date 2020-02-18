@@ -11,11 +11,18 @@ contract Simple {
         param2 = _param2;
     }
 
-	function get() public view returns (uint32, uint) {
+	function get() public view alwaysAccept returns (uint32, uint) {
         return (param1, param2);
     }
 
-    
+    modifier alwaysAccept {
+		// Runtime function that allows contract to process inbound messages spending
+		// its own resources (it's necessary if contract should process all inbound messages,
+		// not only those that carry value with them).
+		tvm.accept();
+		_;
+	}
+
 	modifier OnlyOwner {
         require(msg.pubkey() == tvm.pubkey(), 100);
         tvm.accept();
