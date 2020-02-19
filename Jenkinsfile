@@ -33,7 +33,7 @@ def checkAndCreateBranch(ton_client_url) {
             git push --set-upstream origin ${GIT_BRANCH}
             echo "Branch ${GIT_BRANCH} in $ton_client_url was created."
         fi
-    """ ,  returnStdout: true).trim()
+    """)
 }
 
 pipeline {
