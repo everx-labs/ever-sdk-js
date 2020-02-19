@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 - `registerAccessKey` parameters passed as structure. 
 - `restrictToAccounts` option for access keys.
 - `parseMessage` function for parsing message BOC into JSON.
+- `deploy` and `processDeployMessage` functions now check the account state before sending message and return `alreadyDeployed = true` if account is already active.
 
 ## 0.20.2 - Feb 12, 2020
 ### Fixed
