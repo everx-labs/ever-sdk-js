@@ -16,8 +16,17 @@
 
 // @flow
 
-import type { QTransaction, TONKeyPairData } from '../types';
+import type {
+    QTransaction,
+    TONClient,
+    TONContractDeployResult, TONContractRunLocalParams,
+    TONContractRunParams,
+    TONContractRunResult,
+    TONKeyPairData
+} from '../types';
 import { tests } from './_/init-tests';
+
+const HelloContractPackage = tests.loadPackage('Hello');
 
 
 beforeAll(tests.init);
@@ -28,26 +37,27 @@ const accountKeys: TONKeyPairData = {
     secret: '7ad5917b5e499890cc930a895d53d2c2044b217e203b6245e5daa715e200e84d',
 };
 
+declare function fail(message: string): void;
+
+async function expectError(code: number, source: string, f) {
+    try {
+        await f();
+        fail(`Expected error with code:${code} source: ${source}`);
+    } catch (error) {
+        expect({ code: error.code, source: error.source }).toEqual({ code, source });
+    }
+}
+
 test.skip('Unauthorized', async () => {
     let client;
-    try {
+    await expectError(401, 'graphql', async () => {
         client = await tests.createClient({ accessKey: '' });
         await client.queries.accounts.query({}, 'id', undefined, 1);
-    } catch (error) {
-        expect(error.source)
-            .toEqual('graphql');
-        expect(error.code)
-            .toEqual(401);
-    }
-    try {
+    });
+    await expectError(401, 'graphql', async () => {
         client = await tests.createClient({ accessKey: 'Foo' });
         await client.queries.accounts.query({}, 'id', undefined, 1);
-    } catch (error) {
-        expect(error.source)
-            .toEqual('graphql');
-        expect(error.code)
-            .toEqual(401);
-    }
+    });
 });
 
 
@@ -66,14 +76,9 @@ test.skip('Register Access Keys', async () => {
         keys: ['Foo'],
         accountKeys,
     });
-    try {
+    await expectError(401, 'graphql', async () => {
         await client.queries.accounts.query({}, 'id', undefined, 1);
-    } catch (error) {
-        expect(error.source)
-            .toEqual('graphql');
-        expect(error.code)
-            .toEqual(401);
-    }
+    });
     await managementClient.registerAccessKeys({
         account: 'bypass',
         keys: [{ key: 'Foo', restrictToAccounts: [accounts[0].id] }],
@@ -113,6 +118,109 @@ test.skip('Register Access Keys', async () => {
             .toBeTruthy();
     });
 });
+
+test.skip('Run restricted contract', async () => {
+    jest.setTimeout(100000);
+    const managementClient = await tests.createClient({ accessKey: 'bypass' });
+
+    const fooKeys = await managementClient.crypto.ed25519Keypair();
+    const barKeys = await managementClient.crypto.ed25519Keypair();
+
+    const fooDeploy = await managementClient.contracts.createDeployMessage({
+        package: HelloContractPackage,
+        constructorParams: {},
+        keyPair: fooKeys,
+    });
+
+    const barDeploy = await managementClient.contracts.createDeployMessage({
+        package: HelloContractPackage,
+        constructorParams: {},
+        keyPair: barKeys,
+    });
+
+    console.log('>>>', 'sponsoring foo...');
+    await tests.get_grams_from_giver(fooDeploy.address, 1000000000);
+    console.log('>>>', 'sponsoring bar...');
+    await tests.get_grams_from_giver(barDeploy.address, 1000000000);
+
+    console.log('>>>', 'registering access keys...');
+    await managementClient.registerAccessKeys({
+        account: 'bypass',
+        keys: [{ key: 'foo', restrictToAccounts: [fooDeploy.address] }],
+        accountKeys,
+    });
+    await managementClient.registerAccessKeys({
+        account: 'bypass',
+        keys: [{ key: 'bar', restrictToAccounts: [barDeploy.address] }],
+        accountKeys,
+    });
+
+    const fooClient: TONClient = await tests.createClient({ accessKey: 'foo' });
+    const barClient: TONClient = await tests.createClient({ accessKey: 'bar' });
+
+    console.log('>>>', 'deploying bar using foo access...');
+    await expectError(401, 'graphql', async () => {
+        await fooClient.contracts.processDeployMessage(barDeploy);
+    });
+    console.log('>>>', 'deploying foo using bar access...');
+    await expectError(401, 'graphql', async () => {
+        await barClient.contracts.processDeployMessage(fooDeploy);
+    });
+
+    console.log('>>>', 'deploying foo...');
+    const fooResponse: TONContractDeployResult = await fooClient.contracts.processDeployMessage(fooDeploy);
+    expect(fooResponse.transaction?.status).toEqual(3);
+
+    console.log('>>>', 'deploying bar...');
+    const barResponse: TONContractDeployResult = await barClient.contracts.processDeployMessage(barDeploy);
+    expect(barResponse.transaction?.status).toEqual(3);
+
+
+    const testRun = async (address, keyPair, myClient, otherClient) => {
+        const params: TONContractRunParams = {
+            abi: HelloContractPackage.abi,
+            functionName: 'touch',
+            input: {},
+            address,
+            keyPair,
+        };
+        await expectError(401, 'graphql', async () => {
+            await otherClient.contracts.run(params);
+        });
+        const response: TONContractRunResult = await myClient.contracts.run(params);
+        expect(response.transaction?.status).toEqual(3);
+
+    };
+
+    console.log('>>>', 'run...');
+    await testRun(barDeploy.address, barKeys, barClient, fooClient);
+    await testRun(fooDeploy.address, fooKeys, fooClient, barClient);
+
+
+    const testRunLocal = async (address, keyPair, myClient, otherClient) => {
+        const params: TONContractRunLocalParams = {
+            abi: HelloContractPackage.abi,
+            functionName: 'touch',
+            input: {},
+            address,
+            keyPair,
+            waitParams: {
+                timeout: 1000,
+            },
+        };
+        await expectError(1003, 'client', async () => {
+            await otherClient.contracts.runLocal(params);
+        });
+        const response: TONContractRunResult = await myClient.contracts.runLocal(params);
+        expect(response.output).toBeNull();
+
+    };
+
+    console.log('>>>', 'run local...');
+    await testRunLocal(barDeploy.address, barKeys, barClient, fooClient);
+    await testRunLocal(fooDeploy.address, fooKeys, fooClient, barClient);
+});
+
 
 test.skip('Subscription restricted to accounts', async () => {
     const managementClient = await tests.createClient({ accessKey: 'bypass' });

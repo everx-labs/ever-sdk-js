@@ -245,5 +245,5 @@ export async function deploy_with_giver(
 }
 
 export function get_giver_address(): string {
-    return giverWalletAddressHex;
+    return nodeSe ? nodeSeGiverAddress : giverWalletAddressHex;
 }
