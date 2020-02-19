@@ -16,10 +16,13 @@
 
 // @flow
 
-import {Span} from "opentracing";
-import {tests} from './_/init-tests';
-import {TONAddressStringVariant} from '../src/modules/TONContractsModule';
-import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
+import { Span } from "opentracing";
+import { tests } from './_/init-tests';
+import {
+    removeProps,
+    TONAddressStringVariant
+} from '../src/modules/TONContractsModule';
+import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
 
 
 import type {
@@ -45,6 +48,29 @@ const walletKeys = {
 };
 
 const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
+
+test('removeProps', () => {
+    const params = {
+        keyPair: {
+            public: 'public',
+            secret: 'secret',
+        },
+        foo: {
+            bar: 'bar',
+            baz: 'baz',
+        }
+    };
+    const reduced = removeProps(params, ['keyPair.secret', 'foo.bar']);
+    expect(reduced)
+        .toEqual({
+            keyPair: {
+                public: 'public'
+            },
+            foo: {
+                baz: 'baz'
+            }
+        });
+});
 
 test('basic', async () => {
     const version = await tests.client.config.getVersion();
@@ -634,4 +660,43 @@ test('test deploy lags', async () => {
 
     config.log("After deploy");
     config.stopProfile();
+});
+
+test('test parse message', async () => {
+    const { contracts, crypto } = tests.client;
+
+    const keys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: WalletContractPackage,
+        constructorParams: {},
+        keyPair: keys,
+    });
+
+    const parsedMsg = await contracts.parseMessage({
+        bocBase64: message.message.messageBodyBase64
+    });
+
+    expect(parsedMsg.dst).toEqual(message.address);
+});
+
+test('Check deployed', async () => {
+    const { contracts, crypto } = tests.client;
+    const helloKeys = await crypto.ed25519Keypair();
+
+    const deployed = await tests.deploy_with_giver({
+        package: HelloContractPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    });
+
+    expect(deployed.alreadyDeployed).toBeFalsy();
+
+    const checked = await contracts.deploy({
+        package: HelloContractPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    });
+
+    expect(checked.alreadyDeployed).toBeTruthy();
 });

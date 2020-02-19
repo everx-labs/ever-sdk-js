@@ -28,8 +28,9 @@ import type {
     TONQueries,
     TONQCollection,
     Subscription,
-    DocEvent,
-    OrderBy
+    TONQueryParams,
+    TONSubscribeParams,
+    TONWaitForParams
 } from "../../types";
 import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
@@ -42,6 +43,10 @@ import { FORMAT_TEXT_MAP, Tags, Span, SpanContext } from 'opentracing';
 export type Request = {
     id: string,
     body: string,
+}
+
+function findParams<T>(args: any[], requiredParamName: string): ?T {
+    return (args.length === 1) && (requiredParamName in args[0]) ? args[0] : null;
 }
 
 export default class TONQueriesModule extends TONModule implements TONQueries {
@@ -210,6 +215,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 {
                     reconnect: true,
                     connectionParams: () => ({
+                        accessKey: this.config.data && this.config.data.accessKey,
                         headers: subsOptions,
                     }),
                 },
@@ -220,9 +226,9 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 const resolvedSpan = (req && req.traceSpan) || span;
                 req.headers = {};
                 this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
-                const authToken = this.config.data && this.config.data.authorization;
-                if (authToken) {
-                    req.headers.authorization = authToken;
+                const accessKey = this.config.data && this.config.data.accessKey;
+                if (accessKey) {
+                    req.headers.accessKey = accessKey;
                 }
                 return {
                     headers: req.headers,
@@ -238,7 +244,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                             && definition.operation === 'subscription'
                         );
                     },
-                    new WebSocketLink(subscriptionClient),
+                    tracerLink.concat(new WebSocketLink(subscriptionClient)),
                     tracerLink.concat(new HttpLink({
                         uri: httpUrl,
                         fetch,
@@ -292,13 +298,23 @@ class TONQueriesModuleCollection implements TONQCollection {
     }
 
     async query(
-        filter: any,
-        result: string,
-        orderBy?: OrderBy[],
-        limit?: number,
-        timeout?: number,
-        parentSpan?: (Span | SpanContext)
+        ...args
+        /*
+            filterOrParams: any | TONQueryParams,
+            result: string,
+            orderBy?: OrderBy[],
+            limit?: number,
+            timeout?: number,
+            parentSpan?: (Span | SpanContext)
+         */
     ): Promise<any> {
+        const params = findParams<TONQueryParams>(args, 'filter');
+        const filter = params ? params.filter : args[0];
+        const result: string = params ? params.result : (args[1]: any);
+        const orderBy = params ? params.orderBy : args[2];
+        const limit = params ? params.limit : args[3];
+        const timeout = params ? params.timeout : args[4];
+        const parentSpan = params ? params.parentSpan : args[5];
         return this.module.context.trace(`${this.collectionName}.query`, async (span) => {
             span.setTag('params', {
                 filter, result, orderBy, limit, timeout
@@ -321,11 +337,19 @@ class TONQueriesModuleCollection implements TONQCollection {
     }
 
     subscribe(
-        filter: any,
-        result: string,
-        onDocEvent: DocEvent,
+        ...args
+        /*
+        filterOrParams: any | TONSubscribeParams,
+        result?: string,
+        onDocEvent?: DocEvent,
         onError?: (err: Error) => void
+         */
     ): Subscription {
+        const params = findParams<TONSubscribeParams>(args, 'filter');
+        const filter = params ? params.filter : args[0];
+        const result: string = params ? params.result : (args[1]: any);
+        const onDocEvent = params ? params.onDocEvent : (args[2]: any);
+        const onError = params ? params.onError : (args[3]: any);
         const span = this.module.config.tracer.startSpan('TONQueriesModule.js:subscribe ');
         span.setTag(Tags.SPAN_KIND, 'client');
         const text = `subscription ${this.collectionName}($filter: ${this.typeName}Filter) {
@@ -365,12 +389,20 @@ class TONQueriesModuleCollection implements TONQCollection {
     }
 
     async waitFor(
-        filter: any,
+        ...args
+        /*
+        filterOrParams: any | TONWaitForParams,
         result: string,
         timeout?: number,
         parentSpan?: (Span | SpanContext)
+         */
     ): Promise<any> {
-        const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000, parentSpan);
+        const params = findParams<TONWaitForParams>(args, 'filter');
+        const filter = params ? params.filter : args[0];
+        const result: string = params ? params.result : (args[1]: any);
+        const timeout = (params ? params.timeout : args[2]) || 40000;
+        const parentSpan = params ? params.parentSpan : args[3];
+        const docs = await this.query({ filter, result, timeout, parentSpan });
         if (docs.length > 0) {
             return docs[0];
         }
