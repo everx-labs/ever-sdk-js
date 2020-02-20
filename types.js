@@ -306,7 +306,7 @@ export type TONContractCreateSignedMessageParams = {
     abi: TONContractABI,
     unsignedBytesBase64: string,
     signBytesBase64: string,
-    publicKeyHex: string,
+    publicKeyHex?: string,
 }
 
 export type TONContractCreateSignedDeployMessageParams = {
@@ -502,6 +502,7 @@ export type QTransaction = {
         success?: boolean,
         result_code?: number,
     };
+    in_msg?: string,
     out_msgs?: string[],
     out_messages?: QMessage[],
 }

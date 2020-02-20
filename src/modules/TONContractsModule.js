@@ -62,7 +62,7 @@ import type {
 import { TONClient, TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
-import TONQueriesModule from './TONQueriesModule';
+import TONQueriesModule, { DEFAULT_TIMEOUT } from './TONQueriesModule';
 import tracing, { Span, SpanContext } from 'opentracing';
 
 export const TONAddressStringVariant = {
@@ -442,46 +442,44 @@ export default class TONContractsModule extends TONModule implements TONContract
         return id;
     }
 
-
     async processMessage(
         message: TONContractMessage,
         resultFields: string,
         parentSpan?: (Span | SpanContext)
     ): Promise<QTransaction> {
-        let transaction: ?QTransaction = null;
-        const expire = Number(message.expire || 0xffffffff);
-        // calculate timeout according to `expire` value (in seconds)
-        // add 20 seconds as block validation time
-        const timeout = Math.min(2147483647, expire * 1000 - Date.now() + 20_000);
-
-        if (timeout <= 0) {
-            throw TONClientError.sendNodeRequestFailed("Message already expired");
-        }
 
         const messageId = await this.sendMessage(message, parentSpan);
-        // wait for message processing transaction
-        const waitTransaction = this.queries.transactions.waitFor({
-            in_msg: { eq: messageId },
-            status: { eq: QTransactionProcessingStatus.finalized },
-        }, resultFields, timeout, parentSpan);
-        // wait for block, produced after `expire` to guarantee that message is rejected
-        const waitBlock = this.queries.blocks.waitFor({
-            workchain_id: { eq: -1 },
-            master: {
-                shard_hashes: {
-                    all: {
-                        descr: { 
-                            gen_utime : { ge: expire }
-                        }
-                    }
-                }
-            },
-        }, 'id', timeout, parentSpan);
+
+        let timeout = DEFAULT_TIMEOUT;
+        let promises = [];
+        if (message.expire) {
+            const expire = message.expire;
+            // calculate timeout according to `expire` value (in seconds)
+            // add default timeout as master block validation time
+            timeout = expire * 1000 - Date.now() + DEFAULT_TIMEOUT;
+            
+            if (timeout <= 0) {
+                throw TONClientError.sendNodeRequestFailed("Message already expired");
+            }
+            // wait for block, produced after `expire` to guarantee that message is rejected
+            promises.push(
+                this.queries.blocks.waitFor({
+                        workchain_id: { eq: -1 },
+                        master: { shard_hashes: { all: { descr: { gen_utime : { ge: expire } } } } },
+                    }, 'id', timeout, parentSpan));
+        }
+
+        // wait for message processing transaction with inreased timeout - to make block waiting end first
+        promises.push(
+            this.queries.transactions.waitFor({
+                    in_msg: { eq: messageId },
+                    status: { eq: QTransactionProcessingStatus.finalized },
+                }, resultFields, timeout, parentSpan));
         
-        transaction = await Promise.race([waitTransaction, waitBlock]);
+        let transaction: QTransaction = await Promise.race(promises);
         
         if (transaction?.in_msg !== messageId) {
-            throw TONClientError.internalError('transaction is null');
+            throw TONClientError.messageExpired();
         }
         const transactionNow = transaction.now || 0;
         this.config.log('processMessage. transaction received', {

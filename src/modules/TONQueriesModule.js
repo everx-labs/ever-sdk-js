@@ -44,6 +44,9 @@ export type Request = {
     body: string,
 }
 
+export const MAX_TIMEOUT = 2147483647;
+export const DEFAULT_TIMEOUT = 40_000;
+
 export default class TONQueriesModule extends TONModule implements TONQueries {
     config: TONConfigModule;
     overrideWsUrl: ?string;
@@ -314,7 +317,7 @@ class TONQueriesModuleCollection implements TONQCollection {
                 limit,
             };
             if (timeout) {
-                variables.timeout = timeout;
+                variables.timeout = Math.min(MAX_TIMEOUT, timeout);
             }
             return (await this.module._query(ql, variables, span)).data[c];
         }, parentSpan);
@@ -370,7 +373,7 @@ class TONQueriesModuleCollection implements TONQCollection {
         timeout?: number,
         parentSpan?: (Span | SpanContext)
     ): Promise<any> {
-        const docs = await this.query(filter, result, undefined, undefined, timeout || 40_000, parentSpan);
+        const docs = await this.query(filter, result, undefined, undefined, timeout || DEFAULT_TIMEOUT, parentSpan);
         if (docs.length > 0) {
             return docs[0];
         }

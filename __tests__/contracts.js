@@ -26,6 +26,7 @@ import type {
     TONContractLoadResult,
 } from '../types';
 import { binariesVersion } from './_/binaries';
+import { TONClientError } from "../src/TONClient";
 
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -675,6 +676,17 @@ test('test deploy lags', async () => {
     config.stopProfile();
 });
 
+declare function fail(message: string): void;
+
+async function expectError(code: number, source: string, f) {
+    try {
+        await f();
+        fail(`Expected error with code:${code} source: ${source}`);
+    } catch (error) {
+        expect({ code: error.code, source: error.source }).toEqual({ code, source });
+    }
+}
+
 test('Test expire', async () => {
     const {contracts, crypto, queries} = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
@@ -724,9 +736,19 @@ test('Test expire', async () => {
     // and then change `expire` to correct value in order to send it properly
     runMsg.message.expire = Math.floor(Date.now() / 1000) + 10;
 
+    // Node SE writes aborted transactions into DB, so error differs
+    let expectedError = TONClientError.messageExpired();
+    if (tests.nodeSe) {
+        expectedError = {
+            code: 9,
+            source: "node"
+        }
+    }
+
     // SDK will wait for message processing using modified `expire` value, but message was created
     // already expired so contract won't accept it
-    expect(async () => await contracts.processRunMessage(runMsg)).toThrow();
+    await expectError(expectedError.code, expectedError.source,
+        async () => contracts.processRunMessage(runMsg));
 
     // check that expired message wasn't processed by the contract
     const ltExpire = (await queries.accounts.query({
