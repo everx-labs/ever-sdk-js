@@ -26,6 +26,14 @@
 			]
 		},
 		{
+			"name": "getNewVersion",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
 			"name": "sendAllMoney",
 			"inputs": [
 				{"name":"dest_addr","type":"address"}
@@ -35,7 +43,5 @@
 		}
 	],
 	"events": [
-	],
-	"data": [
 	]
 }

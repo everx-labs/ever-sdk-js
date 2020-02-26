@@ -37,15 +37,19 @@ test('Specialized', async () => {
 test.skip('Transaction List', async () => {
     const queries = tests.client.queries;
     const transaction = await queries.transactions.query({
-        id: { eq: 'e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465' },
-        status: { in: [QTransactionProcessingStatus.proposed, QTransactionProcessingStatus.finalized] }
-    }, 'id now status', [], 1);
+        filter: {
+            id: { eq: 'e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465' },
+            status: { in: [QTransactionProcessingStatus.proposed, QTransactionProcessingStatus.finalized] }
+        },
+        result: 'id now status',
+        limit: 1,
+    });
     // expect(transaction[0].id).toEqual('e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465');
 });
 
 test('All Accounts', async () => {
     const queries = tests.client.queries;
-    const docs = await queries.accounts.query({}, 'id balance');
+    const docs = await queries.accounts.query({ filter: {}, result: 'id balance' });
     expect(docs.length).toBeGreaterThan(0);
 });
 
@@ -53,24 +57,31 @@ test('All Accounts', async () => {
 test.skip('Message', async () => {
     const queries = tests.client.queries;
     const messages = await queries.messages.query({
-        id: { eq: '3a8e38b419a452fe7a0073e71c083f926055d0f249485ab9f8ca6e9825c20b8c' }
-    }, 'body created_at');
+        filter: {
+            id: { eq: '3a8e38b419a452fe7a0073e71c083f926055d0f249485ab9f8ca6e9825c20b8c' }
+        },
+        result: 'body created_at'
+    });
     // expect(messages[0].header.ExtOutMsgInfo.created_at).toEqual(1562342740);
 });
 
 test('Ranges', async () => {
     const queries = tests.client.queries;
-    const messages = await queries.messages.query(
-        { created_at: { gt: 1562342740 }, },
-        'body created_at');
+    const messages = await queries.messages.query({
+        filter: { created_at: { gt: 1562342740 }, },
+        result: 'body created_at'
+    });
     expect(messages[0].created_at).toBeGreaterThan(1562342740);
 });
 
 test('Wait For', async () => {
     const queries = tests.client.queries;
     const data = await queries.transactions.waitFor({
-        now: { gt: 1563449 },
-    }, 'id status');
+        filter: {
+            now: { gt: 1563449 },
+        },
+        result: 'id status'
+    });
     expect(data.status).toEqual(QTransactionProcessingStatus.finalized);
 });
 
@@ -93,10 +104,14 @@ test("Subscribe for transactions with addresses", async () => {
     console.log('>>>', `Subscribe to transactions on [${message.address}]...`);
     const transactions = [];
     const subscription = (await queries.transactions.subscribe({
-        in_msg: { eq: message.message.messageId }
-    }, 'id', (e, d) => {
-        console.log('>>> Subscription triggered', d);
-        transactions.push(d);
+        filter: {
+            in_msg: { eq: message.message.messageId }
+        },
+        result: 'id',
+        onDocEvent(e, d) {
+            console.log('>>> Subscription triggered', d);
+            transactions.push(d);
+        },
     }));
 
     console.log('>>>', 'Paying...');
@@ -114,9 +129,13 @@ test("Subscribe for messages", async () => {
     const { contracts, queries, crypto } = tests.client;
     const docs = [];
     const subscription = (await queries.messages.subscribe({
-        src: { eq: '1' }
-    }, 'id', (e, doc) => {
-        docs.push(doc);
+        filter: {
+            src: { eq: '1' }
+        },
+        result: 'id',
+        onDocEvent(e, doc) {
+            docs.push(doc);
+        }
     }));
 
     const walletKeys = await crypto.ed25519Keypair();
@@ -140,7 +159,10 @@ test("Subscribe for messages", async () => {
 
 test("Transactions with addresses", async () => {
     const queries = tests.client.queries;
-    const tr = (await queries.transactions.query({}, transactionWithAddresses))[0];
+    const tr = (await queries.transactions.query({
+        filter: {},
+        result: transactionWithAddresses
+    }))[0];
     expect(tr).toBeTruthy();
 });
 
@@ -172,7 +194,10 @@ const shardHashesQuery = `
 `;
 
 test('Check shard_hashes greater then 0', async () => {
-    const queryResult = (await tests.client.queries.blocks.query({}, shardHashesQuery));
+    const queryResult = (await tests.client.queries.blocks.query({
+        filter: {},
+        result: shardHashesQuery
+    }));
     expect(queryResult.length)
         .toBeGreaterThan(0);
 });

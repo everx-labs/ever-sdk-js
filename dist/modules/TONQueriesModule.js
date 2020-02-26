@@ -708,6 +708,7 @@ function (_TONModule) {
                               reconnect: true,
                               connectionParams: function connectionParams() {
                                 return {
+                                  accessKey: _this5.config.data && _this5.config.data.accessKey,
                                   headers: subsOptions
                                 };
                               }
@@ -724,10 +725,10 @@ function (_TONModule) {
 
                               _this5.config.tracer.inject(resolvedSpan, _opentracing.FORMAT_TEXT_MAP, req.headers);
 
-                              var authToken = _this5.config.data && _this5.config.data.authorization;
+                              var accessKey = _this5.config.data && _this5.config.data.accessKey;
 
-                              if (authToken) {
-                                req.headers.authorization = authToken;
+                              if (accessKey) {
+                                req.headers.accessKey = accessKey;
                               }
 
                               return {
@@ -743,7 +744,7 @@ function (_TONModule) {
                                 var query = _ref6.query;
                                 var definition = (0, _apolloUtilities.getMainDefinition)(query);
                                 return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
-                              }, new _apolloLinkWs.WebSocketLink(subscriptionClient), tracerLink.concat(new _apolloLinkHttp.HttpLink({
+                              }, tracerLink.concat(new _apolloLinkWs.WebSocketLink(subscriptionClient)), tracerLink.concat(new _apolloLinkHttp.HttpLink({
                                 uri: httpUrl,
                                 fetch: fetch
                               }))),
@@ -847,13 +848,36 @@ function () {
     value: function () {
       var _query4 = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee20(filter, result, orderBy, limit, timeout, parentSpan) {
+      _regenerator["default"].mark(function _callee20() {
         var _this6 = this;
+
+        var _len,
+            args,
+            _key,
+            params,
+            filter,
+            result,
+            orderBy,
+            limit,
+            timeout,
+            parentSpan,
+            _args20 = arguments;
 
         return _regenerator["default"].wrap(function _callee20$(_context20) {
           while (1) {
             switch (_context20.prev = _context20.next) {
               case 0:
+                for (_len = _args20.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+                  args[_key] = _args20[_key];
+                }
+
+                params = findParams(args, 'filter');
+                filter = params ? params.filter : args[0];
+                result = params ? params.result : args[1];
+                orderBy = params ? params.orderBy : args[2];
+                limit = params ? params.limit : args[3];
+                timeout = params ? params.timeout : args[4];
+                parentSpan = params ? params.parentSpan : args[5];
                 return _context20.abrupt("return", this.module.context.trace("".concat(this.collectionName, ".query"),
                 /*#__PURE__*/
                 function () {
@@ -900,12 +924,12 @@ function () {
                     }, _callee19);
                   }));
 
-                  return function (_x25) {
+                  return function (_x19) {
                     return _ref7.apply(this, arguments);
                   };
                 }(), parentSpan));
 
-              case 1:
+              case 9:
               case "end":
                 return _context20.stop();
             }
@@ -913,7 +937,7 @@ function () {
         }, _callee20, this);
       }));
 
-      function query(_x19, _x20, _x21, _x22, _x23, _x24) {
+      function query() {
         return _query4.apply(this, arguments);
       }
 
@@ -921,9 +945,18 @@ function () {
     }()
   }, {
     key: "subscribe",
-    value: function subscribe(filter, result, onDocEvent, onError) {
+    value: function subscribe() {
       var _this7 = this;
 
+      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
+      var params = findParams(args, 'filter');
+      var filter = params ? params.filter : args[0];
+      var result = params ? params.result : args[1];
+      var onDocEvent = params ? params.onDocEvent : args[2];
+      var onError = params ? params.onError : args[3];
       var span = this.module.config.tracer.startSpan('TONQueriesModule.js:subscribe ');
       span.setTag(_opentracing.Tags.SPAN_KIND, 'client');
       var text = "subscription ".concat(this.collectionName, "($filter: ").concat(this.typeName, "Filter) {\n        \t").concat(this.collectionName, "(filter: $filter) { ").concat(result, " }\n        }");
@@ -990,8 +1023,18 @@ function () {
     value: function () {
       var _waitFor = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee22(filter, result, timeout, parentSpan) {
-        var docs;
+      _regenerator["default"].mark(function _callee22() {
+        var _len3,
+            args,
+            _key3,
+            params,
+            filter,
+            result,
+            timeout,
+            parentSpan,
+            docs,
+            _args22 = arguments;
+
         return _regenerator["default"].wrap(function _callee22$(_context22) {
           while (1) {
             switch (_context22.prev = _context22.next) {
@@ -999,20 +1042,33 @@ function () {
                 _context22.next = 2;
                 return this.query(filter, result, undefined, undefined, timeout || DEFAULT_TIMEOUT, parentSpan);
 
-              case 2:
+                params = findParams(args, 'filter');
+                filter = params ? params.filter : args[0];
+                result = params ? params.result : args[1];
+                timeout = (params ? params.timeout : args[2]) || 40000;
+                parentSpan = params ? params.parentSpan : args[3];
+                _context22.next = 8;
+                return this.query({
+                  filter: filter,
+                  result: result,
+                  timeout: timeout,
+                  parentSpan: parentSpan
+                });
+
+              case 8:
                 docs = _context22.sent;
 
                 if (!(docs.length > 0)) {
-                  _context22.next = 5;
+                  _context22.next = 11;
                   break;
                 }
 
                 return _context22.abrupt("return", docs[0]);
 
-              case 5:
+              case 11:
                 throw _TONClient.TONClientError.waitForTimeout();
 
-              case 6:
+              case 12:
               case "end":
                 return _context22.stop();
             }
@@ -1020,7 +1076,7 @@ function () {
         }, _callee22, this);
       }));
 
-      function waitFor(_x26, _x27, _x28, _x29) {
+      function waitFor() {
         return _waitFor.apply(this, arguments);
       }
 

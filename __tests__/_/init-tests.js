@@ -61,7 +61,7 @@ async function init() {
     await readGiverKeys();
 }
 
-async function createClient(config: { authorization?: string }): Promise<TONClient> {
+async function createClient(config: { accessKey?: string }): Promise<TONClient> {
     return TONClient.create(Object.assign({}, tests.config, config));
 }
 
@@ -116,7 +116,7 @@ function createJaegerTracer(endpoint: string): ?Tracer {
 
 export const tests: {
     config: TONConfigData,
-    createClient(config: { authorization?: string }): Promise<TONClient>,
+    createClient(config: { accessKey?: string }): Promise<TONClient>,
     client: TONClient,
     init(): Promise<void>,
     done(): Promise<void>,
@@ -133,6 +133,7 @@ export const tests: {
         log_verbose: false,
         tracer: createJaegerTracer(''),
         transactionTimeout: 40_000,
+        accessKey: 'bypass',
     },
     createClient,
     client: new TONClient(),

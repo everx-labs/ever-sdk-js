@@ -280,40 +280,44 @@ function () {
       return getManagementAccessKey;
     }()
   }, {
-    key: "registerAccessKeys",
+    key: "_resolveSignedManagementAccessKey",
     value: function () {
-      var _registerAccessKeys = (0, _asyncToGenerator2["default"])(
+      var _resolveSignedManagementAccessKey2 = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee4(account, keys, accountKeys) {
-        var managementAccessKey, signedManagementAccessKey, result;
+      _regenerator["default"].mark(function _callee4(params) {
+        var signKeys, managementAccessKey;
         return _regenerator["default"].wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                _context4.next = 2;
-                return this.getManagementAccessKey();
+                if (!params.signedManagementAccessKey) {
+                  _context4.next = 2;
+                  break;
+                }
+
+                return _context4.abrupt("return", params.signedManagementAccessKey);
 
               case 2:
-                managementAccessKey = _context4.sent;
-                _context4.next = 5;
-                return this.crypto.naclSign({
-                  text: managementAccessKey
-                }, "".concat(accountKeys.secret).concat(accountKeys["public"]), 'Hex');
+                signKeys = params.accountKeys;
 
-              case 5:
-                signedManagementAccessKey = _context4.sent;
-                _context4.next = 8;
-                return this._queries.mutation("mutation registerAccessKeys($account: String, $keys: [String], $signedManagementAccessKey: String) {\n                    registerAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)\n                }", {
-                  account: account,
-                  keys: keys,
-                  signedManagementAccessKey: signedManagementAccessKey
-                });
+                if (!signKeys) {
+                  _context4.next = 8;
+                  break;
+                }
+
+                _context4.next = 6;
+                return this.getManagementAccessKey();
+
+              case 6:
+                managementAccessKey = _context4.sent;
+                return _context4.abrupt("return", this.crypto.naclSign({
+                  text: managementAccessKey
+                }, "".concat(signKeys.secret).concat(signKeys["public"]), 'Hex'));
 
               case 8:
-                result = _context4.sent;
-                return _context4.abrupt("return", result.data.registerAccessKeys);
+                return _context4.abrupt("return", '');
 
-              case 10:
+              case 9:
               case "end":
                 return _context4.stop();
             }
@@ -321,7 +325,48 @@ function () {
         }, _callee4, this);
       }));
 
-      function registerAccessKeys(_x, _x2, _x3) {
+      function _resolveSignedManagementAccessKey(_x) {
+        return _resolveSignedManagementAccessKey2.apply(this, arguments);
+      }
+
+      return _resolveSignedManagementAccessKey;
+    }()
+  }, {
+    key: "registerAccessKeys",
+    value: function () {
+      var _registerAccessKeys = (0, _asyncToGenerator2["default"])(
+      /*#__PURE__*/
+      _regenerator["default"].mark(function _callee5(params) {
+        var signedManagementAccessKey, result;
+        return _regenerator["default"].wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                _context5.next = 2;
+                return this._resolveSignedManagementAccessKey(params);
+
+              case 2:
+                signedManagementAccessKey = _context5.sent;
+                _context5.next = 5;
+                return this._queries.mutation("mutation registerAccessKeys($account: String, $keys: [AccessKey], $signedManagementAccessKey: String) {\n                    registerAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)\n                }", {
+                  account: params.account,
+                  keys: params.keys,
+                  signedManagementAccessKey: signedManagementAccessKey
+                });
+
+              case 5:
+                result = _context5.sent;
+                return _context5.abrupt("return", result.data.registerAccessKeys);
+
+              case 7:
+              case "end":
+                return _context5.stop();
+            }
+          }
+        }, _callee5, this);
+      }));
+
+      function registerAccessKeys(_x2) {
         return _registerAccessKeys.apply(this, arguments);
       }
 
@@ -332,44 +377,37 @@ function () {
     value: function () {
       var _revokeAccessKeys = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee5(account, keys, accountKeys) {
-        var managementAccessKey, signedManagementAccessKey, result;
-        return _regenerator["default"].wrap(function _callee5$(_context5) {
+      _regenerator["default"].mark(function _callee6(params) {
+        var signedManagementAccessKey, result;
+        return _regenerator["default"].wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
-                _context5.next = 2;
-                return this.getManagementAccessKey();
+                _context6.next = 2;
+                return this._resolveSignedManagementAccessKey(params);
 
               case 2:
-                managementAccessKey = _context5.sent;
-                _context5.next = 5;
-                return this.crypto.naclSign({
-                  text: managementAccessKey
-                }, "".concat(accountKeys.secret).concat(accountKeys["public"]), 'Hex');
-
-              case 5:
-                signedManagementAccessKey = _context5.sent;
-                _context5.next = 8;
-                return this._queries.mutation("mutation revokeAccessKeys($account: String, $keys: [String], $signedManagementAccessKey: String) {\n                    registerAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)\n                }", {
-                  account: account,
-                  keys: keys,
+                signedManagementAccessKey = _context6.sent;
+                _context6.next = 5;
+                return this._queries.mutation("mutation revokeAccessKeys($account: String, $keys: [String], $signedManagementAccessKey: String) {\n                    revokeAccessKeys(account: $account, keys: $keys, signedManagementAccessKey: $signedManagementAccessKey)\n                }", {
+                  account: params.account,
+                  keys: params.keys,
                   signedManagementAccessKey: signedManagementAccessKey
                 });
 
-              case 8:
-                result = _context5.sent;
-                return _context5.abrupt("return", result.data.revokeAccessKeys);
+              case 5:
+                result = _context6.sent;
+                return _context6.abrupt("return", result.data.revokeAccessKeys);
 
-              case 10:
+              case 7:
               case "end":
-                return _context5.stop();
+                return _context6.stop();
             }
           }
-        }, _callee5, this);
+        }, _callee6, this);
       }));
 
-      function revokeAccessKeys(_x4, _x5, _x6) {
+      function revokeAccessKeys(_x3) {
         return _revokeAccessKeys.apply(this, arguments);
       }
 
@@ -380,49 +418,49 @@ function () {
     value: function () {
       var _trace = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee6(name, f, parentSpan) {
+      _regenerator["default"].mark(function _callee7(name, f, parentSpan) {
         var span, result;
-        return _regenerator["default"].wrap(function _callee6$(_context6) {
+        return _regenerator["default"].wrap(function _callee7$(_context7) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context7.prev = _context7.next) {
               case 0:
                 span = this.config.tracer.startSpan(name, {
                   childOf: parentSpan
                 });
-                _context6.prev = 1;
+                _context7.prev = 1;
                 span.setTag(_opentracing.Tags.SPAN_KIND, 'client');
-                _context6.next = 5;
+                _context7.next = 5;
                 return f(span);
 
               case 5:
-                result = _context6.sent;
+                result = _context7.sent;
 
                 if (result !== undefined) {
                   span.setTag('result', result);
                 }
 
                 span.finish();
-                return _context6.abrupt("return", result);
+                return _context7.abrupt("return", result);
 
               case 11:
-                _context6.prev = 11;
-                _context6.t0 = _context6["catch"](1);
+                _context7.prev = 11;
+                _context7.t0 = _context7["catch"](1);
                 span.log({
                   event: 'failed',
-                  payload: _context6.t0
+                  payload: _context7.t0
                 });
                 span.finish();
-                throw _context6.t0;
+                throw _context7.t0;
 
               case 16:
               case "end":
-                return _context6.stop();
+                return _context7.stop();
             }
           }
-        }, _callee6, this, [[1, 11]]);
+        }, _callee7, this, [[1, 11]]);
       }));
 
-      function trace(_x7, _x8, _x9) {
+      function trace(_x4, _x5, _x6) {
         return _trace.apply(this, arguments);
       }
 
@@ -434,29 +472,29 @@ function () {
     value: function () {
       var _create = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee7(config) {
+      _regenerator["default"].mark(function _callee8(config) {
         var client;
-        return _regenerator["default"].wrap(function _callee7$(_context7) {
+        return _regenerator["default"].wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context7.prev = _context7.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
                 client = new TONClient();
                 client.config.setData(config);
-                _context7.next = 4;
+                _context8.next = 4;
                 return client.setup();
 
               case 4:
-                return _context7.abrupt("return", client);
+                return _context8.abrupt("return", client);
 
               case 5:
               case "end":
-                return _context7.stop();
+                return _context8.stop();
             }
           }
-        }, _callee7);
+        }, _callee8);
       }));
 
-      function create(_x10) {
+      function create(_x7) {
         return _create.apply(this, arguments);
       }
 

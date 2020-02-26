@@ -17,8 +17,8 @@
 // @flow
 
 
-import type { TONContractGetDeployDataResult} from '../types';
-import { tests } from './_/init-tests';
+import type {TONContractGetDeployDataResult} from '../types';
+import {tests} from './_/init-tests';
 
 const DeployerPackage = tests.loadPackage('Deployer');
 const DeployeePackage = tests.loadPackage('Deployee');
@@ -134,7 +134,7 @@ test('Deploy from contract 1', async () => {
         abi: DeployerPackage.abi,
         input: {
             pubkey: `0x${keys.public}`,
-            gram: 300000000,
+            gram_amount: 300000000,
             constuctor_id: constuctor_id.id,
             constuctor_param0: 1,
             constuctor_param1: 2,
@@ -190,10 +190,7 @@ test('Deploy from contract 2', async () => {
 
     const deployData = await contracts.getDeployData({
         abi: DeployeePackage.abi,
-        initParams: {
-            param1: 1,
-            param2: 2,
-        },
+
         publicKeyHex: keys.public,
     });
 
@@ -209,7 +206,7 @@ test('Deploy from contract 2', async () => {
         abi: DeployerPackage.abi,
         input: {
             data: deployData.dataBase64,
-            gram: 300000000,
+            gram_amount: 300000000,
             constuctor_id: constuctor_id.id,
             constuctor_param0: 1,
             constuctor_param1: 2,
@@ -277,7 +274,7 @@ test('Deploy from contract 3', async () => {
         input: {
             contr: deployData.imageBase64,
             addr: address,
-            grams: 300000000,
+            gram_amount: 300000000,
             payload: runBody.bodyBase64,
         },
         keyPair: keys,

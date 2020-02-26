@@ -12,3 +12,4 @@ package-lock.json
 Jenkinsfile
 /reinstall.sh
 /uninstall.sh
+/.github/workflows/

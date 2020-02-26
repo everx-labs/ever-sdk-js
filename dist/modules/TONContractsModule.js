@@ -1,12 +1,11 @@
 "use strict";
 
-var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard");
-
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.removeProps = removeProps;
 exports["default"] = exports.QBounceType = exports.QSkipReason = exports.QComputeType = exports.QAccountStatusChange = exports.QAccountStatus = exports.QTransactionProcessingStatus = exports.QTransactionType = exports.QAccountType = exports.QSplitType = exports.QBlockProcessingStatus = exports.QMessageProcessingStatus = exports.QMessageType = exports.QOutMsgType = exports.QInMsgType = exports.TONClientStorageStatus = exports.TONClientComputeSkippedStatus = exports.TONClientTransactionPhase = exports.TONAddressStringVariant = void 0;
 
 var _typeof2 = _interopRequireDefault(require("@babel/runtime/helpers/typeof"));
@@ -29,6 +28,8 @@ var _inherits2 = _interopRequireDefault(require("@babel/runtime/helpers/inherits
 
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 
+var _opentracing = require("opentracing");
+
 var _TONClient = require("../TONClient");
 
 var _TONModule2 = require("../TONModule");
@@ -37,23 +38,10 @@ var _TONConfigModule = _interopRequireDefault(require("./TONConfigModule"));
 
 var _TONQueriesModule = _interopRequireWildcard(require("./TONQueriesModule"));
 
-var _opentracing = _interopRequireWildcard(require("opentracing"));
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-/*
- * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
- *
- * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
- * this file except in compliance with the License.  You may obtain a copy of the
- * License at:
- *
- * http://www.ton.dev/licenses
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific TON DEV software governing permissions and
- * limitations under the License.
- */
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(source, true).forEach(function (key) { (0, _defineProperty2["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(source).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
 var TONAddressStringVariant = {
   AccountId: 'AccountId',
   Hex: 'Hex',
@@ -63,7 +51,7 @@ exports.TONAddressStringVariant = TONAddressStringVariant;
 var TONClientTransactionPhase = {
   storage: 'storage',
   computeSkipped: 'computeSkipped',
-  computeVm: "computeVm",
+  computeVm: 'computeVm',
   action: 'action',
   unknown: 'unknown'
 };
@@ -187,6 +175,32 @@ var QBounceType = {
 };
 exports.QBounceType = QBounceType;
 
+function removeProps(obj, paths) {
+  var result = obj;
+  paths.forEach(function (path) {
+    var dotPos = path.indexOf('.');
+
+    if (dotPos < 0) {
+      if (path in result) {
+        result = _objectSpread({}, result);
+        delete result[path];
+      }
+    } else {
+      var name = path.substr(0, dotPos);
+      var child = result[name];
+
+      if (child) {
+        var reducedChild = removeProps(child, [path.substr(dotPos + 1)]);
+
+        if (reducedChild !== child) {
+          result = _objectSpread({}, result, (0, _defineProperty2["default"])({}, name, reducedChild));
+        }
+      }
+    }
+  });
+  return result;
+}
+
 var TONContractsModule =
 /*#__PURE__*/
 function (_TONModule) {
@@ -206,7 +220,7 @@ function (_TONModule) {
     _this = (0, _possibleConstructorReturn2["default"])(this, (_getPrototypeOf2 = (0, _getPrototypeOf3["default"])(TONContractsModule)).call.apply(_getPrototypeOf2, [this].concat(args)));
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this), "config", void 0);
     (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this), "queries", void 0);
-    (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this), "bigBalance", "0x10000000000000");
+    (0, _defineProperty2["default"])((0, _assertThisInitialized2["default"])(_this), "bigBalance", '0x10000000000000');
     return _this;
   }
 
@@ -311,7 +325,7 @@ function (_TONModule) {
                       while (1) {
                         switch (_context3.prev = _context3.next) {
                           case 0:
-                            span.setTag('params', params);
+                            span.setTag('params', removeProps(params, ['keyPair.secret']));
                             return _context3.abrupt("return", _this2.internalDeployJs(params, span));
 
                           case 2:
@@ -363,7 +377,7 @@ function (_TONModule) {
                       while (1) {
                         switch (_context5.prev = _context5.next) {
                           case 0:
-                            span.setTag('params', params);
+                            span.setTag('params', removeProps(params, ['keyPair.secret']));
                             return _context5.abrupt("return", _this3.internalRunJs(params, span));
 
                           case 2:
@@ -415,7 +429,7 @@ function (_TONModule) {
                       while (1) {
                         switch (_context7.prev = _context7.next) {
                           case 0:
-                            span.setTag('params', params);
+                            span.setTag('params', removeProps(params, ['keyPair.secret']));
                             return _context7.abrupt("return", _this4.internalRunLocalJs(params, span));
 
                           case 2:
@@ -856,19 +870,18 @@ function (_TONModule) {
       }
 
       return getBocHash;
-    }() // Message parsing
-
+    }()
   }, {
-    key: "decodeRunOutput",
+    key: "parseMessage",
     value: function () {
-      var _decodeRunOutput = (0, _asyncToGenerator2["default"])(
+      var _parseMessage = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
       _regenerator["default"].mark(function _callee21(params) {
         return _regenerator["default"].wrap(function _callee21$(_context21) {
           while (1) {
             switch (_context21.prev = _context21.next) {
               case 0:
-                return _context21.abrupt("return", this.requestCore('contracts.run.output', params));
+                return _context21.abrupt("return", this.requestCore('contracts.parse.message', params));
 
               case 1:
               case "end":
@@ -878,7 +891,34 @@ function (_TONModule) {
         }, _callee21, this);
       }));
 
-      function decodeRunOutput(_x24) {
+      function parseMessage(_x24) {
+        return _parseMessage.apply(this, arguments);
+      }
+
+      return parseMessage;
+    }() // Message parsing
+
+  }, {
+    key: "decodeRunOutput",
+    value: function () {
+      var _decodeRunOutput = (0, _asyncToGenerator2["default"])(
+      /*#__PURE__*/
+      _regenerator["default"].mark(function _callee22(params) {
+        return _regenerator["default"].wrap(function _callee22$(_context22) {
+          while (1) {
+            switch (_context22.prev = _context22.next) {
+              case 0:
+                return _context22.abrupt("return", this.requestCore('contracts.run.output', params));
+
+              case 1:
+              case "end":
+                return _context22.stop();
+            }
+          }
+        }, _callee22, this);
+      }));
+
+      function decodeRunOutput(_x25) {
         return _decodeRunOutput.apply(this, arguments);
       }
 
@@ -889,22 +929,22 @@ function (_TONModule) {
     value: function () {
       var _decodeInputMessageBody = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee22(params) {
-        return _regenerator["default"].wrap(function _callee22$(_context22) {
+      _regenerator["default"].mark(function _callee23(params) {
+        return _regenerator["default"].wrap(function _callee23$(_context23) {
           while (1) {
-            switch (_context22.prev = _context22.next) {
+            switch (_context23.prev = _context23.next) {
               case 0:
-                return _context22.abrupt("return", this.requestCore('contracts.run.unknown.input', params));
+                return _context23.abrupt("return", this.requestCore('contracts.run.unknown.input', params));
 
               case 1:
               case "end":
-                return _context22.stop();
+                return _context23.stop();
             }
           }
-        }, _callee22, this);
+        }, _callee23, this);
       }));
 
-      function decodeInputMessageBody(_x25) {
+      function decodeInputMessageBody(_x26) {
         return _decodeInputMessageBody.apply(this, arguments);
       }
 
@@ -915,22 +955,22 @@ function (_TONModule) {
     value: function () {
       var _decodeOutputMessageBody = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee23(params) {
-        return _regenerator["default"].wrap(function _callee23$(_context23) {
+      _regenerator["default"].mark(function _callee24(params) {
+        return _regenerator["default"].wrap(function _callee24$(_context24) {
           while (1) {
-            switch (_context23.prev = _context23.next) {
+            switch (_context24.prev = _context24.next) {
               case 0:
-                return _context23.abrupt("return", this.requestCore('contracts.run.unknown.output', params));
+                return _context24.abrupt("return", this.requestCore('contracts.run.unknown.output', params));
 
               case 1:
               case "end":
-                return _context23.stop();
+                return _context24.stop();
             }
           }
-        }, _callee23, this);
+        }, _callee24, this);
       }));
 
-      function decodeOutputMessageBody(_x26) {
+      function decodeOutputMessageBody(_x27) {
         return _decodeOutputMessageBody.apply(this, arguments);
       }
 
@@ -942,31 +982,31 @@ function (_TONModule) {
     value: function () {
       var _sendMessage = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee24(params, parentSpan) {
+      _regenerator["default"].mark(function _callee25(params, parentSpan) {
         var id, idBase64;
-        return _regenerator["default"].wrap(function _callee24$(_context24) {
+        return _regenerator["default"].wrap(function _callee25$(_context25) {
           while (1) {
-            switch (_context24.prev = _context24.next) {
+            switch (_context25.prev = _context25.next) {
               case 0:
-                _context24.t0 = params.messageId;
+                _context25.t0 = params.messageId;
 
-                if (_context24.t0) {
-                  _context24.next = 5;
+                if (_context25.t0) {
+                  _context25.next = 5;
                   break;
                 }
 
-                _context24.next = 4;
+                _context25.next = 4;
                 return this.getBocHash({
                   bocBase64: params.messageBodyBase64
                 });
 
               case 4:
-                _context24.t0 = _context24.sent.hash;
+                _context25.t0 = _context25.sent.hash;
 
               case 5:
-                id = _context24.t0;
+                id = _context25.t0;
                 idBase64 = Buffer.from(id, 'hex').toString('base64');
-                _context24.next = 9;
+                _context25.next = 9;
                 return this.queries.postRequests([{
                   id: idBase64,
                   body: params.messageBodyBase64
@@ -974,17 +1014,17 @@ function (_TONModule) {
 
               case 9:
                 this.config.log('sendMessage. Request posted');
-                return _context24.abrupt("return", id);
+                return _context25.abrupt("return", id);
 
               case 11:
               case "end":
-                return _context24.stop();
+                return _context25.stop();
             }
           }
-        }, _callee24, this);
+        }, _callee25, this);
       }));
 
-      function sendMessage(_x27, _x28) {
+      function sendMessage(_x28, _x29) {
         return _sendMessage.apply(this, arguments);
       }
 
@@ -999,7 +1039,7 @@ function (_TONModule) {
         var messageId, timeout, promises, expire, transaction, transactionNow;
         return _regenerator["default"].wrap(function _callee25$(_context25) {
           while (1) {
-            switch (_context25.prev = _context25.next) {
+            switch (_context26.prev = _context26.next) {
               case 0:
                 _context25.next = 2;
                 return this.sendMessage(message, parentSpan);
@@ -1075,17 +1115,17 @@ function (_TONModule) {
                   block_id: transaction.block_id,
                   now: "".concat(new Date(transactionNow * 1000).toISOString(), " (").concat(transactionNow, ")")
                 });
-                return _context25.abrupt("return", transaction);
+                return _context26.abrupt("return", transaction);
 
               case 20:
               case "end":
-                return _context25.stop();
+                return _context26.stop();
             }
           }
         }, _callee25, this);
       }));
 
-      function processMessage(_x29, _x30, _x31) {
+      function processMessage(_x30, _x31, _x32) {
         return _processMessage.apply(this, arguments);
       }
 
@@ -1096,38 +1136,67 @@ function (_TONModule) {
     value: function () {
       var _processDeployMessage = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee26(params, parentSpan) {
-        var transaction;
-        return _regenerator["default"].wrap(function _callee26$(_context26) {
+      _regenerator["default"].mark(function _callee27(params, parentSpan) {
+        var account, transaction;
+        return _regenerator["default"].wrap(function _callee27$(_context27) {
           while (1) {
-            switch (_context26.prev = _context26.next) {
+            switch (_context27.prev = _context27.next) {
               case 0:
-                this.config.log('processDeployMessage', params);
-                _context26.next = 3;
-                return this.processMessage(params.message, transactionDetails, parentSpan);
+                this.config.log('processDeployMessage', params); // check that account is already deployed
+
+                _context27.next = 3;
+                return this.queries.accounts.query({
+                  filter: {
+                    id: {
+                      eq: params.address
+                    },
+                    acc_type: {
+                      eq: QAccountType.active
+                    }
+                  },
+                  result: 'id',
+                  parentSpan: parentSpan
+                });
 
               case 3:
-                transaction = _context26.sent;
-                _context26.next = 6;
-                return checkTransaction(transaction);
+                account = _context27.sent;
+
+                if (!(account.length > 0)) {
+                  _context27.next = 6;
+                  break;
+                }
+
+                return _context27.abrupt("return", {
+                  address: params.address,
+                  alreadyDeployed: true
+                });
 
               case 6:
+                _context27.next = 8;
+                return this.processMessage(params.message, transactionDetails, parentSpan);
+
+              case 8:
+                transaction = _context27.sent;
+                _context27.next = 11;
+                return checkTransaction(transaction);
+
+              case 11:
                 this.config.log('processDeployMessage. End');
-                return _context26.abrupt("return", {
+                return _context27.abrupt("return", {
                   address: params.address,
                   alreadyDeployed: false,
                   transaction: transaction
                 });
 
-              case 8:
+              case 13:
               case "end":
-                return _context26.stop();
+                return _context27.stop();
             }
           }
-        }, _callee26, this);
+        }, _callee27, this);
       }));
 
-      function processDeployMessage(_x32, _x33) {
+      function processDeployMessage(_x33, _x34) {
         return _processDeployMessage.apply(this, arguments);
       }
 
@@ -1138,32 +1207,32 @@ function (_TONModule) {
     value: function () {
       var _processRunMessage = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee27(params, parentSpan) {
+      _regenerator["default"].mark(function _callee28(params, parentSpan) {
         var _this5 = this;
 
         var transaction, outputMessages, externalMessages, outputs, resultOutput;
-        return _regenerator["default"].wrap(function _callee27$(_context27) {
+        return _regenerator["default"].wrap(function _callee28$(_context28) {
           while (1) {
-            switch (_context27.prev = _context27.next) {
+            switch (_context28.prev = _context28.next) {
               case 0:
                 this.config.log('processRunMessage', params);
-                _context27.next = 3;
+                _context28.next = 3;
                 return this.processMessage(params.message, transactionDetails, parentSpan);
 
               case 3:
-                transaction = _context27.sent;
-                _context27.next = 6;
+                transaction = _context28.sent;
+                _context28.next = 6;
                 return checkTransaction(transaction);
 
               case 6:
                 outputMessages = transaction.out_messages;
 
                 if (!(!outputMessages || outputMessages.length === 0)) {
-                  _context27.next = 9;
+                  _context28.next = 9;
                   break;
                 }
 
-                return _context27.abrupt("return", {
+                return _context28.abrupt("return", {
                   output: null,
                   transaction: transaction
                 });
@@ -1173,7 +1242,7 @@ function (_TONModule) {
                   return x.msg_type === QMessageType.extOut;
                 });
                 this.config.log('processRunMessage. Before messages parse');
-                _context27.next = 13;
+                _context28.next = 13;
                 return Promise.all(externalMessages.map(function (x) {
                   return _this5.decodeOutputMessageBody({
                     abi: params.abi,
@@ -1182,25 +1251,25 @@ function (_TONModule) {
                 }));
 
               case 13:
-                outputs = _context27.sent;
+                outputs = _context28.sent;
                 resultOutput = outputs.find(function (x) {
                   return x["function"].toLowerCase() === params.functionName.toLowerCase();
                 });
                 this.config.log('processRunMessage. End');
-                return _context27.abrupt("return", {
+                return _context28.abrupt("return", {
                   output: resultOutput ? resultOutput.output : null,
                   transaction: transaction
                 });
 
               case 17:
               case "end":
-                return _context27.stop();
+                return _context28.stop();
             }
           }
-        }, _callee27, this);
+        }, _callee28, this);
       }));
 
-      function processRunMessage(_x34, _x35) {
+      function processRunMessage(_x35, _x36) {
         return _processRunMessage.apply(this, arguments);
       }
 
@@ -1211,19 +1280,19 @@ function (_TONModule) {
     value: function () {
       var _processRunMessageLocal = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee28(params, waitParams, parentSpan) {
+      _regenerator["default"].mark(function _callee29(params, waitParams, parentSpan) {
         var account;
-        return _regenerator["default"].wrap(function _callee28$(_context28) {
+        return _regenerator["default"].wrap(function _callee29$(_context29) {
           while (1) {
-            switch (_context28.prev = _context28.next) {
+            switch (_context29.prev = _context29.next) {
               case 0:
                 this.config.log('processRunMessageLocal', params);
-                _context28.next = 3;
+                _context29.next = 3;
                 return this.getAccount(params.address, true, waitParams, parentSpan);
 
               case 3:
-                account = _context28.sent;
-                return _context28.abrupt("return", this.requestCore('contracts.run.local.msg', {
+                account = _context29.sent;
+                return _context29.abrupt("return", this.requestCore('contracts.run.local.msg', {
                   address: params.address,
                   account: account,
                   abi: params.abi,
@@ -1233,13 +1302,13 @@ function (_TONModule) {
 
               case 5:
               case "end":
-                return _context28.stop();
+                return _context29.stop();
             }
           }
-        }, _callee28, this);
+        }, _callee29, this);
       }));
 
-      function processRunMessageLocal(_x36, _x37, _x38) {
+      function processRunMessageLocal(_x37, _x38, _x39) {
         return _processRunMessageLocal.apply(this, arguments);
       }
 
@@ -1251,24 +1320,24 @@ function (_TONModule) {
     value: function () {
       var _calcRunFees = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee29(params, parentSpan) {
+      _regenerator["default"].mark(function _callee30(params, parentSpan) {
         var account;
-        return _regenerator["default"].wrap(function _callee29$(_context29) {
+        return _regenerator["default"].wrap(function _callee30$(_context30) {
           while (1) {
-            switch (_context29.prev = _context29.next) {
+            switch (_context30.prev = _context30.next) {
               case 0:
                 this.config.log('calcRunFees', params);
-                _context29.next = 3;
+                _context30.next = 3;
                 return this.getAccount(params.address, true, params.waitParams, parentSpan);
 
               case 3:
-                account = _context29.sent;
+                account = _context30.sent;
 
                 if (params.emulateBalance) {
                   account.balance = this.bigBalance;
                 }
 
-                return _context29.abrupt("return", this.requestCore('contracts.run.fee', {
+                return _context30.abrupt("return", this.requestCore('contracts.run.fee', {
                   address: params.address,
                   account: account,
                   abi: params.abi,
@@ -1279,13 +1348,13 @@ function (_TONModule) {
 
               case 6:
               case "end":
-                return _context29.stop();
+                return _context30.stop();
             }
           }
-        }, _callee29, this);
+        }, _callee30, this);
       }));
 
-      function calcRunFees(_x39, _x40) {
+      function calcRunFees(_x40, _x41) {
         return _calcRunFees.apply(this, arguments);
       }
 
@@ -1296,19 +1365,19 @@ function (_TONModule) {
     value: function () {
       var _calcDeployFees = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee30(params, parentSpan) {
+      _regenerator["default"].mark(function _callee31(params, parentSpan) {
         var message;
-        return _regenerator["default"].wrap(function _callee30$(_context30) {
+        return _regenerator["default"].wrap(function _callee31$(_context31) {
           while (1) {
-            switch (_context30.prev = _context30.next) {
+            switch (_context31.prev = _context31.next) {
               case 0:
                 this.config.log('calcDeployFees', params);
-                _context30.next = 3;
+                _context31.next = 3;
                 return this.createDeployMessage(params);
 
               case 3:
-                message = _context30.sent;
-                return _context30.abrupt("return", this.calcMsgProcessFees({
+                message = _context31.sent;
+                return _context31.abrupt("return", this.calcMsgProcessFees({
                   address: message.address,
                   message: message.message,
                   emulateBalance: params.emulateBalance,
@@ -1317,13 +1386,13 @@ function (_TONModule) {
 
               case 5:
               case "end":
-                return _context30.stop();
+                return _context31.stop();
             }
           }
-        }, _callee30, this);
+        }, _callee31, this);
       }));
 
-      function calcDeployFees(_x41, _x42) {
+      function calcDeployFees(_x42, _x43) {
         return _calcDeployFees.apply(this, arguments);
       }
 
@@ -1334,11 +1403,11 @@ function (_TONModule) {
     value: function () {
       var _calcMsgProcessFees = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee31(params, parentSpan) {
+      _regenerator["default"].mark(function _callee32(params, parentSpan) {
         var account;
-        return _regenerator["default"].wrap(function _callee31$(_context31) {
+        return _regenerator["default"].wrap(function _callee32$(_context32) {
           while (1) {
-            switch (_context31.prev = _context31.next) {
+            switch (_context32.prev = _context32.next) {
               case 0:
                 this.config.log('calcMsgProcessFees', params);
                 account = {
@@ -1348,22 +1417,22 @@ function (_TONModule) {
                 };
 
                 if (params.newAccount) {
-                  _context31.next = 6;
+                  _context32.next = 6;
                   break;
                 }
 
-                _context31.next = 5;
+                _context32.next = 5;
                 return this.getAccount(params.address, false, params.waitParams, parentSpan);
 
               case 5:
-                account = _context31.sent;
+                account = _context32.sent;
 
               case 6:
                 if (params.emulateBalance) {
                   account.balance = this.bigBalance;
                 }
 
-                return _context31.abrupt("return", this.requestCore('contracts.run.fee.msg', {
+                return _context32.abrupt("return", this.requestCore('contracts.run.fee.msg', {
                   address: params.address,
                   account: account,
                   messageBase64: params.message.messageBodyBase64
@@ -1371,13 +1440,13 @@ function (_TONModule) {
 
               case 8:
               case "end":
-                return _context31.stop();
+                return _context32.stop();
             }
           }
-        }, _callee31, this);
+        }, _callee32, this);
       }));
 
-      function calcMsgProcessFees(_x43, _x44) {
+      function calcMsgProcessFees(_x44, _x45) {
         return _calcMsgProcessFees.apply(this, arguments);
       }
 
@@ -1389,22 +1458,22 @@ function (_TONModule) {
     value: function () {
       var _convertAddress = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee32(params) {
-        return _regenerator["default"].wrap(function _callee32$(_context32) {
+      _regenerator["default"].mark(function _callee33(params) {
+        return _regenerator["default"].wrap(function _callee33$(_context33) {
           while (1) {
-            switch (_context32.prev = _context32.next) {
+            switch (_context33.prev = _context33.next) {
               case 0:
-                return _context32.abrupt("return", this.requestCore('contracts.address.convert', params));
+                return _context33.abrupt("return", this.requestCore('contracts.address.convert', params));
 
               case 1:
               case "end":
-                return _context32.stop();
+                return _context33.stop();
             }
           }
-        }, _callee32, this);
+        }, _callee33, this);
       }));
 
-      function convertAddress(_x45) {
+      function convertAddress(_x46) {
         return _convertAddress.apply(this, arguments);
       }
 
@@ -1416,12 +1485,12 @@ function (_TONModule) {
     value: function () {
       var _internalDeployNative = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee33(params) {
-        return _regenerator["default"].wrap(function _callee33$(_context33) {
+      _regenerator["default"].mark(function _callee34(params) {
+        return _regenerator["default"].wrap(function _callee34$(_context34) {
           while (1) {
-            switch (_context33.prev = _context33.next) {
+            switch (_context34.prev = _context34.next) {
               case 0:
-                return _context33.abrupt("return", this.requestCore('contracts.deploy', {
+                return _context34.abrupt("return", this.requestCore('contracts.deploy', {
                   abi: params["package"].abi,
                   constructorHeader: params.constructorHeader,
                   constructorParams: params.constructorParams,
@@ -1432,13 +1501,13 @@ function (_TONModule) {
 
               case 1:
               case "end":
-                return _context33.stop();
+                return _context34.stop();
             }
           }
-        }, _callee33, this);
+        }, _callee34, this);
       }));
 
-      function internalDeployNative(_x46) {
+      function internalDeployNative(_x47) {
         return _internalDeployNative.apply(this, arguments);
       }
 
@@ -1449,12 +1518,12 @@ function (_TONModule) {
     value: function () {
       var _internalRunNative = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee34(params) {
-        return _regenerator["default"].wrap(function _callee34$(_context34) {
+      _regenerator["default"].mark(function _callee35(params) {
+        return _regenerator["default"].wrap(function _callee35$(_context35) {
           while (1) {
-            switch (_context34.prev = _context34.next) {
+            switch (_context35.prev = _context35.next) {
               case 0:
-                _context34.next = 2;
+                _context35.next = 2;
                 return this.requestCore('contracts.run', {
                   address: params.address,
                   abi: params.abi,
@@ -1465,17 +1534,17 @@ function (_TONModule) {
                 });
 
               case 2:
-                return _context34.abrupt("return", _context34.sent);
+                return _context35.abrupt("return", _context35.sent);
 
               case 3:
               case "end":
-                return _context34.stop();
+                return _context35.stop();
             }
           }
-        }, _callee34, this);
+        }, _callee35, this);
       }));
 
-      function internalRunNative(_x47) {
+      function internalRunNative(_x48) {
         return _internalRunNative.apply(this, arguments);
       }
 
@@ -1501,11 +1570,11 @@ function (_TONModule) {
     value: function () {
       var _internalDeployJs = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee35(params, parentSpan) {
+      _regenerator["default"].mark(function _callee36(params, parentSpan) {
         var message;
-        return _regenerator["default"].wrap(function _callee35$(_context35) {
+        return _regenerator["default"].wrap(function _callee36$(_context36) {
           while (1) {
-            switch (_context35.prev = _context35.next) {
+            switch (_context36.prev = _context36.next) {
               case 0:
                 this.config.log("Deploy start");
                 params.constructorHeader = this.makeHeader(params["package"].abi, params.constructorHeader);
@@ -1518,13 +1587,13 @@ function (_TONModule) {
 
               case 6:
               case "end":
-                return _context35.stop();
+                return _context36.stop();
             }
           }
-        }, _callee35, this);
+        }, _callee36, this);
       }));
 
-      function internalDeployJs(_x48, _x49) {
+      function internalDeployJs(_x49, _x50) {
         return _internalDeployJs.apply(this, arguments);
       }
 
@@ -1535,11 +1604,11 @@ function (_TONModule) {
     value: function () {
       var _internalRunJs = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee36(params, parentSpan) {
+      _regenerator["default"].mark(function _callee37(params, parentSpan) {
         var message;
-        return _regenerator["default"].wrap(function _callee36$(_context36) {
+        return _regenerator["default"].wrap(function _callee37$(_context37) {
           while (1) {
-            switch (_context36.prev = _context36.next) {
+            switch (_context37.prev = _context37.next) {
               case 0:
                 this.config.log("Run start");
                 params.header = this.makeHeader(params.abi, params.header);
@@ -1552,13 +1621,13 @@ function (_TONModule) {
 
               case 6:
               case "end":
-                return _context36.stop();
+                return _context37.stop();
             }
           }
-        }, _callee36, this);
+        }, _callee37, this);
       }));
 
-      function internalRunJs(_x50, _x51) {
+      function internalRunJs(_x51, _x52) {
         return _internalRunJs.apply(this, arguments);
       }
 
@@ -1569,11 +1638,11 @@ function (_TONModule) {
     value: function () {
       var _getAccount = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee37(address, active, waitParams, parentSpan) {
+      _regenerator["default"].mark(function _callee38(address, active, waitParams, parentSpan) {
         var removeTypeName, filter, account;
-        return _regenerator["default"].wrap(function _callee37$(_context37) {
+        return _regenerator["default"].wrap(function _callee38$(_context38) {
           while (1) {
-            switch (_context37.prev = _context37.next) {
+            switch (_context38.prev = _context38.next) {
               case 0:
                 removeTypeName = function _ref4(obj) {
                   if (obj.__typename) {
@@ -1605,25 +1674,25 @@ function (_TONModule) {
                   };
                 }
 
-                this.config.log("getAccount. Filter", filter);
-                _context37.next = 7;
+                this.config.log('getAccount. Filter', filter);
+                _context38.next = 7;
                 return this.queries.accounts.waitFor(filter, 'id code data balance balance_other { currency value } last_paid', waitParams && waitParams.timeout, parentSpan);
 
               case 7:
-                account = _context37.sent;
+                account = _context38.sent;
                 removeTypeName(account);
-                this.config.log("getAccount. Account recieved", account);
-                return _context37.abrupt("return", account);
+                this.config.log('getAccount. Account recieved', account);
+                return _context38.abrupt("return", account);
 
               case 11:
               case "end":
-                return _context37.stop();
+                return _context38.stop();
             }
           }
-        }, _callee37, this);
+        }, _callee38, this);
       }));
 
-      function getAccount(_x52, _x53, _x54, _x55) {
+      function getAccount(_x53, _x54, _x55, _x56) {
         return _getAccount.apply(this, arguments);
       }
 
@@ -1634,18 +1703,18 @@ function (_TONModule) {
     value: function () {
       var _internalRunLocalJs = (0, _asyncToGenerator2["default"])(
       /*#__PURE__*/
-      _regenerator["default"].mark(function _callee38(params, parentSpan) {
+      _regenerator["default"].mark(function _callee39(params, parentSpan) {
         var account;
-        return _regenerator["default"].wrap(function _callee38$(_context38) {
+        return _regenerator["default"].wrap(function _callee39$(_context39) {
           while (1) {
-            switch (_context38.prev = _context38.next) {
+            switch (_context39.prev = _context39.next) {
               case 0:
-                _context38.next = 2;
+                _context39.next = 2;
                 return this.getAccount(params.address, true, params.waitParams, parentSpan);
 
               case 2:
-                account = _context38.sent;
-                return _context38.abrupt("return", this.requestCore('contracts.run.local', {
+                account = _context39.sent;
+                return _context39.abrupt("return", this.requestCore('contracts.run.local', {
                   address: params.address,
                   account: account,
                   abi: params.abi,
@@ -1656,13 +1725,13 @@ function (_TONModule) {
 
               case 4:
               case "end":
-                return _context38.stop();
+                return _context39.stop();
             }
           }
-        }, _callee38, this);
+        }, _callee39, this);
       }));
 
-      function internalRunLocalJs(_x56, _x57) {
+      function internalRunLocalJs(_x57, _x58) {
         return _internalRunLocalJs.apply(this, arguments);
       }
 
@@ -1675,18 +1744,18 @@ function (_TONModule) {
 exports["default"] = TONContractsModule;
 TONContractsModule.moduleName = 'TONContractsModule';
 
-function checkTransaction(_x58) {
+function checkTransaction(_x59) {
   return _checkTransaction.apply(this, arguments);
 }
 
 function _checkTransaction() {
   _checkTransaction = (0, _asyncToGenerator2["default"])(
   /*#__PURE__*/
-  _regenerator["default"].mark(function _callee39(transaction) {
+  _regenerator["default"].mark(function _callee40(transaction) {
     var nodeError, storage, status, compute, reason, action;
-    return _regenerator["default"].wrap(function _callee39$(_context39) {
+    return _regenerator["default"].wrap(function _callee40$(_context40) {
       while (1) {
-        switch (_context39.prev = _context39.next) {
+        switch (_context40.prev = _context40.next) {
           case 0:
             nodeError = function _ref5(message, code, phase) {
               return new _TONClient.TONClientError("".concat(message, " (").concat(code, ") at ").concat(phase), code, _TONClient.TONClientError.source.NODE, {
@@ -1696,24 +1765,24 @@ function _checkTransaction() {
             };
 
             if (transaction.aborted) {
-              _context39.next = 3;
+              _context40.next = 3;
               break;
             }
 
-            return _context39.abrupt("return");
+            return _context40.abrupt("return");
 
           case 3:
             storage = transaction.storage;
 
             if (!storage) {
-              _context39.next = 10;
+              _context40.next = 10;
               break;
             }
 
             status = storage.status_change;
 
             if (!(status === QAccountStatusChange.frozen)) {
-              _context39.next = 8;
+              _context40.next = 8;
               break;
             }
 
@@ -1721,7 +1790,7 @@ function _checkTransaction() {
 
           case 8:
             if (!(status === QAccountStatusChange.deleted)) {
-              _context39.next = 10;
+              _context40.next = 10;
               break;
             }
 
@@ -1731,19 +1800,19 @@ function _checkTransaction() {
             compute = transaction.compute;
 
             if (!compute) {
-              _context39.next = 24;
+              _context40.next = 24;
               break;
             }
 
             if (!(compute.compute_type === QComputeType.skipped)) {
-              _context39.next = 21;
+              _context40.next = 21;
               break;
             }
 
             reason = compute.skipped_reason;
 
             if (!(reason === QSkipReason.noState)) {
-              _context39.next = 16;
+              _context40.next = 16;
               break;
             }
 
@@ -1751,7 +1820,7 @@ function _checkTransaction() {
 
           case 16:
             if (!(reason === QSkipReason.badState)) {
-              _context39.next = 18;
+              _context40.next = 18;
               break;
             }
 
@@ -1759,7 +1828,7 @@ function _checkTransaction() {
 
           case 18:
             if (!(reason === QSkipReason.noGas)) {
-              _context39.next = 20;
+              _context40.next = 20;
               break;
             }
 
@@ -1770,12 +1839,12 @@ function _checkTransaction() {
 
           case 21:
             if (!(compute.compute_type === QComputeType.vm)) {
-              _context39.next = 24;
+              _context40.next = 24;
               break;
             }
 
             if (compute.success) {
-              _context39.next = 24;
+              _context40.next = 24;
               break;
             }
 
@@ -1785,12 +1854,12 @@ function _checkTransaction() {
             action = transaction.action;
 
             if (!action) {
-              _context39.next = 28;
+              _context40.next = 28;
               break;
             }
 
             if (action.success) {
-              _context39.next = 28;
+              _context40.next = 28;
               break;
             }
 
@@ -1801,10 +1870,10 @@ function _checkTransaction() {
 
           case 29:
           case "end":
-            return _context39.stop();
+            return _context40.stop();
         }
       }
-    }, _callee39);
+    }, _callee40);
   }));
   return _checkTransaction.apply(this, arguments);
 }
