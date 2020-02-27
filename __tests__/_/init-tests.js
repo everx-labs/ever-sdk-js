@@ -27,6 +27,16 @@ if (!process.env.TON_NETWORK_ADDRESS) {
 }
 const serversConfig = process.env.TON_NETWORK_ADDRESS.replace(/ /gi, '').split(',');
 
+if (!process.env.ABI_VERSION) {
+    throw new Error('ABI version is not specified');
+}
+export const abiVersion = Number(process.env.ABI_VERSION);
+
+const supportedVersions = [1, 2];
+if (!supportedVersions.includes(abiVersion)) {
+    throw new Error('ABI version is not supported');
+}
+
 export type TONContractDeployedParams = {
     address: string,
     key: TONKeyPairData,
@@ -38,8 +48,8 @@ const path = require('path');
 
 export function loadPackage(name: string): TONContractPackage {
     const contract = {};
-    contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.abi.json`), 'utf8'));
-    contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.tvc`)).toString('base64');
+    contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `abi_v${abiVersion}`, `${name}.abi.json`), 'utf8'));
+    contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `abi_v${abiVersion}`, `${name}.tvc`)).toString('base64');
     return contract;
 }
 
@@ -79,7 +89,7 @@ async function done() {
             });
             await tests.client.contracts.sendMessage(message.message);
         } catch (e) {
-            console.log(`Self destruct error: ${e}`);
+            console.log(`Self destruct error: ${JSON.stringify(e)}`);
             // ignore exception
         }
     }
@@ -126,6 +136,7 @@ export const tests: {
     get_giver_address(): string,
     nodeSe: boolean,
     loadPackage(name: string): TONContractPackage,
+    abiVersion: Number
 } = {
     config: {
         defaultWorkchain: 0,
@@ -145,4 +156,5 @@ export const tests: {
     get_giver_address,
     nodeSe,
     loadPackage,
+    abiVersion,
 };

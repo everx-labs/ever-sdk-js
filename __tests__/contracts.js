@@ -199,28 +199,6 @@ test('Run aborted transaction', async () => {
     });
 });
 
-test('decodeInputMessageBody', async () => {
-    const { contracts } = tests.client;
-    const body = 'te6ccgEBAgEA3wAB8y88h10AAAFuW6FWJBERERERERERERERERERERERERERERERERERERERERERIXxlwlrjEGJEDhx3dC3WlQeZKzuAYBDOJ8+g7AM+Ek6AF49G0+VDwIkQKBdIh7hi4J5F0T/g5OggwrHI4HGN1KHAAAAAAAAAD2AAADkQAQDADBiSeQ1t5j0LwYo9dx7wefpnCQ3KrYOeAhX9ZUux62yIxWdQdUHJGCXXcoLbrDDduL9sgKSZT3TzYpRKi8YqASF8ZcJa4xBiRA4cd3Qt1pUHmSs7gGAQzifPoOwDPhJO';
-
-    const result = await contracts.decodeInputMessageBody({
-        abi: SubscriptionContractPackage.abi,
-        bodyBase64: body,
-    });
-
-    expect(result.function)
-        .toEqual('subscribe');
-    expect(result.output)
-        .toEqual({
-            period: '0x1c8',
-            pubkey: '0x217c65c25ae31062440e1c77742dd69507992b3b806010ce27cfa0ec033e124e',
-            subscriptionId: '0x1111111111111111111111111111111111111111111111111111111111111111',
-            to: '0:bc7a369f2a1e04488140ba443dc31704f22e89ff07274106158e47038c6ea50e',
-            value: '0x7b',
-        });
-});
-
-
 test('filterOutput', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
@@ -250,7 +228,8 @@ test('filterOutput', async () => {
         .toEqual('{"value0":"0x0"}');
 });
 
-test('External Signing', async () => {
+if(test.abiVersion === 1)
+test('External Signing on ABI v1', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
@@ -282,7 +261,7 @@ test('External Signing', async () => {
         .toEqual(message.message.messageBodyBase64);
 });
 
-// TODO: take ABI v2 contract
+if(test.abiVersion === 2)
 test('External Signing on ABI v2', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
@@ -292,7 +271,8 @@ test('External Signing on ABI v2', async () => {
     const deployParams = {
         package: contractPackage,
         constructorHeader: {
-            pubkey: keys.public
+            pubkey: keys.public,
+            time: 123,
         },
         constructorParams: {},
         keyPair: keys,
@@ -710,6 +690,7 @@ async function expectError(code: number, source: string, f) {
     }
 }
 
+if (tests.abiVersion === 2)
 test('Test expire', async () => {
     const {contracts, crypto, queries} = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
@@ -763,7 +744,7 @@ test('Test expire', async () => {
     let expectedError = TONClientError.messageExpired();
     if (tests.nodeSe) {
         expectedError = {
-            code: 9,
+            code: 57, // message expired code
             source: "node"
         }
     }
@@ -781,6 +762,8 @@ test('Test expire', async () => {
     ))[0].last_trans_lt;
 
     expect(ltExpire).toEqual(ltRun);
+});
+
 test('test parse message', async () => {
     const { contracts, crypto } = tests.client;
 

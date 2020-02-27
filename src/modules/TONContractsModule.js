@@ -64,7 +64,6 @@ import { TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule, { DEFAULT_TIMEOUT } from './TONQueriesModule';
-import tracing, { Span, SpanContext } from 'opentracing';
 
 export const TONAddressStringVariant = {
     AccountId: 'AccountId',
