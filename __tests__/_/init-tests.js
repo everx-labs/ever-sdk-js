@@ -143,7 +143,7 @@ export const tests: {
     get_giver_address(): string,
     nodeSe: boolean,
     loadPackage(name: string): TONContractPackage,
-    abiVersion: Number
+    abiVersion: number
 } = {
     config: {
         defaultWorkchain: 0,

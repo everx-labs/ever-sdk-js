@@ -5,15 +5,15 @@ import {
     QAccountType,
     TONAddressStringVariant,
     QTransactionProcessingStatus,
-    QMessageType,
-    TONContractABI,
-    TONKeyPairData
+    QMessageType
 } from '../../src/modules/TONContractsModule';
 import type {
     TONContractDeployParams,
     TONContractDeployResult,
     TONContractRunParams,
-    TONContractRunResult
+    TONContractRunResult,
+    TONContractABI,
+    TONKeyPairData
 } from '../../types';
 import { nodeSe, tests } from './init-tests';
 

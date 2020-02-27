@@ -234,44 +234,6 @@ export interface TONCrypto {
 
 // Contracts
 
-export type QMessage = {
-    id?: string,
-    msg_type?: number,
-    status?: number,
-    src?: string,
-    dst?: string,
-    created_at?: number,
-    body?: string,
-}
-
-export type QTransaction = {
-    id?: string,
-    account_addr?: string,
-    tr_type?: number,
-    status?: number,
-    block_id?: string,
-    aborted?: boolean,
-    now?: number,
-    lt?: string,
-    storage?: {
-        status_change?: number,
-    },
-    compute?: {
-        compute_type?: number,
-        success?: boolean,
-        exit_code?: number,
-        skipped_reason?: number,
-    },
-    action?: {
-        valid?: boolean,
-        no_funds?: boolean,
-        success?: boolean,
-        result_code?: number,
-    };
-    out_msgs?: string[],
-    out_messages?: QMessage[],
-}
-
 export type TONContractABIParameter = {
     name: string,
     type: string,
@@ -552,6 +514,7 @@ export type QAccount = {
 
 export type QTransaction = {
     id?: string,
+    account_addr: string,
     tr_type?: number,
     status?: number,
     block_id?: string,
