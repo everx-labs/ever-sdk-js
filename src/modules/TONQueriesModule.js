@@ -315,7 +315,7 @@ class TONQueriesModuleCollection implements TONQCollection {
         const result: string = params ? params.result : (args[1]: any);
         const orderBy = params ? params.orderBy : args[2];
         const limit = params ? params.limit : args[3];
-        const timeout = params ? params.timeout : args[4];
+        const timeout = params ? params.timeout : (args[4]: any);
         const parentSpan = params ? params.parentSpan : args[5];
         return this.module.context.trace(`${this.collectionName}.query`, async (span) => {
             span.setTag('params', {
