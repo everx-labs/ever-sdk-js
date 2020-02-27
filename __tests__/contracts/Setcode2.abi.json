@@ -4,32 +4,31 @@
 		{
 			"name": "constructor",
 			"inputs": [
-				{"name":"_param1","type":"uint32"},
-				{"name":"_param2","type":"uint256"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "get",
+			"name": "main",
+			"inputs": [
+				{"name":"newcode","type":"cell"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
+			"name": "getNewVersion",
 			"inputs": [
 			],
 			"outputs": [
-				{"name":"value0","type":"uint32"},
-				{"name":"value1","type":"uint256"}
+				{"name":"value0","type":"uint256"}
 			]
 		},
 		{
 			"name": "sendAllMoney",
 			"inputs": [
 				{"name":"dest_addr","type":"address"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "fallback",
-			"inputs": [
 			],
 			"outputs": [
 			]
