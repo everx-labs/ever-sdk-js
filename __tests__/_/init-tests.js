@@ -34,9 +34,9 @@ if (!process.env.TON_NETWORK_ADDRESS) {
 const serversConfig = process.env.TON_NETWORK_ADDRESS.replace(/ /gi, '').split(',');
 
 if (!process.env.ABI_VERSION) {
-    throw new Error('ABI version is not specified');
+    console.log('ABI version is not specified. Default used');
 }
-export const abiVersion = Number(process.env.ABI_VERSION);
+export const abiVersion = Number(process.env.ABI_VERSION || 2);
 
 const supportedVersions = [1, 2];
 if (!supportedVersions.includes(abiVersion)) {
