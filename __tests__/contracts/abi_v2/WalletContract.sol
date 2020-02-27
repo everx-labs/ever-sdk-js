@@ -52,4 +52,7 @@ contract Wallet {
         tvm.transfer(dest, value, bounce, 0);
     }
 
+    function sendAllMoney(address payable dest_addr) public checkOwnerAndAccept {
+        selfdestruct(dest_addr);
+    }
 }

@@ -18,6 +18,14 @@
 			],
 			"outputs": [
 			]
+		},
+		{
+			"name": "sendAllMoney",
+			"inputs": [
+				{"name":"dest_addr","type":"address"}
+			],
+			"outputs": [
+			]
 		}
 	],
 	"events": [
