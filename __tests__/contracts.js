@@ -228,7 +228,7 @@ test('filterOutput', async () => {
         .toEqual('{"value0":"0x0"}');
 });
 
-if(test.abiVersion === 1)
+if(tests.abiVersion === 1)
 test('External Signing on ABI v1', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
@@ -261,7 +261,7 @@ test('External Signing on ABI v1', async () => {
         .toEqual(message.message.messageBodyBase64);
 });
 
-if(test.abiVersion === 2)
+if(tests.abiVersion === 2)
 test('External Signing on ABI v2', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
