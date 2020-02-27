@@ -11,7 +11,13 @@ import type {
     TONKeyPairData
 } from '../../types';
 import { ensureBinaries } from './binaries';
-import { deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address } from './giver';
+import {
+    deploy_with_giver,
+    get_grams_from_giver,
+    readGiverKeys,
+    get_giver_address,
+    add_deployed_contract
+} from './giver';
 import { initTracer as initJaegerTracer } from 'jaeger-client';
 
 require('dotenv').config();
@@ -132,6 +138,7 @@ export const tests: {
     done(): Promise<void>,
     get_grams_from_giver(account: string, amount?: number, parentSpan?: Span): Promise<void>,
     deploy_with_giver(params: TONContractDeployParams, parentSpan?: Span): Promise<TONContractDeployResult>,
+    add_deployed_contract(key: TONKeyPairData, address: string, abi: TONContractABI): void,
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
     nodeSe: boolean,
@@ -152,6 +159,7 @@ export const tests: {
     done,
     get_grams_from_giver,
     deploy_with_giver,
+    add_deployed_contract,
     deployedContracts: [],
     get_giver_address,
     nodeSe,
