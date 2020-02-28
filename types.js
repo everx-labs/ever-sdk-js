@@ -301,6 +301,7 @@ export type TONContractDeployResult = {
 }
 
 export type TONContractUnsignedMessage = {
+    abi: TONContractABI,
     unsignedBytesBase64: string,
     bytesToSignBase64: string,
     expire?: number,
@@ -318,7 +319,7 @@ export type TONContractUnsignedDeployMessage = {
 }
 
 export type TONContractUnsignedRunMessage = {
-    abi: TONContractABI,
+    address: string,
     functionName: string,
     signParams: TONContractUnsignedMessage,
 }
@@ -343,15 +344,15 @@ export type TONContractCreateSignedMessageParams = {
 }
 
 export type TONContractCreateSignedDeployMessageParams = {
-    address: string,
-    createSignedParams: TONContractCreateSignedMessageParams,
+    unsignedMessage: TONContractUnsignedDeployMessage,
+    signBytesBase64: string,
+    publicKeyHex?: string,
 }
 
 export type TONContractCreateSignedRunMessageParams = {
-    address: string,
-    abi: TONContractABI,
-    functionName: string,
-    createSignedParams: TONContractCreateSignedMessageParams,
+    unsignedMessage: TONContractUnsignedRunMessage,
+    signBytesBase64: string,
+    publicKeyHex?: string,
 }
 
 export type TONContractRunParams = {

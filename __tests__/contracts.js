@@ -247,13 +247,8 @@ test('External Signing on ABI v1', async () => {
         base64: unsignedMessage.signParams.bytesToSignBase64,
     }, signKey.secret, TONOutputEncoding.Base64);
     const signed = await contracts.createSignedDeployMessage({
-        address: unsignedMessage.address,
-        createSignedParams: {
-            abi: contractPackage.abi,
-            publicKeyHex: keys.public,
-            signBytesBase64,
-            unsignedBytesBase64: unsignedMessage.signParams.unsignedBytesBase64,
-        },
+        signBytesBase64,
+        unsignedMessage,
     });
 
     const message = await contracts.createDeployMessage(deployParams);
@@ -272,7 +267,8 @@ test('External Signing on ABI v2', async () => {
         package: contractPackage,
         constructorHeader: {
             pubkey: keys.public,
-            time: 123,
+            time: Date.now(),
+            expire: Math.floor((Date.now() + 40_000) / 1000),
         },
         constructorParams: {},
         keyPair: keys,
@@ -283,17 +279,15 @@ test('External Signing on ABI v2', async () => {
         base64: unsignedMessage.signParams.bytesToSignBase64,
     }, signKey.secret, TONOutputEncoding.Base64);
     const signed = await contracts.createSignedDeployMessage({
-        address: unsignedMessage.address,
-        createSignedParams: {
-            abi: contractPackage.abi,
-            signBytesBase64,
-            unsignedBytesBase64: unsignedMessage.signParams.unsignedBytesBase64,
-        },
+        signBytesBase64,
+        unsignedMessage,
     });
 
     const message = await contracts.createDeployMessage(deployParams);
     expect(signed.message.messageBodyBase64)
         .toEqual(message.message.messageBodyBase64);
+
+    
 });
 
 // TODO return test when data[] will fix in compilers

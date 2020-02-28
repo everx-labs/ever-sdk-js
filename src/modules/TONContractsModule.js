@@ -290,6 +290,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     async createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage> {
         this.config.log('createDeployMessage', params);
+        params.constructorHeader = this.makeExpireHeader(params.package.abi, params.constructorHeader);
         const message: {
             address: string,
             messageId: string,
@@ -316,6 +317,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     async createRunMessage(params: TONContractRunParams): Promise<TONContractRunMessage> {
         this.config.log('createRunMessage', params);
+        params.header = this.makeExpireHeader(params.abi, params.header);
         const message = await this.requestCore('contracts.run.message', {
             address: params.address,
             abi: params.abi,
@@ -336,6 +338,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async createUnsignedDeployMessage(
         params: TONContractDeployParams,
     ): Promise<TONContractUnsignedDeployMessage> {
+        params.constructorHeader = this.makeExpireHeader(params.package.abi, params.constructorHeader);
         const result: {
             encoded: TONContractUnsignedMessage,
             addressHex: string,
@@ -350,12 +353,17 @@ export default class TONContractsModule extends TONModule implements TONContract
         });
         return {
             address: result.addressHex,
-            signParams: result.encoded,
+            signParams: {
+                ...result.encoded,
+                abi: params.package.abi,
+                expire: params.constructorHeader?.expire,
+            },
         };
     }
 
 
     async createUnsignedRunMessage(params: TONContractRunParams): Promise<TONContractUnsignedRunMessage> {
+        params.header = this.makeExpireHeader(params.abi, params.header);
         const signParams = await this.requestCore('contracts.run.encode_unsigned_message', {
             address: params.address,
             abi: params.abi,
@@ -364,9 +372,13 @@ export default class TONContractsModule extends TONModule implements TONContract
             input: params.input,
         });
         return {
-            abi: params.abi,
+            address: params.address,
             functionName: params.functionName,
-            signParams,
+            signParams: {
+                ...signParams,
+                abi: params.abi,
+                expire: params.header?.expire,
+            },
         };
     }
 
@@ -379,9 +391,15 @@ export default class TONContractsModule extends TONModule implements TONContract
     async createSignedDeployMessage(
         params: TONContractCreateSignedDeployMessageParams,
     ): Promise<TONContractDeployMessage> {
-        const message = await this.createSignedMessage(params.createSignedParams);
+        const message = await this.createSignedMessage({
+            abi: params.unsignedMessage.signParams.abi,
+            unsignedBytesBase64: params.unsignedMessage.signParams.unsignedBytesBase64,
+            signBytesBase64: params.signBytesBase64,
+            publicKeyHex: params.publicKeyHex,
+        });
+        message.expire = params.unsignedMessage.signParams.expire;
         return {
-            address: params.address,
+            address: params.unsignedMessage.address,
             message,
         };
     }
@@ -390,11 +408,17 @@ export default class TONContractsModule extends TONModule implements TONContract
     async createSignedRunMessage(
         params: TONContractCreateSignedRunMessageParams,
     ): Promise<TONContractRunMessage> {
-        const message = await this.createSignedMessage(params.createSignedParams);
+        const message = await this.createSignedMessage({
+            abi: params.unsignedMessage.signParams.abi,
+            unsignedBytesBase64: params.unsignedMessage.signParams.unsignedBytesBase64,
+            signBytesBase64: params.signBytesBase64,
+            publicKeyHex: params.publicKeyHex,
+        });
+        message.expire = params.unsignedMessage.signParams.expire;
         return {
-            address: params.address,
-            abi: params.abi,
-            functionName: params.functionName,
+            address: params.unsignedMessage.address,
+            abi: params.unsignedMessage.signParams.abi,
+            functionName: params.unsignedMessage.functionName,
             message,
         };
     }
@@ -718,9 +742,9 @@ export default class TONContractsModule extends TONModule implements TONContract
         });
     }
 
-    makeHeader(abi: TONContractABI, userHeader?: any): any {
-        const timeout = this.config.data?.transactionTimeout || 0;
-        if (abi.header && abi.header.includes("expire") && timeout > 0){
+    makeExpireHeader(abi: TONContractABI, userHeader?: any): any {
+        const timeout = this.config.data?.transactionTimeout || DEFAULT_TIMEOUT;
+        if (abi.header && abi.header.includes("expire") && !userHeader?.expire) {
             let header = userHeader || {};
             header.expire = Math.floor((Date.now() + timeout) / 1000) + 1;
             return header;
@@ -734,7 +758,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractDeployResult> {
         this.config.log("Deploy start");
-        params.constructorHeader = this.makeHeader(params.package.abi, params.constructorHeader);
         const message = await this.createDeployMessage(params);
         return this.processDeployMessage(message, parentSpan);
     }
@@ -745,7 +768,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
         this.config.log("Run start");
-        params.header = this.makeHeader(params.abi, params.header);
         const message = await this.createRunMessage(params);
         return this.processRunMessage(message, parentSpan);
     }

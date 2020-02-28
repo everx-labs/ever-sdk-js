@@ -53,7 +53,7 @@ test('Test SDK Errors 1-3', async () => {
             .toEqual('client');
         expect(error.code)
             .toEqual(2);
-    } */
+    }
 
     try {
         await contracts.createDeployMessage({
@@ -63,6 +63,7 @@ test('Test SDK Errors 1-3', async () => {
             keyPair: keys,
         });
     } catch (error) {
+        console.log(JSON.stringify(error));
         expect(error.source)
             .toEqual('client');
         expect(error.code)
@@ -71,7 +72,7 @@ test('Test SDK Errors 1-3', async () => {
             .toBeNull();
         expect(error.message)
             .toMatch('Invalid params: missing field \`abi\`');
-    }
+    } */
 
     try {
         await contracts.createDeployMessage({
