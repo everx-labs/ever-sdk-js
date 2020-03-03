@@ -534,7 +534,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     timeout, parentSpan);
 
                 const transaction_id = block.in_msg_descr && block.in_msg_descr.find(
-                        (element, index, array) => !!element.transaction_id)
+                        msg => !!msg.transaction_id)
                     ?.transaction_id;
                 if (!transaction_id) {
                     throw TONClientError.internalError("Invalid block recieved: no transaction ID");
