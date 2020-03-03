@@ -18,6 +18,7 @@
 import { Span, SpanContext } from 'opentracing';
 import type {
     QAccount,
+    QBlock,
     QMessage,
     QTransaction,
     TONContractABI,
@@ -64,6 +65,8 @@ import { TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule, { DEFAULT_TIMEOUT } from './TONQueriesModule';
+
+const DEFAULT_RETRIES_COUNT = 3;
 
 export const TONAddressStringVariant = {
     AccountId: 'AccountId',
@@ -520,15 +523,33 @@ export default class TONContractsModule extends TONModule implements TONContract
             if (timeout <= 0) {
                 throw TONClientError.sendNodeRequestFailed("Message already expired");
             }
-            // wait for block, produced after `expire` to guarantee that message is rejected
-            promises.push(
-                this.queries.blocks.waitFor({
+
+            const waitExpired = async () => {
+                // wait for block, produced after `expire` to guarantee that message is rejected
+                const block: QBlock = await this.queries.blocks.waitFor({
                         workchain_id: { eq: -1 },
-                        master: { shard_hashes: { all: { descr: { gen_utime : { ge: expire } } } } },
-                    }, 'id', timeout, parentSpan));
+                        master: { min_shard_gen_utime: { ge: expire }},
+                    },
+                    'in_msg_descr { transaction_id }',
+                    timeout, parentSpan);
+
+                const transaction_id = block.in_msg_descr && block.in_msg_descr.find(
+                        (element, index, array) => !!element.transaction_id)
+                    ?.transaction_id;
+                if (!transaction_id) {
+                    throw TONClientError.internalError("Invalid block recieved: no transaction ID");
+                }
+                // check that transactions collection is updated 
+                return this.queries.transactions.waitFor({
+                        id: { eq: transaction_id },
+                    },
+                    'id',
+                    timeout, parentSpan);
+            }
+            promises.push(waitExpired());
         }
 
-        // wait for message processing transaction with inreased timeout - to make block waiting end first
+        // wait for message processing transaction
         promises.push(
             this.queries.transactions.waitFor({
                     in_msg: { eq: messageId },
@@ -753,13 +774,31 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
     }
 
+    async retryCall(call: () => Promise<any>): Promise<any> {
+        const retriesCount = this.config.data?.retriesCount || DEFAULT_RETRIES_COUNT;
+        for (let i = 0; i <= retriesCount; i++) {
+            this.config.log(`Try #${i}`);
+            try {
+                return await call();
+            }
+            catch (error) {
+                if (error !== TONClientError.messageExpired()){
+                    throw error;
+                }
+            }
+        }
+        throw TONClientError.messageExpired();
+    }
+
     async internalDeployJs(
         params: TONContractDeployParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractDeployResult> {
         this.config.log("Deploy start");
-        const message = await this.createDeployMessage(params);
-        return this.processDeployMessage(message, parentSpan);
+        return this.retryCall(async () => {
+            const message = await this.createDeployMessage(params);
+            return this.processDeployMessage(message, parentSpan);
+        });
     }
 
 
@@ -768,8 +807,10 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
         this.config.log("Run start");
-        const message = await this.createRunMessage(params);
-        return this.processRunMessage(message, parentSpan);
+        return this.retryCall(async () => {
+            const message = await this.createRunMessage(params);
+            return this.processRunMessage(message, parentSpan);
+        });
     }
 
     async getAccount(

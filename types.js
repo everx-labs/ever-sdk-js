@@ -13,6 +13,7 @@ export type TONConfigData = {
     tracer?: ?Object, // opentracing.Tracer
     authorization?: string,
     transactionTimeout?: number,
+    retriesCount?: number,
     accessKey?: string,
 }
 
@@ -550,6 +551,16 @@ export type QMessage = {
     dst?: string,
     created_at?: number,
     body?: string,
+}
+
+export type InMsg = {
+    transaction_id?: string
+}
+
+export type QBlock = {
+    id?: string,
+    tr_count?: number,
+    in_msg_descr?: InMsg[]
 }
 
 export interface TONContracts {
