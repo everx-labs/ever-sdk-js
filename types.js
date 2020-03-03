@@ -4,14 +4,9 @@ import { Span, SpanContext } from 'opentracing';
 import type { Request } from './src/modules/TONQueriesModule';
 
 export type TONConfigData = {
-    defaultWorkchain: ?number,
     servers: string[],
-    requestsServer?: string,
-    queriesServer?: string,
-    queriesWsServer?: string,
     log_verbose?: boolean,
     tracer?: ?Object, // opentracing.Tracer
-    authorization?: string,
     transactionTimeout?: number,
     retriesCount?: number,
     accessKey?: string,

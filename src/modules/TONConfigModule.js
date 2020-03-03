@@ -89,8 +89,8 @@ export class URLParts {
     }
 }
 
-function resolveServer(configured?: string, def: string): string {
-    return URLParts.fix(configured || def, (parts) => {
+function resolveServer(server: string): string {
+    return URLParts.fix(server, (parts) => {
         if (parts.protocol === '') {
             parts.protocol = 'https://';
         }
@@ -101,7 +101,7 @@ function replacePrefix(s, prefix, newPrefix) {
     return `${newPrefix}${s.substr(prefix.length)}`;
 }
 
-const defaultServer = 'services.tonlabs.io';
+const defaultServer = 'http://localhost';
 
 export default class TONConfigModule extends TONModule {
     data: ?TONConfigData;
@@ -112,14 +112,13 @@ export default class TONConfigModule extends TONModule {
         this.data = data || {
             servers: [defaultServer],
         };
-        const server = resolveServer(data.servers[0], defaultServer);
-        this._requestsUrl = resolveServer(data.requestsServer, URLParts.appendPath(server, '/topics/requests'));
-        this._queriesHttpUrl = resolveServer(data.queriesServer, URLParts.appendPath(server, '/graphql'));
+        const server = resolveServer(data.servers[0] || defaultServer);
+        this._queriesHttpUrl = resolveServer(URLParts.appendPath(server, '/graphql'));
         const queriesWsServer = this._queriesHttpUrl.startsWith('https://')
             ? replacePrefix(this._queriesHttpUrl, 'https://', 'wss://')
             : replacePrefix(this._queriesHttpUrl, 'http://', 'ws://');
 
-        this._queriesWsUrl = resolveServer(data.queriesWsServer, queriesWsServer);
+        this._queriesWsUrl = resolveServer(queriesWsServer);
         this.tracer = data.tracer || noopTracer;
     }
 
@@ -150,10 +149,6 @@ export default class TONConfigModule extends TONModule {
         this._profileStart = this._profilePrev = 0;
     }
 
-    requestsUrl(): string {
-        return this._requestsUrl;
-    }
-
     queriesHttpUrl(): string {
         return this._queriesHttpUrl;
     }
@@ -180,8 +175,6 @@ export default class TONConfigModule extends TONModule {
     }
 
     _logVerbose: boolean;
-
-    _requestsUrl: string;
 
     _queriesHttpUrl: string;
 

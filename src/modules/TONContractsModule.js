@@ -527,7 +527,6 @@ export default class TONContractsModule extends TONModule implements TONContract
             const waitExpired = async () => {
                 // wait for block, produced after `expire` to guarantee that message is rejected
                 const block: QBlock = await this.queries.blocks.waitFor({
-                        workchain_id: { eq: -1 },
                         master: { min_shard_gen_utime: { ge: expire }},
                     },
                     'in_msg_descr { transaction_id }',
