@@ -29,7 +29,7 @@ import type {
     TONContractLoadResult,
 } from '../types';
 import { binariesVersion } from './_/binaries';
-import { TONClientError } from "../src/TONClient";
+import { TONClientError, TONClient } from "../src/TONClient";
 
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -249,6 +249,7 @@ test('External Signing on ABI v1', async () => {
     const signed = await contracts.createSignedDeployMessage({
         signBytesBase64,
         unsignedMessage,
+        publicKeyHex: keys.public
     });
 
     const message = await contracts.createDeployMessage(deployParams);
@@ -687,6 +688,7 @@ async function expectError(code: number, source: string, f) {
 if (tests.abiVersion === 2)
 test('Test expire', async () => {
     const {contracts, crypto, queries} = tests.client;
+
     const helloKeys = await crypto.ed25519Keypair();
 
     const contractData = await tests.deploy_with_giver({
@@ -743,10 +745,16 @@ test('Test expire', async () => {
         }
     }
 
+    // no retries client
+    const client = TONClient.create({
+        ...tests.config,
+        retriesCount: 0
+    });
+
     // SDK will wait for message processing using modified `expire` value, but message was created
     // already expired so contract won't accept it
     await expectError(expectedError.code, expectedError.source,
-        async () => contracts.processRunMessage(runMsg));
+        async () => client.contracts.processRunMessage(runMsg));
 
     // check that expired message wasn't processed by the contract
     const ltExpire = (await queries.accounts.query({
