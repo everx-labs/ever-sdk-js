@@ -45,6 +45,8 @@ export type Request = {
     body: string,
 }
 
+export const MAX_TIMEOUT = 2147483647;
+export const DEFAULT_TIMEOUT = 40_000;
 function findParams<T>(args: any[], requiredParamName: string): ?T {
     return (args.length === 1) && (requiredParamName in args[0]) ? args[0] : null;
 }
@@ -313,7 +315,7 @@ class TONQueriesModuleCollection implements TONQCollection {
         const result: string = params ? params.result : (args[1]: any);
         const orderBy = params ? params.orderBy : args[2];
         const limit = params ? params.limit : args[3];
-        const timeout = params ? params.timeout : args[4];
+        const timeout = params ? params.timeout : (args[4]: any);
         const parentSpan = params ? params.parentSpan : args[5];
         return this.module.context.trace(`${this.collectionName}.query`, async (span) => {
             span.setTag('params', {
@@ -330,7 +332,7 @@ class TONQueriesModuleCollection implements TONQCollection {
                 limit,
             };
             if (timeout) {
-                variables.timeout = timeout;
+                variables.timeout = Math.min(MAX_TIMEOUT, timeout);
             }
             return (await this.module._query(ql, variables, span)).data[c];
         }, parentSpan);
@@ -400,7 +402,7 @@ class TONQueriesModuleCollection implements TONQCollection {
         const params = findParams<TONWaitForParams>(args, 'filter');
         const filter = params ? params.filter : args[0];
         const result: string = params ? params.result : (args[1]: any);
-        const timeout = (params ? params.timeout : args[2]) || 40000;
+        const timeout = (params ? params.timeout : args[2]) || DEFAULT_TIMEOUT;
         const parentSpan = params ? params.parentSpan : args[3];
         const docs = await this.query({ filter, result, timeout, parentSpan });
         if (docs.length > 0) {

@@ -28,7 +28,8 @@ import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
 import type {
     TONContractLoadResult,
 } from '../types';
-import {binariesVersion} from './_/binaries';
+import { binariesVersion } from './_/binaries';
+import { TONClientError, TONClient } from "../src/TONClient";
 
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -198,28 +199,6 @@ test('Run aborted transaction', async () => {
     });
 });
 
-test('decodeInputMessageBody', async () => {
-    const { contracts } = tests.client;
-    const body = 'te6ccgEBAgEA3wAB8y88h10AAAFuW6FWJBERERERERERERERERERERERERERERERERERERERERERIXxlwlrjEGJEDhx3dC3WlQeZKzuAYBDOJ8+g7AM+Ek6AF49G0+VDwIkQKBdIh7hi4J5F0T/g5OggwrHI4HGN1KHAAAAAAAAAD2AAADkQAQDADBiSeQ1t5j0LwYo9dx7wefpnCQ3KrYOeAhX9ZUux62yIxWdQdUHJGCXXcoLbrDDduL9sgKSZT3TzYpRKi8YqASF8ZcJa4xBiRA4cd3Qt1pUHmSs7gGAQzifPoOwDPhJO';
-
-    const result = await contracts.decodeInputMessageBody({
-        abi: SubscriptionContractPackage.abi,
-        bodyBase64: body,
-    });
-
-    expect(result.function)
-        .toEqual('subscribe');
-    expect(result.output)
-        .toEqual({
-            period: '0x1c8',
-            pubkey: '0x217c65c25ae31062440e1c77742dd69507992b3b806010ce27cfa0ec033e124e',
-            subscriptionId: '0x1111111111111111111111111111111111111111111111111111111111111111',
-            to: '0:bc7a369f2a1e04488140ba443dc31704f22e89ff07274106158e47038c6ea50e',
-            value: '0x7b',
-        });
-});
-
-
 test('filterOutput', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
@@ -249,7 +228,8 @@ test('filterOutput', async () => {
         .toEqual('{"value0":"0x0"}');
 });
 
-test('External Signing', async () => {
+if(tests.abiVersion === 1)
+test('External Signing on ABI v1', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
@@ -267,18 +247,50 @@ test('External Signing', async () => {
         base64: unsignedMessage.signParams.bytesToSignBase64,
     }, signKey.secret, TONOutputEncoding.Base64);
     const signed = await contracts.createSignedDeployMessage({
-        address: unsignedMessage.address,
-        createSignedParams: {
-            publicKeyHex: keys.public,
-            signBytesBase64,
-            unsignedBytesBase64: unsignedMessage.signParams.unsignedBytesBase64,
-        },
+        signBytesBase64,
+        unsignedMessage,
+        publicKeyHex: keys.public
     });
 
     const message = await contracts.createDeployMessage(deployParams);
     expect(signed.message.messageBodyBase64)
         .toEqual(message.message.messageBodyBase64);
 });
+
+if(tests.abiVersion === 2)
+test('External Signing on ABI v2', async () => {
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+
+    const contractPackage = EventsPackage;
+
+    const deployParams = {
+        package: contractPackage,
+        constructorHeader: {
+            pubkey: keys.public,
+            time: Date.now(),
+            expire: Math.floor((Date.now() + 40_000) / 1000),
+        },
+        constructorParams: {},
+        keyPair: keys,
+    };
+    const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
+    const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
+    const signBytesBase64 = await crypto.naclSignDetached({
+        base64: unsignedMessage.signParams.bytesToSignBase64,
+    }, signKey.secret, TONOutputEncoding.Base64);
+    const signed = await contracts.createSignedDeployMessage({
+        signBytesBase64,
+        unsignedMessage,
+    });
+
+    const message = await contracts.createDeployMessage(deployParams);
+    expect(signed.message.messageBodyBase64)
+        .toEqual(message.message.messageBodyBase64);
+
+    
+});
+
 // TODO return test when data[] will fix in compilers
 test.skip('changeInitState', async () => {
     const { contracts, crypto } = tests.client;
@@ -660,6 +672,98 @@ test('test deploy lags', async () => {
 
     config.log("After deploy");
     config.stopProfile();
+});
+
+declare function fail(message: string): void;
+
+async function expectError(code: number, source: string, f) {
+    try {
+        await f();
+        fail(`Expected error with code:${code} source: ${source}`);
+    } catch (error) {
+        expect({ code: error.code, source: error.source }).toEqual({ code, source });
+    }
+}
+
+if (tests.abiVersion === 2)
+test('Test expire', async () => {
+    const {contracts, crypto, queries} = tests.client;
+
+    const helloKeys = await crypto.ed25519Keypair();
+
+    const contractData = await tests.deploy_with_giver({
+        package: HelloContractPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    });
+
+    const ltDeploy = (await queries.accounts.query({
+            id: { eq: contractData.address }
+        },
+        'last_trans_lt'
+    ))[0].last_trans_lt;
+
+    await contracts.run({
+        address: contractData.address,
+        abi: HelloContractPackage.abi,
+        functionName: 'touch',
+        input: {},
+        keyPair: helloKeys,
+    });
+
+    const ltRun = (await queries.accounts.query({
+            id: { eq: contractData.address }
+        },
+        'last_trans_lt'
+    ))[0].last_trans_lt;
+
+    expect(ltRun).not.toEqual(ltDeploy);
+
+    // to check message expiration we have to make some trick with `expire` value, because
+    // SDK can not send already expired message
+
+    // we create expired message
+    let runMsg = await contracts.createRunMessage({
+        address: contractData.address,
+        abi: HelloContractPackage.abi,
+        functionName: 'touch',
+        header: {
+            expire: Math.floor(Date.now() / 1000) - 1
+        },
+        input: {},
+        keyPair: helloKeys,
+    });
+    // and then change `expire` to correct value in order to send it properly
+    runMsg.message.expire = Math.floor(Date.now() / 1000) + 10;
+
+    // Node SE writes aborted transactions into DB, so error differs
+    let expectedError = TONClientError.messageExpired();
+    if (tests.nodeSe) {
+        expectedError = {
+            code: 57, // message expired code
+            source: "node"
+        }
+    }
+
+    // no retries client
+    const client = TONClient.create({
+        ...tests.config,
+        retriesCount: 0
+    });
+
+    // SDK will wait for message processing using modified `expire` value, but message was created
+    // already expired so contract won't accept it
+    await expectError(expectedError.code, expectedError.source,
+        async () => client.contracts.processRunMessage(runMsg));
+
+    // check that expired message wasn't processed by the contract
+    const ltExpire = (await queries.accounts.query({
+            id: { eq: contractData.address }
+        },
+        'last_trans_lt'
+    ))[0].last_trans_lt;
+
+    expect(ltExpire).toEqual(ltRun);
 });
 
 test('test parse message', async () => {

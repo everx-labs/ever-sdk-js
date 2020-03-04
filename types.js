@@ -4,13 +4,11 @@ import { Span, SpanContext } from 'opentracing';
 import type { Request } from './src/modules/TONQueriesModule';
 
 export type TONConfigData = {
-    defaultWorkchain: ?number,
     servers: string[],
-    requestsServer?: string,
-    queriesServer?: string,
-    queriesWsServer?: string,
     log_verbose?: boolean,
     tracer?: ?Object, // opentracing.Tracer
+    transactionTimeout?: number,
+    retriesCount?: number,
     accessKey?: string,
 }
 
@@ -232,44 +230,6 @@ export interface TONCrypto {
 
 // Contracts
 
-export type QMessage = {
-    id?: string,
-    msg_type?: number,
-    status?: number,
-    src?: string,
-    dst?: string,
-    created_at?: number,
-    body?: string,
-}
-
-export type QTransaction = {
-    id?: string,
-    account_addr?: string,
-    tr_type?: number,
-    status?: number,
-    block_id?: string,
-    aborted?: boolean,
-    now?: number,
-    lt?: string,
-    storage?: {
-        status_change?: number,
-    },
-    compute?: {
-        compute_type?: number,
-        success?: boolean,
-        exit_code?: number,
-        skipped_reason?: number,
-    },
-    action?: {
-        valid?: boolean,
-        no_funds?: boolean,
-        success?: boolean,
-        result_code?: number,
-    };
-    out_msgs?: string[],
-    out_messages?: QMessage[],
-}
-
 export type TONContractABIParameter = {
     name: string,
     type: string,
@@ -295,6 +255,7 @@ export type TONContractABIEvent = {
 export type TONContractABI = {
     'ABI version': number,
     setTime?: boolean,
+    header?: string[],
     functions: TONContractABIFunction[],
     events: TONContractABIEvent[],
     data: TONContractABIDataItem[],
@@ -317,6 +278,7 @@ export type TONContractLoadResult = {
 
 export type TONContractDeployParams = {
     package: TONContractPackage,
+    constructorHeader?: any,
     constructorParams: any,
     initParams?: any,
     keyPair: TONKeyPairData,
@@ -335,13 +297,16 @@ export type TONContractDeployResult = {
 }
 
 export type TONContractUnsignedMessage = {
+    abi: TONContractABI,
     unsignedBytesBase64: string,
     bytesToSignBase64: string,
+    expire?: number,
 }
 
 export type TONContractMessage = {
     messageId?: string,
     messageBodyBase64: string,
+    expire?: number,
 }
 
 export type TONContractUnsignedDeployMessage = {
@@ -350,7 +315,7 @@ export type TONContractUnsignedDeployMessage = {
 }
 
 export type TONContractUnsignedRunMessage = {
-    abi: TONContractABI,
+    address: string,
     functionName: string,
     signParams: TONContractUnsignedMessage,
 }
@@ -368,27 +333,29 @@ export type TONContractRunMessage = {
 }
 
 export type TONContractCreateSignedMessageParams = {
+    abi: TONContractABI,
     unsignedBytesBase64: string,
     signBytesBase64: string,
-    publicKeyHex: string,
+    publicKeyHex?: string,
 }
 
 export type TONContractCreateSignedDeployMessageParams = {
-    address: string,
-    createSignedParams: TONContractCreateSignedMessageParams,
+    unsignedMessage: TONContractUnsignedDeployMessage,
+    signBytesBase64: string,
+    publicKeyHex?: string,
 }
 
 export type TONContractCreateSignedRunMessageParams = {
-    address: string,
-    abi: TONContractABI,
-    functionName: string,
-    createSignedParams: TONContractCreateSignedMessageParams,
+    unsignedMessage: TONContractUnsignedRunMessage,
+    signBytesBase64: string,
+    publicKeyHex?: string,
 }
 
 export type TONContractRunParams = {
     address: string,
     abi: TONContractABI,
     functionName: string,
+    header?: any,
     input: any,
     keyPair?: TONKeyPairData,
 }
@@ -476,6 +443,7 @@ export type TONContractGetCodeFromImageResult = {
 export type TONContractCreateRunBodyParams = {
     abi: TONContractABI,
     function: string,
+    header?: any,
     params: any,
     internal?: boolean,
     keyPair?: TONKeyPairData,
@@ -541,6 +509,54 @@ export type QAccount = {
     library?: string,
 }
 
+export type QTransaction = {
+    id?: string,
+    account_addr: string,
+    tr_type?: number,
+    status?: number,
+    block_id?: string,
+    aborted?: boolean,
+    now?: number,
+    lt?: string,
+    storage?: {
+        status_change?: number,
+    },
+    compute?: {
+        compute_type?: number,
+        success?: boolean,
+        exit_code?: number,
+        skipped_reason?: number,
+    },
+    action?: {
+        valid?: boolean,
+        no_funds?: boolean,
+        success?: boolean,
+        result_code?: number,
+    };
+    in_msg?: string,
+    out_msgs?: string[],
+    out_messages?: QMessage[],
+}
+
+export type QMessage = {
+    id?: string,
+    msg_type?: number,
+    status?: number,
+    src?: string,
+    dst?: string,
+    created_at?: number,
+    body?: string,
+}
+
+export type InMsg = {
+    transaction_id?: string
+}
+
+export type QBlock = {
+    id?: string,
+    tr_count?: number,
+    in_msg_descr?: InMsg[]
+}
 
 export interface TONContracts {
     load(

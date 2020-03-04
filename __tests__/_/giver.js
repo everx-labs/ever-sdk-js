@@ -11,7 +11,9 @@ import type {
     TONContractDeployParams,
     TONContractDeployResult,
     TONContractRunParams,
-    TONContractRunResult
+    TONContractRunResult,
+    TONContractABI,
+    TONKeyPairData
 } from '../../types';
 import { nodeSe, tests } from './init-tests';
 
@@ -246,4 +248,13 @@ export async function deploy_with_giver(
 
 export function get_giver_address(): string {
     return nodeSe ? nodeSeGiverAddress : giverWalletAddressHex;
+}
+
+export function add_deployed_contract(key: TONKeyPairData, address: string, abi: TONContractABI) {
+    tests.deployedContracts.push({
+        key,
+        address,
+        abi,
+        giverAddress: nodeSe ? nodeSeGiverAddress : giverWalletAddressHex,
+    });
 }

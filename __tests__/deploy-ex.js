@@ -143,6 +143,7 @@ test('Deploy from contract 1', async () => {
     });
 
     const address = addressResult.output.value0;
+    tests.add_deployed_contract(keys, address, DeployeePackage.abi);
 
     await queries.accounts.waitFor({
         id: { eq: address },
@@ -215,6 +216,7 @@ test('Deploy from contract 2', async () => {
     });
 
     const address = addressResult.output.value0;
+    tests.add_deployed_contract(keys, address, DeployeePackage.abi);
 
     await queries.accounts.waitFor(
         {
@@ -282,6 +284,8 @@ test('Deploy from contract 3', async () => {
 
     expect(addressResult.output.value0)
         .toEqual(address);
+
+    tests.add_deployed_contract(keys, address, DeployeePackage.abi);
 
     await queries.accounts.waitFor(
         {
