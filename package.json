@@ -6,7 +6,7 @@
 	"scripts": {
 		"babel": "babel src --out-dir dist --source-maps inline",
 		"flow": "flow",
-		"test": "jest --forceExit --detectOpenHandles --testTimeout=200000 --coverage",
+		"test": "jest --forceExit --detectOpenHandles --testTimeout=200000 --coverage --verbose",
 		"test-ci": "jest --forceExit --detectOpenHandles --testTimeout=120000 -b -i --verbose",
 		"npm install": "npm install"
 	},
