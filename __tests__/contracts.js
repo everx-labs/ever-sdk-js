@@ -746,7 +746,7 @@ test('Test expire', async () => {
     }
 
     // no retries client
-    const client = TONClient.create({
+    const client = await TONClient.create({
         ...tests.config,
         retriesCount: 0
     });
