@@ -514,6 +514,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
         let timeout = DEFAULT_TIMEOUT;
         let promises = [];
+        let transactionFound = false;
         if (message.expire) {
             const expire = message.expire;
             // calculate timeout according to `expire` value (in seconds)
@@ -532,6 +533,9 @@ export default class TONContractsModule extends TONModule implements TONContract
                     'in_msg_descr { transaction_id }',
                     timeout, parentSpan);
 
+                if (transactionFound)
+                    return;
+
                 const transaction_id = block.in_msg_descr && block.in_msg_descr.find(
                         msg => !!msg.transaction_id)
                     ?.transaction_id;
@@ -549,15 +553,18 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
 
         // wait for message processing transaction
-        promises.push(
-            this.queries.transactions.waitFor({
+        promises.push(new Promise(async (resolve) => {
+            const tr = await this.queries.transactions.waitFor({
                     in_msg: { eq: messageId },
                     status: { eq: QTransactionProcessingStatus.finalized },
-                }, resultFields, timeout, parentSpan));
+                }, resultFields, timeout, parentSpan);
+            transactionFound = true;
+            resolve(tr);
+        }));
         
         let transaction: QTransaction = await Promise.race(promises);
         
-        if (transaction?.in_msg !== messageId) {
+        if (!transactionFound) {
             throw TONClientError.messageExpired();
         }
         const transactionNow = transaction.now || 0;
