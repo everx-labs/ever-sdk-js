@@ -533,8 +533,9 @@ export default class TONContractsModule extends TONModule implements TONContract
                     'in_msg_descr { transaction_id }',
                     timeout, parentSpan);
 
-                if (transactionFound)
+                if (transactionFound) {
                     return;
+                }
 
                 const transaction_id = block.in_msg_descr && block.in_msg_descr.find(
                         msg => !!msg.transaction_id)
