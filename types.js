@@ -423,12 +423,13 @@ export type TONContractGetDeployDataParams = {
     initParams?: any,
     imageBase64?: string,
     publicKeyHex: string,
+    workchainId?: number,
 }
-
 
 export type TONContractGetDeployDataResult = {
     imageBase64?: string,
     accountId?: string,
+    address?: string,
     dataBase64: string,
 }
 
