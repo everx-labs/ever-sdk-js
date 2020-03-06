@@ -480,7 +480,7 @@ test('Address conversion', async () => {
         .toEqual(hex);
 });
 
-test('calc gas fee', async () => {
+test.skip('calc gas fee', async () => {
     const { contracts, crypto, queries } = tests.client;
     if (tests.nodeSe) {
         console.log('[calc gas fee] Skip test on Node SE');
