@@ -554,13 +554,19 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
 
         // wait for message processing transaction
-        promises.push(new Promise(async (resolve) => {
-            const tr = await this.queries.transactions.waitFor({
-                    in_msg: { eq: messageId },
-                    status: { eq: QTransactionProcessingStatus.finalized },
-                }, resultFields, timeout, parentSpan);
-            transactionFound = true;
-            resolve(tr);
+        promises.push(new Promise((resolve, reject) => {
+            (async () => {
+              try {
+                      const tr = await this.queries.transactions.waitFor({
+                              in_msg: { eq: messageId },
+                              status: { eq: QTransactionProcessingStatus.finalized },
+                          }, resultFields, timeout, parentSpan);
+                      transactionFound = true;
+                      resolve(tr);
+              } catch (error) {
+                reject(error);
+              }
+          })();
         }));
         
         let transaction: QTransaction = await Promise.race(promises);
