@@ -534,7 +534,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     timeout, parentSpan);
 
                 if (transactionFound) {
-                    return;
+                    return {};
                 }
 
                 const transaction_id = block.in_msg_descr && block.in_msg_descr.find(

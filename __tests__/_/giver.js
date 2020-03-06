@@ -233,12 +233,17 @@ export async function deploy_with_giver(
 ): Promise<TONContractDeployResult> {
     const { contracts } = tests.client;
     return tests.client.trace('deploy_with_giver', async(span: Span) => {
-        const message = await contracts.createDeployMessage(params);
-        await get_grams_from_giver(message.address, giverRequestAmount, span);
-        console.log(`Deployed test contract address ${message.address}`);
+        const address = (await contracts.getDeployData({
+            ...params.package,
+            initParams: params.initParams,
+            publicKeyHex: params.keyPair.public,
+            workchainId: params.workchainId
+        })).address || "";
+        await get_grams_from_giver(address, giverRequestAmount, span);
+        console.log(`Deployed test contract address ${address}`);
         tests.deployedContracts.push({
             key: params.keyPair,
-            address: message.address,
+            address,
             abi: params.package.abi,
             giverAddress: nodeSe ? nodeSeGiverAddress : giverWalletAddressHex,
         });
