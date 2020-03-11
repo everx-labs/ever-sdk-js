@@ -11,7 +11,13 @@ import type {
     TONKeyPairData
 } from '../../types';
 import { ensureBinaries } from './binaries';
-import { deploy_with_giver, get_grams_from_giver, readGiverKeys, get_giver_address } from './giver';
+import {
+    deploy_with_giver,
+    get_grams_from_giver,
+    readGiverKeys,
+    get_giver_address,
+    add_deployed_contract
+} from './giver';
 import { initTracer as initJaegerTracer } from 'jaeger-client';
 
 require('dotenv').config();
@@ -27,6 +33,16 @@ if (!process.env.TON_NETWORK_ADDRESS) {
 }
 const serversConfig = process.env.TON_NETWORK_ADDRESS.replace(/ /gi, '').split(',');
 
+if (!process.env.ABI_VERSION) {
+    console.log('ABI version is not specified. Default used');
+}
+export const abiVersion = Number(process.env.ABI_VERSION || 2);
+
+const supportedVersions = [1, 2];
+if (!supportedVersions.includes(abiVersion)) {
+    throw new Error('ABI version is not supported');
+}
+
 export type TONContractDeployedParams = {
     address: string,
     key: TONKeyPairData,
@@ -38,8 +54,8 @@ const path = require('path');
 
 export function loadPackage(name: string): TONContractPackage {
     const contract = {};
-    contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.abi.json`), 'utf8'));
-    contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `${name}.tvc`)).toString('base64');
+    contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `abi_v${abiVersion}`, `${name}.abi.json`), 'utf8'));
+    contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `abi_v${abiVersion}`, `${name}.tvc`)).toString('base64');
     return contract;
 }
 
@@ -79,7 +95,7 @@ async function done() {
             });
             await tests.client.contracts.sendMessage(message.message);
         } catch (e) {
-            console.log(`Self destruct error: ${e}`);
+            console.log(`Self destruct error: ${JSON.stringify(e)}`);
             // ignore exception
         }
     }
@@ -122,16 +138,19 @@ export const tests: {
     done(): Promise<void>,
     get_grams_from_giver(account: string, amount?: number, parentSpan?: Span): Promise<void>,
     deploy_with_giver(params: TONContractDeployParams, parentSpan?: Span): Promise<TONContractDeployResult>,
+    add_deployed_contract(key: TONKeyPairData, address: string, abi: TONContractABI): void,
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
     nodeSe: boolean,
     loadPackage(name: string): TONContractPackage,
+    abiVersion: number
 } = {
     config: {
         defaultWorkchain: 0,
         servers: serversConfig,
         log_verbose: false,
         tracer: createJaegerTracer(''),
+        transactionTimeout: 40_000,
         accessKey: 'bypass',
     },
     createClient,
@@ -140,8 +159,10 @@ export const tests: {
     done,
     get_grams_from_giver,
     deploy_with_giver,
+    add_deployed_contract,
     deployedContracts: [],
     get_giver_address,
     nodeSe,
     loadPackage,
+    abiVersion,
 };
