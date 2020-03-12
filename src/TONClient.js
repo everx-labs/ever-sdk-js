@@ -230,6 +230,7 @@ export class TONClientError {
         WAIT_FOR_TIMEOUT: 1003,
         INTERNAL_ERROR: 1004,
         QUERY_FAILED: 1005,
+        MESSAGE_EXPIRED: 1006
     };
 
     message: string;
@@ -288,6 +289,14 @@ export class TONClientError {
         return new TONClientError(
             `Query failed: ${errors.map(x => x.message || x.toString()).join('\n')}`,
             TONClientError.code.QUERY_FAILED,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static messageExpired() {
+        return new TONClientError(
+            'Message expired',
+            TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
         );
     }
