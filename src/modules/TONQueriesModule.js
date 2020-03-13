@@ -47,6 +47,7 @@ export type Request = {
 
 export const MAX_TIMEOUT = 2147483647;
 export const DEFAULT_TIMEOUT = 40_000;
+
 function findParams<T>(args: any[], requiredParamName: string): ?T {
     return (args.length === 1) && (requiredParamName in args[0]) ? args[0] : null;
 }
@@ -223,6 +224,16 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 },
                 WebSocket
             );
+            subscriptionClient.onError((evt) => {
+                console.log('>>>', evt.target.url);
+                // (async () => {
+                //     try {
+                //         // const newWsUrl = (await this.getClientConfig()).wsUrl;
+                //     } catch (err) {
+                //         console.log('>>>', err);
+                //     }
+                // })();
+            });
             subscriptionClient.maxConnectTimeGenerator.duration = () => subscriptionClient.maxConnectTimeGenerator.max;
             const tracerLink = await setContext((_, req) => {
                 const resolvedSpan = (req && req.traceSpan) || span;

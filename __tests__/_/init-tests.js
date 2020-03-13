@@ -152,6 +152,7 @@ export const tests: {
         tracer: createJaegerTracer(''),
         transactionTimeout: 40_000,
         accessKey: 'bypass',
+        abiVersion: 2,
     },
     createClient,
     client: new TONClient(),

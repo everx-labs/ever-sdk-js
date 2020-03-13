@@ -520,7 +520,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             // calculate timeout according to `expire` value (in seconds)
             // add default timeout as master block validation time
             timeout = expire * 1000 - Date.now() + DEFAULT_TIMEOUT;
-            
+
             if (timeout <= 0) {
                 throw TONClientError.sendNodeRequestFailed("Message already expired");
             }
@@ -528,7 +528,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             const waitExpired = async () => {
                 // wait for block, produced after `expire` to guarantee that message is rejected
                 const block: QBlock = await this.queries.blocks.waitFor({
-                        master: { min_shard_gen_utime: { ge: expire }},
+                        master: { min_shard_gen_utime: { ge: expire } },
                     },
                     'in_msg_descr { transaction_id }',
                     timeout, parentSpan);
@@ -538,39 +538,40 @@ export default class TONContractsModule extends TONModule implements TONContract
                 }
 
                 const transaction_id = block.in_msg_descr && block.in_msg_descr.find(
-                        msg => !!msg.transaction_id)
+                    msg => !!msg.transaction_id)
                     ?.transaction_id;
                 if (!transaction_id) {
                     throw TONClientError.internalError("Invalid block recieved: no transaction ID");
                 }
-                // check that transactions collection is updated 
+                // check that transactions collection is updated
                 return this.queries.transactions.waitFor({
                         id: { eq: transaction_id },
                     },
                     'id',
                     timeout, parentSpan);
-            }
+            };
+
             promises.push(waitExpired());
         }
 
         // wait for message processing transaction
         promises.push(new Promise((resolve, reject) => {
             (async () => {
-              try {
-                      const tr = await this.queries.transactions.waitFor({
-                              in_msg: { eq: messageId },
-                              status: { eq: QTransactionProcessingStatus.finalized },
-                          }, resultFields, timeout, parentSpan);
-                      transactionFound = true;
-                      resolve(tr);
-              } catch (error) {
-                reject(error);
-              }
-          })();
+                try {
+                    const tr = await this.queries.transactions.waitFor({
+                        in_msg: { eq: messageId },
+                        status: { eq: QTransactionProcessingStatus.finalized },
+                    }, resultFields, timeout, parentSpan);
+                    transactionFound = true;
+                    resolve(tr);
+                } catch (error) {
+                    reject(error);
+                }
+            })();
         }));
-        
+
         let transaction: QTransaction = await Promise.race(promises);
-        
+
         if (!transactionFound) {
             throw TONClientError.messageExpired();
         }
@@ -793,9 +794,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             this.config.log(`Try #${i}`);
             try {
                 return await call();
-            }
-            catch (error) {
-                if (error !== TONClientError.messageExpired()){
+            } catch (error) {
+                if (error !== TONClientError.messageExpired()) {
                     throw error;
                 }
             }

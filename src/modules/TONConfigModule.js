@@ -123,7 +123,7 @@ export default class TONConfigModule extends TONModule {
     }
 
     log(...args: any[]) {
-        const profile = (this._profileStart || 0) != 0;
+        const profile = (this._profileStart || 0) !== 0;
         if (profile) {
             const current = Date.now() / 1000;
             const timeString = `${String(current.toFixed(3))} ${
