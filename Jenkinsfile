@@ -59,15 +59,9 @@ pipeline {
                             name: 'RUN_TESTS_TON_CLIENT_JS',
                             value: true
                         ],
-                        [
-                            $class: 'StringParameterValue',
-                            name: 'ABI_VERSION',
-                            value: "2"
-                        ],
                     ] 
 
-                    build job: "Integration/integration-tests/0.21.0-rc", parameters: params
-                    // build job: "Integration/integration-tests/master", parameters: params
+                    build job: "Integration/integration-tests/master", parameters: params
                 }
             }
         }
