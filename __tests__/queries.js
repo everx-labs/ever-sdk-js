@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { QTransactionProcessingStatus } from "../src/modules/TONContractsModule";
-import { get_grams_from_giver } from "./_/giver";
-import { tests } from "./_/init-tests";
+import { QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
+import { get_grams_from_giver } from './_/giver';
+import { tests } from './_/init-tests';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 
@@ -26,11 +26,14 @@ afterAll(tests.done);
 test('Specialized', async () => {
     const queries = tests.client.queries;
     let count = await queries.getAccountsCount();
-    expect(count).toBeGreaterThan(10);
+    expect(count)
+        .toBeGreaterThan(10);
     count = await queries.getTransactionsCount();
-    expect(count).toBeGreaterThan(10);
+    expect(count)
+        .toBeGreaterThan(10);
     const totalBalance = BigInt(await queries.getAccountsTotalBalance());
-    expect(totalBalance > BigInt(10)).toBeTruthy();
+    expect(totalBalance > BigInt(10))
+        .toBeTruthy();
 });
 
 // Skipped explicitly due to no expect
@@ -39,7 +42,12 @@ test.skip('Transaction List', async () => {
     const transaction = await queries.transactions.query({
         filter: {
             id: { eq: 'e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465' },
-            status: { in: [QTransactionProcessingStatus.proposed, QTransactionProcessingStatus.finalized] }
+            status: {
+                in: [
+                    QTransactionProcessingStatus.proposed,
+                    QTransactionProcessingStatus.finalized,
+                ],
+            },
         },
         result: 'id now status',
         limit: 1,
@@ -49,8 +57,12 @@ test.skip('Transaction List', async () => {
 
 test('All Accounts', async () => {
     const queries = tests.client.queries;
-    const docs = await queries.accounts.query({ filter: {}, result: 'id balance' });
-    expect(docs.length).toBeGreaterThan(0);
+    const docs = await queries.accounts.query({
+        filter: {},
+        result: 'id balance',
+    });
+    expect(docs.length)
+        .toBeGreaterThan(0);
 });
 
 // Skipped explicitly due to no expect
@@ -58,9 +70,9 @@ test.skip('Message', async () => {
     const queries = tests.client.queries;
     const messages = await queries.messages.query({
         filter: {
-            id: { eq: '3a8e38b419a452fe7a0073e71c083f926055d0f249485ab9f8ca6e9825c20b8c' }
+            id: { eq: '3a8e38b419a452fe7a0073e71c083f926055d0f249485ab9f8ca6e9825c20b8c' },
         },
-        result: 'body created_at'
+        result: 'body created_at',
     });
     // expect(messages[0].header.ExtOutMsgInfo.created_at).toEqual(1562342740);
 });
@@ -68,10 +80,11 @@ test.skip('Message', async () => {
 test('Ranges', async () => {
     const queries = tests.client.queries;
     const messages = await queries.messages.query({
-        filter: { created_at: { gt: 1562342740 }, },
-        result: 'body created_at'
+        filter: { created_at: { gt: 1562342740 } },
+        result: 'body created_at',
     });
-    expect(messages[0].created_at).toBeGreaterThan(1562342740);
+    expect(messages[0].created_at)
+        .toBeGreaterThan(1562342740);
 });
 
 test('Wait For', async () => {
@@ -80,9 +93,10 @@ test('Wait For', async () => {
         filter: {
             now: { gt: 1563449 },
         },
-        result: 'id status'
+        result: 'id status',
     });
-    expect(data.status).toEqual(QTransactionProcessingStatus.finalized);
+    expect(data.status)
+        .toEqual(QTransactionProcessingStatus.finalized);
 });
 
 const transactionWithAddresses = `
@@ -91,7 +105,7 @@ const transactionWithAddresses = `
     in_message { dst src value }
 `;
 
-test("Subscribe for transactions with addresses", async () => {
+test('Subscribe for transactions with addresses', async () => {
     const { contracts, queries, crypto } = tests.client;
     const walletKeys = await crypto.ed25519Keypair();
 
@@ -105,7 +119,7 @@ test("Subscribe for transactions with addresses", async () => {
     const transactions = [];
     const subscription = (await queries.transactions.subscribe({
         filter: {
-            in_msg: { eq: message.message.messageId }
+            in_msg: { eq: message.message.messageId },
         },
         result: 'id',
         onDocEvent(e, d) {
@@ -122,20 +136,21 @@ test("Subscribe for transactions with addresses", async () => {
     console.log('>>>', 'Waiting...');
     await new Promise(resolve => setTimeout(resolve, 1_000));
     subscription.unsubscribe();
-    expect(transactions.length).toBeGreaterThan(0);
+    expect(transactions.length)
+        .toBeGreaterThan(0);
 });
 
-test("Subscribe for messages", async () => {
+test('Subscribe for messages', async () => {
     const { contracts, queries, crypto } = tests.client;
     const docs = [];
     const subscription = (await queries.messages.subscribe({
         filter: {
-            src: { eq: '1' }
+            src: { eq: '1' },
         },
         result: 'id',
         onDocEvent(e, doc) {
             docs.push(doc);
-        }
+        },
     }));
 
     const walletKeys = await crypto.ed25519Keypair();
@@ -154,21 +169,23 @@ test("Subscribe for messages", async () => {
         keyPair: walletKeys,
     });
     subscription.unsubscribe();
-    expect(docs.length).toEqual(0);
+    expect(docs.length)
+        .toEqual(0);
 });
 
-test("Transactions with addresses", async () => {
+test('Transactions with addresses', async () => {
     const queries = tests.client.queries;
     const tr = (await queries.transactions.query({
         filter: {},
-        result: transactionWithAddresses
+        result: transactionWithAddresses,
     }))[0];
-    expect(tr).toBeTruthy();
+    expect(tr)
+        .toBeTruthy();
 });
 
 
 // Skipped explicitly as disabled
-test.skip("Subscribe for failed server", async () => {
+test.skip('Subscribe for failed server', async () => {
     // console.log('>>>', 'Subscribed');
     // tests.client.queries.accounts.subscribe(
     //     {
@@ -196,7 +213,7 @@ const shardHashesQuery = `
 test('Check shard_hashes greater then 0', async () => {
     const queryResult = (await tests.client.queries.blocks.query({
         filter: {},
-        result: shardHashesQuery
+        result: shardHashesQuery,
     }));
     expect(queryResult.length)
         .toBeGreaterThan(0);
@@ -204,7 +221,7 @@ test('Check shard_hashes greater then 0', async () => {
 
 
 // Skipped explicitly as disabled
-test.skip("Subscribe for accounts", async () => {
+test.skip('Subscribe for accounts', async () => {
     // const { queries } = tests.client;
     // const subscriptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => queries.accounts.subscribe({}, 'id code data', (e, doc) => {
     //     console.log(i, doc.id);
@@ -215,7 +232,7 @@ test.skip("Subscribe for accounts", async () => {
 
 
 // Skipped explicitly as disabled
-test("Long time subscription", async () => {
+test('Long time subscription', async () => {
     jest.setTimeout(1000000);
     const { queries } = tests.client;
     const subscription = queries.accounts.subscribe({}, 'id code data', (e, doc) => {
