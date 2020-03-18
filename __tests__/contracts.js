@@ -229,10 +229,10 @@ test('filterOutput', async () => {
 
     const graph = await tests.client.queries.transactions.waitFor({
         filter: { id: { eq: resultReturn.transaction.id} },
-        result: 'id in_message { id dst_transaction { id } }',
+        result: 'id in_message { id dst_transaction { id out_messages { id src_transaction { id } } } }',
     });
     expect(graph.in_message.dst_transaction.id).toEqual(graph.id);
-    console.log('>>>', graph);
+    expect(graph.in_message.dst_transaction.out_messages[0].src_transaction.id).toEqual(graph.id);
 });
 
 if(tests.abiVersion === 1)

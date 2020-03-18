@@ -83,12 +83,10 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }
         const sourceLocation = URLParts.fix(sourceUrl, (parts) => {
             parts.query = '';
-        })
-            .toLowerCase();
+        }).toLowerCase();
         const responseLocation = URLParts.fix(response.url, (parts) => {
             parts.query = '';
-        })
-            .toLowerCase();
+        }).toLowerCase();
         return responseLocation !== sourceLocation ? response.url : '';
     }
 
@@ -101,20 +99,24 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         let httpUrl = config.queriesHttpUrl();
         let wsUrl = config.queriesWsUrl();
         const { fetch } = clientPlatform;
-        const redirected = await this.detectRedirect(
-            fetch,
-            `${httpUrl}?query=%7Binfo%7Bversion%7D%7D`,
-        );
-        if (redirected !== '') {
-            const location = URLParts.fix(redirected, (parts) => {
-                parts.query = '';
-            });
-            if (location) {
-                httpUrl = location;
-                wsUrl = location
-                    .replace(/^https:\/\//gi, 'wss://')
-                    .replace(/^http:\/\//gi, 'ws://');
+        try {
+            const redirected = await this.detectRedirect(
+                fetch,
+                `${httpUrl}?query=%7Binfo%7Bversion%7D%7D`,
+            );
+            if (redirected !== '') {
+                const location = URLParts.fix(redirected, (parts) => {
+                    parts.query = '';
+                });
+                if (location) {
+                    httpUrl = location;
+                    wsUrl = location
+                        .replace(/^https:\/\//gi, 'wss://')
+                        .replace(/^http:\/\//gi, 'ws://');
+                }
             }
+        } catch (error) {
+            console.error('[getClientConfig] failed', error);
         }
         return {
             httpUrl,
@@ -236,6 +238,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     }
 
     async createGraphqlClient(span: Span | SpanContext) {
+        const useHttp = true;
         let clientConfig = await this.getClientConfig();
         let wsLink: ?WebSocketLink = null;
         let httpLink: ?HttpLink = null;
@@ -253,11 +256,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             clientConfig.WebSocket,
         );
         subscriptionClient.onReconnected(() => {
-            console.log('>>>', 'WebSocket Reconnected');
+            console.error('>>>', 'WebSocket Reconnected');
         });
         let detectingRedirection = false;
         subscriptionClient.onError(() => {
-            console.log('>>>', 'WebSocket Error');
+            console.error('[onError]', 'WebSocket Failed');
             if (detectingRedirection) {
                 return;
             }
@@ -268,7 +271,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     const configIsChanged = newConfig.httpUrl !== clientConfig.httpUrl
                         || newConfig.wsUrl !== clientConfig.wsUrl;
                     if (configIsChanged) {
-                        console.log('>>>', 'Client config changed');
+                        console.error('[onError]', 'Client config changed');
                         clientConfig = newConfig;
                         subscriptionClient.url = newConfig.wsUrl;
                         if (wsLink) {
@@ -279,7 +282,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                         }
                     }
                 } catch (err) {
-                    console.log('>>>', err);
+                    console.error('[onError] Detect redirection failed', err);
                 }
                 detectingRedirection = false;
             })();
@@ -301,7 +304,6 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             };
         });
         const wrapLink = (link: ApolloLink): ApolloLink => tracerLink.concat(link);
-        const useHttp = true;
         const isSubscription = ({ query }) => {
             const definition = getMainDefinition(query);
             return (
@@ -313,7 +315,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         httpLink = useHttp
             ? new HttpLink({
                 uri: clientConfig.httpUrl,
-                fetch,
+                fetch: clientConfig.fetch,
             })
             : null;
 
@@ -365,7 +367,7 @@ class TONQueriesModuleCollection implements TONQCollection {
     constructor(module: TONQueriesModule, collectionName: string) {
         this.module = module;
         this.collectionName = collectionName;
-        this.typeName = `${collectionName[0].toUpperCase()}${collectionName.slice(1)}`;
+        this.typeName = `${collectionName[0].toUpperCase()}${collectionName.slice(1, -1)}`;
     }
 
     async query(
