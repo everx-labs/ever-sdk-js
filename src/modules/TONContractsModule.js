@@ -541,6 +541,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         const config = this.config;
         const messageId = await this.sendMessage(message, parentSpan);
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
+        console.log('>>>', { retryIndex, processingTimeout });
         let promises = [];
         let transactionFound = false;
         if (message.expire) {
@@ -549,6 +550,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 throw TONClientError.sendNodeRequestFailed("Message already expired");
             }
 
+            console.log('>>>', { retryIndex, expire });
             // calculate timeout according to `expire` value (in seconds)
             // add processing timeout as master block validation time
             processingTimeout = expire * 1000 - Date.now() + processingTimeout;
@@ -613,6 +615,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         let transaction: QTransaction = await Promise.race(promises);
 
         if (!transactionFound) {
+            console.log('>>> transaction: ', transaction);
             throw TONClientError.messageExpired();
         }
         const transactionNow = transaction.now || 0;
