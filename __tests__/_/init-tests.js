@@ -151,7 +151,6 @@ export const tests: {
         log_verbose: false,
         tracer: createJaegerTracer(''),
         accessKey: 'bypass',
-        abiVersion: 2,
     },
     createClient,
     client: new TONClient(),

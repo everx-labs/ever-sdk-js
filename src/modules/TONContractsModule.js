@@ -490,7 +490,9 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message parsing
 
-    async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
+    async decodeRunOutput(
+        params: TONContractDecodeRunOutputParams,
+    ): Promise<TONContractRunResult> {
         return this.requestCore('contracts.run.output', params);
     }
 
@@ -855,7 +857,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<TONContractDeployResult> {
         this.config.log("Deploy start");
         return this.retryCall(async (retryIndex) => {
-            const message = await this.createDeployMessage(params);
+            const message = await this.createDeployMessage(params, retryIndex);
             return this.processDeployMessage(message, parentSpan, retryIndex);
         });
     }
@@ -867,7 +869,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<TONContractRunResult> {
         this.config.log("Run start");
         return this.retryCall(async (retryIndex) => {
-            const message = await this.createRunMessage(params);
+            const message = await this.createRunMessage(params, retryIndex);
             return this.processRunMessage(message, parentSpan, retryIndex);
         });
     }
