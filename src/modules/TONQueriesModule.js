@@ -48,10 +48,9 @@ export type Request = {
 }
 
 export const MAX_TIMEOUT = 2147483647;
-export const DEFAULT_TIMEOUT = 40_000;
 
-function findParams<T>(args: any[], requiredParamName: string): ?T {
-    return (args.length === 1) && (requiredParamName in args[0]) ? args[0] : null;
+function resolveParams<T>(args: any[], requiredParamName: string, resolveArgs: () => T): T {
+    return (args.length === 1) && (requiredParamName in args[0]) ? args[0] : resolveArgs();
 }
 
 export default class TONQueriesModule extends TONModule implements TONQueries {
@@ -81,49 +80,61 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         if (response.redirected === false) {
             return '';
         }
-        const sourceLocation = URLParts.fix(sourceUrl, (parts) => {
-            parts.query = '';
-        }).toLowerCase();
-        const responseLocation = URLParts.fix(response.url, (parts) => {
-            parts.query = '';
-        }).toLowerCase();
+        const sourceLocation = URLParts.parse(sourceUrl)
+            .fixQuery(_ => '')
+            .toString()
+            .toLowerCase();
+        const responseLocation = URLParts.parse(response.url)
+            .fixQuery(_ => '')
+            .toString()
+            .toLowerCase();
         return responseLocation !== sourceLocation ? response.url : '';
     }
 
     async getClientConfig() {
-        const { config } = this;
-        const { clientPlatform } = TONClient;
-        if (!config.data || !clientPlatform) {
+        const config = this.config;
+        const clientPlatform = TONClient.clientPlatform;
+        if (!clientPlatform) {
             throw Error('TON Client does not configured');
         }
-        let httpUrl = config.queriesHttpUrl();
-        let wsUrl = config.queriesWsUrl();
-        const { fetch } = clientPlatform;
-        try {
-            const redirected = await this.detectRedirect(
-                fetch,
-                `${httpUrl}?query=%7Binfo%7Bversion%7D%7D`,
-            );
-            if (redirected !== '') {
-                const location = URLParts.fix(redirected, (parts) => {
-                    parts.query = '';
-                });
-                if (location) {
-                    httpUrl = location;
-                    wsUrl = location
-                        .replace(/^https:\/\//gi, 'wss://')
-                        .replace(/^http:\/\//gi, 'ws://');
-                }
+        const fetch = clientPlatform.fetch;
+
+        function getConfigForServer(server: string) {
+            const httpParts = URLParts.parse(server)
+                .fixProtocol(x => x === 'http://' ? x : 'https://')
+                .fixPath(x => `${x}/graphql`);
+            const http = httpParts.toString();
+            const ws = httpParts
+                .fixProtocol(x => x === 'http://' ? 'ws://' : 'wss://')
+                .toString();
+            return {
+                httpUrl: http,
+                wsUrl: ws,
+                fetch: clientPlatform.fetch,
+                WebSocket: clientPlatform.WebSocket,
             }
-        } catch (error) {
-            console.error('[getClientConfig] failed', error);
         }
-        return {
-            httpUrl,
-            wsUrl,
-            fetch,
-            WebSocket: clientPlatform.WebSocket,
-        };
+
+        for (const server of config.data.servers) {
+            try {
+                const clientConfig = getConfigForServer(server);
+                const redirected = await this.detectRedirect(
+                    fetch,
+                    `${clientConfig.httpUrl}?query=%7Binfo%7Bversion%7D%7D`,
+                );
+                if (redirected !== '') {
+                    const httpParts = URLParts.parse(redirected).fixQuery(_ => '');
+                    clientConfig.httpUrl = httpParts.toString();
+                    clientConfig.wsUrl = httpParts
+                        .fixProtocol(x => x === 'http://' ? 'ws://' : 'wss://')
+                        .toString();
+                }
+                return clientConfig;
+            } catch (error) {
+                console.error(`[getClientConfig] for server "${server}" failed`, error);
+            }
+        }
+        return getConfigForServer(config.data.servers[0]);
     }
 
     async getAccountsCount(parentSpan?: (Span | SpanContext)): Promise<number> {
@@ -381,13 +392,21 @@ class TONQueriesModuleCollection implements TONQCollection {
             parentSpan?: (Span | SpanContext)
          */
     ): Promise<any> {
-        const params = findParams<TONQueryParams>(args, 'filter');
-        const filter = params ? params.filter : args[0];
-        const result: string = params ? params.result : (args[1]: any);
-        const orderBy = params ? params.orderBy : args[2];
-        const limit = params ? params.limit : args[3];
-        const timeout = params ? params.timeout : (args[4]: any);
-        const parentSpan = params ? params.parentSpan : args[5];
+        const {
+            filter,
+            result,
+            orderBy,
+            limit,
+            timeout,
+            parentSpan,
+        } = resolveParams<TONQueryParams>(args, 'filter', () => ({
+            filter: args[0],
+            result: (args[1]: any),
+            orderBy: (args[2]: any),
+            limit: (args[3]: any),
+            timeout: (args[4]: any),
+            parentSpan: args[5],
+        }));
         return this.module.context.trace(`${this.collectionName}.query`, async (span) => {
             span.setTag('params', {
                 filter,
@@ -422,11 +441,17 @@ class TONQueriesModuleCollection implements TONQCollection {
         onError?: (err: Error) => void
          */
     ): Subscription {
-        const params = findParams<TONSubscribeParams>(args, 'filter');
-        const filter = params ? params.filter : args[0];
-        const result: string = params ? params.result : (args[1]: any);
-        const onDocEvent = params ? params.onDocEvent : (args[2]: any);
-        const onError = params ? params.onError : (args[3]: any);
+        const {
+            filter,
+            result,
+            onDocEvent,
+            onError,
+        } = resolveParams<TONSubscribeParams>(args, 'filter', () => ({
+            filter: args[0],
+            result: (args[1]: any),
+            onDocEvent: (args[2]: any),
+            onError: (args[3]: any),
+        }));
         const span = this.module.config.tracer.startSpan('TONQueriesModule.js:subscribe ');
         span.setTag(Tags.SPAN_KIND, 'client');
         const text = `subscription ${this.collectionName}($filter: ${this.typeName}Filter) {
@@ -477,11 +502,18 @@ class TONQueriesModuleCollection implements TONQCollection {
         parentSpan?: (Span | SpanContext)
          */
     ): Promise<any> {
-        const params = findParams<TONWaitForParams>(args, 'filter');
-        const filter = params ? params.filter : args[0];
-        const result: string = params ? params.result : (args[1]: any);
-        const timeout = (params ? params.timeout : args[2]) || DEFAULT_TIMEOUT;
-        const parentSpan = params ? params.parentSpan : args[3];
+        const {
+            filter,
+            result,
+            timeout: paramsTimeout,
+            parentSpan,
+        } = resolveParams<TONWaitForParams>(args, 'filter', () => ({
+            filter: args[0],
+            result: (args[1]: any),
+            timeout: (args[2]: any),
+            parentSpan: args[3],
+        }));
+        const timeout = paramsTimeout || this.module.config.waitForTimeout();
         const docs = await this.query({
             filter,
             result,

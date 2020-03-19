@@ -48,7 +48,7 @@ async function expectError(code: number, source: string, f) {
     }
 }
 
-test('Unauthorized', async () => {
+test.skip('Unauthorized', async () => {
     let client;
     await expectError(401, 'graphql', async () => {
         client = await tests.createClient({ accessKey: '' });
@@ -62,7 +62,7 @@ test('Unauthorized', async () => {
 
 
 // not implemented yet
-test('Register Access Keys', async () => {
+test.skip('Register Access Keys', async () => {
     const fooKey = 'FooFooFoo';
     const managementClient = await tests.createClient({ accessKey: 'bypass' });
     await managementClient.registerAccessKeys({
@@ -120,7 +120,7 @@ test('Register Access Keys', async () => {
     });
 });
 
-test('Run restricted contract', async () => {
+test.skip('Run restricted contract', async () => {
     const fooKey = 'FooFooFoo';
     const barKey = 'BarBarBar';
     jest.setTimeout(100000);
@@ -225,7 +225,7 @@ test('Run restricted contract', async () => {
 });
 
 
-test('Subscription restricted to accounts', async () => {
+test.skip('Subscription restricted to accounts', async () => {
     const fooKey = 'FooFooFoo';
     const barKey = 'BarBarBar';
     const managementClient = await tests.createClient({ accessKey: 'bypass' });

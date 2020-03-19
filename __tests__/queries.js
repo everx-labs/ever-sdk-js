@@ -232,7 +232,7 @@ test.skip('Subscribe for accounts', async () => {
 
 
 // Skipped explicitly as disabled
-test('Long time subscription', async () => {
+test.skip('Long time subscription', async () => {
     jest.setTimeout(1000000);
     const { queries } = tests.client;
     const subscription = queries.accounts.subscribe({}, 'id code data', (e, doc) => {

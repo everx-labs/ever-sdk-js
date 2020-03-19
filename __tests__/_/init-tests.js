@@ -150,7 +150,6 @@ export const tests: {
         servers: serversConfig,
         log_verbose: false,
         tracer: createJaegerTracer(''),
-        transactionTimeout: 40_000,
         accessKey: 'bypass',
         abiVersion: 2,
     },
