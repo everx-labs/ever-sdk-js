@@ -1,6 +1,21 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.21.1 - Mar 19, 2020
+### Featured
+- Stability improvements 
+
+### New
+- log to console WebSocket errors and reconnections
+- config parameters `retriesCount` and `transactionTimeout` have removed
+- config parameters `messageRetriesCount`, `messageExpirationTimeout`, `messageExpirationTimeoutGrowFactor`, `messageProcessingTimeout`, `messageProcessingTimeoutGrowFactor`, `waitForTimeout`
+- `run` method returns `transactions` with included fields `compute.gas_fees` and `compute.gas_used`
+- client will try to use all addresses from `servers` config if the first server fails 
+
+### Fixed
+- enhanced reconnection procedure when WebSocket connection has failed 
+- expiration retries didn't work
+
 ## 0.21.0 - Mar 12, 2020
 ### Featured
 - ABI version 2 supported. See specification at https://docs.ton.dev

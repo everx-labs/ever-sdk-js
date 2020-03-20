@@ -16,16 +16,16 @@
 
 /* eslint-disable no-bitwise */
 
-import { tests } from "./_/init-tests";
-import { exportAllDeclaration } from "@babel/types";
+import { ABIVersions, tests } from "./_/init-tests";
 
 const SubscriptionContractPackage = tests.loadPackage('Subscription');
 
 beforeAll(tests.init);
 afterAll(tests.done);
 
-test("RunLocal", async () => {
+test.each(ABIVersions)("RunLocal (ABI v%i)", async (abiVersion) => {
     const ton = tests.client;
+    const subscriptionPackage = SubscriptionContractPackage[abiVersion];
     const keys = await ton.crypto.ed25519Keypair();
     console.log(`Keys: ${JSON.stringify(keys)}`);
 
@@ -33,7 +33,7 @@ test("RunLocal", async () => {
 
     // Deploy custom contract
     const { address: packageAddress, transaction } = (await tests.deploy_with_giver({
-        package: SubscriptionContractPackage,
+        package: subscriptionPackage,
         constructorParams: {
             wallet: walletAddress,
         },
@@ -45,7 +45,7 @@ test("RunLocal", async () => {
     // Get the returned value with runLocal
     const runLocalResponse = await ton.contracts.runLocal({
         address: packageAddress,
-        abi: SubscriptionContractPackage.abi,
+        abi: subscriptionPackage.abi,
         functionName: 'getWallet',
         input: {},
         keyPair: keys,
@@ -68,7 +68,7 @@ test("RunLocal", async () => {
 
     const subscribeResult = await ton.contracts.run({
         address: packageAddress,
-        abi: SubscriptionContractPackage.abi,
+        abi: subscriptionPackage.abi,
         functionName: 'subscribe',
         input: subscriptionParams,
         keyPair: keys,
@@ -76,7 +76,7 @@ test("RunLocal", async () => {
 
     const getSubscriptionResult = await ton.contracts.runLocal({
         address: packageAddress,
-        abi: SubscriptionContractPackage.abi,
+        abi: subscriptionPackage.abi,
         functionName: 'getSubscription',
         input: {
             "subscriptionId": subscriptionParams.subscriptionId

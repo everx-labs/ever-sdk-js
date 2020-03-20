@@ -63,17 +63,18 @@ test.skip('Unauthorized', async () => {
 
 // not implemented yet
 test.skip('Register Access Keys', async () => {
+    const fooKey = 'FooFooFoo';
     const managementClient = await tests.createClient({ accessKey: 'bypass' });
     await managementClient.registerAccessKeys({
         account: 'bypass',
-        keys: [{ key: 'Foo' }],
+        keys: [{ key: fooKey }],
         accountKeys,
     });
-    const client = await tests.createClient({ accessKey: 'Foo' });
+    const client = await tests.createClient({ accessKey: fooKey });
     const accounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
     await managementClient.revokeAccessKeys({
         account: 'bypass',
-        keys: ['Foo'],
+        keys: [fooKey],
         accountKeys,
     });
     await expectError(401, 'graphql', async () => {
@@ -81,7 +82,7 @@ test.skip('Register Access Keys', async () => {
     });
     await managementClient.registerAccessKeys({
         account: 'bypass',
-        keys: [{ key: 'Foo', restrictToAccounts: [accounts[0].id] }],
+        keys: [{ key: fooKey, restrictToAccounts: [accounts[0].id] }],
         accountKeys
     });
     const restrictedAccounts = (await client.queries.accounts.query({}, 'id', undefined, 10));
@@ -120,20 +121,23 @@ test.skip('Register Access Keys', async () => {
 });
 
 test.skip('Run restricted contract', async () => {
+    const fooKey = 'FooFooFoo';
+    const barKey = 'BarBarBar';
     jest.setTimeout(100000);
     const managementClient = await tests.createClient({ accessKey: 'bypass' });
 
     const fooKeys = await managementClient.crypto.ed25519Keypair();
     const barKeys = await managementClient.crypto.ed25519Keypair();
+    const helloPackage = HelloContractPackage[2];
 
     const fooDeploy = await managementClient.contracts.createDeployMessage({
-        package: HelloContractPackage,
+        package: helloPackage,
         constructorParams: {},
         keyPair: fooKeys,
     });
 
     const barDeploy = await managementClient.contracts.createDeployMessage({
-        package: HelloContractPackage,
+        package: helloPackage,
         constructorParams: {},
         keyPair: barKeys,
     });
@@ -146,17 +150,17 @@ test.skip('Run restricted contract', async () => {
     console.log('>>>', 'registering access keys...');
     await managementClient.registerAccessKeys({
         account: 'bypass',
-        keys: [{ key: 'foo', restrictToAccounts: [fooDeploy.address] }],
+        keys: [{ key: fooKey, restrictToAccounts: [fooDeploy.address] }],
         accountKeys,
     });
     await managementClient.registerAccessKeys({
         account: 'bypass',
-        keys: [{ key: 'bar', restrictToAccounts: [barDeploy.address] }],
+        keys: [{ key: barKey, restrictToAccounts: [barDeploy.address] }],
         accountKeys,
     });
 
-    const fooClient: TONClient = await tests.createClient({ accessKey: 'foo' });
-    const barClient: TONClient = await tests.createClient({ accessKey: 'bar' });
+    const fooClient: TONClient = await tests.createClient({ accessKey: fooKey });
+    const barClient: TONClient = await tests.createClient({ accessKey: barKey });
 
     console.log('>>>', 'deploying bar using foo access...');
     await expectError(401, 'graphql', async () => {
@@ -178,7 +182,7 @@ test.skip('Run restricted contract', async () => {
 
     const testRun = async (address, keyPair, myClient, otherClient) => {
         const params: TONContractRunParams = {
-            abi: HelloContractPackage.abi,
+            abi: helloPackage.abi,
             functionName: 'touch',
             input: {},
             address,
@@ -199,7 +203,7 @@ test.skip('Run restricted contract', async () => {
 
     const testRunLocal = async (address, keyPair, myClient, otherClient) => {
         const params: TONContractRunLocalParams = {
-            abi: HelloContractPackage.abi,
+            abi: helloPackage.abi,
             functionName: 'touch',
             input: {},
             address,
@@ -223,6 +227,8 @@ test.skip('Run restricted contract', async () => {
 
 
 test.skip('Subscription restricted to accounts', async () => {
+    const fooKey = 'FooFooFoo';
+    const barKey = 'BarBarBar';
     const managementClient = await tests.createClient({ accessKey: 'bypass' });
     const giver = tests.get_giver_address();
     const accounts = (await managementClient.queries.accounts.query(
@@ -233,16 +239,16 @@ test.skip('Subscription restricted to accounts', async () => {
     )).map(x => x.id);
     await managementClient.registerAccessKeys({
         account: 'bypass',
-        keys: [{ key: 'Foo', restrictToAccounts: [accounts[0]] }],
+        keys: [{ key: fooKey, restrictToAccounts: [accounts[0]] }],
         accountKeys
     });
     await managementClient.registerAccessKeys({
         account: 'bypass',
-        keys: [{ key: 'Bar', restrictToAccounts: [accounts[1]] }],
+        keys: [{ key: barKey, restrictToAccounts: [accounts[1]] }],
         accountKeys
     });
-    const client0 = await tests.createClient({ accessKey: 'Foo' });
-    const client1 = await tests.createClient({ accessKey: 'Bar' });
+    const client0 = await tests.createClient({ accessKey: fooKey });
+    const client1 = await tests.createClient({ accessKey: barKey });
     const events0 = [];
     const events1 = [];
     client0.queries.transactions.subscribe({

@@ -245,6 +245,11 @@ export class TONClientError {
         this.data = data;
     }
 
+    static isClientError(error: any, code: number): boolean {
+        return (error.source === TONClientError.source.CLIENT)
+            && (error.code === code);
+    }
+
     static internalError(message: string): TONClientError {
         return new TONClientError(
             `Internal error: ${message}`,
@@ -299,6 +304,10 @@ export class TONClientError {
             TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
         );
+    }
+
+    static isMessageExpired(error: any): boolean {
+        return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
     }
 }
 

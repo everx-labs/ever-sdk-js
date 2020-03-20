@@ -64,9 +64,7 @@ import type {
 import { TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
-import TONQueriesModule, { DEFAULT_TIMEOUT } from './TONQueriesModule';
-
-const DEFAULT_RETRIES_COUNT = 3;
+import TONQueriesModule from './TONQueriesModule';
 
 export const TONAddressStringVariant = {
     AccountId: 'AccountId',
@@ -291,16 +289,23 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message creation
 
-    async createDeployMessage(params: TONContractDeployParams): Promise<TONContractDeployMessage> {
+    async createDeployMessage(
+        params: TONContractDeployParams,
+        retryIndex?: number,
+    ): Promise<TONContractDeployMessage> {
         this.config.log('createDeployMessage', params);
-        params.constructorHeader = this.makeExpireHeader(params.package.abi, params.constructorHeader);
+        const constructorHeader = this.makeExpireHeader(
+            params.package.abi,
+            params.constructorHeader,
+            retryIndex,
+        );
         const message: {
             address: string,
             messageId: string,
             messageBodyBase64: string,
         } = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
-            constructorHeader: params.constructorHeader,
+            constructorHeader,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
@@ -311,25 +316,32 @@ export default class TONContractsModule extends TONModule implements TONContract
             message: {
                 messageId: message.messageId,
                 messageBodyBase64: message.messageBodyBase64,
-                expire: params.constructorHeader?.expire
+                expire: constructorHeader?.expire,
             },
             address: message.address,
         };
     }
 
 
-    async createRunMessage(params: TONContractRunParams): Promise<TONContractRunMessage> {
+    async createRunMessage(
+        params: TONContractRunParams,
+        retryIndex?: number,
+    ): Promise<TONContractRunMessage> {
         this.config.log('createRunMessage', params);
-        params.header = this.makeExpireHeader(params.abi, params.header);
+        const header = this.makeExpireHeader(
+            params.abi,
+            params.header,
+            retryIndex,
+        );
         const message = await this.requestCore('contracts.run.message', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
-            header: params.header,
+            header,
             input: params.input,
             keyPair: params.keyPair,
         });
-        message.expire = params.header?.expire;
+        message.expire = header?.expire;
         return {
             address: params.address,
             abi: params.abi,
@@ -340,14 +352,19 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     async createUnsignedDeployMessage(
         params: TONContractDeployParams,
+        retryIndex?: number,
     ): Promise<TONContractUnsignedDeployMessage> {
-        params.constructorHeader = this.makeExpireHeader(params.package.abi, params.constructorHeader);
+        const constructorHeader = this.makeExpireHeader(
+            params.package.abi,
+            params.constructorHeader,
+            retryIndex,
+        );
         const result: {
             encoded: TONContractUnsignedMessage,
             addressHex: string,
         } = await this.requestCore('contracts.deploy.encode_unsigned_message', {
             abi: params.package.abi,
-            constructorHeader: params.constructorHeader,
+            constructorHeader,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
@@ -359,19 +376,26 @@ export default class TONContractsModule extends TONModule implements TONContract
             signParams: {
                 ...result.encoded,
                 abi: params.package.abi,
-                expire: params.constructorHeader?.expire,
+                expire: constructorHeader?.expire,
             },
         };
     }
 
 
-    async createUnsignedRunMessage(params: TONContractRunParams): Promise<TONContractUnsignedRunMessage> {
-        params.header = this.makeExpireHeader(params.abi, params.header);
+    async createUnsignedRunMessage(
+        params: TONContractRunParams,
+        retryIndex?: number,
+    ): Promise<TONContractUnsignedRunMessage> {
+        const header = this.makeExpireHeader(
+            params.abi,
+            params.header,
+            retryIndex,
+        );
         const signParams = await this.requestCore('contracts.run.encode_unsigned_message', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
-            header: params.header,
+            header,
             input: params.input,
         });
         return {
@@ -380,13 +404,15 @@ export default class TONContractsModule extends TONModule implements TONContract
             signParams: {
                 ...signParams,
                 abi: params.abi,
-                expire: params.header?.expire,
+                expire: header?.expire,
             },
         };
     }
 
 
-    async createSignedMessage(params: TONContractCreateSignedMessageParams): Promise<TONContractMessage> {
+    async createSignedMessage(
+        params: TONContractCreateSignedMessageParams,
+    ): Promise<TONContractMessage> {
         return this.requestCore('contracts.encode_message_with_sign', params);
     }
 
@@ -464,7 +490,9 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message parsing
 
-    async decodeRunOutput(params: TONContractDecodeRunOutputParams): Promise<TONContractRunResult> {
+    async decodeRunOutput(
+        params: TONContractDecodeRunOutputParams,
+    ): Promise<TONContractRunResult> {
         return this.requestCore('contracts.run.output', params);
     }
 
@@ -508,69 +536,81 @@ export default class TONContractsModule extends TONModule implements TONContract
         message: TONContractMessage,
         resultFields: string,
         parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
     ): Promise<QTransaction> {
-
+        const config = this.config;
         const messageId = await this.sendMessage(message, parentSpan);
-
-        let timeout = DEFAULT_TIMEOUT;
+        let processingTimeout = config.messageProcessingTimeout(retryIndex);
         let promises = [];
         let transactionFound = false;
         if (message.expire) {
             const expire = message.expire;
-            // calculate timeout according to `expire` value (in seconds)
-            // add default timeout as master block validation time
-            timeout = expire * 1000 - Date.now() + DEFAULT_TIMEOUT;
-            
-            if (timeout <= 0) {
-                throw TONClientError.sendNodeRequestFailed("Message already expired");
+            if (Date.now() > expire * 1000) {
+                throw TONClientError.sendNodeRequestFailed('Message already expired');
             }
+            // calculate timeout according to `expire` value (in seconds)
+            // add processing timeout as master block validation time
+            processingTimeout = expire * 1000 - Date.now() + processingTimeout;
 
             const waitExpired = async () => {
                 // wait for block, produced after `expire` to guarantee that message is rejected
                 const block: QBlock = await this.queries.blocks.waitFor({
-                        master: { min_shard_gen_utime: { ge: expire }},
+                    filter: {
+                        master: { min_shard_gen_utime: { ge: expire } },
                     },
-                    'in_msg_descr { transaction_id }',
-                    timeout, parentSpan);
+                    result: 'in_msg_descr { transaction_id }',
+                    timeout: processingTimeout,
+                    parentSpan,
+                });
 
                 if (transactionFound) {
                     return {};
                 }
 
-                const transaction_id = block.in_msg_descr && block.in_msg_descr.find(
-                        msg => !!msg.transaction_id)
-                    ?.transaction_id;
+                const transaction_id = block.in_msg_descr
+                    && block.in_msg_descr.find(msg => !!msg.transaction_id)?.transaction_id;
+
                 if (!transaction_id) {
-                    throw TONClientError.internalError("Invalid block recieved: no transaction ID");
+                    throw TONClientError.internalError('Invalid block received: no transaction ID');
                 }
-                // check that transactions collection is updated 
+
+                // check that transactions collection is updated
                 return this.queries.transactions.waitFor({
+                    filter: {
                         id: { eq: transaction_id },
                     },
-                    'id',
-                    timeout, parentSpan);
-            }
+                    result: 'id',
+                    timeout: processingTimeout,
+                    parentSpan,
+                });
+            };
+
             promises.push(waitExpired());
         }
 
         // wait for message processing transaction
         promises.push(new Promise((resolve, reject) => {
             (async () => {
-              try {
-                      const tr = await this.queries.transactions.waitFor({
-                              in_msg: { eq: messageId },
-                              status: { eq: QTransactionProcessingStatus.finalized },
-                          }, resultFields, timeout, parentSpan);
-                      transactionFound = true;
-                      resolve(tr);
-              } catch (error) {
-                reject(error);
-              }
-          })();
+                try {
+                    const tr = await this.queries.transactions.waitFor({
+                        filter: {
+                            in_msg: { eq: messageId },
+                            status: { eq: QTransactionProcessingStatus.finalized },
+                        },
+                        result: resultFields,
+                        timeout: processingTimeout,
+                        parentSpan,
+                    });
+                    transactionFound = true;
+                    resolve(tr);
+                } catch (error) {
+                    reject(error);
+                }
+            })();
         }));
-        
+
         let transaction: QTransaction = await Promise.race(promises);
-        
+
         if (!transactionFound) {
             throw TONClientError.messageExpired();
         }
@@ -587,6 +627,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async processDeployMessage(
         params: TONContractDeployMessage,
         parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
     ): Promise<TONContractDeployResult> {
         this.config.log('processDeployMessage', params);
         // check that account is already deployed
@@ -596,7 +637,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 acc_type: { eq: QAccountType.active },
             },
             result: 'id',
-            parentSpan
+            parentSpan,
         });
         if (account.length > 0) {
             return {
@@ -609,6 +650,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             params.message,
             transactionDetails,
             parentSpan,
+            retryIndex,
         );
         await checkTransaction(transaction);
         this.config.log('processDeployMessage. End');
@@ -623,12 +665,14 @@ export default class TONContractsModule extends TONModule implements TONContract
     async processRunMessage(
         params: TONContractRunMessage,
         parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
     ): Promise<TONContractRunResult> {
         this.config.log('processRunMessage', params);
         const transaction = await this.processMessage(
             params.message,
             transactionDetails,
             parentSpan,
+            retryIndex,
         );
         await checkTransaction(transaction);
         const outputMessages = transaction.out_messages;
@@ -776,9 +820,13 @@ export default class TONContractsModule extends TONModule implements TONContract
         });
     }
 
-    makeExpireHeader(abi: TONContractABI, userHeader?: any): any {
-        const timeout = this.config.data?.transactionTimeout || DEFAULT_TIMEOUT;
-        if (abi.header && abi.header.includes("expire") && !userHeader?.expire) {
+    makeExpireHeader(
+        abi: TONContractABI,
+        userHeader?: any,
+        retryIndex?: number,
+    ): any {
+        const timeout = this.config.messageExpirationTimeout(retryIndex);
+        if (abi.header && abi.header.includes('expire') && !userHeader?.expire) {
             let header = userHeader || {};
             header.expire = Math.floor((Date.now() + timeout) / 1000) + 1;
             return header;
@@ -787,15 +835,14 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
     }
 
-    async retryCall(call: () => Promise<any>): Promise<any> {
-        const retriesCount = this.config.data?.retriesCount || DEFAULT_RETRIES_COUNT;
+    async retryCall(call: (index: number) => Promise<any>): Promise<any> {
+        const retriesCount = this.config.messageRetriesCount();
         for (let i = 0; i <= retriesCount; i++) {
             this.config.log(`Try #${i}`);
             try {
-                return await call();
-            }
-            catch (error) {
-                if (error !== TONClientError.messageExpired()){
+                return await call(i);
+            } catch (error) {
+                if (!TONClientError.isMessageExpired(error)) {
                     throw error;
                 }
             }
@@ -807,10 +854,10 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractDeployParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractDeployResult> {
-        this.config.log("Deploy start");
-        return this.retryCall(async () => {
-            const message = await this.createDeployMessage(params);
-            return this.processDeployMessage(message, parentSpan);
+        this.config.log('Deploy start');
+        return this.retryCall(async (retryIndex) => {
+            const message = await this.createDeployMessage(params, retryIndex);
+            return this.processDeployMessage(message, parentSpan, retryIndex);
         });
     }
 
@@ -819,10 +866,10 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
-        this.config.log("Run start");
-        return this.retryCall(async () => {
-            const message = await this.createRunMessage(params);
-            return this.processRunMessage(message, parentSpan);
+        this.config.log('Run start');
+        return this.retryCall(async (retryIndex) => {
+            const message = await this.createRunMessage(params, retryIndex);
+            return this.processRunMessage(message, parentSpan, retryIndex);
         });
     }
 
@@ -871,7 +918,12 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
-        const account = await this.getAccount(params.address, true, params.waitParams, parentSpan);
+        const account = await this.getAccount(
+            params.address,
+            true,
+            params.waitParams,
+            parentSpan,
+        );
 
         return this.requestCore('contracts.run.local', {
             address: params.address,
@@ -892,15 +944,20 @@ async function checkTransaction(transaction: QTransaction) {
     }
 
     function nodeError(message: string, code: number, phase: string) {
-        return new TONClientError(
-            `${message} (${code}) at ${phase}`,
-            code,
-            TONClientError.source.NODE,
-            {
-                phase,
-                transaction_id: transaction.id,
-            },
-        );
+        const MESSAGE_EXPIRED_CODE = 57;
+        const isNodeSEMessageExpired = phase === TONClientTransactionPhase.computeVm
+            && code === MESSAGE_EXPIRED_CODE;
+        return isNodeSEMessageExpired
+            ? TONClientError.messageExpired()
+            : new TONClientError(
+                `${message} (${code}) at ${phase}`,
+                code,
+                TONClientError.source.NODE,
+                {
+                    phase,
+                    transaction_id: transaction.id,
+                },
+            );
     }
 
     const storage = transaction.storage;
@@ -1003,6 +1060,8 @@ const transactionDetails = `
         skipped_reason
         success
         exit_code
+        gas_fees
+        gas_used
     }
     action {
         success

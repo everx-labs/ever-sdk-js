@@ -7,8 +7,12 @@ export type TONConfigData = {
     servers: string[],
     log_verbose?: boolean,
     tracer?: ?Object, // opentracing.Tracer
-    transactionTimeout?: number,
-    retriesCount?: number,
+    messageRetriesCount?: number,
+    messageExpirationTimeout?: number,
+    messageExpirationTimeoutGrowFactor?: number,
+    messageProcessingTimeout?: number,
+    messageProcessingTimeoutGrowFactor?: number,
+    waitForTimeout?: number,
     accessKey?: string,
 }
 
@@ -521,12 +525,15 @@ export type QTransaction = {
     lt?: string,
     storage?: {
         status_change?: number,
+        storage_fees_collected?: string,
     },
     compute?: {
         compute_type?: number,
         success?: boolean,
         exit_code?: number,
         skipped_reason?: number,
+        gas_fees?: string,
+        total_fwd_fees?: string,
     },
     action?: {
         valid?: boolean,
