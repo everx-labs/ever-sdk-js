@@ -75,7 +75,7 @@ test('basic', async () => {
     console.log(`Client uses expected binaries version: ${version}`);
 });
 
-test.each('load', async () => {
+test('load', async () => {
     const { contracts } = tests.client;
     await tests.client.trace('tests.contracts.load', async (span: Span) => {
         const contract = await contracts.load({
