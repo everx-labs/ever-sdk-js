@@ -801,7 +801,7 @@ test('Test expire', async () => {
         .toEqual(ltRun);
 });
 
-test.todo('Test expire retries', async () => {
+test('Test expire retries', async () => {
     const { contracts, crypto } = tests.client;
     const helloPackage = HelloContractPackage[2];
 
