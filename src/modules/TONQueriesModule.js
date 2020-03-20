@@ -267,11 +267,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             clientConfig.WebSocket,
         );
         subscriptionClient.onReconnected(() => {
-            console.error('>>>', 'WebSocket Reconnected');
+            console.error('[TONClient.queries]', 'WebSocket Reconnected');
         });
         let detectingRedirection = false;
         subscriptionClient.onError(() => {
-            console.error('[onError]', 'WebSocket Failed');
+            console.error('[TONClient.queries]', 'WebSocket Failed');
             if (detectingRedirection) {
                 return;
             }
@@ -282,7 +282,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     const configIsChanged = newConfig.httpUrl !== clientConfig.httpUrl
                         || newConfig.wsUrl !== clientConfig.wsUrl;
                     if (configIsChanged) {
-                        console.error('[onError]', 'Client config changed');
+                        console.error('[TONClient.queries]', 'Client config changed');
                         clientConfig = newConfig;
                         subscriptionClient.url = newConfig.wsUrl;
                         if (wsLink) {
@@ -293,7 +293,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                         }
                     }
                 } catch (err) {
-                    console.error('[onError] Detect redirection failed', err);
+                    console.error('[TONClient.queries] redirection detector failed', err);
                 }
                 detectingRedirection = false;
             })();
