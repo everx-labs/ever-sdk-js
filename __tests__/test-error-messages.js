@@ -16,7 +16,7 @@
 
 // @flow
 
-import { tests } from './_/init-tests';
+import { ABIVersions, tests } from './_/init-tests';
 import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -24,9 +24,9 @@ const WalletContractPackage = tests.loadPackage('WalletContract');
 beforeAll(tests.init);
 afterAll(tests.done);
 
-test('Test SDK Errors 1-3', async () => {
+test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
-
+    const walletPackage = WalletContractPackage[abiVersion];
     const keys = await crypto.ed25519Keypair();
 
     /* // TODO fix thrown TypeError: Cannot read property 'abi' of null && undefined
@@ -76,7 +76,7 @@ test('Test SDK Errors 1-3', async () => {
 
     try {
         await contracts.createDeployMessage({
-            package: WalletContractPackage,
+            package: walletPackage,
             constructorParams: {},
             //$FlowFixMe
             keyPair: null,
@@ -94,7 +94,7 @@ test('Test SDK Errors 1-3', async () => {
 
     try {
         await contracts.createDeployMessage({
-            package: WalletContractPackage,
+            package: walletPackage,
             constructorParams: {},
             //$FlowFixMe
             keyPair: {},
@@ -111,7 +111,7 @@ test('Test SDK Errors 1-3', async () => {
     }
     try {
         await contracts.createDeployMessage({
-            package: WalletContractPackage,
+            package: walletPackage,
             constructorParams: {},
             //$FlowFixMe
             keyPair: '',
@@ -128,15 +128,16 @@ test('Test SDK Errors 1-3', async () => {
     }
 });
 
-test('Test SDK Errors > 2000', async () => {
+test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
+    const walletPackage = WalletContractPackage[abiVersion];
     let wrongKeys = {
         'public': '',
         'secret': '6396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83'
     };
     try {
         await contracts.createDeployMessage({
-            package: WalletContractPackage,
+            package: walletPackage,
             constructorParams: {},
             keyPair: wrongKeys,
         });
@@ -158,7 +159,7 @@ test('Test SDK Errors > 2000', async () => {
     };
     try {
         await contracts.createDeployMessage({
-            package: WalletContractPackage,
+            package: walletPackage,
             constructorParams: {},
             keyPair: wrongKeys,
         });
@@ -179,7 +180,7 @@ test('Test SDK Errors > 2000', async () => {
     };
     try {
         await contracts.createDeployMessage({
-            package: WalletContractPackage,
+            package: walletPackage,
             constructorParams: {},
             keyPair: wrongKeys,
         });
@@ -264,12 +265,13 @@ test('Test SDK Errors > 2000', async () => {
     }
 });
 
-test('Test SDK Errors 3000-3020', async () => {
+test.each(ABIVersions)('Test SDK Errors 3000-3020 (ABI v%i)', async (abiVersion) => {
     const { contracts } = tests.client;
+    const walletPackage = WalletContractPackage[abiVersion];
     const body = '';
     try {
         await contracts.decodeOutputMessageBody({
-            abi: WalletContractPackage.abi,
+            abi: walletPackage.abi,
             bodyBase64: body,
         });
     } catch (error) {
@@ -284,7 +286,7 @@ test('Test SDK Errors 3000-3020', async () => {
     }
     try {
         await contracts.decodeInputMessageBody({
-            abi: WalletContractPackage.abi,
+            abi: walletPackage.abi,
             bodyBase64: body,
         });
     } catch (error) {

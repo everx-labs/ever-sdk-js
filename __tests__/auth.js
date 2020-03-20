@@ -128,15 +128,16 @@ test.skip('Run restricted contract', async () => {
 
     const fooKeys = await managementClient.crypto.ed25519Keypair();
     const barKeys = await managementClient.crypto.ed25519Keypair();
+    const helloPackage = HelloContractPackage[2];
 
     const fooDeploy = await managementClient.contracts.createDeployMessage({
-        package: HelloContractPackage,
+        package: helloPackage,
         constructorParams: {},
         keyPair: fooKeys,
     });
 
     const barDeploy = await managementClient.contracts.createDeployMessage({
-        package: HelloContractPackage,
+        package: helloPackage,
         constructorParams: {},
         keyPair: barKeys,
     });
@@ -181,7 +182,7 @@ test.skip('Run restricted contract', async () => {
 
     const testRun = async (address, keyPair, myClient, otherClient) => {
         const params: TONContractRunParams = {
-            abi: HelloContractPackage.abi,
+            abi: helloPackage.abi,
             functionName: 'touch',
             input: {},
             address,
@@ -202,7 +203,7 @@ test.skip('Run restricted contract', async () => {
 
     const testRunLocal = async (address, keyPair, myClient, otherClient) => {
         const params: TONContractRunLocalParams = {
-            abi: HelloContractPackage.abi,
+            abi: helloPackage.abi,
             functionName: 'touch',
             input: {},
             address,
