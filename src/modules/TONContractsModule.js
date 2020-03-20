@@ -827,9 +827,10 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): any {
         const timeout = this.config.messageExpirationTimeout(retryIndex);
         if (abi.header && abi.header.includes('expire') && !userHeader?.expire) {
-            let header = userHeader || {};
-            header.expire = Math.floor((Date.now() + timeout) / 1000) + 1;
-            return header;
+            return {
+                ...userHeader,
+                expire: Math.floor((Date.now() + timeout) / 1000) + 1
+            };
         } else {
             return userHeader;
         }
