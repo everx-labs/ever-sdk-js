@@ -947,10 +947,10 @@ async function checkTransaction(transaction: QTransaction) {
     }
 
     function nodeError(message: string, code: number, phase: string) {
-        const REPLY_PROTECTION = 52;
+        const REPLAY_PROTECTION = 52;
         const MESSAGE_EXPIRED = 57;
         const isNodeSEMessageExpired = phase === TONClientTransactionPhase.computeVm
-            && (code === MESSAGE_EXPIRED || code === REPLY_PROTECTION);
+            && (code === MESSAGE_EXPIRED || code === REPLAY_PROTECTION);
         return isNodeSEMessageExpired
             ? TONClientError.messageExpired()
             : new TONClientError(
