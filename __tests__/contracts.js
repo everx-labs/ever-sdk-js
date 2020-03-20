@@ -801,7 +801,7 @@ test('Test expire', async () => {
         .toEqual(ltRun);
 });
 
-test('Test expire retries', async () => {
+test.todo('Test expire retries', async () => {
     const { contracts, crypto } = tests.client;
     const helloPackage = HelloContractPackage[2];
 
@@ -813,13 +813,20 @@ test('Test expire retries', async () => {
         keyPair: helloKeys,
     });
 
-    await contracts.run({
-        address: contractData.address,
-        abi: helloPackage.abi,
-        functionName: 'touch',
-        input: {},
-        keyPair: helloKeys,
-    });
+    const run = () => {
+        return contracts.run({
+            address: contractData.address,
+            abi: helloPackage.abi,
+            functionName: 'touch',
+            input: {},
+            keyPair: helloKeys,
+        });
+    };
+    const runs = [];
+    for(let i = 0; i < 20; i += 1) {
+        runs.push(run());
+    }
+    await Promise.all(runs);
 });
 
 test.each(ABIVersions)('test parse message (ABI v%i)', async (abiVersion) => {

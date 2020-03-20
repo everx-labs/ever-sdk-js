@@ -294,7 +294,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractDeployMessage> {
         this.config.log('createDeployMessage', params);
-        params.constructorHeader = this.makeExpireHeader(
+        const constructorHeader = this.makeExpireHeader(
             params.package.abi,
             params.constructorHeader,
             retryIndex,
@@ -305,7 +305,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             messageBodyBase64: string,
         } = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
-            constructorHeader: params.constructorHeader,
+            constructorHeader,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
@@ -316,7 +316,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             message: {
                 messageId: message.messageId,
                 messageBodyBase64: message.messageBodyBase64,
-                expire: params.constructorHeader?.expire,
+                expire: constructorHeader?.expire,
             },
             address: message.address,
         };
@@ -328,7 +328,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractRunMessage> {
         this.config.log('createRunMessage', params);
-        params.header = this.makeExpireHeader(
+        const header = this.makeExpireHeader(
             params.abi,
             params.header,
             retryIndex,
@@ -337,11 +337,11 @@ export default class TONContractsModule extends TONModule implements TONContract
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
-            header: params.header,
+            header,
             input: params.input,
             keyPair: params.keyPair,
         });
-        message.expire = params.header?.expire;
+        message.expire = header?.expire;
         return {
             address: params.address,
             abi: params.abi,
@@ -354,7 +354,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractDeployParams,
         retryIndex?: number,
     ): Promise<TONContractUnsignedDeployMessage> {
-        params.constructorHeader = this.makeExpireHeader(
+        const constructorHeader = this.makeExpireHeader(
             params.package.abi,
             params.constructorHeader,
             retryIndex,
@@ -364,7 +364,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             addressHex: string,
         } = await this.requestCore('contracts.deploy.encode_unsigned_message', {
             abi: params.package.abi,
-            constructorHeader: params.constructorHeader,
+            constructorHeader,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
@@ -376,7 +376,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             signParams: {
                 ...result.encoded,
                 abi: params.package.abi,
-                expire: params.constructorHeader?.expire,
+                expire: constructorHeader?.expire,
             },
         };
     }
@@ -386,7 +386,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunParams,
         retryIndex?: number,
     ): Promise<TONContractUnsignedRunMessage> {
-        params.header = this.makeExpireHeader(
+        const header = this.makeExpireHeader(
             params.abi,
             params.header,
             retryIndex,
@@ -395,7 +395,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
-            header: params.header,
+            header,
             input: params.input,
         });
         return {
@@ -404,7 +404,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             signParams: {
                 ...signParams,
                 abi: params.abi,
-                expire: params.header?.expire,
+                expire: header?.expire,
             },
         };
     }
@@ -541,12 +541,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         const config = this.config;
         const messageId = await this.sendMessage(message, parentSpan);
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
-        console.log('>>>',
-            {
-                retryIndex,
-                processingTimeout,
-            },
-        );
         let promises = [];
         let transactionFound = false;
         if (message.expire) {
@@ -554,13 +548,6 @@ export default class TONContractsModule extends TONModule implements TONContract
             if (Date.now() > expire * 1000) {
                 throw TONClientError.sendNodeRequestFailed('Message already expired');
             }
-
-            console.log('>>>',
-                {
-                    retryIndex,
-                    expire,
-                },
-            );
             // calculate timeout according to `expire` value (in seconds)
             // add processing timeout as master block validation time
             processingTimeout = expire * 1000 - Date.now() + processingTimeout;
@@ -625,7 +612,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         let transaction: QTransaction = await Promise.race(promises);
 
         if (!transactionFound) {
-            console.log('>>> transaction: ', transaction);
             throw TONClientError.messageExpired();
         }
         const transactionNow = transaction.now || 0;

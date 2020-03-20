@@ -16,7 +16,7 @@
 
 import { QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
 import { get_grams_from_giver } from './_/giver';
-import { tests } from './_/init-tests';
+import { ABIVersions, tests } from './_/init-tests';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 
@@ -105,12 +105,13 @@ const transactionWithAddresses = `
     in_message { dst src value }
 `;
 
-test('Subscribe for transactions with addresses', async () => {
+test.each(ABIVersions)('Subscribe for transactions with addresses (ABI v%i)', async (abiVersion) => {
     const { contracts, queries, crypto } = tests.client;
+    const walletPackage = WalletContractPackage[abiVersion];
     const walletKeys = await crypto.ed25519Keypair();
 
     const message = await contracts.createDeployMessage({
-        package: WalletContractPackage,
+        package: walletPackage,
         constructorParams: {},
         keyPair: walletKeys,
     });
@@ -140,8 +141,9 @@ test('Subscribe for transactions with addresses', async () => {
         .toBeGreaterThan(0);
 });
 
-test('Subscribe for messages', async () => {
+test.each(ABIVersions)('Subscribe for messages (ABI v%i)', async (abiVersion) => {
     const { contracts, queries, crypto } = tests.client;
+    const walletPackage = WalletContractPackage[abiVersion];
     const docs = [];
     const subscription = (await queries.messages.subscribe({
         filter: {
@@ -156,7 +158,7 @@ test('Subscribe for messages', async () => {
     const walletKeys = await crypto.ed25519Keypair();
 
     const message = await contracts.createDeployMessage({
-        package: WalletContractPackage,
+        package: walletPackage,
         constructorParams: {},
         keyPair: walletKeys,
     });
@@ -164,7 +166,7 @@ test('Subscribe for messages', async () => {
     await get_grams_from_giver(message.address);
 
     await contracts.deploy({
-        package: WalletContractPackage,
+        package: walletPackage,
         constructorParams: {},
         keyPair: walletKeys,
     });
