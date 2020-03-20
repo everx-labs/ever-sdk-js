@@ -801,7 +801,7 @@ test('Test expire', async () => {
         .toEqual(ltRun);
 });
 
-test.todo('Test expire retries', async () => {
+test('Test expire retries', async () => {
     const { contracts, crypto } = tests.client;
     const helloPackage = HelloContractPackage[2];
 
@@ -813,14 +813,16 @@ test.todo('Test expire retries', async () => {
         keyPair: helloKeys,
     });
 
-    const run = () => {
-        return contracts.run({
+    const run = async () => {
+        const result = await contracts.run({
             address: contractData.address,
             abi: helloPackage.abi,
             functionName: 'touch',
             input: {},
             keyPair: helloKeys,
         });
+        console.log('>>> run complete');
+        return result;
     };
     const runs = [];
     for(let i = 0; i < 20; i += 1) {

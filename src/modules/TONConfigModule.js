@@ -22,7 +22,7 @@ import { Tracer } from 'opentracing';
 import { tracer as noopTracer } from "opentracing/lib/noop";
 
 const MAX_MESSAGE_TIMEOUT = 5 * 60000;
-const DEFAULT_MESSAGE_RETRIES_COUNT = 5;
+const DEFAULT_MESSAGE_RETRIES_COUNT = 10;
 const DEFAULT_MESSAGE_EXPIRATION_TIMEOUT = 10000;
 const DEFAULT_MESSAGE_EXPIRATION_GROW_FACTOR = 1.5;
 const DEFAULT_MESSAGE_PROCESSING_TIMEOUT = 40000;

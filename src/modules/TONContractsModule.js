@@ -827,9 +827,10 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): any {
         const timeout = this.config.messageExpirationTimeout(retryIndex);
         if (abi.header && abi.header.includes('expire') && !userHeader?.expire) {
-            let header = userHeader || {};
-            header.expire = Math.floor((Date.now() + timeout) / 1000) + 1;
-            return header;
+            return {
+                ...userHeader,
+                expire: Math.floor((Date.now() + timeout) / 1000) + 1
+            };
         } else {
             return userHeader;
         }
@@ -838,7 +839,9 @@ export default class TONContractsModule extends TONModule implements TONContract
     async retryCall(call: (index: number) => Promise<any>): Promise<any> {
         const retriesCount = this.config.messageRetriesCount();
         for (let i = 0; i <= retriesCount; i++) {
-            this.config.log(`Try #${i}`);
+            if (i > 0) {
+                this.config.log(`Retry #${i}`);
+            }
             try {
                 return await call(i);
             } catch (error) {
@@ -944,9 +947,10 @@ async function checkTransaction(transaction: QTransaction) {
     }
 
     function nodeError(message: string, code: number, phase: string) {
-        const MESSAGE_EXPIRED_CODE = 57;
+        const REPLAY_PROTECTION = 52;
+        const MESSAGE_EXPIRED = 57;
         const isNodeSEMessageExpired = phase === TONClientTransactionPhase.computeVm
-            && code === MESSAGE_EXPIRED_CODE;
+            && (code === MESSAGE_EXPIRED || code === REPLAY_PROTECTION);
         return isNodeSEMessageExpired
             ? TONClientError.messageExpired()
             : new TONClientError(
