@@ -18,27 +18,29 @@
 
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloClient } from 'apollo-client';
-import { split } from "apollo-link";
+import { ApolloLink, split } from 'apollo-link';
 import { HttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
 import gql from 'graphql-tag';
-import { SubscriptionClient } from "subscriptions-transport-ws";
+import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { setContext } from 'apollo-link-context';
+import {
+    FORMAT_TEXT_MAP, Tags, Span, SpanContext,
+} from 'opentracing';
 import type {
     TONQueries,
     TONQCollection,
     Subscription,
     TONQueryParams,
     TONSubscribeParams,
-    TONWaitForParams
-} from "../../types";
+    TONWaitForParams,
+} from '../../types';
 import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import TONConfigModule, { URLParts } from './TONConfigModule';
 
-import { setContext } from 'apollo-link-context';
-import { FORMAT_TEXT_MAP, Tags, Span, SpanContext } from 'opentracing';
 
 export type Request = {
     id: string,
@@ -46,18 +48,19 @@ export type Request = {
 }
 
 export const MAX_TIMEOUT = 2147483647;
-export const DEFAULT_TIMEOUT = 40_000;
-function findParams<T>(args: any[], requiredParamName: string): ?T {
-    return (args.length === 1) && (requiredParamName in args[0]) ? args[0] : null;
+
+function resolveParams<T>(args: any[], requiredParamName: string, resolveArgs: () => T): T {
+    return (args.length === 1) && (requiredParamName in args[0]) ? args[0] : resolveArgs();
 }
 
 export default class TONQueriesModule extends TONModule implements TONQueries {
     config: TONConfigModule;
+
     overrideWsUrl: ?string;
 
     constructor(context: TONModuleContext) {
         super(context);
-        this._client = null;
+        this.graphqlClient = null;
         this.overrideWsUrl = null;
     }
 
@@ -77,42 +80,61 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         if (response.redirected === false) {
             return '';
         }
-        const sourceLocation = URLParts.fix(sourceUrl, parts => {
-            parts.query = ''
-        }).toLowerCase();
-        const responseLocation = URLParts.fix(response.url, parts => {
-            parts.query = ''
-        }).toLowerCase();
+        const sourceLocation = URLParts.parse(sourceUrl)
+            .fixQuery(_ => '')
+            .toString()
+            .toLowerCase();
+        const responseLocation = URLParts.parse(response.url)
+            .fixQuery(_ => '')
+            .toString()
+            .toLowerCase();
         return responseLocation !== sourceLocation ? response.url : '';
     }
 
     async getClientConfig() {
         const config = this.config;
-        const { clientPlatform } = TONClient;
-        if (!config.data || !clientPlatform) {
+        const clientPlatform = TONClient.clientPlatform;
+        if (!clientPlatform) {
             throw Error('TON Client does not configured');
         }
-        let httpUrl = config.queriesHttpUrl();
-        let wsUrl = config.queriesWsUrl();
         const fetch = clientPlatform.fetch;
-        const redirected = await this.detectRedirect(fetch, `${httpUrl}?query=%7Binfo%7Bversion%7D%7D`);
-        if (redirected !== '') {
-            const location = URLParts.fix(redirected, parts => {
-                parts.query = ''
-            });
-            if (!!location) {
-                httpUrl = location;
-                wsUrl = location
-                    .replace(/^https:\/\//gi, 'wss://')
-                    .replace(/^http:\/\//gi, 'ws://');
+
+        function getConfigForServer(server: string) {
+            const httpParts = URLParts.parse(server)
+                .fixProtocol(x => x === 'http://' ? x : 'https://')
+                .fixPath(x => `${x}/graphql`);
+            const http = httpParts.toString();
+            const ws = httpParts
+                .fixProtocol(x => x === 'http://' ? 'ws://' : 'wss://')
+                .toString();
+            return {
+                httpUrl: http,
+                wsUrl: ws,
+                fetch: clientPlatform.fetch,
+                WebSocket: clientPlatform.WebSocket,
             }
         }
-        return {
-            httpUrl,
-            wsUrl,
-            fetch,
-            WebSocket: clientPlatform.WebSocket,
+
+        for (const server of config.data.servers) {
+            try {
+                const clientConfig = getConfigForServer(server);
+                const redirected = await this.detectRedirect(
+                    fetch,
+                    `${clientConfig.httpUrl}?query=%7Binfo%7Bversion%7D%7D`,
+                );
+                if (redirected !== '') {
+                    const httpParts = URLParts.parse(redirected).fixQuery(_ => '');
+                    clientConfig.httpUrl = httpParts.toString();
+                    clientConfig.wsUrl = httpParts
+                        .fixProtocol(x => x === 'http://' ? 'ws://' : 'wss://')
+                        .toString();
+                }
+                return clientConfig;
+            } catch (error) {
+                console.error(`[getClientConfig] for server "${server}" failed`, error);
+            }
         }
+        return getConfigForServer(config.data.servers[0]);
     }
 
     async getAccountsCount(parentSpan?: (Span | SpanContext)): Promise<number> {
@@ -132,7 +154,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
 
     async postRequests(requests: Request[], parentSpan?: (Span | SpanContext)): Promise<any> {
         return this.context.trace('queries.postRequests', async (span) => {
-            return this._mutation(`mutation postRequests($requests: [Request]) {
+            return this.graphqlMutation(`mutation postRequests($requests: [Request]) {
                 postRequests(requests: $requests)
             }`, {
                 requests,
@@ -140,63 +162,74 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }, parentSpan);
     }
 
-    async mutation(ql: string, variables: { [string]: any } = {}, parentSpan?: (Span | SpanContext)): Promise<any> {
+    async mutation(
+        ql: string,
+        variables: { [string]: any } = {},
+        parentSpan?: (Span | SpanContext),
+    ): Promise<any> {
         return this.context.trace('queries.mutation', async (span: Span) => {
             span.setTag('params', {
                 mutation: ql,
                 variables,
             });
-            return this._mutation(ql, variables, span);
+            return this.graphqlMutation(ql, variables, span);
         }, parentSpan);
     }
 
-    async query(ql: string, variables: { [string]: any } = {}, parentSpan?: (Span | SpanContext)): Promise<any> {
+    async query(
+        ql: string,
+        variables: { [string]: any } = {},
+        parentSpan?: (Span | SpanContext),
+    ): Promise<any> {
         return this.context.trace('queries.query', async (span: Span) => {
             span.setTag('params', {
                 query: ql,
                 variables,
             });
-            return this._query(ql, variables, span);
+            return this.graphqlQuery(ql, variables, span);
         }, parentSpan);
     }
 
-    async _mutation(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
+    async graphqlMutation(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
         const mutation = gql([ql]);
-        return this._graphQl(client => client.mutate({
+        return this.graphQl((client) => client.mutate({
             mutation,
             variables,
             context: {
                 traceSpan: span,
-            }
+            },
         }));
     }
 
-    async _query(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
+    async graphqlQuery(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
         const query = gql([ql]);
-        return this._graphQl(client => client.query({
+        return this.graphQl((client) => client.query({
             query,
             variables,
             context: {
                 traceSpan: span,
-            }
+            },
         }), span);
     }
 
-    async _graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {
-        const client = await this.ensureClient(span);
+    async graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {
+        const client = await this.graphqlClientRequired(span);
         try {
             return await request(client);
         } catch (error) {
             const gqlErr = error.graphQLErrors && error.graphQLErrors[0];
             if (gqlErr) {
                 const clientErr = new Error(gqlErr.message);
-                const gqlExc = gqlErr.extensions && gqlErr.extensions.exception || {};
+                const gqlExc = (gqlErr.extensions && gqlErr.extensions.exception) || {};
                 (clientErr: any).number = gqlExc.code || 0;
                 (clientErr: any).code = gqlExc.code || 0;
                 (clientErr: any).source = gqlExc.source || 'client';
                 throw clientErr;
             }
-            const errors = error && error.networkError && error.networkError.result && error.networkError.result.errors;
+            const errors = error
+                && error.networkError
+                && error.networkError.result
+                && error.networkError.result.errors;
             if (errors) {
                 throw TONClientError.queryFailed(errors);
             } else {
@@ -205,70 +238,119 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }
     }
 
-    async ensureClient(span: Span): Promise<ApolloClient> {
-        if (this._client) {
-            return this._client;
+    async graphqlClientRequired(parentSpan: Span): Promise<ApolloClient> {
+        if (this.graphqlClient) {
+            return this.graphqlClient;
         }
         await this.context.trace('setup client', async (span) => {
-            const { httpUrl, wsUrl, fetch, WebSocket } = await this.getClientConfig();
-            let subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
-            const subscriptionClient = new SubscriptionClient(
-                wsUrl,
-                {
-                    reconnect: true,
-                    connectionParams: () => ({
-                        accessKey: this.config.data && this.config.data.accessKey,
-                        headers: subsOptions,
-                    }),
-                },
-                WebSocket
+            return this.createGraphqlClient(span);
+        }, parentSpan);
+        return this.graphqlClient;
+    }
+
+    async createGraphqlClient(span: Span | SpanContext) {
+        const useHttp = true;
+        let clientConfig = await this.getClientConfig();
+        let wsLink: ?WebSocketLink = null;
+        let httpLink: ?HttpLink = null;
+
+        const subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
+        const subscriptionClient = new SubscriptionClient(
+            clientConfig.wsUrl,
+            {
+                reconnect: true,
+                connectionParams: () => ({
+                    accessKey: this.config.data && this.config.data.accessKey,
+                    headers: subsOptions,
+                }),
+            },
+            clientConfig.WebSocket,
+        );
+        subscriptionClient.onReconnected(() => {
+            console.error('>>>', 'WebSocket Reconnected');
+        });
+        let detectingRedirection = false;
+        subscriptionClient.onError(() => {
+            console.error('[onError]', 'WebSocket Failed');
+            if (detectingRedirection) {
+                return;
+            }
+            (async () => {
+                detectingRedirection = true;
+                try {
+                    const newConfig = await this.getClientConfig();
+                    const configIsChanged = newConfig.httpUrl !== clientConfig.httpUrl
+                        || newConfig.wsUrl !== clientConfig.wsUrl;
+                    if (configIsChanged) {
+                        console.error('[onError]', 'Client config changed');
+                        clientConfig = newConfig;
+                        subscriptionClient.url = newConfig.wsUrl;
+                        if (wsLink) {
+                            wsLink.url = newConfig.wsUrl;
+                        }
+                        if (httpLink) {
+                            httpLink.uri = newConfig.httpUrl;
+                        }
+                    }
+                } catch (err) {
+                    console.error('[onError] Detect redirection failed', err);
+                }
+                detectingRedirection = false;
+            })();
+        });
+        subscriptionClient.maxConnectTimeGenerator.duration = () => {
+            return subscriptionClient.maxConnectTimeGenerator.max;
+        };
+
+        const tracerLink = await setContext((_, req) => {
+            const resolvedSpan = (req && req.traceSpan) || span;
+            req.headers = {};
+            this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
+            const accessKey = this.config.data && this.config.data.accessKey;
+            if (accessKey) {
+                req.headers.accessKey = accessKey;
+            }
+            return {
+                headers: req.headers,
+            };
+        });
+        const wrapLink = (link: ApolloLink): ApolloLink => tracerLink.concat(link);
+        const isSubscription = ({ query }) => {
+            const definition = getMainDefinition(query);
+            return (
+                definition.kind === 'OperationDefinition'
+                && definition.operation === 'subscription'
             );
-            subscriptionClient.maxConnectTimeGenerator.duration = () => subscriptionClient.maxConnectTimeGenerator.max;
-            const tracerLink = await setContext((_, req) => {
-                const resolvedSpan = (req && req.traceSpan) || span;
-                req.headers = {};
-                this.config.tracer.inject(resolvedSpan, FORMAT_TEXT_MAP, req.headers);
-                const accessKey = this.config.data && this.config.data.accessKey;
-                if (accessKey) {
-                    req.headers.accessKey = accessKey;
-                }
-                return {
-                    headers: req.headers,
-                };
-            });
-            this._client = new ApolloClient({
-                cache: new InMemoryCache({}),
-                link: split(
-                    ({ query }) => {
-                        const definition = getMainDefinition(query);
-                        return (
-                            definition.kind === 'OperationDefinition'
-                            && definition.operation === 'subscription'
-                        );
-                    },
-                    tracerLink.concat(new WebSocketLink(subscriptionClient)),
-                    tracerLink.concat(new HttpLink({
-                        uri: httpUrl,
-                        fetch,
-                    })),
-                ),
-                defaultOptions: {
-                    watchQuery: {
-                        fetchPolicy: 'no-cache',
-                    },
-                    query: {
-                        fetchPolicy: 'no-cache',
-                    },
-                }
-            });
-        }, span);
-        return this._client;
+        };
+        wsLink = new WebSocketLink(subscriptionClient);
+        httpLink = useHttp
+            ? new HttpLink({
+                uri: clientConfig.httpUrl,
+                fetch: clientConfig.fetch,
+            })
+            : null;
+
+        const link = httpLink
+            ? split(isSubscription, wrapLink(wsLink), wrapLink(httpLink))
+            : wrapLink(wsLink);
+        this.graphqlClient = new ApolloClient({
+            cache: new InMemoryCache({}),
+            link,
+            defaultOptions: {
+                watchQuery: {
+                    fetchPolicy: 'no-cache',
+                },
+                query: {
+                    fetchPolicy: 'no-cache',
+                },
+            },
+        });
     }
 
     async close() {
-        if (this._client) {
-            const client = this._client;
-            this._client = null;
+        if (this.graphqlClient) {
+            const client = this.graphqlClient;
+            this.graphqlClient = null;
             client.stop();
             await client.clearStore();
         }
@@ -282,7 +364,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
 
     accounts: TONQCollection;
 
-    _client: ApolloClient;
+    graphqlClient: ApolloClient;
 }
 
 
@@ -290,13 +372,13 @@ class TONQueriesModuleCollection implements TONQCollection {
     module: TONQueriesModule;
 
     collectionName: string;
+
     typeName: string;
 
     constructor(module: TONQueriesModule, collectionName: string) {
         this.module = module;
         this.collectionName = collectionName;
-        this.typeName = collectionName.substr(0, 1).toUpperCase() +
-            collectionName.substr(1, collectionName.length - 2);
+        this.typeName = `${collectionName[0].toUpperCase()}${collectionName.slice(1, -1)}`;
     }
 
     async query(
@@ -310,16 +392,28 @@ class TONQueriesModuleCollection implements TONQCollection {
             parentSpan?: (Span | SpanContext)
          */
     ): Promise<any> {
-        const params = findParams<TONQueryParams>(args, 'filter');
-        const filter = params ? params.filter : args[0];
-        const result: string = params ? params.result : (args[1]: any);
-        const orderBy = params ? params.orderBy : args[2];
-        const limit = params ? params.limit : args[3];
-        const timeout = params ? params.timeout : (args[4]: any);
-        const parentSpan = params ? params.parentSpan : args[5];
+        const {
+            filter,
+            result,
+            orderBy,
+            limit,
+            timeout,
+            parentSpan,
+        } = resolveParams<TONQueryParams>(args, 'filter', () => ({
+            filter: args[0],
+            result: (args[1]: any),
+            orderBy: (args[2]: any),
+            limit: (args[3]: any),
+            timeout: (args[4]: any),
+            parentSpan: args[5],
+        }));
         return this.module.context.trace(`${this.collectionName}.query`, async (span) => {
             span.setTag('params', {
-                filter, result, orderBy, limit, timeout
+                filter,
+                result,
+                orderBy,
+                limit,
+                timeout,
             });
             const c = this.collectionName;
             const t = this.typeName;
@@ -334,7 +428,7 @@ class TONQueriesModuleCollection implements TONQCollection {
             if (timeout) {
                 variables.timeout = Math.min(MAX_TIMEOUT, timeout);
             }
-            return (await this.module._query(ql, variables, span)).data[c];
+            return (await this.module.graphqlQuery(ql, variables, span)).data[c];
         }, parentSpan);
     }
 
@@ -347,21 +441,27 @@ class TONQueriesModuleCollection implements TONQCollection {
         onError?: (err: Error) => void
          */
     ): Subscription {
-        const params = findParams<TONSubscribeParams>(args, 'filter');
-        const filter = params ? params.filter : args[0];
-        const result: string = params ? params.result : (args[1]: any);
-        const onDocEvent = params ? params.onDocEvent : (args[2]: any);
-        const onError = params ? params.onError : (args[3]: any);
+        const {
+            filter,
+            result,
+            onDocEvent,
+            onError,
+        } = resolveParams<TONSubscribeParams>(args, 'filter', () => ({
+            filter: args[0],
+            result: (args[1]: any),
+            onDocEvent: (args[2]: any),
+            onError: (args[3]: any),
+        }));
         const span = this.module.config.tracer.startSpan('TONQueriesModule.js:subscribe ');
         span.setTag(Tags.SPAN_KIND, 'client');
         const text = `subscription ${this.collectionName}($filter: ${this.typeName}Filter) {
-        	${this.collectionName}(filter: $filter) { ${result} }
+            ${this.collectionName}(filter: $filter) { ${result} }
         }`;
         const query = gql([text]);
         let subscription = null;
         (async () => {
             try {
-                const client = await this.module.ensureClient(span);
+                const client = await this.module.graphqlClientRequired(span);
                 const observable = client.subscribe({
                     query,
                     variables: {
@@ -372,7 +472,10 @@ class TONQueriesModuleCollection implements TONQCollection {
                     onDocEvent('insert/update', message.data[this.collectionName]);
                 });
             } catch (error) {
-                span.log({ event: 'failed', payload: error });
+                span.log({
+                    event: 'failed',
+                    payload: error,
+                });
                 if (onError) {
                     onError(error);
                 } else {
@@ -399,12 +502,24 @@ class TONQueriesModuleCollection implements TONQCollection {
         parentSpan?: (Span | SpanContext)
          */
     ): Promise<any> {
-        const params = findParams<TONWaitForParams>(args, 'filter');
-        const filter = params ? params.filter : args[0];
-        const result: string = params ? params.result : (args[1]: any);
-        const timeout = (params ? params.timeout : args[2]) || DEFAULT_TIMEOUT;
-        const parentSpan = params ? params.parentSpan : args[3];
-        const docs = await this.query({ filter, result, timeout, parentSpan });
+        const {
+            filter,
+            result,
+            timeout: paramsTimeout,
+            parentSpan,
+        } = resolveParams<TONWaitForParams>(args, 'filter', () => ({
+            filter: args[0],
+            result: (args[1]: any),
+            timeout: (args[2]: any),
+            parentSpan: args[3],
+        }));
+        const timeout = paramsTimeout || this.module.config.waitForTimeout();
+        const docs = await this.query({
+            filter,
+            result,
+            timeout,
+            parentSpan,
+        });
         if (docs.length > 0) {
             return docs[0];
         }

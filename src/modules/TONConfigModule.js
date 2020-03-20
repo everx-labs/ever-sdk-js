@@ -16,9 +16,18 @@
 
 // @flow
 import type { TONConfigData } from "../../types";
+import type { TONModuleContext } from "../TONModule";
 import { TONModule } from '../TONModule';
 import { Tracer } from 'opentracing';
 import { tracer as noopTracer } from "opentracing/lib/noop";
+
+const MAX_MESSAGE_TIMEOUT = 5 * 60000;
+const DEFAULT_MESSAGE_RETRIES_COUNT = 5;
+const DEFAULT_MESSAGE_EXPIRATION_TIMEOUT = 10000;
+const DEFAULT_MESSAGE_EXPIRATION_GROW_FACTOR = 1.5;
+const DEFAULT_MESSAGE_PROCESSING_TIMEOUT = 40000;
+const DEFAULT_MESSAGE_PROCESSING_GROW_FACTOR = 1.5;
+const DEFAULT_WAIT_FOR_TIMEOUT = 40000;
 
 export class URLParts {
     static parse(url: string): URLParts {
@@ -42,24 +51,32 @@ export class URLParts {
 
     static resolveUrl(baseUrl: string, url: string): string {
         const baseParts = URLParts.parse(baseUrl);
-        const parts = URLParts.parse(url);
-        parts.protocol = parts.protocol || baseParts.protocol;
-        parts.host = parts.host || baseParts.host;
-        return parts.toString();
+        return URLParts.parse(url)
+            .fixProtocol(x => x || baseParts.protocol)
+            .fixHost(x => x || baseParts.host)
+            .toString();
     }
 
-    static fix(url: string, fixParts: (parts: URLParts) => void): string {
-        const parts = URLParts.parse(url);
-        fixParts(parts);
-        return parts.toString();
+    fixProtocol(fix: (p: string) => string): URLParts {
+        this.protocol = fix(this.protocol);
+        return this;
     }
 
-
-    static appendPath(url: string, path: string): string {
-        return URLParts.fix(url, (parts) => {
-            parts.path = `${parts.path}/${path}`;
-        });
+    fixHost(fix: (p: string) => string): URLParts {
+        this.host = fix(this.host);
+        return this;
     }
+
+    fixPath(fix: (p: string) => string): URLParts {
+        this.path = fix(this.path);
+        return this;
+    }
+
+    fixQuery(fix: (q: string) => string): URLParts {
+        this.query = fix(this.query);
+        return this;
+    }
+
 
     protocol: string;
 
@@ -89,41 +106,73 @@ export class URLParts {
     }
 }
 
-function resolveServer(server: string): string {
-    return URLParts.fix(server, (parts) => {
-        if (parts.protocol === '') {
-            parts.protocol = 'https://';
-        }
-    });
-}
-
-function replacePrefix(s, prefix, newPrefix) {
-    return `${newPrefix}${s.substr(prefix.length)}`;
+function resolveTimeout(
+    timeout?: number,
+    defaultTimeout: number,
+    growFactor?: number,
+    defaultGrowFactor: number,
+    retryIndex?: number,
+): number {
+    const resolvedTimeout = timeout === 0 ? 0 : (timeout || defaultTimeout);
+    const resolvedGrowFactor = growFactor || defaultGrowFactor;
+    return Math.min(
+        MAX_MESSAGE_TIMEOUT,
+        resolvedTimeout * Math.pow(resolvedGrowFactor, retryIndex || 0)
+    );
 }
 
 const defaultServer = 'http://localhost';
 
 export default class TONConfigModule extends TONModule {
-    data: ?TONConfigData;
+    data: TONConfigData;
     tracer: Tracer;
 
+    constructor(context: TONModuleContext) {
+        super(context);
+        this.data = {
+            servers: [defaultServer],
+        }
+    }
 
     setData(data: TONConfigData) {
-        this.data = data || {
-            servers: [defaultServer],
-        };
-        const server = resolveServer(data.servers[0] || defaultServer);
-        this._queriesHttpUrl = resolveServer(URLParts.appendPath(server, '/graphql'));
-        const queriesWsServer = this._queriesHttpUrl.startsWith('https://')
-            ? replacePrefix(this._queriesHttpUrl, 'https://', 'wss://')
-            : replacePrefix(this._queriesHttpUrl, 'http://', 'ws://');
-
-        this._queriesWsUrl = resolveServer(queriesWsServer);
+        this.data = data || this.data;
+        if (this.data.servers.length === 0) {
+            this.data.servers.push(defaultServer);
+        }
         this.tracer = data.tracer || noopTracer;
     }
 
+
+    messageRetriesCount(): number {
+        return this.data.messageRetriesCount || DEFAULT_MESSAGE_RETRIES_COUNT;
+    }
+
+    messageExpirationTimeout(retryIndex?: number): number {
+        return resolveTimeout(
+            this.data.messageExpirationTimeout,
+            DEFAULT_MESSAGE_EXPIRATION_TIMEOUT,
+            this.data.messageExpirationTimeoutGrowFactor,
+            DEFAULT_MESSAGE_EXPIRATION_GROW_FACTOR,
+            retryIndex,
+        );
+    }
+
+    messageProcessingTimeout(retryIndex?: number): number {
+        return resolveTimeout(
+            this.data.messageProcessingTimeout,
+            DEFAULT_MESSAGE_PROCESSING_TIMEOUT,
+            this.data.messageProcessingTimeoutGrowFactor,
+            DEFAULT_MESSAGE_PROCESSING_GROW_FACTOR,
+            retryIndex,
+        );
+    }
+
+    waitForTimeout(): number {
+        return this.data.waitForTimeout || DEFAULT_WAIT_FOR_TIMEOUT;
+    }
+
     log(...args: any[]) {
-        const profile = (this._profileStart || 0) != 0;
+        const profile = (this._profileStart || 0) !== 0;
         if (profile) {
             const current = Date.now() / 1000;
             const timeString = `${String(current.toFixed(3))} ${
@@ -149,14 +198,6 @@ export default class TONConfigModule extends TONModule {
         this._profileStart = this._profilePrev = 0;
     }
 
-    queriesHttpUrl(): string {
-        return this._queriesHttpUrl;
-    }
-
-    queriesWsUrl(): string {
-        return this._queriesWsUrl;
-    }
-
     async getVersion(): Promise<string> {
         return this.requestCore('version');
     }
@@ -168,17 +209,13 @@ export default class TONConfigModule extends TONModule {
             delete coreConfig.tracer;
             await this.requestCore('setup', coreConfig);
         }
-        this._logVerbose = (this.data && this.data.log_verbose) || false;
+        this._logVerbose = this.data.log_verbose || false;
         if (this._logVerbose) {
             this.startProfile();
         }
     }
 
     _logVerbose: boolean;
-
-    _queriesHttpUrl: string;
-
-    _queriesWsUrl: string;
 
     _profileStart: number;
 

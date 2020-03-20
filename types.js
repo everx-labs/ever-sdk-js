@@ -7,8 +7,12 @@ export type TONConfigData = {
     servers: string[],
     log_verbose?: boolean,
     tracer?: ?Object, // opentracing.Tracer
-    transactionTimeout?: number,
-    retriesCount?: number,
+    messageRetriesCount?: number,
+    messageExpirationTimeout?: number,
+    messageExpirationTimeoutGrowFactor?: number,
+    messageProcessingTimeout?: number,
+    messageProcessingTimeoutGrowFactor?: number,
+    waitForTimeout?: number,
     accessKey?: string,
 }
 
