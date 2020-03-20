@@ -17,7 +17,6 @@
 /* eslint-disable no-bitwise */
 
 import { tests } from "./_/init-tests";
-import { exportAllDeclaration } from "@babel/types";
 
 const SubscriptionContractPackage = tests.loadPackage('Subscription');
 

@@ -316,7 +316,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             message: {
                 messageId: message.messageId,
                 messageBodyBase64: message.messageBodyBase64,
-                expire: params.constructorHeader?.expire
+                expire: params.constructorHeader?.expire,
             },
             address: message.address,
         };
@@ -411,7 +411,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
 
     async createSignedMessage(
-        params: TONContractCreateSignedMessageParams
+        params: TONContractCreateSignedMessageParams,
     ): Promise<TONContractMessage> {
         return this.requestCore('contracts.encode_message_with_sign', params);
     }
@@ -541,16 +541,26 @@ export default class TONContractsModule extends TONModule implements TONContract
         const config = this.config;
         const messageId = await this.sendMessage(message, parentSpan);
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
-        console.log('>>>', { retryIndex, processingTimeout });
+        console.log('>>>',
+            {
+                retryIndex,
+                processingTimeout,
+            },
+        );
         let promises = [];
         let transactionFound = false;
         if (message.expire) {
             const expire = message.expire;
             if (Date.now() > expire * 1000) {
-                throw TONClientError.sendNodeRequestFailed("Message already expired");
+                throw TONClientError.sendNodeRequestFailed('Message already expired');
             }
 
-            console.log('>>>', { retryIndex, expire });
+            console.log('>>>',
+                {
+                    retryIndex,
+                    expire,
+                },
+            );
             // calculate timeout according to `expire` value (in seconds)
             // add processing timeout as master block validation time
             processingTimeout = expire * 1000 - Date.now() + processingTimeout;
@@ -563,7 +573,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     },
                     result: 'in_msg_descr { transaction_id }',
                     timeout: processingTimeout,
-                    parentSpan
+                    parentSpan,
                 });
 
                 if (transactionFound) {
@@ -574,7 +584,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     && block.in_msg_descr.find(msg => !!msg.transaction_id)?.transaction_id;
 
                 if (!transaction_id) {
-                    throw TONClientError.internalError("Invalid block received: no transaction ID");
+                    throw TONClientError.internalError('Invalid block received: no transaction ID');
                 }
 
                 // check that transactions collection is updated
@@ -584,7 +594,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     },
                     result: 'id',
                     timeout: processingTimeout,
-                    parentSpan
+                    parentSpan,
                 });
             };
 
@@ -602,7 +612,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                         },
                         result: resultFields,
                         timeout: processingTimeout,
-                        parentSpan
+                        parentSpan,
                     });
                     transactionFound = true;
                     resolve(tr);
@@ -641,7 +651,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 acc_type: { eq: QAccountType.active },
             },
             result: 'id',
-            parentSpan
+            parentSpan,
         });
         if (account.length > 0) {
             return {
@@ -830,7 +840,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): any {
         const timeout = this.config.messageExpirationTimeout(retryIndex);
-        if (abi.header && abi.header.includes("expire") && !userHeader?.expire) {
+        if (abi.header && abi.header.includes('expire') && !userHeader?.expire) {
             let header = userHeader || {};
             header.expire = Math.floor((Date.now() + timeout) / 1000) + 1;
             return header;
@@ -858,7 +868,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractDeployParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractDeployResult> {
-        this.config.log("Deploy start");
+        this.config.log('Deploy start');
         return this.retryCall(async (retryIndex) => {
             const message = await this.createDeployMessage(params, retryIndex);
             return this.processDeployMessage(message, parentSpan, retryIndex);
@@ -870,7 +880,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
-        this.config.log("Run start");
+        this.config.log('Run start');
         return this.retryCall(async (retryIndex) => {
             const message = await this.createRunMessage(params, retryIndex);
             return this.processRunMessage(message, parentSpan, retryIndex);
@@ -948,15 +958,20 @@ async function checkTransaction(transaction: QTransaction) {
     }
 
     function nodeError(message: string, code: number, phase: string) {
-        return new TONClientError(
-            `${message} (${code}) at ${phase}`,
-            code,
-            TONClientError.source.NODE,
-            {
-                phase,
-                transaction_id: transaction.id,
-            },
-        );
+        const MESSAGE_EXPIRED_CODE = 57;
+        const isNodeSEMessageExpired = phase === TONClientTransactionPhase.computeVm
+            && code === MESSAGE_EXPIRED_CODE;
+        return isNodeSEMessageExpired
+            ? TONClientError.messageExpired()
+            : new TONClientError(
+                `${message} (${code}) at ${phase}`,
+                code,
+                TONClientError.source.NODE,
+                {
+                    phase,
+                    transaction_id: transaction.id,
+                },
+            );
     }
 
     const storage = transaction.storage;

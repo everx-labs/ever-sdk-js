@@ -33,16 +33,6 @@ if (!process.env.TON_NETWORK_ADDRESS) {
 }
 const serversConfig = process.env.TON_NETWORK_ADDRESS.replace(/ /gi, '').split(',');
 
-if (!process.env.ABI_VERSION) {
-    console.log('ABI version is not specified. Default used');
-}
-export const abiVersion = Number(process.env.ABI_VERSION || 2);
-
-const supportedVersions = [1, 2];
-if (!supportedVersions.includes(abiVersion)) {
-    throw new Error('ABI version is not supported');
-}
-
 export type TONContractDeployedParams = {
     address: string,
     key: TONKeyPairData,
@@ -52,11 +42,24 @@ export type TONContractDeployedParams = {
 const fs = require('fs');
 const path = require('path');
 
-export function loadPackage(name: string): TONContractPackage {
-    const contract = {};
-    contract.abi = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `abi_v${abiVersion}`, `${name}.abi.json`), 'utf8'));
-    contract.imageBase64 = fs.readFileSync(path.resolve(process.cwd(), '__tests__', 'contracts', `abi_v${abiVersion}`, `${name}.tvc`)).toString('base64');
-    return contract;
+export type PackageByABIVersion = {
+    [number]: TONContractPackage,
+};
+
+export const ABIVersions = [1, 2];
+
+export function loadPackage(name: string): PackageByABIVersion {
+    const packages: PackageByABIVersion = {};
+    const base = path.resolve(process.cwd(), '__tests__', 'contracts');
+    ABIVersions.forEach(version => {
+        const abi = path.resolve(base, `abi_v${version}`, `${name}.abi.json`);
+        const tvc = path.resolve(base, `abi_v${version}`, `${name}.tvc`);
+        packages[version] = {
+            abi: JSON.parse(fs.readFileSync(abi, 'utf8')),
+            imageBase64: fs.readFileSync(tvc).toString('base64'),
+        }
+    });
+    return packages;
 }
 
 async function init() {
@@ -142,8 +145,7 @@ export const tests: {
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
     nodeSe: boolean,
-    loadPackage(name: string): TONContractPackage,
-    abiVersion: number
+    loadPackage(name: string): PackageByABIVersion,
 } = {
     config: {
         defaultWorkchain: 0,
@@ -163,5 +165,4 @@ export const tests: {
     get_giver_address,
     nodeSe,
     loadPackage,
-    abiVersion,
 };
