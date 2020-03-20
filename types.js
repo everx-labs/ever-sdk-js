@@ -525,12 +525,15 @@ export type QTransaction = {
     lt?: string,
     storage?: {
         status_change?: number,
+        storage_fees_collected?: string,
     },
     compute?: {
         compute_type?: number,
         success?: boolean,
         exit_code?: number,
         skipped_reason?: number,
+        gas_fees?: string,
+        total_fwd_fees?: string,
     },
     action?: {
         valid?: boolean,

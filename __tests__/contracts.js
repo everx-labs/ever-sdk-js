@@ -16,20 +16,15 @@
 
 // @flow
 
-import { Span } from "opentracing";
-import { tests } from './_/init-tests';
-import {
-    removeProps,
-    TONAddressStringVariant
-} from '../src/modules/TONContractsModule';
+import { Span } from 'opentracing';
+import { removeProps, TONAddressStringVariant } from '../src/modules/TONContractsModule';
 import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
+import { TONClient, TONClientError } from '../src/TONClient';
 
 
-import type {
-    TONContractLoadResult,
-} from '../types';
+import type { TONContractLoadResult } from '../types';
 import { binariesVersion } from './_/binaries';
-import { TONClientError, TONClient } from "../src/TONClient";
+import { tests } from './_/init-tests';
 
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -59,23 +54,24 @@ test('removeProps', () => {
         foo: {
             bar: 'bar',
             baz: 'baz',
-        }
+        },
     };
     const reduced = removeProps(params, ['keyPair.secret', 'foo.bar']);
     expect(reduced)
         .toEqual({
             keyPair: {
-                public: 'public'
+                public: 'public',
             },
             foo: {
-                baz: 'baz'
-            }
+                baz: 'baz',
+            },
         });
 });
 
 test('basic', async () => {
     const version = await tests.client.config.getVersion();
-    expect(version).toEqual(binariesVersion);
+    expect(version)
+        .toEqual(binariesVersion);
     console.log(`Client uses expected binaries version: ${version}`);
 });
 
@@ -99,9 +95,8 @@ test('load', async () => {
         }, span);
         expect(w.id)
             .toEqual(walletAddress);
-        expect(Number.parseInt(w.balanceGrams || ''))
+        expect(Number(w.balanceGrams || ''))
             .toBeGreaterThan(0);
-
     });
 });
 
@@ -123,7 +118,8 @@ test('Test hello contract from docs.ton.dev', async () => {
         keyPair: helloKeys,
     });
 
-    expect(response.transaction.status).toEqual(3);
+    expect(response.transaction.status)
+        .toEqual(3);
 
     const localResponse = await contracts.runLocal({
         address: contractData.address,
@@ -140,7 +136,8 @@ test('Test hello contract from docs.ton.dev', async () => {
         input: {},
         keyPair: helloKeys,
     });
-    expect(localResponse.output.value0).toEqual((localResponse2.output.value0));
+    expect(localResponse.output.value0)
+        .toEqual((localResponse2.output.value0));
 });
 
 test('Run aborted transaction', async () => {
@@ -229,74 +226,74 @@ test('filterOutput', async () => {
 
     // const graph = await tests.client.queries.transactions.waitFor({
     //     filter: { id: { eq: resultReturn.transaction.id} },
-    //     result: 'id in_message { id dst_transaction { id out_messages { id src_transaction { id } } } }',
+    //     result: `id in_message { id
+    //          dst_transaction { id out_messages { id src_transaction { id } } } }`,
     // });
     // expect(graph.in_message.dst_transaction.id).toEqual(graph.id);
-    // expect(graph.in_message.dst_transaction.out_messages[0].src_transaction.id).toEqual(graph.id);
+    // expect(graph.in_message.dst_transaction.out_messages[0].src_transaction.id)
+    //      .toEqual(graph.id);
 });
 
-if(tests.abiVersion === 1)
-test('External Signing on ABI v1', async () => {
-    const { contracts, crypto } = tests.client;
-    const keys = await crypto.ed25519Keypair();
+if (tests.abiVersion === 1) {
+    test('External Signing on ABI v1', async () => {
+        const { contracts, crypto } = tests.client;
+        const keys = await crypto.ed25519Keypair();
 
-    const contractPackage = EventsPackage;
-    contractPackage.abi.setTime = false;
+        const contractPackage = EventsPackage;
+        contractPackage.abi.setTime = false;
 
-    const deployParams = {
-        package: contractPackage,
-        constructorParams: {},
-        keyPair: keys,
-    };
-    const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
-    const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
-    const signBytesBase64 = await crypto.naclSignDetached({
-        base64: unsignedMessage.signParams.bytesToSignBase64,
-    }, signKey.secret, TONOutputEncoding.Base64);
-    const signed = await contracts.createSignedDeployMessage({
-        signBytesBase64,
-        unsignedMessage,
-        publicKeyHex: keys.public
+        const deployParams = {
+            package: contractPackage,
+            constructorParams: {},
+            keyPair: keys,
+        };
+        const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
+        const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
+        const signBytesBase64 = await crypto.naclSignDetached({
+            base64: unsignedMessage.signParams.bytesToSignBase64,
+        }, signKey.secret, TONOutputEncoding.Base64);
+        const signed = await contracts.createSignedDeployMessage({
+            signBytesBase64,
+            unsignedMessage,
+            publicKeyHex: keys.public,
+        });
+
+        const message = await contracts.createDeployMessage(deployParams);
+        expect(signed.message.messageBodyBase64)
+            .toEqual(message.message.messageBodyBase64);
     });
+}
 
-    const message = await contracts.createDeployMessage(deployParams);
-    expect(signed.message.messageBodyBase64)
-        .toEqual(message.message.messageBodyBase64);
-});
+if (tests.abiVersion === 2) {
+    test('External Signing on ABI v2', async () => {
+        const { contracts, crypto } = tests.client;
+        const keys = await crypto.ed25519Keypair();
 
-if(tests.abiVersion === 2)
-test('External Signing on ABI v2', async () => {
-    const { contracts, crypto } = tests.client;
-    const keys = await crypto.ed25519Keypair();
+        const deployParams = {
+            package: EventsPackage,
+            constructorHeader: {
+                pubkey: keys.public,
+                time: Date.now(),
+                expire: Math.floor((Date.now() + 40_000) / 1000),
+            },
+            constructorParams: {},
+            keyPair: keys,
+        };
+        const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
+        const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
+        const signBytesBase64 = await crypto.naclSignDetached({
+            base64: unsignedMessage.signParams.bytesToSignBase64,
+        }, signKey.secret, TONOutputEncoding.Base64);
+        const signed = await contracts.createSignedDeployMessage({
+            signBytesBase64,
+            unsignedMessage,
+        });
 
-    const contractPackage = EventsPackage;
-
-    const deployParams = {
-        package: contractPackage,
-        constructorHeader: {
-            pubkey: keys.public,
-            time: Date.now(),
-            expire: Math.floor((Date.now() + 40_000) / 1000),
-        },
-        constructorParams: {},
-        keyPair: keys,
-    };
-    const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
-    const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
-    const signBytesBase64 = await crypto.naclSignDetached({
-        base64: unsignedMessage.signParams.bytesToSignBase64,
-    }, signKey.secret, TONOutputEncoding.Base64);
-    const signed = await contracts.createSignedDeployMessage({
-        signBytesBase64,
-        unsignedMessage,
+        const message = await contracts.createDeployMessage(deployParams);
+        expect(signed.message.messageBodyBase64)
+            .toEqual(message.message.messageBodyBase64);
     });
-
-    const message = await contracts.createDeployMessage(deployParams);
-    expect(signed.message.messageBodyBase64)
-        .toEqual(message.message.messageBodyBase64);
-
-
-});
+}
 
 // TODO return test when data[] will fix in compilers
 test.skip('changeInitState', async () => {
@@ -369,7 +366,8 @@ test('testSetCode', async () => {
         input: {},
         keyPair: keys,
     });
-    expect(version1.output.value0).toEqual('0x1');
+    expect(version1.output.value0)
+        .toEqual('0x1');
     const code = await contracts.getCodeFromImage({
         imageBase64: SetCode2Package.imageBase64,
     });
@@ -388,13 +386,12 @@ test('testSetCode', async () => {
         keyPair: keys,
     });
 
-    expect(newVersion.output.value0).toEqual('0x2');
+    expect(newVersion.output.value0)
+        .toEqual('0x2');
 });
 
 test('testRunBody', async () => {
     const { contracts } = tests.client;
-
-    const walletAddress = '0:2222222222222222222222222222222222222222222222222222222222222222';
 
     const result = await contracts.createRunBody({
         abi: SubscriptionContractPackage.abi,
@@ -499,14 +496,14 @@ test.skip('calc gas fee', async () => {
     const deployMessage = await contracts.createDeployMessage({
         package: WalletContractPackage,
         constructorParams: {},
-        keyPair: keys
+        keyPair: keys,
     });
 
     const deployFees = await contracts.calcDeployFees({
         package: WalletContractPackage,
         constructorParams: {},
         keyPair: keys,
-        newAccount: true
+        newAccount: true,
     });
 
     // use fees to get needed grams value from giver
@@ -514,22 +511,25 @@ test.skip('calc gas fee', async () => {
 
     await tests.get_grams_from_giver(
         deployMessage.address,
-        targetBalance + Number(deployFees.fees.totalAccountFees));
+        targetBalance + Number(deployFees.fees.totalAccountFees),
+    );
 
     // deploy the contract
     const deployed = await contracts.processDeployMessage(deployMessage);
 
-    const deployTransaction = (await queries.transactions.query({
-            in_msg: { eq: deployMessage.message.messageId }
+    const deployTransaction = (await queries.transactions.query(
+        {
+            in_msg: { eq: deployMessage.message.messageId },
         },
-        'storage {storage_fees_collected}'
+        'storage {storage_fees_collected}',
     ))[0];
 
-    const originalBalance = (await queries.accounts.waitFor({
+    const originalBalance = (await queries.accounts.waitFor(
+        {
             id: { eq: deployed.address },
-            code: { gt: "" }
+            code: { gt: '' },
         },
-        'balance'
+        'balance',
     )).balance;
 
     // giver sends message with IHR enabled and ihr_fee is added to target account balance
@@ -537,7 +537,12 @@ test.skip('calc gas fee', async () => {
 
     // check that balance after deploy is the one we expected (except increased storage fee)
     expect(Number(originalBalance))
-        .toEqual(targetBalance + ihrFee + Number(deployFees.fees.storageFee) - Number(deployTransaction.storage.storage_fees_collected));
+        .toEqual(
+            targetBalance
+            + ihrFee
+            + Number(deployFees.fees.storageFee)
+            - Number(deployTransaction.storage.storage_fees_collected),
+        );
 
     // get fees for transaction to calculate possible send value
     const runMessage = await contracts.createRunMessage({
@@ -547,20 +552,22 @@ test.skip('calc gas fee', async () => {
         input: {
             dest: tests.get_giver_address(),
             value: originalBalance,
-            bounce: false
+            bounce: false,
         },
-        keyPair: keys
+        keyPair: keys,
     });
 
     const testFees = await contracts.calcMsgProcessFees({
         address: deployed.address,
         message: runMessage.message,
-        emulateBalance: true
+        emulateBalance: true,
     });
 
     // send almost all balance with reserve for increased storage fee
     const reserveValue = 100;
-    const sendValue = Number(originalBalance) - Number(testFees.fees.totalAccountFees) - Number(reserveValue);
+    const sendValue = Number(originalBalance)
+        - Number(testFees.fees.totalAccountFees)
+        - Number(reserveValue);
 
     // calculate fees for transaction with actual parameters
     const calcFees = await contracts.calcRunFees({
@@ -570,9 +577,9 @@ test.skip('calc gas fee', async () => {
         input: {
             dest: tests.get_giver_address(),
             value: sendValue,
-            bounce: false
+            bounce: false,
         },
-        keyPair: keys
+        keyPair: keys,
     });
 
     // perform real transaction
@@ -583,50 +590,58 @@ test.skip('calc gas fee', async () => {
         input: {
             dest: tests.get_giver_address(),
             value: sendValue,
-            bounce: false
+            bounce: false,
         },
         keyPair: keys,
     });
 
-    const endBalance = (await queries.accounts.waitFor({
+    const endBalance = (await queries.accounts.waitFor(
+        {
             id: { eq: deployed.address },
-            balance: { lt: originalBalance }
+            balance: { lt: originalBalance },
         },
-        'balance'
+        'balance',
     )).balance;
 
     // check that we send almost all balance without reserved value
-    expect(Number(endBalance) < Number(reserveValue)).toBeTruthy();
+    expect(Number(endBalance) < Number(reserveValue))
+        .toBeTruthy();
 
-    const transaction = await queries.transactions.query({
-            id: { eq: resultNet.transaction.id }
+    const transaction = await queries.transactions.query(
+        {
+            id: { eq: resultNet.transaction.id },
         },
-        'storage {storage_fees_collected} compute {gas_fees} action {total_fwd_fees} total_fees'
+        'storage {storage_fees_collected} compute {gas_fees} action {total_fwd_fees} total_fees',
     );
 
     // check actual fees
-    expect(calcFees.fees.gasFee).toEqual(transaction[0].compute.gas_fees);
-    //expect(localResult.fees.storageFee).toEqual(transaction[0].storage.storage_fees_collected);
-    expect(calcFees.fees.outMsgsFwdFee).toEqual(transaction[0].action.total_fwd_fees);
+    expect(calcFees.fees.gasFee)
+        .toEqual(transaction[0].compute.gas_fees);
+    // expect(localResult.fees.storageFee).toEqual(transaction[0].storage.storage_fees_collected);
+    expect(calcFees.fees.outMsgsFwdFee)
+        .toEqual(transaction[0].action.total_fwd_fees);
     // check all fees (with storage fee from real transaction) gives right result
     expect(
-        Number(calcFees.fees.gasFee) +
-        Number(calcFees.fees.outMsgsFwdFee) +
-        Number(calcFees.fees.inMsgFwdFee) +
-        Number(transaction[0].storage.storage_fees_collected)
-    ).toEqual(Number(originalBalance) - Number(sendValue) - Number(endBalance));
+        Number(calcFees.fees.gasFee)
+        + Number(calcFees.fees.outMsgsFwdFee)
+        + Number(calcFees.fees.inMsgFwdFee)
+        + Number(transaction[0].storage.storage_fees_collected),
+    )
+        .toEqual(Number(originalBalance) - Number(sendValue) - Number(endBalance));
 
-    expect(Number(calcFees.fees.totalOutput) === sendValue).toBeTruthy();
+    expect(Number(calcFees.fees.totalOutput) === sendValue)
+        .toBeTruthy();
 });
 
 test('test boc hash', async () => {
     const { contracts } = tests.client;
-    const bocBase64 = "te6ccgEBAgEAxgABwYgAti0S4VOMe6uIVNX3nuDd7KSO13EsFEXDsUVaKRzBgdQCwaZuyAAAC3iWFUwMAK22OiKIN+R4x+31/j8LXRIYPh8iJGtncSuZ7FONbFNXAAAAAAAAAAAAAAAAAA9CQEABAMD3EJkJ6DsPCkGnV5lMTt6LIPRS7ViXPZjHMhJizNODUeKekStEXEUgmHS2vmokCRRUpsUhmwgFmkWaCatqe4wIlcBqp0PR+QAN1kt1SY8QavS350RCNNfeZ+ommI9hgd8=";
-    const hash = "adff1e7fd60632bb572b1afe0c2e569d8c68b1169994c48bc1ed92b3515c3b4e";
+    const bocBase64 = 'te6ccgEBAgEAxgABwYgAti0S4VOMe6uIVNX3nuDd7KSO13EsFEXDsUVaKRzBgdQCwaZuyAAAC3iWFUwMAK22OiKIN+R4x+31/j8LXRIYPh8iJGtncSuZ7FONbFNXAAAAAAAAAAAAAAAAAA9CQEABAMD3EJkJ6DsPCkGnV5lMTt6LIPRS7ViXPZjHMhJizNODUeKekStEXEUgmHS2vmokCRRUpsUhmwgFmkWaCatqe4wIlcBqp0PR+QAN1kt1SY8QavS350RCNNfeZ+ommI9hgd8=';
+    const hash = 'adff1e7fd60632bb572b1afe0c2e569d8c68b1169994c48bc1ed92b3515c3b4e';
 
     const result = await contracts.getBocHash({ bocBase64 });
 
-    expect(result.hash).toEqual(hash);
+    expect(result.hash)
+        .toEqual(hash);
 });
 
 test('test send boc', async () => {
@@ -645,8 +660,8 @@ test('test send boc', async () => {
     await contracts.processDeployMessage({
         address: message.address,
         message: {
-            messageBodyBase64: message.message.messageBodyBase64
-        }
+            messageBodyBase64: message.message.messageBodyBase64,
+        },
     });
 });
 
@@ -654,7 +669,7 @@ test('test deploy lags', async () => {
     const { contracts, crypto, config } = tests.client;
     config.startProfile();
 
-    config.log("Start");
+    config.log('Start');
     const keys = await crypto.ed25519Keypair();
 
     const message = await contracts.createDeployMessage({
@@ -663,21 +678,21 @@ test('test deploy lags', async () => {
         keyPair: keys,
     });
 
-    config.log("Before giver");
+    config.log('Before giver');
 
     await tests.get_grams_from_giver(message.address);
 
-    config.log("After giver");
+    config.log('After giver');
 
     // send message without id - it should be computed inside
     await contracts.processDeployMessage({
         address: message.address,
         message: {
-            messageBodyBase64: message.message.messageBodyBase64
-        }
+            messageBodyBase64: message.message.messageBodyBase64,
+        },
     });
 
-    config.log("After deploy");
+    config.log('After deploy');
     config.stopProfile();
 });
 
@@ -688,90 +703,100 @@ async function expectError(code: number, source: string, f) {
         await f();
         fail(`Expected error with code:${code} source: ${source}`);
     } catch (error) {
-        expect({ code: error.code, source: error.source }).toEqual({ code, source });
+        expect({
+            code: error.code,
+            source: error.source,
+        })
+            .toEqual({
+                code,
+                source,
+            });
     }
 }
 
-if (tests.abiVersion === 2)
-test('Test expire', async () => {
-    const {contracts, crypto, queries} = tests.client;
+if (tests.abiVersion === 2) {
+    test('Test expire', async () => {
+        const { contracts, crypto, queries } = tests.client;
 
-    const helloKeys = await crypto.ed25519Keypair();
+        const helloKeys = await crypto.ed25519Keypair();
 
-    const contractData = await tests.deploy_with_giver({
-        package: HelloContractPackage,
-        constructorParams: {},
-        keyPair: helloKeys,
+        const contractData = await tests.deploy_with_giver({
+            package: HelloContractPackage,
+            constructorParams: {},
+            keyPair: helloKeys,
+        });
+
+        const ltDeploy = (await queries.accounts.query(
+            {
+                id: { eq: contractData.address },
+            },
+            'last_trans_lt',
+        ))[0].last_trans_lt;
+
+        await contracts.run({
+            address: contractData.address,
+            abi: HelloContractPackage.abi,
+            functionName: 'touch',
+            input: {},
+            keyPair: helloKeys,
+        });
+
+        const ltRun = (await queries.accounts.query(
+            {
+                id: { eq: contractData.address },
+            },
+            'last_trans_lt',
+        ))[0].last_trans_lt;
+
+        expect(ltRun)
+            .not
+            .toEqual(ltDeploy);
+
+        // to check message expiration we have to make some trick with `expire` value, because
+        // SDK can not send already expired message
+
+        // we create expired message
+        const runMsg = await contracts.createRunMessage({
+            address: contractData.address,
+            abi: HelloContractPackage.abi,
+            functionName: 'touch',
+            header: {
+                expire: Math.floor(Date.now() / 1000) - 1,
+            },
+            input: {},
+            keyPair: helloKeys,
+        });
+        // and then change `expire` to correct value in order to send it properly
+        runMsg.message.expire = Math.floor(Date.now() / 1000) + 10;
+
+        const expectedError = TONClientError.messageExpired();
+
+        // no retries client
+        const client = await TONClient.create({
+            ...tests.config,
+            messageRetriesCount: 0,
+        });
+
+        // SDK will wait for message processing using modified `expire` value,
+        // but message was created already expired so contract won't accept it
+        await expectError(
+            expectedError.code,
+            expectedError.source,
+            async () => client.contracts.processRunMessage(runMsg),
+        );
+
+        // check that expired message wasn't processed by the contract
+        const ltExpire = (await queries.accounts.query(
+            {
+                id: { eq: contractData.address },
+            },
+            'last_trans_lt',
+        ))[0].last_trans_lt;
+
+        expect(ltExpire)
+            .toEqual(ltRun);
     });
-
-    const ltDeploy = (await queries.accounts.query({
-            id: { eq: contractData.address }
-        },
-        'last_trans_lt'
-    ))[0].last_trans_lt;
-
-    await contracts.run({
-        address: contractData.address,
-        abi: HelloContractPackage.abi,
-        functionName: 'touch',
-        input: {},
-        keyPair: helloKeys,
-    });
-
-    const ltRun = (await queries.accounts.query({
-            id: { eq: contractData.address }
-        },
-        'last_trans_lt'
-    ))[0].last_trans_lt;
-
-    expect(ltRun).not.toEqual(ltDeploy);
-
-    // to check message expiration we have to make some trick with `expire` value, because
-    // SDK can not send already expired message
-
-    // we create expired message
-    let runMsg = await contracts.createRunMessage({
-        address: contractData.address,
-        abi: HelloContractPackage.abi,
-        functionName: 'touch',
-        header: {
-            expire: Math.floor(Date.now() / 1000) - 1
-        },
-        input: {},
-        keyPair: helloKeys,
-    });
-    // and then change `expire` to correct value in order to send it properly
-    runMsg.message.expire = Math.floor(Date.now() / 1000) + 10;
-
-    // Node SE writes aborted transactions into DB, so error differs
-    let expectedError = TONClientError.messageExpired();
-    if (tests.nodeSe) {
-        expectedError = {
-            code: 57, // message expired code
-            source: "node"
-        }
-    }
-
-    // no retries client
-    const client = await TONClient.create({
-        ...tests.config,
-        retriesCount: 0
-    });
-
-    // SDK will wait for message processing using modified `expire` value, but message was created
-    // already expired so contract won't accept it
-    await expectError(expectedError.code, expectedError.source,
-        async () => client.contracts.processRunMessage(runMsg));
-
-    // check that expired message wasn't processed by the contract
-    const ltExpire = (await queries.accounts.query({
-            id: { eq: contractData.address }
-        },
-        'last_trans_lt'
-    ))[0].last_trans_lt;
-
-    expect(ltExpire).toEqual(ltRun);
-});
+}
 
 test('test parse message', async () => {
     const { contracts, crypto } = tests.client;
@@ -785,10 +810,11 @@ test('test parse message', async () => {
     });
 
     const parsedMsg = await contracts.parseMessage({
-        bocBase64: message.message.messageBodyBase64
+        bocBase64: message.message.messageBodyBase64,
     });
 
-    expect(parsedMsg.dst).toEqual(message.address);
+    expect(parsedMsg.dst)
+        .toEqual(message.address);
 });
 
 test('Check deployed', async () => {
@@ -801,7 +827,8 @@ test('Check deployed', async () => {
         keyPair: helloKeys,
     });
 
-    expect(deployed.alreadyDeployed).toBeFalsy();
+    expect(deployed.alreadyDeployed)
+        .toBeFalsy();
 
     const checked = await contracts.deploy({
         package: HelloContractPackage,
@@ -809,5 +836,6 @@ test('Check deployed', async () => {
         keyPair: helloKeys,
     });
 
-    expect(checked.alreadyDeployed).toBeTruthy();
+    expect(checked.alreadyDeployed)
+        .toBeTruthy();
 });
