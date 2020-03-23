@@ -1,6 +1,16 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.21.22 - Mar 23, 2020
+### Featured
+- Ability to use web sockets for queries and mutations 
+
+### New
+- config parameter `useWebSocketForQueries`
+
+### Fixed
+- WebSocket reconnect log record changed from `error` to `info` 
+
 ## 0.21.1 - Mar 19, 2020
 ### Featured
 - Stability improvements 
