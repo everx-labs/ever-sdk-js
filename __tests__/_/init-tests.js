@@ -106,7 +106,7 @@ async function done() {
     await new Promise(resolve => setTimeout(resolve, 1000));
     await tests.client.close();
 }
-
+jest.setTimeout(30000);
 function createJaegerTracer(endpoint: string): ?Tracer {
     if (!endpoint) {
         return null;
