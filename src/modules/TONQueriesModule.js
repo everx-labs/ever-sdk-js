@@ -131,7 +131,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 }
                 return clientConfig;
             } catch (error) {
-                console.error(`[getClientConfig] for server "${server}" failed`, error);
+                console.log(`[getClientConfig] for server "${server}" failed`, error);
             }
         }
         return getConfigForServer(config.data.servers[0]);
@@ -249,7 +249,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     }
 
     async createGraphqlClient(span: Span | SpanContext) {
-        const useHttp = true;
+        const useHttp = !this.config.data.useWebSocketForQueries;
         let clientConfig = await this.getClientConfig();
         let wsLink: ?WebSocketLink = null;
         let httpLink: ?HttpLink = null;
@@ -267,11 +267,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             clientConfig.WebSocket,
         );
         subscriptionClient.onReconnected(() => {
-            console.error('[TONClient.queries]', 'WebSocket Reconnected');
+            console.log('[TONClient.queries]', 'WebSocket Reconnected');
         });
         let detectingRedirection = false;
         subscriptionClient.onError(() => {
-            console.error('[TONClient.queries]', 'WebSocket Failed');
+            console.log('[TONClient.queries]', 'WebSocket Failed');
             if (detectingRedirection) {
                 return;
             }
@@ -282,7 +282,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     const configIsChanged = newConfig.httpUrl !== clientConfig.httpUrl
                         || newConfig.wsUrl !== clientConfig.wsUrl;
                     if (configIsChanged) {
-                        console.error('[TONClient.queries]', 'Client config changed');
+                        console.log('[TONClient.queries]', 'Client config changed');
                         clientConfig = newConfig;
                         subscriptionClient.url = newConfig.wsUrl;
                         if (wsLink) {
@@ -293,7 +293,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                         }
                     }
                 } catch (err) {
-                    console.error('[TONClient.queries] redirection detector failed', err);
+                    console.log('[TONClient.queries] redirection detector failed', err);
                 }
                 detectingRedirection = false;
             })();
@@ -479,7 +479,7 @@ class TONQueriesModuleCollection implements TONQCollection {
                 if (onError) {
                     onError(error);
                 } else {
-                    console.error('TON Client subscription error', error);
+                    console.log('TON Client subscription error', error);
                 }
             }
         })();
