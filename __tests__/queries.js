@@ -14,17 +14,37 @@
  * limitations under the License.
  */
 
+import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
 import { QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
 import { get_grams_from_giver } from './_/giver';
 import { ABIVersions, tests } from './_/init-tests';
+
+
+const fetch = require('node-fetch');
+const expectedSchema = require('./data/expected-schema.json');
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 
 beforeAll(tests.init);
 afterAll(tests.done);
 
+test('Schema graphQL should equals with reference', async () => {
+    const response = await fetch(`${process.env.TON_NETWORK_ADDRESS}/graphql`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: introspectionQuery }),
+    });
+    if (response.status !== 200) {
+        throw Error(`GraphQL returns ${response.status}`);
+    }
+    const schema = await response.json();
+    expect(expectedSchema).toEqual(schema.data);
+});
+
 test('Specialized', async () => {
-    const queries = tests.client.queries;
+    const { queries } = tests.client;
     let count = await queries.getAccountsCount();
     expect(count)
         .toBeGreaterThan(10);
@@ -38,7 +58,7 @@ test('Specialized', async () => {
 
 // Skipped explicitly due to no expect
 test.skip('Transaction List', async () => {
-    const queries = tests.client.queries;
+    const { queries } = tests.client;
     const transaction = await queries.transactions.query({
         filter: {
             id: { eq: 'e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465' },
@@ -56,7 +76,7 @@ test.skip('Transaction List', async () => {
 });
 
 test('All Accounts', async () => {
-    const queries = tests.client.queries;
+    const { queries } = tests.client;
     const docs = await queries.accounts.query({
         filter: {},
         result: 'id balance',
@@ -67,7 +87,7 @@ test('All Accounts', async () => {
 
 // Skipped explicitly due to no expect
 test.skip('Message', async () => {
-    const queries = tests.client.queries;
+    const { queries } = tests.client;
     const messages = await queries.messages.query({
         filter: {
             id: { eq: '3a8e38b419a452fe7a0073e71c083f926055d0f249485ab9f8ca6e9825c20b8c' },
@@ -78,7 +98,7 @@ test.skip('Message', async () => {
 });
 
 test('Ranges', async () => {
-    const queries = tests.client.queries;
+    const { queries } = tests.client;
     const messages = await queries.messages.query({
         filter: { created_at: { gt: 1562342740 } },
         result: 'body created_at',
@@ -88,7 +108,7 @@ test('Ranges', async () => {
 });
 
 test('Wait For', async () => {
-    const queries = tests.client.queries;
+    const { queries } = tests.client;
     const data = await queries.transactions.waitFor({
         filter: {
             now: { gt: 1563449 },
@@ -135,7 +155,7 @@ test.each(ABIVersions)('Subscribe for transactions with addresses (ABI v%i)', as
     console.log('>>>', 'Deploying...');
     await contracts.processDeployMessage(message);
     console.log('>>>', 'Waiting...');
-    await new Promise(resolve => setTimeout(resolve, 1_000));
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
     subscription.unsubscribe();
     expect(transactions.length)
         .toBeGreaterThan(0);
@@ -176,7 +196,7 @@ test.each(ABIVersions)('Subscribe for messages (ABI v%i)', async (abiVersion) =>
 });
 
 test('Transactions with addresses', async () => {
-    const queries = tests.client.queries;
+    const { queries } = tests.client;
     const tr = (await queries.transactions.query({
         filter: {},
         result: transactionWithAddresses,
@@ -240,7 +260,6 @@ test.skip('Long time subscription', async () => {
     const subscription = queries.accounts.subscribe({}, 'id code data', (e, doc) => {
         console.log(doc.id);
     });
-    await new Promise(resolve => setTimeout(resolve, 1_000_000));
+    await new Promise((resolve) => setTimeout(resolve, 1_000_000));
     subscription.unsubscribe();
 });
-
