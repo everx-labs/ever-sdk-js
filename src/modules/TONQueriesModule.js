@@ -99,6 +99,16 @@ class MulticastPromise<Value> {
     }
 }
 
+function versionToNumber(s: string): number {
+    const parts = `${s || ''}`.split('.')
+        .map(x => Number(x))
+        .slice(0, 3);
+    while (parts.length < 3) {
+        parts.push(0);
+    }
+    return parts[0] * 1000000 + parts[1] * 1000 + parts[2];
+}
+
 export default class TONQueriesModule extends TONModule implements TONQueries {
     config: TONConfigModule;
 
@@ -106,6 +116,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     graphqlClientCreation: ?MulticastPromise<ApolloClient>;
     waitingIdPrefix: string;
     waitingIdSuffix: number;
+    serverVersion: number;
 
     constructor(context: TONModuleContext) {
         super(context);
@@ -114,9 +125,12 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         this.graphqlClientCreation = null;
         this.waitingIdPrefix = '';
         for (let i = 0; i < 20; i += 1) {
-            this.waitingIdPrefix = `${this.waitingIdPrefix}${Math.round(Math.random() * 256).toString(16)}`;
+            this.waitingIdPrefix =
+                `${this.waitingIdPrefix}${Math.round(Math.random() * 256)
+                    .toString(16)}`;
         }
         this.waitingIdSuffix = 1;
+        this.serverVersion = versionToNumber('0.23.4');
     }
 
     async setup() {
@@ -127,21 +141,13 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         this.accounts = new TONQueriesModuleCollection(this, 'accounts');
     }
 
-    generateWaitingId(): string {
-        this.waitingIdSuffix += 1;
-        return `${this.waitingIdPrefix}${this.waitingIdSuffix.toString(16)}`;
-    }
-
-    cancelWaiting(waitingId: string) {
-        this.graphqlMutation(`mutation cancelWaiting($waitingId: String) {
-                cancelWaiting(waitingId: $waitingId)
-            }`, {
-            waitingId,
-        });
-    }
-
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {
         const response = await fetch(sourceUrl);
+        try {
+            this.serverVersion = versionToNumber((await response.json()).data.info.version);
+        } catch {
+        }
+        console.log('>>>', this.serverVersion);
         if (response.redirected === true) {
             return response.url;
         }
@@ -169,32 +175,34 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
 
         function getConfigForServer(server: string) {
             const httpParts = URLParts.parse(server)
-                .fixProtocol(x => x === 'http://' ? x : 'https://')
+                .fixProtocol(x => (x === 'http://' ? x : 'https://'))
                 .fixPath(x => `${x}/graphql`);
             const http = httpParts.toString();
             const ws = httpParts
-                .fixProtocol(x => x === 'http://' ? 'ws://' : 'wss://')
+                .fixProtocol(x => (x === 'http://' ? 'ws://' : 'wss://'))
                 .toString();
             return {
                 httpUrl: http,
                 wsUrl: ws,
                 fetch: clientPlatform.fetch,
                 WebSocket: clientPlatform.WebSocket,
-            }
+            };
         }
 
         for (const server of config.data.servers) {
             try {
                 const clientConfig = getConfigForServer(server);
+                // eslint-disable-next-line no-await-in-loop
                 const redirected = await this.detectRedirect(
                     fetch,
                     `${clientConfig.httpUrl}?query=%7Binfo%7Bversion%7D%7D`,
                 );
                 if (redirected !== '') {
-                    const httpParts = URLParts.parse(redirected).fixQuery(_ => '');
+                    const httpParts = URLParts.parse(redirected)
+                        .fixQuery(_ => '');
                     clientConfig.httpUrl = httpParts.toString();
                     clientConfig.wsUrl = httpParts
-                        .fixProtocol(x => x === 'http://' ? 'ws://' : 'wss://')
+                        .fixProtocol(x => (x === 'http://' ? 'ws://' : 'wss://'))
                         .toString();
                 }
                 return clientConfig;
@@ -203,6 +211,42 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             }
         }
         return getConfigForServer(config.data.servers[0]);
+    }
+
+    async getServerVersion(span?: Span | SpanContext): number {
+        await this.graphqlClientRequired(span);
+    }
+
+    generateWaitingId(): string {
+        this.waitingIdSuffix += 1;
+        return `${this.waitingIdPrefix}${this.waitingIdSuffix.toString(16)}`;
+    }
+
+    async generateWaitingIdMixing(
+        parentSpan?: Span | SpanContext,
+    ): Promise<{ waitingId?: string }> {
+        if ((await this.getServerVersion(parentSpan)) <= 24004) {
+            return {};
+        }
+        return {
+            waitingId: this.generateWaitingId(),
+        };
+    }
+
+    cancelWaiting(waitingId: string | null | typeof undefined) {
+        if (!waitingId) {
+            return;
+        }
+        (async () => {
+            if ((await this.getServerVersion()) <= 24004) {
+                return;
+            }
+            await this.graphqlMutation(`mutation cancelWaiting($waitingId: String) {
+                cancelWaiting(waitingId: $waitingId)
+            }`, {
+                waitingId,
+            });
+        })();
     }
 
     async getAccountsCount(parentSpan?: (Span | SpanContext)): Promise<number> {
@@ -306,7 +350,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }
     }
 
-    async graphqlClientRequired(parentSpan: Span): Promise<ApolloClient> {
+    async graphqlClientRequired(parentSpan?: Span | SpanContext): Promise<ApolloClient> {
         if (this.graphqlClient) {
             return this.graphqlClient;
         }
@@ -480,6 +524,7 @@ class TONQueriesModuleCollection implements TONQCollection {
             orderBy,
             limit,
             timeout,
+            waitingId,
             parentSpan,
         } = resolveParams<TONQueryParams>(args, 'filter', () => ({
             filter: args[0],
@@ -496,6 +541,7 @@ class TONQueriesModuleCollection implements TONQCollection {
                 orderBy,
                 limit,
                 timeout,
+                waitingId,
             });
             const c = this.collectionName;
             const t = this.typeName;
@@ -589,6 +635,7 @@ class TONQueriesModuleCollection implements TONQCollection {
             result,
             timeout: paramsTimeout,
             parentSpan,
+            waitingId,
         } = resolveParams<TONWaitForParams>(args, 'filter', () => ({
             filter: args[0],
             result: (args[1]: any),
@@ -601,6 +648,7 @@ class TONQueriesModuleCollection implements TONQCollection {
             result,
             timeout,
             parentSpan,
+            waitingId,
         });
         if (docs.length > 0) {
             return docs[0];

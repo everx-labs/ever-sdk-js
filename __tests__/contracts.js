@@ -296,8 +296,10 @@ test('External Signing on ABI v2', async () => {
 //     const { contracts, crypto } = tests.client;
 //     const keys = await crypto.ed25519Keypair();
 //
-//     const subscriptionAddress1 = '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-//     const subscriptionAddress2 = '0:fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
+//     const subscriptionAddress1 =
+//     '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+//     const subscriptionAddress2 =
+//     '0:fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
 //
 //     const walletPackage = WalletContractPackage[abiVersion];
 //     const deployed1 = await tests.deploy_with_giver({
@@ -620,7 +622,8 @@ test('Address conversion', async () => {
 //     // check actual fees
 //     expect(calcFees.fees.gasFee)
 //         .toEqual(transaction[0].compute.gas_fees);
-//     // expect(localResult.fees.storageFee).toEqual(transaction[0].storage.storage_fees_collected);
+//     // expect(localResult.fees.storageFee)
+//     //.toEqual(transaction[0].storage.storage_fees_collected);
 //     expect(calcFees.fees.outMsgsFwdFee)
 //         .toEqual(transaction[0].action.total_fwd_fees);
 //     // check all fees (with storage fee from real transaction) gives right result
@@ -825,7 +828,7 @@ test('Test expire retries', async () => {
         return result;
     };
     const runs = [];
-    for(let i = 0; i < 20; i += 1) {
+    for (let i = 0; i < 20; i += 1) {
         runs.push(run());
     }
     await Promise.all(runs);

@@ -516,8 +516,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractMessage,
         parentSpan?: (Span | SpanContext),
     ): Promise<string> {
-        const id = params.messageId ||
-            (await this.getBocHash({
+        const id = params.messageId
+            || (await this.getBocHash({
                 bocBase64: params.messageBodyBase64,
             })).hash;
         const idBase64 = Buffer.from(id, 'hex')
@@ -541,9 +541,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         const config = this.config;
         const messageId = await this.sendMessage(message, parentSpan);
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
-        let promises = [];
-        let transactionFound = false;
-        const waitingId = this.queries.generateWaitingId();
+        const promises = [];
+        const waitingIdMixing = await this.queries.generateWaitingIdMixing(parentSpan);
         let transaction: QTransaction = null;
         if (message.expire) {
             const expire = message.expire;
@@ -562,8 +561,8 @@ export default class TONContractsModule extends TONModule implements TONContract
                     },
                     result: 'in_msg_descr { transaction_id }',
                     timeout: processingTimeout,
-                    waitingId,
                     parentSpan,
+                    ...waitingIdMixing,
                 });
 
                 if (transaction) {
@@ -578,13 +577,13 @@ export default class TONContractsModule extends TONModule implements TONContract
                 }
 
                 // check that transactions collection is updated
-                return this.queries.transactions.waitFor({
+                await this.queries.transactions.waitFor({
                     filter: {
                         id: { eq: transaction_id },
                     },
                     result: 'id',
                     timeout: processingTimeout,
-                    waitingId,
+                    ...waitingIdMixing,
                     parentSpan,
                 });
             };
@@ -603,7 +602,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                         },
                         result: resultFields,
                         timeout: processingTimeout,
-                        waitingId,
+                        ...waitingIdMixing,
                         parentSpan,
                     });
                     resolve();
@@ -617,7 +616,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             await Promise.race(promises);
         } finally {
             if (promises.length > 1) {
-                this.queries.cancelWaiting(waitingId);
+                this.queries.cancelWaiting(waitingIdMixing.waitingId);
             }
         }
 
@@ -801,7 +800,9 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Address processing
 
-    async convertAddress(params: TONContractConvertAddressParams): Promise<TONContractConvertAddressResult> {
+    async convertAddress(
+        params: TONContractConvertAddressParams,
+    ): Promise<TONContractConvertAddressResult> {
         return this.requestCore('contracts.address.convert', params);
     }
 
@@ -820,7 +821,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
 
     async internalRunNative(params: TONContractRunParams): Promise<TONContractRunResult> {
-        return await this.requestCore('contracts.run', {
+        return this.requestCore('contracts.run', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
@@ -839,16 +840,15 @@ export default class TONContractsModule extends TONModule implements TONContract
         if (abi.header && abi.header.includes('expire') && !userHeader?.expire) {
             return {
                 ...userHeader,
-                expire: Math.floor((Date.now() + timeout) / 1000) + 1
+                expire: Math.floor((Date.now() + timeout) / 1000) + 1,
             };
-        } else {
-            return userHeader;
         }
+        return userHeader;
     }
 
     async retryCall(call: (index: number) => Promise<any>): Promise<any> {
         const retriesCount = this.config.messageRetriesCount();
-        for (let i = 0; i <= retriesCount; i++) {
+        for (let i = 0; i <= retriesCount; i += 1) {
             if (i > 0) {
                 this.config.log(`Retry #${i}`);
             }
