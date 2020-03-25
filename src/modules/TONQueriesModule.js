@@ -104,12 +104,19 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
 
     overrideWsUrl: ?string;
     graphqlClientCreation: ?MulticastPromise<ApolloClient>;
+    waitingIdPrefix: string;
+    waitingIdSuffix: number;
 
     constructor(context: TONModuleContext) {
         super(context);
         this.graphqlClient = null;
         this.overrideWsUrl = null;
         this.graphqlClientCreation = null;
+        this.waitingIdPrefix = '';
+        for (let i = 0; i < 20; i += 1) {
+            this.waitingIdPrefix = `${this.waitingIdPrefix}${Math.round(Math.random() * 256).toString(16)}`;
+        }
+        this.waitingIdSuffix = 1;
     }
 
     async setup() {
@@ -118,6 +125,19 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         this.messages = new TONQueriesModuleCollection(this, 'messages');
         this.blocks = new TONQueriesModuleCollection(this, 'blocks');
         this.accounts = new TONQueriesModuleCollection(this, 'accounts');
+    }
+
+    generateWaitingId(): string {
+        this.waitingIdSuffix += 1;
+        return `${this.waitingIdPrefix}${this.waitingIdSuffix.toString(16)}`;
+    }
+
+    cancelWaiting(waitingId: string) {
+        this.graphqlMutation(`mutation cancelWaiting($waitingId: String) {
+                cancelWaiting(waitingId: $waitingId)
+            }`, {
+            waitingId,
+        });
     }
 
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {

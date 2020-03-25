@@ -543,6 +543,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
         let promises = [];
         let transactionFound = false;
+        const waitingId = this.queries.generateWaitingId();
+        let transaction: QTransaction = null;
         if (message.expire) {
             const expire = message.expire;
             if (Date.now() > expire * 1000) {
@@ -560,11 +562,12 @@ export default class TONContractsModule extends TONModule implements TONContract
                     },
                     result: 'in_msg_descr { transaction_id }',
                     timeout: processingTimeout,
+                    waitingId,
                     parentSpan,
                 });
 
-                if (transactionFound) {
-                    return {};
+                if (transaction) {
+                    return;
                 }
 
                 const transaction_id = block.in_msg_descr
@@ -581,6 +584,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     },
                     result: 'id',
                     timeout: processingTimeout,
+                    waitingId,
                     parentSpan,
                 });
             };
@@ -592,26 +596,32 @@ export default class TONContractsModule extends TONModule implements TONContract
         promises.push(new Promise((resolve, reject) => {
             (async () => {
                 try {
-                    const tr = await this.queries.transactions.waitFor({
+                    transaction = await this.queries.transactions.waitFor({
                         filter: {
                             in_msg: { eq: messageId },
                             status: { eq: QTransactionProcessingStatus.finalized },
                         },
                         result: resultFields,
                         timeout: processingTimeout,
+                        waitingId,
                         parentSpan,
                     });
-                    transactionFound = true;
-                    resolve(tr);
+                    resolve();
                 } catch (error) {
                     reject(error);
                 }
             })();
         }));
 
-        let transaction: QTransaction = await Promise.race(promises);
+        try {
+            await Promise.race(promises);
+        } finally {
+            if (promises.length > 1) {
+                this.queries.cancelWaiting(waitingId);
+            }
+        }
 
-        if (!transactionFound) {
+        if (!transaction) {
             throw TONClientError.messageExpired();
         }
         const transactionNow = transaction.now || 0;
