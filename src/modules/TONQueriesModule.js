@@ -53,15 +53,63 @@ function resolveParams<T>(args: any[], requiredParamName: string, resolveArgs: (
     return (args.length === 1) && (requiredParamName in args[0]) ? args[0] : resolveArgs();
 }
 
+type MulticastListener<Value> = {
+    resolve: (value: Value) => void;
+    reject: (error: Error) => void;
+};
+
+class MulticastPromise<Value> {
+    listeners: MulticastListener<Value>[];
+    onComplete: ?(() => void);
+
+    constructor() {
+        this.listeners = [];
+        this.onComplete = null;
+    }
+
+    listen(): Promise<Value> {
+        const listener: MulticastListener<Value> = {
+            resolve: () => {
+            },
+            reject: () => {
+            },
+        };
+        this.listeners.push(listener);
+        return new Promise((resolve, reject) => {
+            listener.resolve = resolve;
+            listener.reject = reject;
+        });
+    }
+
+    resolve(value: Value) {
+        this.complete(listener => listener.resolve(value));
+    }
+
+    reject(error: Error) {
+        this.complete(listener => listener.reject(error));
+    }
+
+    complete(completeListener: (listener: MulticastListener<Value>) => void) {
+        const { listeners } = this;
+        this.listeners = [];
+        if (this.onComplete) {
+            this.onComplete();
+        }
+        listeners.forEach(listener => completeListener(listener));
+    }
+}
+
 export default class TONQueriesModule extends TONModule implements TONQueries {
     config: TONConfigModule;
 
     overrideWsUrl: ?string;
+    graphqlClientCreation: ?MulticastPromise<ApolloClient>;
 
     constructor(context: TONModuleContext) {
         super(context);
         this.graphqlClient = null;
         this.overrideWsUrl = null;
+        this.graphqlClientCreation = null;
     }
 
     async setup() {
@@ -242,9 +290,23 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         if (this.graphqlClient) {
             return this.graphqlClient;
         }
-        await this.context.trace('setup client', async (span) => {
-            return this.createGraphqlClient(span);
-        }, parentSpan);
+        if (this.graphqlClientCreation) {
+            await this.graphqlClientCreation.listen();
+        } else {
+            const creation = new MulticastPromise();
+            this.graphqlClientCreation = creation;
+            try {
+                await this.context.trace('setup client', (span) => {
+                    return this.createGraphqlClient(span);
+                }, parentSpan);
+                this.graphqlClientCreation = null;
+                creation.resolve(this.graphqlClient);
+            } catch (error) {
+                this.graphqlClientCreation = null;
+                creation.reject(error);
+                throw error;
+            }
+        }
         return this.graphqlClient;
     }
 

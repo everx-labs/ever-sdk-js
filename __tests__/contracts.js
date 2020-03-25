@@ -802,10 +802,9 @@ test('Test expire', async () => {
 });
 
 test('Test expire retries', async () => {
-    const { contracts, crypto } = tests.client;
     const helloPackage = HelloContractPackage[2];
 
-    const helloKeys = await crypto.ed25519Keypair();
+    const helloKeys = await tests.client.crypto.ed25519Keypair();
 
     const contractData = await tests.deploy_with_giver({
         package: helloPackage,
@@ -813,8 +812,9 @@ test('Test expire retries', async () => {
         keyPair: helloKeys,
     });
 
+    const client = await TONClient.create(tests.config);
     const run = async () => {
-        const result = await contracts.run({
+        const result = await client.contracts.run({
             address: contractData.address,
             abi: helloPackage.abi,
             functionName: 'touch',

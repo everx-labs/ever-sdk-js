@@ -1,6 +1,13 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.21.23 - Mar 24, 2020
+### Featured
+- Stability fixes 
+
+### Fixed
+- guard client initialization from several simultaneous starts. 
+
 ## 0.21.22 - Mar 23, 2020
 ### Featured
 - Ability to use web sockets for queries and mutations 
