@@ -47,6 +47,11 @@ export type Request = {
     body: string,
 }
 
+export type ServerInfo = {
+    version: number,
+    supportsWaitingId: boolean,
+};
+
 export const MAX_TIMEOUT = 2147483647;
 
 function resolveParams<T>(args: any[], requiredParamName: string, resolveArgs: () => T): T {
@@ -116,7 +121,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     graphqlClientCreation: ?MulticastPromise<ApolloClient>;
     waitingIdPrefix: string;
     waitingIdSuffix: number;
-    serverVersion: number;
+    serverInfo: ServerInfo;
 
     constructor(context: TONModuleContext) {
         super(context);
@@ -130,7 +135,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     .toString(16)}`;
         }
         this.waitingIdSuffix = 1;
-        this.serverVersion = versionToNumber('0.23.4');
+        const version = versionToNumber('0.23.4');
+        this.serverInfo = {
+            version,
+            supportsWaitingId: version > 23004,
+        };
     }
 
     async setup() {
@@ -543,10 +552,23 @@ class TONQueriesModuleCollection implements TONQCollection {
                 timeout,
                 waitingId,
             });
+            const isWaitingIdSupported =
+                (await this.module.getServerVersion(span))
             const c = this.collectionName;
             const t = this.typeName;
-            const ql = `query ${c}($filter: ${t}Filter, $orderBy: [QueryOrderBy], $limit: Int, $timeout: Float) {
-                ${c}(filter: $filter, orderBy: $orderBy, limit: $limit, timeout: $timeout) { ${result} }
+            const ql = `
+            query ${c}(
+                $filter: ${t}Filter,
+                $orderBy: [QueryOrderBy], 
+                $limit: Int, 
+                $timeout: Float
+             ) {
+                ${c}(
+                    filter: $filter, 
+                    orderBy: $orderBy, 
+                    limit: $limit, 
+                    timeout: $timeout
+                ) { ${result} }
             }`;
             const variables: { [string]: any } = {
                 filter,
