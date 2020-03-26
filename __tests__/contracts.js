@@ -25,6 +25,7 @@ import { TONClient, TONClientError } from '../src/TONClient';
 import type { TONContractLoadResult } from '../types';
 import { binariesVersion } from './_/binaries';
 import { ABIVersions, tests } from './_/init-tests';
+import { get_grams_from_giver } from './_/giver';
 
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -33,6 +34,8 @@ const SubscriptionContractPackage = tests.loadPackage('Subscription');
 const SetCodePackage = tests.loadPackage('Setcode');
 const SetCode2Package = tests.loadPackage('Setcode2');
 const EventsPackage = tests.loadPackage('Events');
+const GiverV2Package = tests.loadPackage('giverv2', [2]);
+const VagrantPackage = tests.loadPackage('Vagrant', [2]);
 
 
 beforeAll(tests.init);
@@ -872,4 +875,45 @@ test.each(ABIVersions)('Check deployed (ABI v%i)', async (abiVersion) => {
 
     expect(checked.alreadyDeployed)
         .toBeTruthy();
+});
+
+test('Deploy givers', async () => {
+    const { contracts, crypto } = tests.client;
+
+    let givers = [];
+
+    for (let i = 0; i < 5; i++) {
+        const helloKeys = await crypto.ed25519Keypair();
+
+        const helloPackage = GiverV2Package[2];
+        const deployed = await tests.deploy_with_giver({
+            package: helloPackage,
+            constructorParams: {},
+            keyPair: helloKeys,
+        });
+
+        await tests.get_grams_from_giver(deployed.address, 50_000_000_000_000);
+
+        givers.push({
+            address: deployed.address,
+            keys: helloKeys,
+        });
+    }
+
+    console.log(JSON.stringify(givers, null, 2));
+});
+
+test('Deploy vagrant', async () => {
+    const helloKeys = {
+        "public": "fc98ff7ccd7ecf541f5fe55ddab8507b96e09a040fba547b8ff1d0cc5ef12049",
+        "secret": "93df8f900dd123aa876a08b25af7007cf63bdcb45035eac223266adf2f22d08d"
+    };
+    const helloPackage = VagrantPackage[2];
+    const deployed = await tests.deploy_with_giver({
+        package: helloPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    });
+
+    await tests.get_grams_from_giver(deployed.address, 200_000_000_000_000);
 });

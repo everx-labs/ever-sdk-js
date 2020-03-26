@@ -48,10 +48,11 @@ export type PackageByABIVersion = {
 
 export const ABIVersions = [1, 2];
 
-export function loadPackage(name: string): PackageByABIVersion {
+export function loadPackage(name: string, spec_versions?: [number]): PackageByABIVersion {
     const packages: PackageByABIVersion = {};
+    const versions = spec_versions || ABIVersions;
     const base = path.resolve(process.cwd(), '__tests__', 'contracts');
-    ABIVersions.forEach(version => {
+    versions.forEach(version => {
         const abi = path.resolve(base, `abi_v${version}`, `${name}.abi.json`);
         const tvc = path.resolve(base, `abi_v${version}`, `${name}.tvc`);
         packages[version] = {
@@ -106,7 +107,7 @@ async function done() {
     await new Promise(resolve => setTimeout(resolve, 1000));
     await tests.client.close();
 }
-jest.setTimeout(40000);
+//jest.setTimeout(40000);
 function createJaegerTracer(endpoint: string): ?Tracer {
     if (!endpoint) {
         return null;
@@ -145,7 +146,7 @@ export const tests: {
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
     nodeSe: boolean,
-    loadPackage(name: string): PackageByABIVersion,
+    loadPackage(name: string, spec_versions?: [number]): PackageByABIVersion,
 } = {
     config: {
         defaultWorkchain: 0,
