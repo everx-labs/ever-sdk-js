@@ -734,6 +734,7 @@ export type TONQueryParams = {
     orderBy?: OrderBy[],
     limit?: number,
     timeout?: number,
+    operationId?: string,
     parentSpan?: (Span | SpanContext),
 }
 
@@ -741,6 +742,7 @@ export type TONWaitForParams = {
     filter: any,
     result: string,
     timeout?: number,
+    operationId?: string,
     parentSpan?: (Span | SpanContext),
 }
 
