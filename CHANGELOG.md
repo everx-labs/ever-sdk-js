@@ -1,6 +1,19 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.21.24 - Mar 27, 2020
+### Featured
+- Stability fixes
+- Operation ID in queries 
+
+### New
+- `operationId` parameter to waitFor and query
+
+### Fixed
+- message expiration check was after sending request to node
+- operationId is used to reduce inactive server listeners 
+
+
 ## 0.21.23 - Mar 24, 2020
 ### Featured
 - Stability fixes 

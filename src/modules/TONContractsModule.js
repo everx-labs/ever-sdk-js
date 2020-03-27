@@ -538,17 +538,18 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<QTransaction> {
+        const expire = message.expire;
+        if (expire && (Date.now() > expire * 1000)) {
+            throw TONClientError.sendNodeRequestFailed('Message already expired');
+        }
         const config = this.config;
         const messageId = await this.sendMessage(message, parentSpan);
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
         const promises = [];
-        const waitingIdMixing = await this.queries.generateWaitingIdMixing(parentSpan);
-        let transaction: QTransaction = null;
-        if (message.expire) {
-            const expire = message.expire;
-            if (Date.now() > expire * 1000) {
-                throw TONClientError.sendNodeRequestFailed('Message already expired');
-            }
+        const serverInfo = await this.queries.getServerInfo(parentSpan);
+        const operationId = serverInfo.supportsOperationId ? this.queries.generateOperationId() : undefined;
+        let transaction: ?QTransaction = null;
+        if (expire) {
             // calculate timeout according to `expire` value (in seconds)
             // add processing timeout as master block validation time
             processingTimeout = expire * 1000 - Date.now() + processingTimeout;
@@ -562,7 +563,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     result: 'in_msg_descr { transaction_id }',
                     timeout: processingTimeout,
                     parentSpan,
-                    ...waitingIdMixing,
+                    operationId,
                 });
 
                 if (transaction) {
@@ -583,8 +584,8 @@ export default class TONContractsModule extends TONModule implements TONContract
                     },
                     result: 'id',
                     timeout: processingTimeout,
-                    ...waitingIdMixing,
                     parentSpan,
+                    operationId,
                 });
             };
 
@@ -602,7 +603,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                         },
                         result: resultFields,
                         timeout: processingTimeout,
-                        ...waitingIdMixing,
+                        operationId: operationId,
                         parentSpan,
                     });
                     resolve();
@@ -615,8 +616,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         try {
             await Promise.race(promises);
         } finally {
-            if (promises.length > 1) {
-                this.queries.cancelWaiting(waitingIdMixing.waitingId);
+            if (promises.length > 1 && operationId) {
+                await this.queries.finishOperations([operationId]);
             }
         }
 
