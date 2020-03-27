@@ -516,8 +516,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractMessage,
         parentSpan?: (Span | SpanContext),
     ): Promise<string> {
-        const id = params.messageId ||
-            (await this.getBocHash({
+        const id = params.messageId
+            || (await this.getBocHash({
                 bocBase64: params.messageBodyBase64,
             })).hash;
         const idBase64 = Buffer.from(id, 'hex')
@@ -538,16 +538,18 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<QTransaction> {
+        const expire = message.expire;
+        if (expire && (Date.now() > expire * 1000)) {
+            throw TONClientError.sendNodeRequestFailed('Message already expired');
+        }
         const config = this.config;
         const messageId = await this.sendMessage(message, parentSpan);
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
-        let promises = [];
-        let transactionFound = false;
-        if (message.expire) {
-            const expire = message.expire;
-            if (Date.now() > expire * 1000) {
-                throw TONClientError.sendNodeRequestFailed('Message already expired');
-            }
+        const promises = [];
+        const serverInfo = await this.queries.getServerInfo(parentSpan);
+        const operationId = serverInfo.supportsOperationId ? this.queries.generateOperationId() : undefined;
+        let transaction: ?QTransaction = null;
+        if (expire) {
             // calculate timeout according to `expire` value (in seconds)
             // add processing timeout as master block validation time
             processingTimeout = expire * 1000 - Date.now() + processingTimeout;
@@ -561,10 +563,11 @@ export default class TONContractsModule extends TONModule implements TONContract
                     result: 'in_msg_descr { transaction_id }',
                     timeout: processingTimeout,
                     parentSpan,
+                    operationId,
                 });
 
-                if (transactionFound) {
-                    return {};
+                if (transaction) {
+                    return;
                 }
 
                 const transaction_id = block.in_msg_descr
@@ -575,13 +578,14 @@ export default class TONContractsModule extends TONModule implements TONContract
                 }
 
                 // check that transactions collection is updated
-                return this.queries.transactions.waitFor({
+                await this.queries.transactions.waitFor({
                     filter: {
                         id: { eq: transaction_id },
                     },
                     result: 'id',
                     timeout: processingTimeout,
                     parentSpan,
+                    operationId,
                 });
             };
 
@@ -592,26 +596,32 @@ export default class TONContractsModule extends TONModule implements TONContract
         promises.push(new Promise((resolve, reject) => {
             (async () => {
                 try {
-                    const tr = await this.queries.transactions.waitFor({
+                    transaction = await this.queries.transactions.waitFor({
                         filter: {
                             in_msg: { eq: messageId },
                             status: { eq: QTransactionProcessingStatus.finalized },
                         },
                         result: resultFields,
                         timeout: processingTimeout,
+                        operationId: operationId,
                         parentSpan,
                     });
-                    transactionFound = true;
-                    resolve(tr);
+                    resolve();
                 } catch (error) {
                     reject(error);
                 }
             })();
         }));
 
-        let transaction: QTransaction = await Promise.race(promises);
+        try {
+            await Promise.race(promises);
+        } finally {
+            if (promises.length > 1 && operationId) {
+                await this.queries.finishOperations([operationId]);
+            }
+        }
 
-        if (!transactionFound) {
+        if (!transaction) {
             throw TONClientError.messageExpired();
         }
         const transactionNow = transaction.now || 0;
@@ -791,7 +801,9 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Address processing
 
-    async convertAddress(params: TONContractConvertAddressParams): Promise<TONContractConvertAddressResult> {
+    async convertAddress(
+        params: TONContractConvertAddressParams,
+    ): Promise<TONContractConvertAddressResult> {
         return this.requestCore('contracts.address.convert', params);
     }
 
@@ -810,7 +822,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
 
     async internalRunNative(params: TONContractRunParams): Promise<TONContractRunResult> {
-        return await this.requestCore('contracts.run', {
+        return this.requestCore('contracts.run', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
@@ -829,16 +841,15 @@ export default class TONContractsModule extends TONModule implements TONContract
         if (abi.header && abi.header.includes('expire') && !userHeader?.expire) {
             return {
                 ...userHeader,
-                expire: Math.floor((Date.now() + timeout) / 1000) + 1
+                expire: Math.floor((Date.now() + timeout) / 1000) + 1,
             };
-        } else {
-            return userHeader;
         }
+        return userHeader;
     }
 
     async retryCall(call: (index: number) => Promise<any>): Promise<any> {
         const retriesCount = this.config.messageRetriesCount();
-        for (let i = 0; i <= retriesCount; i++) {
+        for (let i = 0; i <= retriesCount; i += 1) {
             if (i > 0) {
                 this.config.log(`Retry #${i}`);
             }

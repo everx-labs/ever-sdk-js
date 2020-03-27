@@ -52,7 +52,9 @@ test.skip('Transaction List', async () => {
         result: 'id now status',
         limit: 1,
     });
-    // expect(transaction[0].id).toEqual('e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465');
+    // expect(transaction[0].id).toEqual(
+    // 'e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465'
+    // );
 });
 
 test('All Accounts', async () => {
@@ -225,7 +227,8 @@ test('Check shard_hashes greater then 0', async () => {
 // Skipped explicitly as disabled
 test.skip('Subscribe for accounts', async () => {
     // const { queries } = tests.client;
-    // const subscriptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => queries.accounts.subscribe({}, 'id code data', (e, doc) => {
+    // const subscriptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    //  .map(i => queries.accounts.subscribe({}, 'id code data', (e, doc) => {
     //     console.log(i, doc.id);
     // }));
     // await new Promise(resolve => setTimeout(resolve, 1000_000));
@@ -243,4 +246,3 @@ test.skip('Long time subscription', async () => {
     await new Promise(resolve => setTimeout(resolve, 1_000_000));
     subscription.unsubscribe();
 });
-
