@@ -152,6 +152,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         this.messages = new TONQueriesModuleCollection(this, 'messages');
         this.blocks = new TONQueriesModuleCollection(this, 'blocks');
         this.accounts = new TONQueriesModuleCollection(this, 'accounts');
+        this.blocks_signatures = new TONQueriesModuleCollection(this, 'blocks_signatures');
     }
 
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {
@@ -489,6 +490,8 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     blocks: TONQCollection;
 
     accounts: TONQCollection;
+
+    blocks_signatures: TONQCollection;
 
     graphqlClient: ApolloClient;
 }
