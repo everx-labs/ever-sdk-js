@@ -655,19 +655,27 @@ test.each(ABIVersions)('test send boc (ABI v%i)', async (abiVersion) => {
     const keys = await crypto.ed25519Keypair();
 
     const walletPackage = WalletContractPackage[abiVersion];
+    const address = (await contracts.createDeployMessage({
+        package: walletPackage,
+        constructorParams: {},
+        keyPair: keys,
+    })).address;
+
+    await tests.get_grams_from_giver(address);
+
+    // create new message - to set new expire
     const message = await contracts.createDeployMessage({
         package: walletPackage,
         constructorParams: {},
         keyPair: keys,
     });
 
-    await tests.get_grams_from_giver(message.address);
-
     // send message without id - it should be computed inside
     await contracts.processDeployMessage({
         address: message.address,
         message: {
             messageBodyBase64: message.message.messageBodyBase64,
+            expire: message.message.expire
         },
     });
 });
@@ -691,12 +699,10 @@ test.each(ABIVersions)('test deploy lags (ABI v%i)', async (abiVersion) => {
 
     config.log('After giver');
 
-    // send message without id - it should be computed inside
-    await contracts.processDeployMessage({
-        address: message.address,
-        message: {
-            messageBodyBase64: message.message.messageBodyBase64,
-        },
+    await contracts.deploy({
+        package: walletPackage,
+        constructorParams: {},
+        keyPair: keys,
     });
 
     config.log('After deploy');

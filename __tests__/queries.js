@@ -112,6 +112,14 @@ test.each(ABIVersions)('Subscribe for transactions with addresses (ABI v%i)', as
     const walletPackage = WalletContractPackage[abiVersion];
     const walletKeys = await crypto.ed25519Keypair();
 
+    const deployData = await contracts.getDeployData({
+        ...walletPackage,
+        publicKeyHex: walletKeys.public,
+    });
+
+    console.log('>>>', 'Paying...');
+    await get_grams_from_giver(deployData.address);
+
     const message = await contracts.createDeployMessage({
         package: walletPackage,
         constructorParams: {},
@@ -122,7 +130,7 @@ test.each(ABIVersions)('Subscribe for transactions with addresses (ABI v%i)', as
     const transactions = [];
     const subscription = (await queries.transactions.subscribe({
         filter: {
-            in_msg: { eq: message.message.messageId },
+            account_addr: { eq: message.address },
         },
         result: 'id',
         onDocEvent(e, d) {
@@ -130,9 +138,6 @@ test.each(ABIVersions)('Subscribe for transactions with addresses (ABI v%i)', as
             transactions.push(d);
         },
     }));
-
-    console.log('>>>', 'Paying...');
-    await get_grams_from_giver(message.address);
 
     console.log('>>>', 'Deploying...');
     await contracts.processDeployMessage(message);
