@@ -57,6 +57,16 @@ test.skip('Transaction List', async () => {
     // );
 });
 
+test('Block signatures', async () => {
+    const queries = tests.client.queries;
+    const signatures = await queries.blocks_signatures.query({
+        filter: {},
+        result: 'id',
+        limit: 1,
+    });
+    expect(signatures.length).toBeGreaterThan(0);
+});
+
 test('All Accounts', async () => {
     const queries = tests.client.queries;
     const docs = await queries.accounts.query({

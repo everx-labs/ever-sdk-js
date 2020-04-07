@@ -148,11 +148,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
 
     async setup() {
         this.config = this.context.getModule(TONConfigModule);
-        this.transactions = new TONQueriesModuleCollection(this, 'transactions');
-        this.messages = new TONQueriesModuleCollection(this, 'messages');
-        this.blocks = new TONQueriesModuleCollection(this, 'blocks');
-        this.accounts = new TONQueriesModuleCollection(this, 'accounts');
-        this.blocks_signatures = new TONQueriesModuleCollection(this, 'blocks_signatures');
+        this.transactions = new TONQueriesModuleCollection(this, 'transactions', 'Transaction');
+        this.messages = new TONQueriesModuleCollection(this, 'messages', 'Message');
+        this.blocks = new TONQueriesModuleCollection(this, 'blocks', 'Block');
+        this.accounts = new TONQueriesModuleCollection(this, 'accounts', 'Account');
+        this.blocks_signatures = new TONQueriesModuleCollection(this, 'blocks_signatures', 'BlockSignatures');
     }
 
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {
@@ -504,10 +504,14 @@ class TONQueriesModuleCollection implements TONQCollection {
 
     typeName: string;
 
-    constructor(module: TONQueriesModule, collectionName: string) {
+    constructor(
+        module: TONQueriesModule,
+        collectionName: string,
+        typeName: string,
+    ) {
         this.module = module;
         this.collectionName = collectionName;
-        this.typeName = `${collectionName[0].toUpperCase()}${collectionName.slice(1, -1)}`;
+        this.typeName = typeName;
     }
 
     async query(
@@ -544,9 +548,10 @@ class TONQueriesModuleCollection implements TONQCollection {
                 orderBy,
                 limit,
                 timeout,
-                operationId: operationId,
+                operationId,
             });
-            const useOperationId = operationId && (await this.module.getServerInfo(span)).supportsOperationId;
+            const useOperationId = operationId
+                && (await this.module.getServerInfo(span)).supportsOperationId;
             const c = this.collectionName;
             const t = this.typeName;
             const ql = `
@@ -668,7 +673,7 @@ class TONQueriesModuleCollection implements TONQCollection {
             result,
             timeout,
             parentSpan,
-            operationId: operationId,
+            operationId,
         });
         if (docs.length > 0) {
             return docs[0];

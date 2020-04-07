@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.21.26 - Apr 7, 2020
+### Fixed
+- `blocks_signatures` collection queries failed
+
 ## 0.21.25 - Apr 4, 2020
 ### New
 - `blocks_signatures` queries collection
