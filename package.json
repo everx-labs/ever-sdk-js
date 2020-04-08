@@ -12,7 +12,6 @@
 		"test-cinet": "jest --forceExit --detectOpenHandles --testTimeout=300000 --bail --runInBand --verbose",
 		"npm install": "npm install"
 	},
-	"pre-commit": [],
 	"keywords": [
 		"TON",
 		"Javascript",
@@ -72,7 +71,6 @@
 		"jaeger-client": "3.17.2",
 		"jest": "25.1.0",
 		"node-fetch": "2.6.0",
-		"pre-commit": "1.2.2",
 		"websocket": "1.0.31"
 	},
 	"dependencies": {
