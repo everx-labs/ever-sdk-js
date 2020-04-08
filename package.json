@@ -7,7 +7,8 @@
 		"babel": "babel src --out-dir dist --source-maps inline",
 		"flow": "flow",
 		"test": "jest --forceExit --detectOpenHandles --testTimeout=200000 --coverage --verbose",
-		"test-ci": "jest --forceExit --detectOpenHandles --testTimeout=120000 -b -i --verbose",
+		"test-ci": "jest --forceExit --detectOpenHandles --testTimeout=120000 --bail --runInBand --verbose",
+		"test-cinet": "jest --forceExit --detectOpenHandles --testTimeout=300000 --bail --runInBand --verbose",
 		"npm install": "npm install"
 	},
 	"pre-commit": [],
