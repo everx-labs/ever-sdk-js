@@ -1,7 +1,7 @@
 {
 	"name": "ton-client-js",
 	"version": "0.21.26",
-	"binaries_version" : "0.21.10",
+	"binaries_version": "0.21.10",
 	"description": "TON Client for Java Script",
 	"main": "index.js",
 	"scripts": {
@@ -28,7 +28,7 @@
 	"homepage": "https://ton.dev/node-se",
 	"husky": {
 		"hooks": {
-		  "pre-push": "npm run babel"
+			"pre-commit": "npm run babel && git add dist"
 		}
 	},
 	"devDependencies": {
