@@ -64,7 +64,7 @@ test('Block signatures', async () => {
         result: 'id',
         limit: 1,
     });
-    expect(signatures.length).toBeGreaterThan(0);
+    expect(signatures.length).toBeGreaterThanOrEqual(0);
 });
 
 test('All Accounts', async () => {
