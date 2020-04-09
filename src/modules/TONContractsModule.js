@@ -547,7 +547,9 @@ export default class TONContractsModule extends TONModule implements TONContract
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
         const promises = [];
         const serverInfo = await this.queries.getServerInfo(parentSpan);
-        const operationId = serverInfo.supportsOperationId ? this.queries.generateOperationId() : undefined;
+        const operationId = serverInfo.supportsOperationId
+            ? this.queries.generateOperationId()
+            : undefined;
         let transaction: ?QTransaction = null;
         if (expire) {
             // calculate timeout according to `expire` value (in seconds)
@@ -603,7 +605,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                         },
                         result: resultFields,
                         timeout: processingTimeout,
-                        operationId: operationId,
+                        operationId,
                         parentSpan,
                     });
                     resolve();
