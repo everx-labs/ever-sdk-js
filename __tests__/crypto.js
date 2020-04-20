@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import TONCryptoModule, { TONMnemonicDictionary, TONOutputEncoding } from "../src/modules/TONCryptoModule";
-import { tests } from "./_/init-tests";
+import TONCryptoModule, {TONMnemonicDictionary, TONOutputEncoding} from "../src/modules/TONCryptoModule";
+import {tests} from "./_/init-tests";
 
 beforeAll(tests.init);
 afterAll(tests.done);
-
+const TONMnemonicWordCounts = [12, 15, 18, 21, 24];
 test('crypto', async () => {
     const crypto: TONCryptoModule = tests.client.crypto;
 
@@ -37,7 +37,7 @@ test('crypto', async () => {
     const result3 = await crypto.randomGenerateBytes(32, TONOutputEncoding.Hex);
     expect(result3.length).toEqual(64);
 
-    const resultHexUppercase= await crypto.randomGenerateBytes(32, TONOutputEncoding.HexUppercase);
+    const resultHexUppercase = await crypto.randomGenerateBytes(32, TONOutputEncoding.HexUppercase);
     expect(resultHexUppercase.length).toEqual(64);
 
     const result4 = await crypto.randomGenerateBytes(32, TONOutputEncoding.Base64);
@@ -80,6 +80,7 @@ test('crypto', async () => {
     const result7 = await crypto.naclBoxKeypair();
     expect(result7.public.length).toEqual(64);
     expect(result7.secret.length).toEqual(64);
+    expect(result7.public).not.toEqual(result7.secret);
 
     const result8 = await crypto.naclBoxKeypairFromSecretKey('e207b5966fb2c5be1b71ed94ea813202706ab84253bdf4dc55232f82a1caf0d4');
     expect(result8.public).toEqual('a53b003d3ffc1e159355cb37332d67fc235a7feb6381e36c803274074dc3933a');
@@ -165,25 +166,40 @@ test('crypto', async () => {
     const mnemonicWords = await crypto.mnemonicWords();
     expect(mnemonicWords.split(' ').length).toEqual(2048);
 
-    expect((await crypto.mnemonicFromRandom({
-        dictionary: TONMnemonicDictionary.ENGLISH,
-        wordCount: 12,
-    })).split(' ').length).toEqual(12);
-
+    for (const dictionary in TONMnemonicDictionary) {
+        for (let i = 0; i < TONMnemonicWordCounts.length; i++) {
+            expect((await crypto.mnemonicFromRandom({
+                dictionary: TONMnemonicDictionary[dictionary],
+                wordCount: TONMnemonicWordCounts[i],
+            })).split(' ').length).toEqual(TONMnemonicWordCounts[i]);
+        }
+    }
     expect(await crypto.mnemonicFromEntropy({
         entropy: { hex: '00112233445566778899AABBCCDDEEFF' },
         dictionary: TONMnemonicDictionary.ENGLISH,
         wordCount: 12,
     })).toEqual('abandon math mimic master filter design carbon crystal rookie group knife young');
 
-    expect(await crypto.mnemonicIsValid({
+    expect(await crypto.mnemonicFromEntropy({
+        entropy: { hex: '0011' },
         dictionary: TONMnemonicDictionary.ENGLISH,
         wordCount: 12,
-        phrase: await crypto.mnemonicFromRandom({
-            dictionary: TONMnemonicDictionary.ENGLISH,
-            wordCount: 12,
-        }),
-    })).toBeTruthy();
+    })).toEqual('abandon math mimic master filter design carbon crystal rookie group knife young');
+
+    for (const dictionary in TONMnemonicDictionary) {
+        for (let i = 0; i < TONMnemonicWordCounts.length; i++) {
+            expect(await crypto.mnemonicIsValid({
+                dictionary: TONMnemonicDictionary[dictionary],
+                wordCount: TONMnemonicWordCounts[i],
+                phrase: await crypto.mnemonicFromRandom({
+                    dictionary: TONMnemonicDictionary[dictionary],
+                    wordCount: TONMnemonicWordCounts[i],
+                }),
+            })).toBeTruthy();
+        }
+
+    }
+
     expect(await crypto.mnemonicIsValid({ phrase: 'one two' })).toBeFalsy();
 
     const keys = await crypto.mnemonicDeriveSignKeys({
