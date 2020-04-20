@@ -738,6 +738,28 @@ export type TONQueryParams = {
     parentSpan?: (Span | SpanContext),
 }
 
+type TONQueryAggregateFnType =
+    'COUNT'
+    | 'MIN'
+    | 'MAX'
+    | 'SUM'
+    | 'AVERAGE'
+    | 'STDDEV_POPULATION'
+    | 'STDDEV_SAMPLE'
+    | 'VARIANCE_POPULATION'
+    | 'VARIANCE_SAMPLE';
+
+export type TONQueryAggregateField = {
+    field: string,
+    fn: TONQueryAggregateFnType,
+}
+
+export type TONQueryAggregateParams = {
+    filter: any,
+    fields: TONQueryAggregateField[],
+    parentSpan?: (Span | SpanContext),
+}
+
 export type TONWaitForParams = {
     filter: any,
     result: string,
@@ -754,6 +776,8 @@ export type TONSubscribeParams = {
 }
 
 export interface TONQCollection {
+    aggregate(params: TONQueryAggregateParams): Promise<string[]>;
+
     query(params: TONQueryParams): Promise<any>;
 
     query(
@@ -788,6 +812,7 @@ export interface TONQueries {
     transactions: TONQCollection;
     messages: TONQCollection;
     blocks: TONQCollection;
+    blocks_signatures: TONQCollection;
     accounts: TONQCollection;
 
     getAccountsCount(

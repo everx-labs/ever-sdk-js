@@ -34,7 +34,7 @@ import type {
     Subscription,
     TONQueryParams,
     TONSubscribeParams,
-    TONWaitForParams,
+    TONWaitForParams, TONQueryAggregateParams,
 } from '../../types';
 import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
@@ -50,6 +50,7 @@ export type Request = {
 export type ServerInfo = {
     version: number,
     supportsOperationId: boolean,
+    supportsAggregations: boolean,
 };
 
 export const MAX_TIMEOUT = 2147483647;
@@ -119,6 +120,7 @@ function resolveServerInfo(versionString: string | null | typeof undefined): Ser
     return {
         version,
         supportsOperationId: version > 24004,
+        supportsAggregations: version >= 25000,
     };
 }
 
@@ -583,6 +585,37 @@ class TONQueriesModuleCollection implements TONQCollection {
             }
             return (await this.module.graphqlQuery(ql, variables, span)).data[c];
         }, parentSpan);
+    }
+
+    async aggregate(
+        params: TONQueryAggregateParams
+    ): Promise<string[]> {
+        return this.module.context.trace(`${this.collectionName}.aggregate`, async (span) => {
+            span.setTag('params', {
+                filter: params.filter,
+                fields: params.fields,
+            });
+            if (!(await this.module.getServerInfo(span)).supportsAggregations) {
+                throw TONClientError.serverDoesntSupportAggregations();
+            }
+            const t = this.typeName;
+            const q = this.typeName.endsWith('s') ? `aggregate${t}` : `aggregate${t}s`;
+            const ql = `
+            query ${q}(
+                $filter: ${t}Filter,
+                $fields: [FieldAggregation] 
+             ) {
+                ${q}(
+                    filter: $filter, 
+                    fields: $fields 
+                )
+            }`;
+            const variables: { [string]: any } = {
+                filter: params.filter,
+                fields: params.fields,
+            };
+            return (await this.module.graphqlQuery(ql, variables, span)).data[q];
+        }, params.parentSpan);
     }
 
     subscribe(
