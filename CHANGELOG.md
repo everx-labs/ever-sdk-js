@@ -1,6 +1,13 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.22.0 - Apr 20, 2020
+### Featured
+- Aggregation queries
+
+### New
+- `aggregate` method of `TONQueriesModuleCollection` 
+ 
 ## 0.21.26 - Apr 7, 2020
 ### Fixed
 - `blocks_signatures` collection queries failed
@@ -8,12 +15,6 @@ All notable changes to this project will be documented in this file.
 ## 0.21.25 - Apr 4, 2020
 ### New
 - `blocks_signatures` queries collection
-
-## 0.22.0 - Apr 20, 2020
-### Featured
-### New
-
-### Fixed
 
 
 ## 0.21.24 - Mar 27, 2020
