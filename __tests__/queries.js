@@ -203,6 +203,23 @@ test('Transactions with addresses', async () => {
 });
 
 
+test('Aggregations', async () => {
+    const testCollection = async (c, n) => {
+        const tr = (await c.aggregate({
+            filter: {},
+            fields: [{ field: 'id', fn: "COUNT" }],
+        }))[0];
+        expect(Number(tr)).toBeGreaterThanOrEqual(n);
+    }
+    const queries = tests.client.queries;
+    await testCollection(queries.accounts, 1);
+    await testCollection(queries.blocks, 1);
+    await testCollection(queries.transactions, 1);
+    await testCollection(queries.messages, 1);
+    await testCollection(queries.blocks_signatures, 0);
+});
+
+
 // Skipped explicitly as disabled
 test.skip('Subscribe for failed server', async () => {
     // console.log('>>>', 'Subscribed');
