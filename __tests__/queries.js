@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
-import { get_grams_from_giver } from './_/giver';
-import { ABIVersions, tests } from './_/init-tests';
+import {QTransactionProcessingStatus} from '../src/modules/TONContractsModule';
+import {get_grams_from_giver} from './_/giver';
+import {ABIVersions, tests} from './_/init-tests';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 
@@ -219,6 +219,63 @@ test('Aggregations', async () => {
     await testCollection(queries.blocks_signatures, 0);
 });
 
+test('Should do all aggragation function with Block numerous fields', async () => {
+    const testCollection = async (c, field) => {
+        const tr = (await c.aggregate({
+            filter: {},
+            fields: [
+                { field, fn: 'MIN' },
+                { field, fn: 'MAX' },
+                { field, fn: 'SUM' },
+                { field, fn: 'AVERAGE' },
+                { field, fn: 'STDDEV_POPULATION' },
+                { field, fn: 'STDDEV_SAMPLE' },
+                { field, fn: 'VARIANCE_POPULATION' },
+                { field, fn: 'VARIANCE_SAMPLE' }],
+        }));
+        expect(Number(tr[0])).toBeGreaterThanOrEqual(0);
+        expect(Number(tr[1])).toBeGreaterThanOrEqual(0);
+        expect(Number(tr[2])).toBeGreaterThanOrEqual(0);
+        expect(Number(tr[3])).toBeGreaterThanOrEqual(0);
+        expect(Number(tr[4])).toBeGreaterThanOrEqual(0);
+        expect(Number(tr[5])).toBeGreaterThanOrEqual(0);
+        expect(Number(tr[6])).toBeGreaterThanOrEqual(0);
+        expect(Number(tr[7])).toBeGreaterThanOrEqual(0);
+    };
+    const queries = tests.client.queries;
+
+    await testCollection(queries.accounts, 'workchain_id');
+    //await testCollection(queries.accounts, 'acc_type');
+    await testCollection(queries.accounts, 'last_paid');
+    await testCollection(queries.accounts, 'split_depth');
+    //await testCollection(queries.blocks, 'status');
+    await testCollection(queries.blocks, 'global_id');
+    await testCollection(queries.blocks, 'seq_no');
+    await testCollection(queries.blocks, 'gen_utime');
+    await testCollection(queries.blocks, 'gen_catchain_seqno');
+    await testCollection(queries.blocks, 'flags');
+    await testCollection(queries.blocks, 'master_ref.seq_no');
+    await testCollection(queries.blocks, 'prev_ref.seq_no');
+    await testCollection(queries.blocks, 'prev_alt_ref.seq_no');
+    await testCollection(queries.blocks, 'prev_vert_ref.seq_no');
+    await testCollection(queries.blocks, 'prev_vert_alt_ref.seq_no');
+    await testCollection(queries.blocks, 'version');
+    await testCollection(queries.blocks, 'gen_validator_list_hash_short');
+    await testCollection(queries.blocks, 'vert_seq_no');
+    await testCollection(queries.blocks, 'workchain_id');//int
+    await testCollection(queries.blocks, 'min_ref_mc_seqno');
+    await testCollection(queries.blocks, 'prev_key_block_seqno');//float
+    await testCollection(queries.blocks, 'gen_software_version');
+    await testCollection(queries.blocks, 'value_flow.to_next_blk_other.currency');
+    await testCollection(queries.blocks, 'value_flow.exported_other.currency');
+    await testCollection(queries.blocks, 'value_flow.fees_collected_other.currency');
+    await testCollection(queries.blocks, 'value_flow.created_other.currency');
+    await testCollection(queries.blocks, 'value_flow.imported_other.currency');
+    await testCollection(queries.blocks, 'value_flow.from_prev_blk_other.currency');
+    await testCollection(queries.blocks, 'value_flow.minted_other.currency');
+    await testCollection(queries.blocks, 'value_flow.fees_imported_other.currency');
+
+});
 
 // Skipped explicitly as disabled
 test.skip('Subscribe for failed server', async () => {
