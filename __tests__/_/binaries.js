@@ -1,20 +1,21 @@
+import {version, binaries_version} from '../../package.json';
+
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const http = require('http');
 const zlib = require('zlib');
 
+
 export const p = os.platform();
-const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', '..', 'package.json')).toString('utf8'));
-const v: string[] = pkg.version.split('.');
-export const binariesVersion = `${v[0]}.${v[1]}.${~~(Number.parseInt(v[2]) / 100) * 100}`;
+const v: string[] = version.split('.');
+export const binariesVersion = binaries_version || `${v[0]}.${v[1]}.${~~(Number.parseInt(v[2]) / 100) * 100}`;
 export const bv = binariesVersion.split('.').join('_');
 const binariesHost = 'sdkbinaries.tonlabs.io';
 export const binariesPath = path.resolve(__dirname, '..');
 
 function downloadAndGunzip(dest, url) {
     return new Promise((resolve, reject) => {
-
         const request = http.get(url, response => {
             if (response.statusCode !== 200) {
                 reject({
