@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {QTransactionProcessingStatus} from '../src/modules/TONContractsModule';
-import {get_grams_from_giver} from './_/giver';
-import {ABIVersions, tests} from './_/init-tests';
+import { QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
+import { get_grams_from_giver } from './_/giver';
+import { ABIVersions, tests } from './_/init-tests';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 
@@ -207,10 +207,10 @@ test('Aggregations', async () => {
     const testCollection = async (c, n) => {
         const tr = (await c.aggregate({
             filter: {},
-            fields: [{ field: 'id', fn: "COUNT" }],
+            fields: [{ field: 'id', fn: 'COUNT' }],
         }))[0];
         expect(Number(tr)).toBeGreaterThanOrEqual(n);
-    }
+    };
     const queries = tests.client.queries;
     await testCollection(queries.accounts, 1);
     await testCollection(queries.blocks, 1);
@@ -219,7 +219,7 @@ test('Aggregations', async () => {
     await testCollection(queries.blocks_signatures, 0);
 });
 
-test('Should do all aggragation function with Block numerous fields', async () => {
+test('Should correctly perform aggregation queries for Block numeric fields', async () => {
     const testCollection = async (c, field) => {
         const tr = (await c.aggregate({
             filter: {},
@@ -233,6 +233,7 @@ test('Should do all aggragation function with Block numerous fields', async () =
                 { field, fn: 'VARIANCE_POPULATION' },
                 { field, fn: 'VARIANCE_SAMPLE' }],
         }));
+        console.log(field);
         expect(Number(tr[0])).toBeGreaterThanOrEqual(0);
         expect(Number(tr[1])).toBeGreaterThanOrEqual(0);
         expect(Number(tr[2])).toBeGreaterThanOrEqual(0);
@@ -243,39 +244,140 @@ test('Should do all aggragation function with Block numerous fields', async () =
         expect(Number(tr[7])).toBeGreaterThanOrEqual(0);
     };
     const queries = tests.client.queries;
-
     await testCollection(queries.accounts, 'workchain_id');
-    //await testCollection(queries.accounts, 'acc_type');
+    await testCollection(queries.accounts, 'acc_type');
     await testCollection(queries.accounts, 'last_paid');
+    await testCollection(queries.accounts, 'due_payment');
+    await testCollection(queries.accounts, 'last_trans_lt');
+    await testCollection(queries.accounts, 'balance');
+    await testCollection(queries.accounts, 'balance_other.currency');
     await testCollection(queries.accounts, 'split_depth');
-    //await testCollection(queries.blocks, 'status');
+    await testCollection(queries.blocks, 'status');
     await testCollection(queries.blocks, 'global_id');
     await testCollection(queries.blocks, 'seq_no');
     await testCollection(queries.blocks, 'gen_utime');
     await testCollection(queries.blocks, 'gen_catchain_seqno');
     await testCollection(queries.blocks, 'flags');
+    await testCollection(queries.blocks, 'master_ref.end_lt');
     await testCollection(queries.blocks, 'master_ref.seq_no');
+    await testCollection(queries.blocks, 'prev_ref.end_lt');
     await testCollection(queries.blocks, 'prev_ref.seq_no');
+    await testCollection(queries.blocks, 'prev_alt_ref.end_lt');
     await testCollection(queries.blocks, 'prev_alt_ref.seq_no');
+    await testCollection(queries.blocks, 'prev_vert_ref.end_lt');
     await testCollection(queries.blocks, 'prev_vert_ref.seq_no');
+    await testCollection(queries.blocks, 'prev_vert_alt_ref.end_lt');
     await testCollection(queries.blocks, 'prev_vert_alt_ref.seq_no');
     await testCollection(queries.blocks, 'version');
     await testCollection(queries.blocks, 'gen_validator_list_hash_short');
     await testCollection(queries.blocks, 'vert_seq_no');
-    await testCollection(queries.blocks, 'workchain_id');//int
+    await testCollection(queries.blocks, 'start_lt');
+    await testCollection(queries.blocks, 'end_lt');
+    await testCollection(queries.blocks, 'workchain_id');
     await testCollection(queries.blocks, 'min_ref_mc_seqno');
-    await testCollection(queries.blocks, 'prev_key_block_seqno');//float
+    await testCollection(queries.blocks, 'prev_key_block_seqno');
     await testCollection(queries.blocks, 'gen_software_version');
-    await testCollection(queries.blocks, 'value_flow.to_next_blk_other.currency');
-    await testCollection(queries.blocks, 'value_flow.exported_other.currency');
-    await testCollection(queries.blocks, 'value_flow.fees_collected_other.currency');
-    await testCollection(queries.blocks, 'value_flow.created_other.currency');
-    await testCollection(queries.blocks, 'value_flow.imported_other.currency');
-    await testCollection(queries.blocks, 'value_flow.from_prev_blk_other.currency');
-    await testCollection(queries.blocks, 'value_flow.minted_other.currency');
-    await testCollection(queries.blocks, 'value_flow.fees_imported_other.currency');
 
+    await testCollection(queries.blocks, 'value_flow.to_next_blk');
+    await testCollection(queries.blocks, 'value_flow.to_next_blk_other.currency');
+    await testCollection(queries.blocks, 'value_flow.to_next_blk_other.value');
+    await testCollection(queries.blocks, 'value_flow.exported');
+    await testCollection(queries.blocks, 'value_flow.exported_other.currency');
+    await testCollection(queries.blocks, 'value_flow.exported_other.value');
+    await testCollection(queries.blocks, 'value_flow.fees_collected');
+    await testCollection(queries.blocks, 'value_flow.fees_collected_other.currency');
+    await testCollection(queries.blocks, 'value_flow.fees_collected_other.value');
+    await testCollection(queries.blocks, 'value_flow.created');
+    await testCollection(queries.blocks, 'value_flow.created_other.currency');
+    await testCollection(queries.blocks, 'value_flow.created_other.value');
+    await testCollection(queries.blocks, 'value_flow.imported');
+    await testCollection(queries.blocks, 'value_flow.imported_other.currency');
+    await testCollection(queries.blocks, 'value_flow.imported_other.value');
+    await testCollection(queries.blocks, 'value_flow.from_prev_blk');
+    await testCollection(queries.blocks, 'value_flow.from_prev_blk_other.currency');
+    await testCollection(queries.blocks, 'value_flow.from_prev_blk_other.value');
+    await testCollection(queries.blocks, 'value_flow.minted');
+    await testCollection(queries.blocks, 'value_flow.minted_other.currency');
+    await testCollection(queries.blocks, 'value_flow.minted_other.value');
+    await testCollection(queries.blocks, 'value_flow.fees_imported');
+    await testCollection(queries.blocks, 'value_flow.fees_imported_other.currency');
+    await testCollection(queries.blocks, 'value_flow.fees_imported_other.value');
+
+    await testCollection(queries.blocks, 'in_msg_descr.msg_type');
+    await testCollection(queries.blocks, 'in_msg_descr.ihr_fee');
+    await testCollection(queries.blocks, 'in_msg_descr.in_msg.fwd_fee_remaining');
+    await testCollection(queries.blocks, 'in_msg_descr.fwd_fee');
+    await testCollection(queries.blocks, 'in_msg_descr.out_msg.fwd_fee_remaining');
+    await testCollection(queries.blocks, 'in_msg_descr.transit_fee');
+    await testCollection(queries.blocks, 'out_msg_descr.msg_type');
+    await testCollection(queries.blocks, 'out_msg_descr.out_msg.fwd_fee_remaining');
+    await testCollection(queries.blocks, 'out_msg_descr.reimport.msg_type');
+    await testCollection(queries.blocks, 'out_msg_descr.reimport.ihr_fee');
+    await testCollection(queries.blocks, 'out_msg_descr.reimport.in_msg.fwd_fee_remaining');
+    await testCollection(queries.blocks, 'out_msg_descr.reimport.fwd_fee');
+    await testCollection(queries.blocks, 'out_msg_descr.reimport.out_msg.fwd_fee_remaining');
+    await testCollection(queries.blocks, 'out_msg_descr.reimport.transit_fee');
+
+    await testCollection(queries.blocks, 'out_msg_descr.imported.msg_type');
+
+    await testCollection(queries.blocks, 'out_msg_descr.imported.ihr_fee');
+    await testCollection(queries.blocks, 'out_msg_descr.imported.in_msg.fwd_fee_remaining');
+    await testCollection(queries.blocks, 'out_msg_descr.imported.fwd_fee');
+    await testCollection(queries.blocks, 'out_msg_descr.imported.out_msg.fwd_fee_remaining');
+    await testCollection(queries.blocks, 'out_msg_descr.imported.transit_fee');
+
+    await testCollection(queries.blocks, 'out_msg_descr.import_block_lt');
+    await testCollection(queries.blocks, 'out_msg_descr.next_workchain');
+    await testCollection(queries.blocks, 'out_msg_descr.next_addr_pfx');
+
+    await testCollection(queries.blocks, 'account_blocks.transactions.lt');
+    await testCollection(queries.blocks, 'account_blocks.total_fees');
+    await testCollection(queries.blocks, 'account_blocks.total_fees_other.currency');
+    await testCollection(queries.blocks, 'account_blocks.total_fees_other.value');
+    await testCollection(queries.blocks, 'account_blocks.tr_count');
+
+    await testCollection(queries.blocks, 'state_update.new_depth');
+    await testCollection(queries.blocks, 'state_update.old_depth');
+
+    await testCollection(queries.blocks, 'master.min_shard_gen_utime');
+    await testCollection(queries.blocks, 'master.max_shard_gen_utime');
+    await testCollection(queries.blocks, 'master.shard_hashes.workchain_id');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.seq_no');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.start_lt');
+
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.end_lt');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.flags');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.next_catchain_seqno');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.min_ref_mc_seqno');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.gen_utime');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.split_type');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.split');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.fees_collected');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.fees_collected_other.currency');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.fees_collected_other.value');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.funds_created');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.funds_created_other.currency');
+    await testCollection(queries.blocks, 'master.shard_hashes.descr.funds_created_other.value');
+
+    await testCollection(queries.blocks, 'master.shard_fees.workchain_id');
+    await testCollection(queries.blocks, 'master.shard_fees.fees');
+    await testCollection(queries.blocks, 'master.shard_fees.fees_other.currency');
+    await testCollection(queries.blocks, 'master.shard_fees.fees_other.value');
+    await testCollection(queries.blocks, 'master.recover_create_msg.msg_type');
+    await testCollection(queries.blocks, 'master.recover_create_msg.ihr_fee');
+    await testCollection(queries.blocks, 'master.recover_create_msg.fwd_fee_remaining');
+    await testCollection(queries.blocks, 'master.recover_create_msg.fwd_fee');
+    await testCollection(queries.blocks, 'master.recover_create_msg.out_msg.fwd_fee_remaining');
+    await testCollection(queries.blocks, 'master.recover_create_msg.transit_fee');
+
+
+    await testCollection(queries.blocks, 'master.config.p7.currency');
+    await testCollection(queries.blocks, 'master.config.p8.version');
+    await testCollection(queries.blocks, 'master.config.p9');
+    await testCollection(queries.blocks, 'master.config.p10');
+    // todo config
 });
+
 
 // Skipped explicitly as disabled
 test.skip('Subscribe for failed server', async () => {
