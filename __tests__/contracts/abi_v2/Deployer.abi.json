@@ -3,13 +3,6 @@
 	"header": ["time", "expire"],
 	"functions": [
 		{
-			"name": "constructor",
-			"inputs": [
-			],
-			"outputs": [
-			]
-		},
-		{
 			"name": "setContract",
 			"inputs": [
 				{"name":"_contract","type":"cell"}
@@ -70,7 +63,16 @@
 			],
 			"outputs": [
 			]
+		},
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
+			]
 		}
+	],
+	"data": [
 	],
 	"events": [
 	]
