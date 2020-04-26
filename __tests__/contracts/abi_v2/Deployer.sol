@@ -6,15 +6,6 @@ pragma AbiHeader expire;
 pragma experimental ABIEncoderV2;
 
 contract ContractDeployer {
-	uint256 owner;	 // contract owner's address;
-
-	/// @dev Contract constructor.
-    constructor() public {
-        // save contract's public key in the state variable.
-        // Runctime function that obtains contract owner's public key.
-        owner = tvm.pubkey();
-    }
-
 	// Runtime functions:
 
 	// Function that inserts public key into contracts data field.
@@ -98,9 +89,10 @@ contract ContractDeployer {
 	}
 
 	modifier onlyOwner {
-		require(msg.pubkey() == owner);
-		_;
-	}
+        require(msg.pubkey() == tvm.pubkey(), 100);
+        tvm.accept();
+        _;
+    }
 
 	function sendAllMoney(address payable dest_addr) public onlyOwner {
 		selfdestruct(dest_addr);

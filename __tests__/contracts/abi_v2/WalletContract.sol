@@ -6,11 +6,6 @@ pragma AbiHeader expire;
 /// @author Tonlabs
 contract Wallet {
     /*
-     *  Storage
-     */
-    uint256 owner;
-
-    /*
      Exception codes:
       100 - message sender is not a wallet owner.
       101 - invalid transfer value.
@@ -21,7 +16,7 @@ contract Wallet {
     modifier checkOwnerAndAccept {
         // Check that inbound message was signed with owner's public key.
         // Runtime function that obtains sender's public key.
-        require(msg.pubkey() == owner, 100);
+         require(msg.pubkey() == tvm.pubkey(), 100); 
 
 		// Runtime function that allows contract to process inbound messages spending
 		// its own resources (it's necessary if contract should process all inbound messages,
@@ -29,17 +24,6 @@ contract Wallet {
 		tvm.accept();
 		_;
 	}
-
-    /*
-     * Public functions
-     */
-
-    /// @dev Contract constructor.
-    constructor() public {
-        // save contract's public key in the state variable.
-        // Runctime function that obtains contract owner's public key.
-        owner = tvm.pubkey();
-    }
 
 
     /// @dev Allows to transfer grams to the destination account.

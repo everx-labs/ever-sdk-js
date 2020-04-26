@@ -230,7 +230,8 @@ export class TONClientError {
         WAIT_FOR_TIMEOUT: 1003,
         INTERNAL_ERROR: 1004,
         QUERY_FAILED: 1005,
-        MESSAGE_EXPIRED: 1006
+        MESSAGE_EXPIRED: 1006,
+        SERVER_DOESNT_SUPPORT_AGGREGATIONS: 1007,
     };
 
     message: string;
@@ -306,8 +307,17 @@ export class TONClientError {
         );
     }
 
+    static serverDoesntSupportAggregations() {
+        return new TONClientError(
+            'Server doesn\'t support aggregations',
+            TONClientError.code.SERVER_DOESNT_SUPPORT_AGGREGATIONS,
+            TONClientError.source.CLIENT,
+        );
+    }
+
     static isMessageExpired(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
     }
+
 }
 

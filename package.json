@@ -1,6 +1,7 @@
 {
 	"name": "ton-client-js",
-	"version": "0.21.26",
+	"version": "0.22.0",
+	"binaries_version": "0.22.0",
 	"description": "TON Client for Java Script",
 	"main": "index.js",
 	"scripts": {
@@ -11,7 +12,6 @@
 		"test-cinet": "jest --forceExit --detectOpenHandles --testTimeout=300000 --bail --runInBand --verbose",
 		"npm install": "npm install"
 	},
-	"pre-commit": [],
 	"keywords": [
 		"TON",
 		"Javascript",
@@ -25,6 +25,11 @@
 		"url": "https://github.com/tonlabs/ton-client-js.git"
 	},
 	"homepage": "https://ton.dev/node-se",
+	"husky": {
+		"hooks": {
+			"pre-commit": "npm run babel && git add dist"
+		}
+	},
 	"devDependencies": {
 		"@babel/cli": "7.8.4",
 		"@babel/core": "7.9.0",
@@ -50,9 +55,9 @@
 		"@babel/plugin-transform-block-scoping": "7.8.3",
 		"@babel/plugin-transform-classes": "7.8.3",
 		"@babel/plugin-transform-runtime": "7.8.3",
+		"@babel/preset-env": "7.9.0",
 		"@babel/preset-flow": "7.9.0",
 		"@babel/preset-react": "7.9.1",
-		"@babel/preset-env": "7.9.0",
 		"babel-eslint": "10.1.0",
 		"eslint": "6.8.0",
 		"eslint-config-airbnb": "18.1.0",
@@ -62,11 +67,11 @@
 		"eslint-plugin-react-hooks": "2.5.1",
 		"flow": "0.2.3",
 		"flow-bin": "0.121.0",
+		"husky": "^4.2.3",
+		"jaeger-client": "3.17.2",
 		"jest": "25.1.0",
 		"node-fetch": "2.6.0",
-		"pre-commit": "1.2.2",
-		"websocket": "1.0.31",
-		"jaeger-client": "3.17.2"
+		"websocket": "1.0.31"
 	},
 	"dependencies": {
 		"@babel/runtime": "7.8.3",

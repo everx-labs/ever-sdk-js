@@ -17,6 +17,7 @@ contract HelloTON {
     }
 
     constructor() public {
+        tvm.accept();
         timestamp = uint32(now);
     }
     //Function setting set value to state variable timestamp
