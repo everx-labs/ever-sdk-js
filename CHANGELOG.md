@@ -1,6 +1,13 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.22.1 - Apr 29, 2020
+### Fixed
+- GraphQL query will retry if network error has occurred
+
+### New
+- `aggregate` method of `TONQueriesModuleCollection` 
+ 
 ## 0.22.0 - Apr 20, 2020
 ### Featured
 - Aggregation queries

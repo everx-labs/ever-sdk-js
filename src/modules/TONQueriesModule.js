@@ -150,11 +150,31 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
 
     async setup() {
         this.config = this.context.getModule(TONConfigModule);
-        this.transactions = new TONQueriesModuleCollection(this, 'transactions', 'Transaction');
-        this.messages = new TONQueriesModuleCollection(this, 'messages', 'Message');
-        this.blocks = new TONQueriesModuleCollection(this, 'blocks', 'Block');
-        this.accounts = new TONQueriesModuleCollection(this, 'accounts', 'Account');
-        this.blocks_signatures = new TONQueriesModuleCollection(this, 'blocks_signatures', 'BlockSignatures');
+        this.transactions = new TONQueriesModuleCollection(
+            this,
+            'transactions',
+            'Transaction',
+        );
+        this.messages = new TONQueriesModuleCollection(
+            this,
+            'messages',
+            'Message',
+        );
+        this.blocks = new TONQueriesModuleCollection(
+            this,
+            'blocks',
+            'Block',
+        );
+        this.accounts = new TONQueriesModuleCollection(
+            this,
+            'accounts',
+            'Account',
+        );
+        this.blocks_signatures = new TONQueriesModuleCollection(
+            this,
+            'blocks_signatures',
+            'BlockSignatures',
+        );
     }
 
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {
@@ -316,15 +336,44 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }));
     }
 
+    static isNetworkError(error: any): boolean {
+        const networkError = error.networkError;
+        if (!networkError) {
+            return false;
+        }
+        if ('errno' in networkError) {
+            return true;
+        }
+        return !('response' in networkError || 'result' in networkError);
+    }
+
     async graphqlQuery(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
         const query = gql([ql]);
-        return this.graphQl((client) => client.query({
-            query,
-            variables,
-            context: {
-                traceSpan: span,
-            },
-        }), span);
+        return this.graphQl(async (client) => {
+            let nextTimeout = 100;
+            while (true) {
+                try {
+                    return await client.query({
+                        query,
+                        variables,
+                        context: {
+                            traceSpan: span,
+                        },
+                    });
+                } catch (error) {
+                    if (TONQueriesModule.isNetworkError(error)) {
+                        console.warn(error.networkError);
+                        const timeout = nextTimeout;
+                        await new Promise(x => setTimeout(x, timeout));
+                        if (nextTimeout < 3200) {
+                            nextTimeout *= 2;
+                        }
+                    } else {
+                        throw error;
+                    }
+                }
+            }
+        }, span);
     }
 
     async graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {
@@ -588,7 +637,7 @@ class TONQueriesModuleCollection implements TONQCollection {
     }
 
     async aggregate(
-        params: TONQueryAggregateParams
+        params: TONQueryAggregateParams,
     ): Promise<string[]> {
         return this.module.context.trace(`${this.collectionName}.aggregate`, async (span) => {
             span.setTag('params', {
