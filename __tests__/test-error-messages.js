@@ -16,13 +16,23 @@
 
 // @flow
 
-import { ABIVersions, tests } from './_/init-tests';
-import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
+import {ABIVersions, tests} from './_/init-tests';
+import {TONMnemonicDictionary} from '../src/modules/TONCryptoModule';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 
 beforeAll(tests.init);
 afterAll(tests.done);
+
+async function expectError(code: number, source: string, message?: string, f) {
+    try {
+        await f();
+        fail(`Expected error with code:${code} source: ${source}`);
+    } catch (error) {
+        expect({ code: error.code, source: error.source }).toEqual({ code, source });
+        expect(error.message).toMatch(message);
+    }
+}
 
 test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
@@ -74,46 +84,26 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
             .toMatch('Invalid params: missing field \`abi\`');
     } */
 
-    try {
+    await expectError(2, 'client', 'Invalid params: invalid type: null, expected struct KeyPair', async () => {
         await contracts.createDeployMessage({
             package: walletPackage,
             constructorParams: {},
-            //$FlowFixMe
             keyPair: null,
         });
-    } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2);
-        expect(error.data)
-            .toBeNull();
-        expect(error.message)
-            .toMatch('Invalid params: invalid type: null, expected struct KeyPair');
-    }
+    });
+
+    await expectError(2, 'client', 'Invalid params: missing field `public`', async () => {
+        await contracts.createDeployMessage({
+            package: walletPackage,
+            constructorParams: {},
+            keyPair: {},
+        });
+    });
 
     try {
         await contracts.createDeployMessage({
             package: walletPackage,
             constructorParams: {},
-            //$FlowFixMe
-            keyPair: {},
-        });
-    } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2);
-        expect(error.data)
-            .toBeNull();
-        expect(error.message)
-            .toMatch('Invalid params: missing field `public`');
-    }
-    try {
-        await contracts.createDeployMessage({
-            package: walletPackage,
-            constructorParams: {},
-            //$FlowFixMe
             keyPair: '',
         });
     } catch (error) {
@@ -148,8 +138,8 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
             .toEqual(2001);
         expect(error.data)
             .toBeNull();
-       /* expect(error.message)
-            .toMatch('Invalid public key [PublicKey must be 32 bytes in length]');*/
+        expect(error.message)
+            .toMatch('Invalid public key [PublicKey must be 32 bytes in length]');
     }
 
 
@@ -219,6 +209,22 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
             .toMatch('Invalid factorize challenge: invalid digit found in string');
     }
     try {
+        await crypto.mnemonicFromEntropy({
+            entropy: { hex: '' },
+            dictionary: TONMnemonicDictionary.ENGLISH,
+        });
+    } catch (error) {
+        expect(error.source)
+            .toEqual('client');
+        expect(error.code)
+            .toEqual(2016);
+        expect(error.data)
+            .toBeNull();
+        expect(error.message)
+            .toMatch('Invalid bip39 entropy:');
+    }
+
+    try {
         await crypto.hdkeyXPrvDerivePath('???', '', true);
     } catch (error) {
         expect(error.source)
@@ -247,7 +253,7 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
         try {
             await crypto.mnemonicFromRandom({
                 dictionary: TONMnemonicDictionary[dict],
-            //$FlowFixMe
+                //$FlowFixMe
                 wordCount: 1,
             });
         } catch (error) {
