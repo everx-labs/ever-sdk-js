@@ -23,6 +23,16 @@ const WalletContractPackage = tests.loadPackage('WalletContract');
 beforeAll(tests.init);
 afterAll(tests.done);
 
+test.skip('(not test) Debug network errors during wait for', async () => {
+    const queries = tests.client.queries;
+    const accounts = await queries.accounts.waitFor({
+        filter: { id: { eq: '3333' } },
+        result: 'id',
+        timeout: 10000,
+    });
+    console.log('>>>', accounts);
+});
+
 test('Specialized', async () => {
     const queries = tests.client.queries;
     let count = await queries.getAccountsCount();
@@ -64,7 +74,8 @@ test('Block signatures', async () => {
         result: 'id',
         limit: 1,
     });
-    expect(signatures.length).toBeGreaterThanOrEqual(0);
+    expect(signatures.length)
+        .toBeGreaterThanOrEqual(0);
 });
 
 test('All Accounts', async () => {
@@ -117,7 +128,7 @@ const transactionWithAddresses = `
     in_message { dst src value }
 `;
 
-test.each(ABIVersions)('Subscribe for transactions with addresses (ABI v%i)', async (abiVersion) => {
+test.each(ABIVersions)('Subscribe for transactions with addresses (ABIv%i)', async (abiVersion) => {
     const { contracts, queries, crypto } = tests.client;
     const walletPackage = WalletContractPackage[abiVersion];
     const walletKeys = await crypto.ed25519Keypair();
@@ -210,7 +221,7 @@ test('Aggregations', async () => {
             fields: [{ field: 'id', fn: "COUNT" }],
         }))[0];
         expect(Number(tr)).toBeGreaterThanOrEqual(n);
-    }
+    };
     const queries = tests.client.queries;
     await testCollection(queries.accounts, 1);
     await testCollection(queries.blocks, 1);

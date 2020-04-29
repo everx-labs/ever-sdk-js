@@ -16,15 +16,15 @@
 
 // @flow
 
-import { Span } from 'opentracing';
-import { removeProps, TONAddressStringVariant } from '../src/modules/TONContractsModule';
-import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
-import { TONClient, TONClientError } from '../src/TONClient';
+import {Span} from 'opentracing';
+import {removeProps, TONAddressStringVariant} from '../src/modules/TONContractsModule';
+import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
+import {TONClient, TONClientError} from '../src/TONClient';
 
 
-import type { TONContractLoadResult } from '../types';
-import { binariesVersion } from './_/binaries';
-import { ABIVersions, tests } from './_/init-tests';
+import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
+import {binariesVersion} from './_/binaries';
+import {ABIVersions, tests} from './_/init-tests';
 
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -248,7 +248,7 @@ test('External Signing on ABI v1', async () => {
     };
     const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
     const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
-    const signBytesBase64 = await crypto.naclSignDetached({
+    let signBytesBase64 = await crypto.naclSignDetached({
         base64: unsignedMessage.signParams.bytesToSignBase64,
     }, signKey.secret, TONOutputEncoding.Base64);
     const signed = await contracts.createSignedDeployMessage({
@@ -260,6 +260,33 @@ test('External Signing on ABI v1', async () => {
     const message = await contracts.createDeployMessage(deployParams);
     expect(signed.message.messageBodyBase64)
         .toEqual(message.message.messageBodyBase64);
+
+    const unsignedRunMessage = await contracts.createUnsignedRunMessage({
+        address: message.address,
+        abi: eventsPackage.abi,
+        functionName: 'returnValue',
+        input: { id: '0' },
+        keyPair: keys,
+    });
+    signBytesBase64 = await crypto.naclSignDetached({
+        base64: unsignedRunMessage.signParams.bytesToSignBase64,
+    }, signKey.secret, TONOutputEncoding.Base64);
+
+    const signedRunMessage = await contracts.createSignedRunMessage({
+        unsignedMessage: unsignedRunMessage,
+        signBytesBase64,
+        publicKeyHex: keys.public,
+    });
+    const runMessage = await contracts.createRunMessage({
+        address: message.address,
+        abi: eventsPackage.abi,
+        functionName: 'returnValue',
+        input: { id: '0' },
+        keyPair: keys,
+    });
+
+    expect(signedRunMessage.message.messageBodyBase64)
+        .toEqual(runMessage.message.messageBodyBase64);
 });
 
 test('External Signing on ABI v2', async () => {
@@ -278,9 +305,10 @@ test('External Signing on ABI v2', async () => {
     };
     const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
     const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
-    const signBytesBase64 = await crypto.naclSignDetached({
+    let signBytesBase64 = await crypto.naclSignDetached({
         base64: unsignedMessage.signParams.bytesToSignBase64,
     }, signKey.secret, TONOutputEncoding.Base64);
+
     const signed = await contracts.createSignedDeployMessage({
         signBytesBase64,
         unsignedMessage,
@@ -289,6 +317,32 @@ test('External Signing on ABI v2', async () => {
     const message = await contracts.createDeployMessage(deployParams);
     expect(signed.message.messageBodyBase64)
         .toEqual(message.message.messageBodyBase64);
+
+
+    const messageParams = {
+        address: message.address,
+        abi: eventsPackage.abi,
+        functionName: 'returnValue',
+        header: {
+            pubkey: keys.public,
+            time: Date.now(),
+        },
+        input: { id: '0' },
+        keyPair: keys,
+    };
+
+    const unsignedRunMessage = await contracts.createUnsignedRunMessage(messageParams);
+    signBytesBase64 = await crypto.naclSignDetached({
+        base64: unsignedRunMessage.signParams.bytesToSignBase64,
+    }, signKey.secret, TONOutputEncoding.Base64);
+    const signedRunMessage = await contracts.createSignedRunMessage({
+        unsignedMessage: unsignedRunMessage,
+        signBytesBase64,
+    });
+    const runMessage = await contracts.createRunMessage(messageParams);
+
+    expect(signedRunMessage.message.messageBodyBase64)
+        .toEqual(runMessage.message.messageBodyBase64);
 });
 
 // TODO return test when data[] will fix in compilers
