@@ -150,31 +150,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
 
     async setup() {
         this.config = this.context.getModule(TONConfigModule);
-        this.transactions = new TONQueriesModuleCollection(
-            this,
-            'transactions',
-            'Transaction',
-        );
-        this.messages = new TONQueriesModuleCollection(
-            this,
-            'messages',
-            'Message',
-        );
-        this.blocks = new TONQueriesModuleCollection(
-            this,
-            'blocks',
-            'Block',
-        );
-        this.accounts = new TONQueriesModuleCollection(
-            this,
-            'accounts',
-            'Account',
-        );
-        this.blocks_signatures = new TONQueriesModuleCollection(
-            this,
-            'blocks_signatures',
-            'BlockSignatures',
-        );
+        this.transactions = new TONQueriesModuleCollection(this, 'transactions', 'Transaction');
+        this.messages = new TONQueriesModuleCollection(this, 'messages', 'Message');
+        this.blocks = new TONQueriesModuleCollection(this, 'blocks', 'Block');
+        this.accounts = new TONQueriesModuleCollection(this, 'accounts', 'Account');
+        this.blocks_signatures = new TONQueriesModuleCollection(this, 'blocks_signatures', 'BlockSignatures');
     }
 
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {

@@ -23,7 +23,6 @@ const WalletContractPackage = tests.loadPackage('WalletContract');
 beforeAll(tests.init);
 afterAll(tests.done);
 
-jest.setTimeout(200000);
 test.skip('(not test) Debug network errors during wait for', async () => {
     const queries = tests.client.queries;
     const accounts = await queries.accounts.waitFor({
@@ -129,49 +128,46 @@ const transactionWithAddresses = `
     in_message { dst src value }
 `;
 
-test.each(ABIVersions)(
-    'Subscribe for transactions with addresses (ABI v%i)',
-    async (abiVersion) => {
-        const { contracts, queries, crypto } = tests.client;
-        const walletPackage = WalletContractPackage[abiVersion];
-        const walletKeys = await crypto.ed25519Keypair();
+test.each(ABIVersions)('Subscribe for transactions with addresses (ABIv%i)', async (abiVersion) => {
+    const { contracts, queries, crypto } = tests.client;
+    const walletPackage = WalletContractPackage[abiVersion];
+    const walletKeys = await crypto.ed25519Keypair();
 
-        const deployData = await contracts.getDeployData({
-            ...walletPackage,
-            publicKeyHex: walletKeys.public,
-        });
+    const deployData = await contracts.getDeployData({
+        ...walletPackage,
+        publicKeyHex: walletKeys.public,
+    });
 
-        console.log('>>>', 'Paying...');
-        await get_grams_from_giver(deployData.address);
+    console.log('>>>', 'Paying...');
+    await get_grams_from_giver(deployData.address);
 
-        const message = await contracts.createDeployMessage({
-            package: walletPackage,
-            constructorParams: {},
-            keyPair: walletKeys,
-        });
+    const message = await contracts.createDeployMessage({
+        package: walletPackage,
+        constructorParams: {},
+        keyPair: walletKeys,
+    });
 
-        console.log('>>>', `Subscribe to transactions on [${message.address}]...`);
-        const transactions = [];
-        const subscription = (await queries.transactions.subscribe({
-            filter: {
-                account_addr: { eq: message.address },
-            },
-            result: 'id',
-            onDocEvent(e, d) {
-                console.log('>>> Subscription triggered', d);
-                transactions.push(d);
-            },
-        }));
+    console.log('>>>', `Subscribe to transactions on [${message.address}]...`);
+    const transactions = [];
+    const subscription = (await queries.transactions.subscribe({
+        filter: {
+            account_addr: { eq: message.address },
+        },
+        result: 'id',
+        onDocEvent(e, d) {
+            console.log('>>> Subscription triggered', d);
+            transactions.push(d);
+        },
+    }));
 
-        console.log('>>>', 'Deploying...');
-        await contracts.processDeployMessage(message);
-        console.log('>>>', 'Waiting...');
-        await new Promise(resolve => setTimeout(resolve, 1_000));
-        subscription.unsubscribe();
-        expect(transactions.length)
-            .toBeGreaterThan(0);
-    },
-);
+    console.log('>>>', 'Deploying...');
+    await contracts.processDeployMessage(message);
+    console.log('>>>', 'Waiting...');
+    await new Promise(resolve => setTimeout(resolve, 1_000));
+    subscription.unsubscribe();
+    expect(transactions.length)
+        .toBeGreaterThan(0);
+});
 
 test.each(ABIVersions)('Subscribe for messages (ABI v%i)', async (abiVersion) => {
     const { contracts, queries, crypto } = tests.client;
@@ -222,15 +218,9 @@ test('Aggregations', async () => {
     const testCollection = async (c, n) => {
         const tr = (await c.aggregate({
             filter: {},
-            fields: [
-                {
-                    field: 'id',
-                    fn: 'COUNT',
-                },
-            ],
+            fields: [{ field: 'id', fn: "COUNT" }],
         }))[0];
-        expect(Number(tr))
-            .toBeGreaterThanOrEqual(n);
+        expect(Number(tr)).toBeGreaterThanOrEqual(n);
     };
     const queries = tests.client.queries;
     await testCollection(queries.accounts, 1);
