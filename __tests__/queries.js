@@ -24,7 +24,7 @@ beforeAll(tests.init);
 afterAll(tests.done);
 
 jest.setTimeout(200000);
-test('(not test) Debug network errors during wait for', async () => {
+test.skip('(not test) Debug network errors during wait for', async () => {
     const queries = tests.client.queries;
     const accounts = await queries.accounts.waitFor({
         filter: { id: { eq: '3333' } },
