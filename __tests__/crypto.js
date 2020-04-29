@@ -180,12 +180,6 @@ test('crypto', async () => {
         wordCount: 12,
     })).toEqual('abandon math mimic master filter design carbon crystal rookie group knife young');
 
-    expect(await crypto.mnemonicFromEntropy({
-        entropy: { hex: '0011' },
-        dictionary: TONMnemonicDictionary.ENGLISH,
-        wordCount: 12,
-    })).toEqual('abandon math mimic master filter design carbon crystal rookie group knife young');
-
     for (const dictionary in TONMnemonicDictionary) {
         for (let i = 0; i < TONMnemonicWordCounts.length; i++) {
             expect(await crypto.mnemonicIsValid({
