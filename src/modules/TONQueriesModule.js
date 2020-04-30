@@ -205,8 +205,8 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }
 
         for (const server of config.data.servers) {
+            const clientConfig = getConfigForServer(server);
             try {
-                const clientConfig = getConfigForServer(server);
                 // eslint-disable-next-line no-await-in-loop
                 const redirected = await this.detectRedirect(
                     fetch,
@@ -222,7 +222,14 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 }
                 return clientConfig;
             } catch (error) {
-                console.log(`[getClientConfig] for server "${server}" failed`, error);
+                console.log(`[getClientConfig] for server "${server}" failed`, {
+                    clientConfig: {
+                        httpUrl: clientConfig.httpUrl,
+                        wsUrl: clientConfig.wsUrl,
+                    },
+                    errorString: error.toString(),
+                    error,
+                });
             }
         }
         return getConfigForServer(config.data.servers[0]);
