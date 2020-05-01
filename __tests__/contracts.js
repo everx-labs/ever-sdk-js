@@ -33,6 +33,7 @@ const SubscriptionContractPackage = tests.loadPackage('Subscription');
 const SetCodePackage = tests.loadPackage('Setcode');
 const SetCode2Package = tests.loadPackage('Setcode2');
 const EventsPackage = tests.loadPackage('Events');
+const GiverPackage = tests.loadPackage('Giver');
 
 
 beforeAll(tests.init);
@@ -888,7 +889,7 @@ test('Test expire retries', async () => {
         return result;
     };
     const runs = [];
-    for (let i = 0; i < 20; i += 1) {
+    for (let i = 0; i < 5; i += 1) {
         runs.push(run());
     }
     await Promise.all(runs);
@@ -935,4 +936,49 @@ test.each(ABIVersions)('Check deployed (ABI v%i)', async (abiVersion) => {
 
     expect(checked.alreadyDeployed)
         .toBeTruthy();
+});
+test('do_tvm_transfer() should carry all the remaining balance of the current smart contract to another address', async () => {
+    const { contracts, crypto, queries } = tests.client;
+    const giverKeys = await crypto.ed25519Keypair();
+
+    const giverPackage = GiverPackage[2];
+    const contractData = await tests.deploy_with_giver({
+        package: giverPackage,
+        constructorParams: {},
+        keyPair: giverKeys,
+    });
+
+    const originalBalance = (await queries.accounts.waitFor(
+        {
+            id: { eq: contractData.address },
+        },
+        'balance',
+    )).balance;
+
+    // eslint-disable-next-line no-bitwise
+    const flags = 0 | 128;
+    const response = await contracts.run({
+        address: contractData.address,
+        abi: giverPackage.abi,
+        functionName: 'do_tvm_transfer',
+        input: {
+            remote_addr: tests.get_giver_address(),
+            grams_value: 100000,
+            bounce: true,
+            sendrawmsg_flag: flags,
+        },
+        keyPair: giverKeys,
+    });
+    console.log(response);
+    const endBalance = (await queries.accounts.waitFor(
+        {
+            id: { eq: contractData.address },
+            balance: { lt: originalBalance },
+        },
+        'balance',
+    )).balance;
+
+    expect(endBalance).toEqual('0x0');
+
+
 });
