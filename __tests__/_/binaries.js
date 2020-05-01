@@ -9,7 +9,7 @@ const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', '..', 'pack
 const v: string[] = pkg.version.split('.');
 export const binariesVersion = `${v[0]}.${v[1]}.${~~(Number.parseInt(v[2]) / 100) * 100}`;
 export const bv = binariesVersion.split('.').join('_');
-const binariesHost = 'sdkbinaries.tonlabs.io';
+const binariesHost = 'sdkbinaries-ws.tonlabs.io';
 export const binariesPath = path.resolve(__dirname, '..');
 
 function downloadAndGunzip(dest, url) {
