@@ -11,7 +11,7 @@ export const p = os.platform();
 const v: string[] = version.split('.');
 export const binariesVersion = binaries_version || `${v[0]}.${v[1]}.${~~(Number.parseInt(v[2]) / 100) * 100}`;
 export const bv = binariesVersion.split('.').join('_');
-const binariesHost = 'sdkbinaries.tonlabs.io';
+const binariesHost = 'sdkbinaries-ws.tonlabs.io';
 export const binariesPath = path.resolve(__dirname, '..');
 
 function downloadAndGunzip(dest, url) {
