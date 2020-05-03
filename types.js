@@ -379,6 +379,20 @@ export type TONContractRunLocalParams = TONContractRunParams & {
     waitParams?: TONContractAccountWaitParams
 }
 
+export type TONContractRunGetParams = {
+    codeBase64: string,
+    dataBase64: string,
+    functionName: string,
+    input?: any,
+    address?: string,
+    balance?: string,
+    last_paid?: number,
+}
+
+export type TONContractRunGetResult = {
+    output: any,
+}
+
 export type TONContractTransactionFees = {
     inMsgFwdFee: string,
     storageFee: string,
@@ -589,6 +603,10 @@ export interface TONContracts {
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult>;
+
+    runGet(
+        params: TONContractRunGetParams,
+    ): Promise<TONContractRunGetResult>;
 
     // Message creation
 

@@ -59,7 +59,7 @@ import type {
     TONContracts,
     TONContractUnsignedDeployMessage,
     TONContractUnsignedMessage,
-    TONContractUnsignedRunMessage,
+    TONContractUnsignedRunMessage, TONContractRunGetParams, TONContractRunGetResult,
 } from '../../types';
 import { TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
@@ -286,6 +286,13 @@ export default class TONContractsModule extends TONModule implements TONContract
             return this.internalRunLocalJs(params, span);
         }, parentSpan);
     }
+
+    async runGet(
+        params: TONContractRunGetParams,
+    ): Promise<TONContractRunGetResult> {
+        return this.requestCore('tvm.get', params);
+    }
+
 
     // Message creation
 
