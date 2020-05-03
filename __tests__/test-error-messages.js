@@ -27,10 +27,12 @@ afterAll(tests.done);
 async function expectError(code: number, source: string, message?: string, f) {
     try {
         await f();
+        //$FlowFixMe
         fail(`Expected error with code:${code} source: ${source}`);
     } catch (error) {
         expect({ code: error.code, source: error.source }).toEqual({ code, source });
-        expect(error.message).toMatch(message);
+        if (message)
+            expect(error.message).toMatch(message);
     }
 }
 
@@ -88,6 +90,7 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
         await contracts.createDeployMessage({
             package: walletPackage,
             constructorParams: {},
+            //$FlowFixMe
             keyPair: null,
         });
     });
@@ -96,6 +99,7 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
         await contracts.createDeployMessage({
             package: walletPackage,
             constructorParams: {},
+            //$FlowFixMe
             keyPair: {},
         });
     });
@@ -104,6 +108,7 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
         await contracts.createDeployMessage({
             package: walletPackage,
             constructorParams: {},
+            //$FlowFixMe
             keyPair: '',
         });
     } catch (error) {
