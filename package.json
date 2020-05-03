@@ -1,6 +1,6 @@
 {
 	"name": "ton-client-js",
-	"version": "0.22.1",
+	"version": "0.22.2",
 	"binaries_version": "0.22.0",
 	"description": "TON Client for Java Script",
 	"main": "index.js",
