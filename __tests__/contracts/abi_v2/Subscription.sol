@@ -27,6 +27,7 @@ contract SubscriptionContract {
         _;
     }
     constructor(address wallet) public {
+        tvm.accept();
         mywallet = wallet;
     }
 

@@ -3,13 +3,6 @@
 	"header": ["time", "expire"],
 	"functions": [
 		{
-			"name": "constructor",
-			"inputs": [
-			],
-			"outputs": [
-			]
-		},
-		{
 			"name": "sendTransaction",
 			"inputs": [
 				{"name":"dest","type":"address"},
@@ -26,7 +19,16 @@
 			],
 			"outputs": [
 			]
+		},
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
+			]
 		}
+	],
+	"data": [
 	],
 	"events": [
 	]

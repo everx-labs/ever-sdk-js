@@ -16,24 +16,23 @@
 
 // @flow
 
-import { Span } from 'opentracing';
-import { removeProps, TONAddressStringVariant } from '../src/modules/TONContractsModule';
-import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
-import { TONClient, TONClientError } from '../src/TONClient';
+import {Span} from 'opentracing';
+import {removeProps, TONAddressStringVariant} from '../src/modules/TONContractsModule';
+import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
+import {TONClient, TONClientError} from '../src/TONClient';
 
 
-import type { TONContractLoadResult } from '../types';
-import { binariesVersion } from './_/binaries';
-import { ABIVersions, tests } from './_/init-tests';
+import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
+import {binariesVersion} from './_/binaries';
+import {ABIVersions, tests} from './_/init-tests';
 
-
+const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
 const WalletContractPackage = tests.loadPackage('WalletContract');
 const HelloContractPackage = tests.loadPackage('Hello');
 const SubscriptionContractPackage = tests.loadPackage('Subscription');
 const SetCodePackage = tests.loadPackage('Setcode');
 const SetCode2Package = tests.loadPackage('Setcode2');
 const EventsPackage = tests.loadPackage('Events');
-
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -248,7 +247,7 @@ test('External Signing on ABI v1', async () => {
     };
     const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
     const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
-    const signBytesBase64 = await crypto.naclSignDetached({
+    let signBytesBase64 = await crypto.naclSignDetached({
         base64: unsignedMessage.signParams.bytesToSignBase64,
     }, signKey.secret, TONOutputEncoding.Base64);
     const signed = await contracts.createSignedDeployMessage({
@@ -260,6 +259,33 @@ test('External Signing on ABI v1', async () => {
     const message = await contracts.createDeployMessage(deployParams);
     expect(signed.message.messageBodyBase64)
         .toEqual(message.message.messageBodyBase64);
+
+    const unsignedRunMessage = await contracts.createUnsignedRunMessage({
+        address: message.address,
+        abi: eventsPackage.abi,
+        functionName: 'returnValue',
+        input: { id: '0' },
+        keyPair: keys,
+    });
+    signBytesBase64 = await crypto.naclSignDetached({
+        base64: unsignedRunMessage.signParams.bytesToSignBase64,
+    }, signKey.secret, TONOutputEncoding.Base64);
+
+    const signedRunMessage = await contracts.createSignedRunMessage({
+        unsignedMessage: unsignedRunMessage,
+        signBytesBase64,
+        publicKeyHex: keys.public,
+    });
+    const runMessage = await contracts.createRunMessage({
+        address: message.address,
+        abi: eventsPackage.abi,
+        functionName: 'returnValue',
+        input: { id: '0' },
+        keyPair: keys,
+    });
+
+    expect(signedRunMessage.message.messageBodyBase64)
+        .toEqual(runMessage.message.messageBodyBase64);
 });
 
 test('External Signing on ABI v2', async () => {
@@ -278,9 +304,10 @@ test('External Signing on ABI v2', async () => {
     };
     const unsignedMessage = await contracts.createUnsignedDeployMessage(deployParams);
     const signKey = await crypto.naclSignKeypairFromSecretKey(keys.secret);
-    const signBytesBase64 = await crypto.naclSignDetached({
+    let signBytesBase64 = await crypto.naclSignDetached({
         base64: unsignedMessage.signParams.bytesToSignBase64,
     }, signKey.secret, TONOutputEncoding.Base64);
+
     const signed = await contracts.createSignedDeployMessage({
         signBytesBase64,
         unsignedMessage,
@@ -289,64 +316,154 @@ test('External Signing on ABI v2', async () => {
     const message = await contracts.createDeployMessage(deployParams);
     expect(signed.message.messageBodyBase64)
         .toEqual(message.message.messageBodyBase64);
+
+
+    const messageParams = {
+        address: message.address,
+        abi: eventsPackage.abi,
+        functionName: 'returnValue',
+        header: {
+            pubkey: keys.public,
+            time: Date.now(),
+        },
+        input: { id: '0' },
+        keyPair: keys,
+    };
+
+    const unsignedRunMessage = await contracts.createUnsignedRunMessage(messageParams);
+    signBytesBase64 = await crypto.naclSignDetached({
+        base64: unsignedRunMessage.signParams.bytesToSignBase64,
+    }, signKey.secret, TONOutputEncoding.Base64);
+    const signedRunMessage = await contracts.createSignedRunMessage({
+        unsignedMessage: unsignedRunMessage,
+        signBytesBase64,
+    });
+    const runMessage = await contracts.createRunMessage(messageParams);
+
+    expect(signedRunMessage.message.messageBodyBase64)
+        .toEqual(runMessage.message.messageBodyBase64);
 });
 
-// TODO return test when data[] will fix in compilers
-// test.each(ABIVersions)('changeInitState (ABI v%i)', async (abiVersion) => {
-//     const { contracts, crypto } = tests.client;
-//     const keys = await crypto.ed25519Keypair();
-//
-//     const subscriptionAddress1 =
-//     '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-//     const subscriptionAddress2 =
-//     '0:fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
-//
-//     const walletPackage = WalletContractPackage[abiVersion];
-//     const deployed1 = await tests.deploy_with_giver({
-//         package: walletPackage,
-//         constructorParams: {},
-//         initParams: {
-//             subscription: subscriptionAddress1,
-//             owner: `0x${keys.public}`,
-//         },
-//         keyPair: keys,
-//     });
-//
-//     const deployed2 = await tests.deploy_with_giver({
-//         package: walletPackage,
-//         constructorParams: {},
-//         initParams: {
-//             subscription: subscriptionAddress2,
-//             owner: `0x${keys.public}`,
-//         },
-//         keyPair: keys,
-//     });
-//
-//     expect(deployed1.address)
-//         .not
-//         .toEqual(deployed2.address);
-//
-//     const result1 = await contracts.runLocal({
-//         address: deployed1.address,
-//         functionName: 'getSubscriptionAccount',
-//         abi: walletPackage.abi,
-//         input: {},
-//         keyPair: keys,
-//     });
-//
-//     const result2 = await contracts.runLocal({
-//         address: deployed2.address,
-//         functionName: 'getSubscriptionAccount',
-//         abi: walletPackage.abi,
-//         input: {},
-//         keyPair: keys,
-//     });
-//
-//     expect(result1.output)
-//         .toEqual({ value0: subscriptionAddress1 });
-//     expect(result2.output)
-//         .toEqual({ value0: subscriptionAddress2 });
-// });
+test('Should change InitState of contract', async () => {
+    jest.setTimeout(2000000);
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+    const walletPackage = CheckInitParamsPackage[2];
+
+    const initParams1 = {
+        addressVariable: '0:fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321',
+        uintVariable: '0x0',
+        booleanVariable: true,
+        bytesVariable: await crypto.randomGenerateBytes(32, TONOutputEncoding.Hex),
+    };
+
+    const initParams2 = {
+        addressVariable: '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        uintVariable: '0xffffffff',
+        booleanVariable: false,
+        bytesVariable: await crypto.randomGenerateBytes(64, TONOutputEncoding.Hex),
+    };
+    const deployed1 = await tests.deploy_with_giver({
+        package: walletPackage,
+        constructorParams: {},
+        initParams: initParams1,
+        keyPair: keys,
+    });
+
+    const deployed2 = await tests.deploy_with_giver({
+        package: walletPackage,
+        constructorParams: {},
+        initParams: initParams2,
+        keyPair: keys,
+    });
+
+    expect(deployed1.address).not.toEqual(deployed2.address);
+
+    let result1 = await contracts.runLocal({
+        address: deployed1.address,
+        functionName: 'getAddressVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    let result2 = await contracts.runLocal({
+        address: deployed2.address,
+        functionName: 'getAddressVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    expect(result1.output)
+        .toEqual({ value0: initParams1.addressVariable });
+    expect(result2.output)
+        .toEqual({ value0: initParams2.addressVariable });
+
+    result1 = await contracts.runLocal({
+        address: deployed1.address,
+        functionName: 'getUintVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    result2 = await contracts.runLocal({
+        address: deployed2.address,
+        functionName: 'getUintVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    expect(result1.output)
+        .toEqual({ value0: initParams1.uintVariable });
+    expect(result2.output)
+        .toEqual({ value0: initParams2.uintVariable });
+
+
+    result1 = await contracts.runLocal({
+        address: deployed1.address,
+        functionName: 'getBooleanVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    result2 = await contracts.runLocal({
+        address: deployed2.address,
+        functionName: 'getBooleanVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    expect(result1.output)
+        .toEqual({ value0: initParams1.booleanVariable });
+    expect(result2.output)
+        .toEqual({ value0: initParams2.booleanVariable });
+
+    result1 = await contracts.runLocal({
+        address: deployed1.address,
+        functionName: 'getBytesVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    result2 = await contracts.runLocal({
+        address: deployed2.address,
+        functionName: 'getBytesVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    expect(result1.output)
+        .toEqual({ value0: initParams1.bytesVariable });
+    expect(result2.output)
+        .toEqual({ value0: initParams2.bytesVariable });
+});
 
 test.each(ABIVersions)('testSetCode (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
