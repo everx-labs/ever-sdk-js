@@ -31,7 +31,8 @@ async function expectError(code: number, source: string, message?: string, f) {
         fail(`Expected error with code:${code} source: ${source}`);
     } catch (error) {
         expect({ code: error.code, source: error.source }).toEqual({ code, source });
-        expect(error.message).toEqual(message);
+        if (message)
+            expect(error.message).toMatch(message);
     }
 }
 
