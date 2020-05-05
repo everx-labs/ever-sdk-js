@@ -1,0 +1,5 @@
+# Exclude git files and Jenkinsfile fron 
+/.github            export-ignore
+/.gitattributes     export-ignore
+
+Jenkinsfile         export-ignore

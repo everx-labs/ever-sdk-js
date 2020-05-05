@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.22.2 - May 3, 2020
+### New
+- keep-alive checking support for graphql subscriptions
+ 
 ## 0.22.1 - Apr 29, 2020
 ### Fixed
 - GraphQL query will retry if network error has occurred

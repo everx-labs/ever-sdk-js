@@ -53,6 +53,14 @@ export type ServerInfo = {
     supportsAggregations: boolean,
 };
 
+// Keep-alive timeout used to support keep-alive connection checking:
+// - Every 1 minute server sends GQL_CONNECTION_KEEP_ALIVE message.
+// - Every 2 minutes client checks that GQL_CONNECTION_KEEP_ALIVE message was received
+//   within last 2 minutes.
+// - If client hadn't received keep alive message during last 2 minutes
+//   it closes connection and goes to reconnect.
+const KEEP_ALIVE_TIMEOUT = 2 * 60000;
+
 export const MAX_TIMEOUT = 2147483647;
 
 function resolveParams<T>(args: any[], requiredParamName: string, resolveArgs: () => T): T {
@@ -205,8 +213,8 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }
 
         for (const server of config.data.servers) {
+            const clientConfig = getConfigForServer(server);
             try {
-                const clientConfig = getConfigForServer(server);
                 // eslint-disable-next-line no-await-in-loop
                 const redirected = await this.detectRedirect(
                     fetch,
@@ -222,7 +230,14 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 }
                 return clientConfig;
             } catch (error) {
-                console.log(`[getClientConfig] for server "${server}" failed`, error);
+                console.log(`[getClientConfig] for server "${server}" failed`, {
+                    clientConfig: {
+                        httpUrl: clientConfig.httpUrl,
+                        wsUrl: clientConfig.wsUrl,
+                    },
+                    errorString: error.toString(),
+                    error,
+                });
             }
         }
         return getConfigForServer(config.data.servers[0]);
@@ -416,6 +431,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         const subscriptionClient = new SubscriptionClient(
             clientConfig.wsUrl,
             {
+                timeout: KEEP_ALIVE_TIMEOUT,
                 reconnect: true,
                 connectionParams: () => ({
                     accessKey: this.config.data && this.config.data.accessKey,
