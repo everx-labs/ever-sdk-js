@@ -422,8 +422,8 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
     await testCollection(queries.transactions, 'storage.storage_fees_collected');
     await testCollection(queries.transactions, 'storage.storage_fees_due');
     await testCollection(queries.transactions, 'compute.gas_fees');
-    // await testCollection(queries.transactions, 'compute.gas_used');
-    // await testCollection(queries.transactions, 'compute.gas_limit');
+    await testCollection(queries.transactions, 'compute.gas_used');
+    await testCollection(queries.transactions, 'compute.gas_limit');
     await testCollection(queries.transactions, 'compute.gas_credit');
     await testCollection(queries.transactions, 'compute.mode');
     await testCollection(queries.transactions, 'compute.exit_code');
@@ -469,8 +469,11 @@ test('Check shard_hashes greater then 0', async () => {
 
 
 test('Should return data about validator set', async () => {
-    if (nodeSe) return;
-    // test https://docs.ton.dev/86757ecb2/p/30eb5e-query-language
+    if (tests.nodeSe) {
+        console.log('Should return data about validator set');
+        return;
+    }
+    // test https://docs.ton.dev/86757ecb2/p/978847-get-config
     const result = await tests.client.queries.blocks.query({
         filter: {},
         orderBy: [{
@@ -499,14 +502,18 @@ test('Should return data about validator set', async () => {
     expect(p15ConfigParams.stake_held_for).toBeGreaterThan(0);
 
     const p16ConfigParams = config[0].master.config.p16;
-    expect(BigInt(p16ConfigParams.max_validators)).toBeGreaterThan(BigInt(p16ConfigParams.min_validators));
-    expect(BigInt(p16ConfigParams.max_validators)).toBeGreaterThanOrEqual(p16ConfigParams.max_main_validators);
+    expect(BigInt(p16ConfigParams.max_validators))
+        .toBeGreaterThan(BigInt(p16ConfigParams.min_validators));
+    expect(BigInt(p16ConfigParams.max_validators))
+        .toBeGreaterThanOrEqual(p16ConfigParams.max_main_validators);
 
     const p17ConfigParams = config[0].master.config.p17;
     expect(p17ConfigParams.min_stake).toBeDefined();
     expect(p17ConfigParams.max_stake).toBeDefined();
-    // expect(BigInt(p17ConfigParams.min_stake)).toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
-    // expect(BigInt(p17ConfigParams.min_total_stake)).toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
+    expect(BigInt(p17ConfigParams.min_stake))
+        .toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
+    expect(BigInt(p17ConfigParams.min_total_stake))
+        .toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
     expect(p17ConfigParams.min_total_stake).toBeDefined();
 
 
