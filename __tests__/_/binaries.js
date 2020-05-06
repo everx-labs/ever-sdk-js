@@ -77,7 +77,7 @@ function downloadAndGunzip(dest, url) {
 export async function dl(dst, src) {
     const dstPath = path.resolve(binariesPath, dst);
     const srcUrl = `http://${binariesHost}/${src}.gz`;
-    process.stdout.write(`Downloading ${dst} from ${binariesHost} ...`);
+    process.stdout.write(`Downloading ${dst} from ${srcUrl} to ${dstPath} ...`);
     await downloadAndGunzip(dstPath, srcUrl);
     process.stdout.write('\n');
 }

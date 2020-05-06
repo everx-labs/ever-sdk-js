@@ -26,7 +26,7 @@ import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../typ
 import {binariesVersion} from './_/binaries';
 import {ABIVersions, tests} from './_/init-tests';
 
-
+const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
 const WalletContractPackage = tests.loadPackage('WalletContract');
 const HelloContractPackage = tests.loadPackage('Hello');
 const SubscriptionContractPackage = tests.loadPackage('Subscription');
@@ -34,7 +34,6 @@ const SetCodePackage = tests.loadPackage('Setcode');
 const SetCode2Package = tests.loadPackage('Setcode2');
 const EventsPackage = tests.loadPackage('Events');
 const GiverPackage = tests.loadPackage('Giver');
-
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -346,62 +345,126 @@ test('External Signing on ABI v2', async () => {
         .toEqual(runMessage.message.messageBodyBase64);
 });
 
-// TODO return test when data[] will fix in compilers
-// test.each(ABIVersions)('changeInitState (ABI v%i)', async (abiVersion) => {
-//     const { contracts, crypto } = tests.client;
-//     const keys = await crypto.ed25519Keypair();
-//
-//     const subscriptionAddress1 =
-//     '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-//     const subscriptionAddress2 =
-//     '0:fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
-//
-//     const walletPackage = WalletContractPackage[abiVersion];
-//     const deployed1 = await tests.deploy_with_giver({
-//         package: walletPackage,
-//         constructorParams: {},
-//         initParams: {
-//             subscription: subscriptionAddress1,
-//             owner: `0x${keys.public}`,
-//         },
-//         keyPair: keys,
-//     });
-//
-//     const deployed2 = await tests.deploy_with_giver({
-//         package: walletPackage,
-//         constructorParams: {},
-//         initParams: {
-//             subscription: subscriptionAddress2,
-//             owner: `0x${keys.public}`,
-//         },
-//         keyPair: keys,
-//     });
-//
-//     expect(deployed1.address)
-//         .not
-//         .toEqual(deployed2.address);
-//
-//     const result1 = await contracts.runLocal({
-//         address: deployed1.address,
-//         functionName: 'getSubscriptionAccount',
-//         abi: walletPackage.abi,
-//         input: {},
-//         keyPair: keys,
-//     });
-//
-//     const result2 = await contracts.runLocal({
-//         address: deployed2.address,
-//         functionName: 'getSubscriptionAccount',
-//         abi: walletPackage.abi,
-//         input: {},
-//         keyPair: keys,
-//     });
-//
-//     expect(result1.output)
-//         .toEqual({ value0: subscriptionAddress1 });
-//     expect(result2.output)
-//         .toEqual({ value0: subscriptionAddress2 });
-// });
+test('Should change InitState of contract', async () => {
+    jest.setTimeout(2000000);
+    const { contracts, crypto } = tests.client;
+    const keys = await crypto.ed25519Keypair();
+    const walletPackage = CheckInitParamsPackage[2];
+
+    const initParams1 = {
+        addressVariable: '0:fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321',
+        uintVariable: '0x0',
+        booleanVariable: true,
+        bytesVariable: await crypto.randomGenerateBytes(32, TONOutputEncoding.Hex),
+    };
+
+    const initParams2 = {
+        addressVariable: '0:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        uintVariable: '0xffffffff',
+        booleanVariable: false,
+        bytesVariable: await crypto.randomGenerateBytes(64, TONOutputEncoding.Hex),
+    };
+    const deployed1 = await tests.deploy_with_giver({
+        package: walletPackage,
+        constructorParams: {},
+        initParams: initParams1,
+        keyPair: keys,
+    });
+
+    const deployed2 = await tests.deploy_with_giver({
+        package: walletPackage,
+        constructorParams: {},
+        initParams: initParams2,
+        keyPair: keys,
+    });
+
+    expect(deployed1.address).not.toEqual(deployed2.address);
+
+    let result1 = await contracts.runLocal({
+        address: deployed1.address,
+        functionName: 'getAddressVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    let result2 = await contracts.runLocal({
+        address: deployed2.address,
+        functionName: 'getAddressVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    expect(result1.output)
+        .toEqual({ value0: initParams1.addressVariable });
+    expect(result2.output)
+        .toEqual({ value0: initParams2.addressVariable });
+
+    result1 = await contracts.runLocal({
+        address: deployed1.address,
+        functionName: 'getUintVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    result2 = await contracts.runLocal({
+        address: deployed2.address,
+        functionName: 'getUintVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    expect(result1.output)
+        .toEqual({ value0: initParams1.uintVariable });
+    expect(result2.output)
+        .toEqual({ value0: initParams2.uintVariable });
+
+
+    result1 = await contracts.runLocal({
+        address: deployed1.address,
+        functionName: 'getBooleanVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    result2 = await contracts.runLocal({
+        address: deployed2.address,
+        functionName: 'getBooleanVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    expect(result1.output)
+        .toEqual({ value0: initParams1.booleanVariable });
+    expect(result2.output)
+        .toEqual({ value0: initParams2.booleanVariable });
+
+    result1 = await contracts.runLocal({
+        address: deployed1.address,
+        functionName: 'getBytesVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    result2 = await contracts.runLocal({
+        address: deployed2.address,
+        functionName: 'getBytesVariable',
+        abi: walletPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    expect(result1.output)
+        .toEqual({ value0: initParams1.bytesVariable });
+    expect(result2.output)
+        .toEqual({ value0: initParams2.bytesVariable });
+});
 
 test.each(ABIVersions)('testSetCode (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
