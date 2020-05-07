@@ -33,7 +33,7 @@ const SubscriptionContractPackage = tests.loadPackage('Subscription');
 const SetCodePackage = tests.loadPackage('Setcode');
 const SetCode2Package = tests.loadPackage('Setcode2');
 const EventsPackage = tests.loadPackage('Events');
-const GiverPackage = tests.loadPackage('Giver');
+const TransferContractPackage = tests.loadPackage('TransferContract');
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -1004,9 +1004,9 @@ test('do_tvm_transfer() should carry all the remaining balance of the current sm
     const { contracts, crypto, queries } = tests.client;
     const giverKeys = await crypto.ed25519Keypair();
 
-    const giverPackage = GiverPackage[2];
+    const transferPackage = TransferContractPackage[2];
     const contractData = await tests.deploy_with_giver({
-        package: giverPackage,
+        package: transferPackage,
         constructorParams: {},
         keyPair: giverKeys,
     });
@@ -1022,7 +1022,7 @@ test('do_tvm_transfer() should carry all the remaining balance of the current sm
     const flags = 0 | 128;
     const response = await contracts.run({
         address: contractData.address,
-        abi: giverPackage.abi,
+        abi: transferPackage.abi,
         functionName: 'do_tvm_transfer',
         input: {
             remote_addr: tests.get_giver_address(),
