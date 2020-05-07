@@ -33,7 +33,7 @@ contract Wallet {
     function sendTransaction(address payable dest, uint128 value, bool bounce) public view checkOwnerAndAccept {
         require(value > 0 && value < address(this).balance, 101);
          // Runtime function that allows to make a transfer with arbitrary settings.
-        tvm.transfer(dest, value, bounce, 0);
+        dest.transfer(value);
     }
 
     function sendAllMoney(address payable dest_addr) public checkOwnerAndAccept {
