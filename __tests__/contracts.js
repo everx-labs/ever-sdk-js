@@ -952,7 +952,7 @@ test('Test expire retries', async () => {
         return result;
     };
     const runs = [];
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < 10; i += 1) {
         runs.push(run());
     }
     await Promise.all(runs);
