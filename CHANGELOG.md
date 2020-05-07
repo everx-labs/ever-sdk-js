@@ -1,9 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.23.0 - May 3, 2020
+## 0.23.0 - May 7, 2020
 ### New
-- `runGet` method of `contracts` module executes get method on a local tvm.
+- Method `runGet` of `contracts` module executes get method on a local tvm.
+- Method `arrayFromCONS` of `contracts` module converts CONS-list to JS arrays.
  
 ## 0.22.2 - May 3, 2020
 ### New

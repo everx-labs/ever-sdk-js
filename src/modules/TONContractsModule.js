@@ -59,7 +59,9 @@ import type {
     TONContracts,
     TONContractUnsignedDeployMessage,
     TONContractUnsignedMessage,
-    TONContractUnsignedRunMessage, TONContractRunGetParams, TONContractRunGetResult,
+    TONContractUnsignedRunMessage,
+    TONContractRunGetParams,
+    TONContractRunGetResult,
 } from '../../types';
 import { TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
@@ -291,6 +293,19 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunGetParams,
     ): Promise<TONContractRunGetResult> {
         return this.requestCore('tvm.get', params);
+    }
+
+    arrayFromCONS(cons: any[]): any[] {
+        const result = [];
+        let item = cons;
+        while (item) {
+            if (!item.length === 2) {
+                throw TONClientError.invalidCons();
+            }
+            result.push(item[0]);
+            item = item[1];
+        }
+        return result;
     }
 
 

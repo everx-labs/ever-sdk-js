@@ -608,6 +608,8 @@ export interface TONContracts {
         params: TONContractRunGetParams,
     ): Promise<TONContractRunGetResult>;
 
+    arrayFromCONS(cons: any[]): any[];
+
     // Message creation
 
     createDeployMessage(

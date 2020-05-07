@@ -232,6 +232,7 @@ export class TONClientError {
         QUERY_FAILED: 1005,
         MESSAGE_EXPIRED: 1006,
         SERVER_DOESNT_SUPPORT_AGGREGATIONS: 1007,
+        INVALID_CONS: 1008,
     };
 
     message: string;
@@ -255,6 +256,14 @@ export class TONClientError {
         return new TONClientError(
             `Internal error: ${message}`,
             TONClientError.code.INTERNAL_ERROR,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static invalidCons(): TONClientError {
+        return new TONClientError(
+            'Invalid CONS structure. Each CONS item must contains of two elements.',
+            TONClientError.code.INVALID_CONS,
             TONClientError.source.CLIENT,
         );
     }
