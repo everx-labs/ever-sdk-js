@@ -297,11 +297,14 @@ export default class TONContractsModule extends TONModule implements TONContract
             if (!params.address) {
                 throw TONClientError.addressRequiredForRunLocal();
             }
-            const account = await this.getAccount(params.address, true);
+            const account: any = await this.getAccount(params.address, true);
+            account.codeBase64 = account.code;
+            account.dataBase64 = account.data;
+            delete account.code;
+            delete account.data;
             coreParams = {
+                ...account,
                 ...params,
-                codeBase64: params.codeBase64 || account.code,
-                dataBase64: params.dataBase64 || account.data,
             };
         }
         return this.requestCore('tvm.get', coreParams);
