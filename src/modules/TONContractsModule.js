@@ -292,7 +292,19 @@ export default class TONContractsModule extends TONModule implements TONContract
     async runGet(
         params: TONContractRunGetParams,
     ): Promise<TONContractRunGetResult> {
-        return this.requestCore('tvm.get', params);
+        let coreParams: TONContractRunGetParams = params;
+        if (!params.codeBase64 || !params.dataBase64) {
+            if (!params.address) {
+                throw TONClientError.addressRequiredForRunLocal();
+            }
+            const account = await this.getAccount(params.address, true);
+            coreParams = {
+                ...params,
+                codeBase64: params.codeBase64 || account.code,
+                dataBase64: params.dataBase64 || account.data,
+            };
+        }
+        return this.requestCore('tvm.get', coreParams);
     }
 
     arrayFromCONS(cons: any[]): any[] {
@@ -948,7 +960,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         );
 
         removeTypeName(account);
-        this.config.log('getAccount. Account recieved', account);
+        this.config.log('getAccount. Account received', account);
         return account;
     }
 

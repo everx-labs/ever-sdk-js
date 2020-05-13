@@ -380,8 +380,8 @@ export type TONContractRunLocalParams = TONContractRunParams & {
 }
 
 export type TONContractRunGetParams = {
-    codeBase64: string,
-    dataBase64: string,
+    codeBase64?: string,
+    dataBase64?: string,
     functionName: string,
     input?: any,
     address?: string,
