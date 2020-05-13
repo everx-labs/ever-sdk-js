@@ -239,15 +239,11 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
                 { field, fn: 'AVERAGE' },
             ],
         }));
-        console.log(`${field}:`);
-        console.log(Number(tr[0]));
-        console.log(Number(tr[1]));
-        console.log(Number(tr[2]));
-        console.log(Number(tr[3]));
         expect(Number(tr[0])).toBeDefined();
         expect(Number(tr[1])).toBeDefined();
         expect(Number(tr[2])).toBeDefined();
         expect(Number(tr[3])).toBeDefined();
+        // console.log(`${field}: MIN ${Number(tr[0])} MAX ${Number(tr[1])} SUM ${Number(tr[2])} AVERAGE ${Number(tr[3])}`);
     };
     const queries = tests.client.queries;
     await testCollection(queries.accounts, 'workchain_id');

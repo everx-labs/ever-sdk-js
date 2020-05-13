@@ -60,6 +60,8 @@ import type {
     TONContractUnsignedDeployMessage,
     TONContractUnsignedMessage,
     TONContractUnsignedRunMessage,
+    TONContractRunGetParams,
+    TONContractRunGetResult,
 } from '../../types';
 import { TONClientError } from '../TONClient';
 import { TONModule } from '../TONModule';
@@ -286,6 +288,41 @@ export default class TONContractsModule extends TONModule implements TONContract
             return this.internalRunLocalJs(params, span);
         }, parentSpan);
     }
+
+    async runGet(
+        params: TONContractRunGetParams,
+    ): Promise<TONContractRunGetResult> {
+        let coreParams: TONContractRunGetParams = params;
+        if (!params.codeBase64 || !params.dataBase64) {
+            if (!params.address) {
+                throw TONClientError.addressRequiredForRunLocal();
+            }
+            const account: any = await this.getAccount(params.address, true);
+            account.codeBase64 = account.code;
+            account.dataBase64 = account.data;
+            delete account.code;
+            delete account.data;
+            coreParams = {
+                ...account,
+                ...params,
+            };
+        }
+        return this.requestCore('tvm.get', coreParams);
+    }
+
+    arrayFromCONS(cons: any[]): any[] {
+        const result = [];
+        let item = cons;
+        while (item) {
+            if (!item.length === 2) {
+                throw TONClientError.invalidCons();
+            }
+            result.push(item[0]);
+            item = item[1];
+        }
+        return result;
+    }
+
 
     // Message creation
 
@@ -926,7 +963,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         );
 
         removeTypeName(account);
-        this.config.log('getAccount. Account recieved', account);
+        this.config.log('getAccount. Account received', account);
         return account;
     }
 
