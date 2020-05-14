@@ -1,6 +1,5 @@
 {
-	"ABI version": 2,
-	"header": ["time", "expire"],
+	"ABI version": 1,
 	"functions": [
 		{
 			"name": "constructor",
