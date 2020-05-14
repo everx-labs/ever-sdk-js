@@ -1000,11 +1000,11 @@ test.each(ABIVersions)('Check deployed (ABI v%i)', async (abiVersion) => {
     expect(checked.alreadyDeployed)
         .toBeTruthy();
 });
-test('do_tvm_transfer() should carry all the remaining balance of the current smart contract to another address', async () => {
+test.each(ABIVersions)('do_tvm_transfer() should carry all the remaining balance of the current smart contract to another address', async (abiVersion) => {
     const { contracts, crypto, queries } = tests.client;
     const giverKeys = await crypto.ed25519Keypair();
 
-    const transferPackage = TransferContractPackage[2];
+    const transferPackage = TransferContractPackage[abiVersion];
     const contractData = await tests.deploy_with_giver({
         package: transferPackage,
         constructorParams: {},
@@ -1018,8 +1018,7 @@ test('do_tvm_transfer() should carry all the remaining balance of the current sm
         'balance',
     )).balance;
 
-    // eslint-disable-next-line no-bitwise
-    const flags = 0 | 128;
+    const flags = 128;
     const response = await contracts.run({
         address: contractData.address,
         abi: transferPackage.abi,
@@ -1042,6 +1041,4 @@ test('do_tvm_transfer() should carry all the remaining balance of the current sm
     )).balance;
 
     expect(endBalance).toEqual('0x0');
-
-
 });

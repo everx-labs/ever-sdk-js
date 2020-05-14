@@ -1,22 +1,6 @@
 {
-	"ABI version": 2,
-	"header": ["time"],
+	"ABI version": 1,
 	"functions": [
-		{
-			"name": "doCrash",
-			"inputs": [
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "receiveTransfer",
-			"inputs": [
-				{"name":"number","type":"uint64"}
-			],
-			"outputs": [
-			]
-		},
 		{
 			"name": "transferToAddress",
 			"inputs": [
