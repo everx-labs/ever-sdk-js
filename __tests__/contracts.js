@@ -23,7 +23,7 @@ import {TONClient, TONClientError} from '../src/TONClient';
 
 
 import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
-import {binariesVersion} from './_/binaries';
+import {bv} from './_/binaries';
 import {ABIVersions, tests} from './_/init-tests';
 
 const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
@@ -69,8 +69,8 @@ test('removeProps', () => {
 
 test('basic', async () => {
     const version = await tests.client.config.getVersion();
-    expect(version)
-        .toEqual(binariesVersion);
+    expect(version.split('.')[0])
+        .toEqual(bv);
     console.log(`Client uses expected binaries version: ${version}`);
 });
 
