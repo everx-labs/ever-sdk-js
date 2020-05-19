@@ -10,7 +10,7 @@ const zlib = require('zlib');
 
 
 export const p = os.platform();
-export const bv = process.env.TON_SDK_BIN_VERSION ? process.env.TON_SDK_BIN_VERSION : (binaries_version || version).split('.')[0];
+export const bv = process.env.TON_SDK_BIN_VERSION ? process.env.TON_SDK_BIN_VERSION : binaries_version.split('.')[0];
 const binariesHost = 'sdkbinaries-ws.tonlabs.io';
 export const binariesPath = path.resolve(__dirname, '..');
 
