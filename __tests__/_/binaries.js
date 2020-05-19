@@ -10,7 +10,7 @@ const zlib = require('zlib');
 
 
 export const p = os.platform();
-export const bv = process.env.binaries_version ? process.env.binaries_version.replace(/\./g, '_') : (binaries_version || version).split('.')[0];
+export const bv = process.env.BINARIES_VERSION ? process.env.BINARIES_VERSION.replace(/\./g, '_') : (binaries_version || version).split('.')[0];
 const binariesHost = 'sdkbinaries-ws.tonlabs.io';
 export const binariesPath = path.resolve(__dirname, '..');
 

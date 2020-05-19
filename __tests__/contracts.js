@@ -69,9 +69,9 @@ test('removeProps', () => {
 
 test('basic', async () => {
     const version = await tests.client.config.getVersion();
-    if (process.env.binaries_version) {
+    if (process.env.BINARIES_VERSION) {
         expect(version)
-            .toEqual(process.env.binaries_version);
+            .toEqual(process.env.BINARIES_VERSION);
     } else {
         expect(version.split('.')[0])
             .toEqual(bv);
