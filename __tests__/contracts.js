@@ -16,15 +16,15 @@
 
 // @flow
 
-import {Span} from 'opentracing';
-import {removeProps, TONAddressStringVariant} from '../src/modules/TONContractsModule';
-import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
-import {TONClient, TONClientError} from '../src/TONClient';
+import { Span } from 'opentracing';
+import { removeProps, TONAddressStringVariant } from '../src/modules/TONContractsModule';
+import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
+import { TONClient, TONClientError } from '../src/TONClient';
 
 
-import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
-import {bv} from './_/binaries';
-import {ABIVersions, tests} from './_/init-tests';
+import type { TONContractABI, TONContractLoadResult, TONKeyPairData } from '../types';
+import { bv } from './_/binaries';
+import { ABIVersions, tests } from './_/init-tests';
 
 const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -69,8 +69,13 @@ test('removeProps', () => {
 
 test('basic', async () => {
     const version = await tests.client.config.getVersion();
-    expect(version.split('.')[0])
-        .toEqual(bv);
+    if (process.env.binaries_version) {
+        expect(version)
+            .toEqual(process.env.binaries_version);
+    } else {
+        expect(version.split('.')[0])
+            .toEqual(bv);
+    }
     console.log(`Client uses expected binaries version: ${version}`);
 });
 
@@ -377,7 +382,9 @@ test('Should change InitState of contract', async () => {
         keyPair: keys,
     });
 
-    expect(deployed1.address).not.toEqual(deployed2.address);
+    expect(deployed1.address)
+        .not
+        .toEqual(deployed2.address);
 
     let result1 = await contracts.runLocal({
         address: deployed1.address,

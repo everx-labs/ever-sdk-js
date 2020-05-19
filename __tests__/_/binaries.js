@@ -1,5 +1,7 @@
-import {version, binaries_version} from '../../package.json';
+import { version, binaries_version } from '../../package.json';
 
+require('dotenv')
+    .config();
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -8,7 +10,7 @@ const zlib = require('zlib');
 
 
 export const p = os.platform();
-export const bv = (binaries_version || version).split('.')[0];
+export const bv = process.env.binaries_version ? process.env.binaries_version.replace(/\./g, '_') : (binaries_version || version).split('.')[0];
 const binariesHost = 'sdkbinaries-ws.tonlabs.io';
 export const binariesPath = path.resolve(__dirname, '..');
 
@@ -22,7 +24,7 @@ function downloadAndGunzip(dest, url) {
                 return;
             }
             fs.mkdirSync(path.dirname(path.resolve(dest)), ({ recursive: true }: any));
-            let file = fs.createWriteStream(dest, { flags: "w" });
+            let file = fs.createWriteStream(dest, { flags: 'w' });
             let opened = false;
             const failed = (err) => {
                 if (file) {
@@ -43,26 +45,26 @@ function downloadAndGunzip(dest, url) {
             response.pipe(unzip);
 
 
-            request.on("error", err => {
+            request.on('error', err => {
                 failed(err);
             });
 
-            file.on("finish", () => {
+            file.on('finish', () => {
                 if (opened && file) {
                     resolve();
                 }
             });
 
-            file.on("open", () => {
+            file.on('open', () => {
                 opened = true;
             });
 
-            file.on("error", err => {
-                if (err.code === "EEXIST") {
+            file.on('error', err => {
+                if (err.code === 'EEXIST') {
                     if (file) {
                         file.close();
                     }
-                    reject("File already exists");
+                    reject('File already exists');
                 } else {
                     failed(err);
                 }
