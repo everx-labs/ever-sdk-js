@@ -14,6 +14,7 @@ export type TONConfigData = {
     messageProcessingTimeoutGrowFactor?: number,
     waitForTimeout?: number,
     useWebSocketForQueries?: boolean,
+    outOfSyncThreshold?: number,
     accessKey?: string,
 }
 
@@ -263,7 +264,7 @@ export type TONContractABI = {
     header?: string[],
     functions: TONContractABIFunction[],
     events: TONContractABIEvent[],
-    data: TONContractABIDataItem[],
+    data?: TONContractABIDataItem[],
 };
 
 export type TONContractPackage = {
@@ -881,6 +882,10 @@ export interface ITONClient {
     crypto: TONCrypto;
     contracts: TONContracts;
     queries: TONQueries;
+
+    serverTimeDelta(): Promise<number>;
+
+    serverNow(): Promise<number>;
 
     trace<T>(
         name: string,

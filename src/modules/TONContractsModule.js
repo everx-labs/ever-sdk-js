@@ -553,6 +553,11 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractMessage,
         parentSpan?: (Span | SpanContext),
     ): Promise<string> {
+        const serverTimeDelta = Math.abs(await this.queries.serverTimeDelta(parentSpan));
+        if (serverTimeDelta > this.config.outOfSyncThreshold()) {
+            this.queries.dropServerTimeDelta();
+            throw TONClientError.clockOutOfSync();
+        }
         const id = params.messageId
             || (await this.getBocHash({
                 bocBase64: params.messageBodyBase64,

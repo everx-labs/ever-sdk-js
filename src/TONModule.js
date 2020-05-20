@@ -97,6 +97,10 @@ export interface TONModuleContext {
 
     getModule<T>(ModuleClass: typeof TONModule): T,
 
+    serverTimeDelta(): Promise<number>,
+
+    serverNow(): Promise<number>,
+
     trace<T>(
         name: string,
         f: (span: Span) => Promise<T>,

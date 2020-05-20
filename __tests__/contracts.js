@@ -99,6 +99,21 @@ test('load', async () => {
     });
 });
 
+
+test('out of sync', async () => {
+    const cfg = tests.client.config.data;
+    const saveOutOfSyncThreshold = cfg.outOfSyncThreshold;
+    cfg.outOfSyncThreshold = -1;
+    try {
+        await expectError(TONClientError.code.CLOCK_OUT_OF_SYNC, TONClientError.source.CLIENT, async () => {
+            await tests.get_grams_from_giver(walletAddress);
+        });
+    } finally {
+        cfg.outOfSyncThreshold = saveOutOfSyncThreshold;
+    }
+});
+
+
 test.each(ABIVersions)('Test hello contract from docs.ton.dev (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
