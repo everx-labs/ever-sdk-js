@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {QTransactionProcessingStatus} from '../src/modules/TONContractsModule';
-import {get_grams_from_giver} from './_/giver';
-import {ABIVersions, nodeSe, tests} from './_/init-tests';
+import { QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
+import { get_grams_from_giver } from './_/giver';
+import { ABIVersions, nodeSe, tests } from './_/init-tests';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 
@@ -62,7 +62,8 @@ test.skip('Transaction List', async () => {
         result: 'id now status',
         limit: 1,
     });
-    expect(transaction[0].id).toEqual('e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465');
+    expect(transaction[0].id)
+        .toEqual('e19948d53c4fc8d405fbb8bde4af83039f37ce6bc9d0fc07bbd47a1cf59a8465');
 });
 
 test('Block signatures', async () => {
@@ -95,7 +96,8 @@ test.skip('Message', async () => {
         },
         result: 'body created_at',
     });
-    expect(messages[0].header.ExtOutMsgInfo.created_at).toEqual(1562342740);
+    expect(messages[0].header.ExtOutMsgInfo.created_at)
+        .toEqual(1562342740);
 });
 
 test('Ranges', async () => {
@@ -216,9 +218,13 @@ test('Aggregations', async () => {
     const testCollection = async (c, n) => {
         const tr = (await c.aggregate({
             filter: {},
-            fields: [{ field: 'id', fn: 'COUNT' }],
+            fields: [{
+                field: 'id',
+                fn: 'COUNT',
+            }],
         }))[0];
-        expect(Number(tr)).toBeGreaterThanOrEqual(n);
+        expect(Number(tr))
+            .toBeGreaterThanOrEqual(n);
     };
     const queries = tests.client.queries;
     await testCollection(queries.accounts, 1);
@@ -227,34 +233,51 @@ test('Aggregations', async () => {
     await testCollection(queries.messages, 1);
     await testCollection(queries.blocks_signatures, 0);
 });
-
-test('Should correctly perform aggregation queries for Account, Block, Transaction numeric fields', async () => {
-    const testCollection = async (c, field) => {
-        const tr = (await c.aggregate({
-            filter: {},
-            fields: [
-                { field, fn: 'MIN' },
-                { field, fn: 'MAX' },
-                { field, fn: 'SUM' },
-                { field, fn: 'AVERAGE' },
-            ],
-        }));
-        expect(Number(tr[0])).toBeDefined();
-        expect(Number(tr[1])).toBeDefined();
-        expect(Number(tr[2])).toBeDefined();
-        expect(Number(tr[3])).toBeDefined();
-        // console.log(`${field}: MIN ${Number(tr[0])} MAX ${Number(tr[1])} SUM ${Number(tr[2])} AVERAGE ${Number(tr[3])}`);
-    };
+const testCollection = async (c, field) => {
+    const tr = (await c.aggregate({
+        filter: {},
+        fields: [
+            {
+                field,
+                fn: 'MIN',
+            },
+            {
+                field,
+                fn: 'MAX',
+            },
+            {
+                field,
+                fn: 'SUM',
+            },
+            {
+                field,
+                fn: 'AVERAGE',
+            },
+        ],
+    }));
+    expect(Number(tr[0]))
+        .toBeDefined();
+    expect(Number(tr[1]))
+        .toBeDefined();
+    expect(Number(tr[2]))
+        .toBeDefined();
+    expect(Number(tr[3]))
+        .toBeDefined();
+    console.log(`${field}: MIN ${Number(tr[0])} MAX ${Number(tr[1])} SUM ${Number(tr[2])} AVERAGE ${Number(tr[3])}`);
+};
+test('Should correctly perform aggregation queries for Account numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.accounts, 'workchain_id');
-    // await testCollection(queries.accounts, 'acc_type');
     await testCollection(queries.accounts, 'last_paid');
     await testCollection(queries.accounts, 'due_payment');
     await testCollection(queries.accounts, 'last_trans_lt');
     await testCollection(queries.accounts, 'balance');
     await testCollection(queries.accounts, 'balance_other.currency');
     await testCollection(queries.accounts, 'split_depth');
-    //  await testCollection(queries.blocks, 'status');
+});
+
+test('Should correctly perform aggregation queries for Block numeric fields', async () => {
+    const queries = tests.client.queries;
     await testCollection(queries.blocks, 'global_id');
     await testCollection(queries.blocks, 'seq_no');
     await testCollection(queries.blocks, 'gen_utime');
@@ -279,7 +302,10 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
     await testCollection(queries.blocks, 'min_ref_mc_seqno');
     await testCollection(queries.blocks, 'prev_key_block_seqno');
     await testCollection(queries.blocks, 'gen_software_version');
+});
 
+test('Should correctly perform aggregation queries for Block value_flow numeric fields', async () => {
+    const queries = tests.client.queries;
     await testCollection(queries.blocks, 'value_flow.to_next_blk');
     await testCollection(queries.blocks, 'value_flow.to_next_blk_other.currency');
     await testCollection(queries.blocks, 'value_flow.to_next_blk_other.value');
@@ -304,22 +330,21 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
     await testCollection(queries.blocks, 'value_flow.fees_imported');
     await testCollection(queries.blocks, 'value_flow.fees_imported_other.currency');
     await testCollection(queries.blocks, 'value_flow.fees_imported_other.value');
+});
 
-    // await testCollection(queries.blocks, 'in_msg_descr.msg_type');
+test('Should correctly perform aggregation queries for Block in_msg_descr numeric fields', async () => {
+    const queries = tests.client.queries;
     await testCollection(queries.blocks, 'in_msg_descr.ihr_fee');
     await testCollection(queries.blocks, 'in_msg_descr.in_msg.fwd_fee_remaining');
     await testCollection(queries.blocks, 'in_msg_descr.fwd_fee');
     await testCollection(queries.blocks, 'in_msg_descr.out_msg.fwd_fee_remaining');
     await testCollection(queries.blocks, 'in_msg_descr.transit_fee');
-    // await testCollection(queries.blocks, 'out_msg_descr.msg_type');
     await testCollection(queries.blocks, 'out_msg_descr.out_msg.fwd_fee_remaining');
-    // await testCollection(queries.blocks, 'out_msg_descr.reimport.msg_type');
     await testCollection(queries.blocks, 'out_msg_descr.reimport.ihr_fee');
     await testCollection(queries.blocks, 'out_msg_descr.reimport.in_msg.fwd_fee_remaining');
     await testCollection(queries.blocks, 'out_msg_descr.reimport.fwd_fee');
     await testCollection(queries.blocks, 'out_msg_descr.reimport.out_msg.fwd_fee_remaining');
     await testCollection(queries.blocks, 'out_msg_descr.reimport.transit_fee');
-    // await testCollection(queries.blocks, 'out_msg_descr.imported.msg_type');
     await testCollection(queries.blocks, 'out_msg_descr.imported.ihr_fee');
     await testCollection(queries.blocks, 'out_msg_descr.imported.in_msg.fwd_fee_remaining');
     await testCollection(queries.blocks, 'out_msg_descr.imported.fwd_fee');
@@ -328,18 +353,22 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
     await testCollection(queries.blocks, 'out_msg_descr.import_block_lt');
     await testCollection(queries.blocks, 'out_msg_descr.next_workchain');
     await testCollection(queries.blocks, 'out_msg_descr.next_addr_pfx');
+});
 
-
-    // TODO not collected
-    /* await testCollection(queries.blocks, 'account_blocks.transactions.lt');
-     await testCollection(queries.blocks, 'account_blocks.transactions.total_fees');
-     await testCollection(queries.blocks, 'account_blocks.transactions.total_fees_other.currency');
-     await testCollection(queries.blocks, 'account_blocks.transactions.total_fees_other.value');
-     await testCollection(queries.blocks, 'account_blocks.tr_count'); */
+test('Should correctly perform aggregation queries for Block account_blocks & state_update numeric fields', async () => {
+    const queries = tests.client.queries;
+    await testCollection(queries.blocks, 'account_blocks.transactions.lt');
+    await testCollection(queries.blocks, 'account_blocks.transactions.total_fees');
+    await testCollection(queries.blocks, 'account_blocks.transactions.total_fees_other.currency');
+    await testCollection(queries.blocks, 'account_blocks.transactions.total_fees_other.value');
+    await testCollection(queries.blocks, 'account_blocks.tr_count');
 
     await testCollection(queries.blocks, 'state_update.new_depth');
     await testCollection(queries.blocks, 'state_update.old_depth');
+});
 
+test('Should correctly perform aggregation queries for Block master numeric fields', async () => {
+    const queries = tests.client.queries;
     await testCollection(queries.blocks, 'master.min_shard_gen_utime');
     await testCollection(queries.blocks, 'master.max_shard_gen_utime');
     await testCollection(queries.blocks, 'master.shard_hashes.workchain_id');
@@ -351,7 +380,6 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
     await testCollection(queries.blocks, 'master.shard_hashes.descr.next_catchain_seqno');
     await testCollection(queries.blocks, 'master.shard_hashes.descr.min_ref_mc_seqno');
     await testCollection(queries.blocks, 'master.shard_hashes.descr.gen_utime');
-    // await testCollection(queries.blocks, 'master.shard_hashes.descr.split_type');
     await testCollection(queries.blocks, 'master.shard_hashes.descr.split');
     await testCollection(queries.blocks, 'master.shard_hashes.descr.fees_collected');
     await testCollection(queries.blocks, 'master.shard_hashes.descr.fees_collected_other.currency');
@@ -364,7 +392,6 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
     await testCollection(queries.blocks, 'master.shard_fees.fees');
     await testCollection(queries.blocks, 'master.shard_fees.fees_other.currency');
     await testCollection(queries.blocks, 'master.shard_fees.fees_other.value');
-    //  await testCollection(queries.blocks, 'master.recover_create_msg.msg_type');
     await testCollection(queries.blocks, 'master.recover_create_msg.ihr_fee');
     await testCollection(queries.blocks, 'master.recover_create_msg.in_msg.fwd_fee_remaining');
     await testCollection(queries.blocks, 'master.recover_create_msg.fwd_fee');
@@ -376,19 +403,21 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
     await testCollection(queries.blocks, 'master.config.p8.version');
     await testCollection(queries.blocks, 'master.config.p9');
     await testCollection(queries.blocks, 'master.config.p10');
-    // todo config
+});
 
+
+test('Should correctly perform aggregation queries for blocks_signatures numeric fields', async () => {
+    const queries = tests.client.queries;
     await testCollection(queries.blocks_signatures, 'gen_utime');
     await testCollection(queries.blocks_signatures, 'seq_no');
     await testCollection(queries.blocks_signatures, 'workchain_id');
     await testCollection(queries.blocks_signatures, 'validator_list_hash_short');
     await testCollection(queries.blocks_signatures, 'catchain_seqno');
     await testCollection(queries.blocks_signatures, 'sig_weight');
+});
 
-
-    // await testCollection(queries.messages, 'msg_type');
-    // await testCollection(queries.messages, 'status');
-
+test('Should correctly perform aggregation queries for Messages numeric fields', async () => {
+    const queries = tests.client.queries;
     await testCollection(queries.messages, 'split_depth');
     await testCollection(queries.messages, 'src_workchain_id');
     await testCollection(queries.messages, 'dst_workchain_id');
@@ -410,7 +439,10 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
     await testCollection(queries.messages, 'src_transaction.orig_status');
     await testCollection(queries.messages, 'src_transaction.end_status');
     await testCollection(queries.messages, 'src_transaction.in_message.split_depth'); */
+});
 
+test('Should correctly perform aggregation queries for transactions numeric fields', async () => {
+    const queries = tests.client.queries;
     await testCollection(queries.transactions, 'lt');
     await testCollection(queries.transactions, 'prev_trans_lt');
     await testCollection(queries.transactions, 'now');
@@ -426,8 +458,6 @@ test('Should correctly perform aggregation queries for Account, Block, Transacti
     await testCollection(queries.transactions, 'compute.exit_arg');
     await testCollection(queries.transactions, 'compute.vm_steps');
 });
-
-
 // Skipped explicitly as disabled
 test.skip('Subscribe for failed server', async () => {
     // console.log('>>>', 'Subscribed');
@@ -479,53 +509,72 @@ test('Should return data about validator set', async () => {
         limit: 1,
         result: 'prev_key_block_seqno',
     });
-    expect(result.length).toEqual(1);
+    expect(result.length)
+        .toEqual(1);
     const seq_no = result[0].prev_key_block_seqno;
-    expect(seq_no).toBeGreaterThan(0);
+    expect(seq_no)
+        .toBeGreaterThanOrEqual(0);
 
-    const config = await tests.client.queries.blocks.query({
-        filter: {
-            seq_no: { eq: seq_no },
-            workchain_id: { eq: -1 },
-        },
-        result: 'master { config { p15 { validators_elected_for elections_start_before elections_end_before stake_held_for } p16 { max_validators max_main_validators min_validators } p17 { min_stake max_stake min_total_stake max_stake_factor } p34 { utime_since utime_until total total_weight list { public_key adnl_addr weight } } } }',
-    });
-    expect(config.length).toEqual(1);
-    const p15ConfigParams = config[0].master.config.p15;
-    expect(p15ConfigParams.validators_elected_for).toBeGreaterThan(0);
-    expect(p15ConfigParams.elections_start_before).toBeGreaterThan(0);
-    expect(p15ConfigParams.elections_end_before).toBeGreaterThan(0);
-    expect(p15ConfigParams.stake_held_for).toBeGreaterThan(0);
+    // no masterblock before first election and seq_no = 0
+    if (seq_no > 0) {
+        const config = await tests.client.queries.blocks.query({
+            filter: {
+                seq_no: { eq: seq_no },
+                workchain_id: { eq: -1 },
+            },
+            result: 'master { config { p15 { validators_elected_for elections_start_before elections_end_before stake_held_for } p16 { max_validators max_main_validators min_validators } p17 { min_stake max_stake min_total_stake max_stake_factor } p34 { utime_since utime_until total total_weight list { public_key adnl_addr weight } } } }',
+        });
+        expect(config.length)
+            .toEqual(1);
+        const p15ConfigParams = config[0].master.config.p15;
+        expect(p15ConfigParams.validators_elected_for)
+            .toBeGreaterThan(0);
+        expect(p15ConfigParams.elections_start_before)
+            .toBeGreaterThan(0);
+        expect(p15ConfigParams.elections_end_before)
+            .toBeGreaterThan(0);
+        expect(p15ConfigParams.stake_held_for)
+            .toBeGreaterThan(0);
 
-    const p16ConfigParams = config[0].master.config.p16;
-    expect(BigInt(p16ConfigParams.max_validators))
-        .toBeGreaterThan(BigInt(p16ConfigParams.min_validators));
-    expect(BigInt(p16ConfigParams.max_validators))
-        .toBeGreaterThanOrEqual(p16ConfigParams.max_main_validators);
+        const p16ConfigParams = config[0].master.config.p16;
+        expect(BigInt(p16ConfigParams.max_validators))
+            .toBeGreaterThan(BigInt(p16ConfigParams.min_validators));
+        expect(BigInt(p16ConfigParams.max_validators))
+            .toBeGreaterThanOrEqual(p16ConfigParams.max_main_validators);
 
-    const p17ConfigParams = config[0].master.config.p17;
-    expect(p17ConfigParams.min_stake).toBeDefined();
-    expect(p17ConfigParams.max_stake).toBeDefined();
-    expect(BigInt(p17ConfigParams.min_stake))
-        .toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
-    expect(BigInt(p17ConfigParams.min_total_stake))
-        .toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
-    expect(p17ConfigParams.min_total_stake).toBeDefined();
+        const p17ConfigParams = config[0].master.config.p17;
+        expect(p17ConfigParams.min_stake)
+            .toBeDefined();
+        expect(p17ConfigParams.max_stake)
+            .toBeDefined();
+        expect(BigInt(p17ConfigParams.min_stake))
+            .toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
+        expect(BigInt(p17ConfigParams.min_total_stake))
+            .toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
+        expect(p17ConfigParams.min_total_stake)
+            .toBeDefined();
 
 
-    expect(p17ConfigParams.max_stake_factor).toBeDefined();
+        expect(p17ConfigParams.max_stake_factor)
+            .toBeDefined();
 
-    const validatorSetList = config[0].master.config.p34.list;
-    const p34ConfigParams = config[0].master.config.p34;
-    expect(p34ConfigParams.total).toEqual(validatorSetList.length);
-    let weight = 0n;
-    for (let i = 0; i < validatorSetList.length; i++) {
-        expect(validatorSetList[i].adnl_addr).not.toBeNull();
-        expect(validatorSetList[i].public_key).toBeDefined();
-        expect(validatorSetList[i].public_key.length).toEqual(64);
-        weight += BigInt(validatorSetList[i].weight);
+        const validatorSetList = config[0].master.config.p34.list;
+        const p34ConfigParams = config[0].master.config.p34;
+        expect(p34ConfigParams.total)
+            .toEqual(validatorSetList.length);
+        let weight = 0n;
+        for (let i = 0; i < validatorSetList.length; i++) {
+            expect(validatorSetList[i].adnl_addr)
+                .toBeDefined();
+            expect(validatorSetList[i].public_key)
+                .toBeDefined();
+            expect(validatorSetList[i].public_key.length)
+                .toEqual(64);
+            weight += BigInt(validatorSetList[i].weight);
+        }
+        expect(BigInt(p34ConfigParams.total_weight))
+            .toEqual(weight);
     }
-    expect(BigInt(p34ConfigParams.total_weight)).toEqual(weight);
 });
 
 
