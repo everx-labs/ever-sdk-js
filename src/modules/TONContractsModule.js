@@ -691,6 +691,17 @@ export default class TONContractsModule extends TONModule implements TONContract
         return transaction;
     }
 
+    async isDeployed(address: string, parentSpan?: (Span | SpanContext)): Promise<bool> {
+        const account = await this.queries.accounts.query({
+            filter: {
+                id: { eq: address },
+                acc_type: { eq: QAccountType.active },
+            },
+            result: 'id',
+            parentSpan,
+        });
+        return account.length > 0;
+    }
 
     async processDeployMessage(
         params: TONContractDeployMessage,
@@ -698,16 +709,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractDeployResult> {
         this.config.log('processDeployMessage', params);
-        // check that account is already deployed
-        const account = await this.queries.accounts.query({
-            filter: {
-                id: { eq: params.address },
-                acc_type: { eq: QAccountType.active },
-            },
-            result: 'id',
-            parentSpan,
-        });
-        if (account.length > 0) {
+        if (await this.isDeployed(params.address, parentSpan)) {
             return {
                 address: params.address,
                 alreadyDeployed: true,
@@ -950,6 +952,12 @@ export default class TONContractsModule extends TONModule implements TONContract
         this.config.log('Deploy start');
         return this.retryCall(async (retryIndex) => {
             const deployMessage = await this.createDeployMessage(params, retryIndex);
+            if (await this.isDeployed(deployMessage.address, parentSpan)) {
+                return {
+                    address: deployMessage.address,
+                    alreadyDeployed: true,
+                };
+            }
             await this.sendMessage(deployMessage.message, parentSpan);
             return this.waitForDeployTransaction(deployMessage, parentSpan, retryIndex);
         });

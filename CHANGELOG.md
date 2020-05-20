@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Check for a clock is out of sync before sending a message (fail if out of sync).
 - Method `waitForRunTransaction` of `contracts` module. 
 - Method `waitForDeployTransaction` of `contracts` module. 
+- Method `isDeployed` of `contracts` module. 
  
 ## 0.23.0 - May 15, 2020
 ### New
