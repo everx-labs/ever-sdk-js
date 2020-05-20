@@ -549,21 +549,27 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message processing
 
+    async getMessageId(message: TONContractMessage): Promise<string> {
+        return message.messageId || (await this.getBocHash({
+            bocBase64: message.messageBodyBase64,
+        })).hash
+    }
+
     async sendMessage(
         params: TONContractMessage,
         parentSpan?: (Span | SpanContext),
     ): Promise<string> {
+        const expire = params.expire;
+        if (expire && (Date.now() > expire * 1000)) {
+            throw TONClientError.sendNodeRequestFailed('Message already expired');
+        }
         const serverTimeDelta = Math.abs(await this.queries.serverTimeDelta(parentSpan));
         if (serverTimeDelta > this.config.outOfSyncThreshold()) {
             this.queries.dropServerTimeDelta();
             throw TONClientError.clockOutOfSync();
         }
-        const id = params.messageId
-            || (await this.getBocHash({
-                bocBase64: params.messageBodyBase64,
-            })).hash;
-        const idBase64 = Buffer.from(id, 'hex')
-            .toString('base64');
+        const id = await this.getMessageId(params);
+        const idBase64 = Buffer.from(id, 'hex').toString('base64');
         await this.queries.postRequests([
             {
                 id: idBase64,
@@ -580,12 +586,19 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<QTransaction> {
-        const expire = message.expire;
-        if (expire && (Date.now() > expire * 1000)) {
-            throw TONClientError.sendNodeRequestFailed('Message already expired');
-        }
+        await this.sendMessage(message, parentSpan);
+        return this.waitForTransaction(message, resultFields, parentSpan, retryIndex);
+    }
+
+
+    async waitForTransaction(
+        message: TONContractMessage,
+        resultFields: string,
+        parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
+    ): Promise<QTransaction> {
+        const messageId = await this.getMessageId(message);
         const config = this.config;
-        const messageId = await this.sendMessage(message, parentSpan);
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
         const promises = [];
         const serverInfo = await this.queries.getServerInfo(parentSpan);
@@ -593,6 +606,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             ? this.queries.generateOperationId()
             : undefined;
         let transaction: ?QTransaction = null;
+        const expire = message.expire;
         if (expire) {
             // calculate timeout according to `expire` value (in seconds)
             // add processing timeout as master block validation time
@@ -699,9 +713,21 @@ export default class TONContractsModule extends TONModule implements TONContract
                 alreadyDeployed: true,
             };
         }
+        await this.sendMessage(params.message, parentSpan);
+        return this.waitForDeployTransaction(
+            params,
+            parentSpan,
+            retryIndex,
+        );
+    }
 
-        const transaction = await this.processMessage(
-            params.message,
+    async waitForDeployTransaction(
+        deployMessage: TONContractDeployMessage,
+        parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
+    ): Promise<TONContractDeployResult> {
+        const transaction = await this.waitForTransaction(
+            deployMessage.message,
             transactionDetails,
             parentSpan,
             retryIndex,
@@ -709,7 +735,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         await checkTransaction(transaction);
         this.config.log('processDeployMessage. End');
         return {
-            address: params.address,
+            address: deployMessage.address,
             alreadyDeployed: false,
             transaction,
         };
@@ -717,13 +743,22 @@ export default class TONContractsModule extends TONModule implements TONContract
 
 
     async processRunMessage(
-        params: TONContractRunMessage,
+        runMessage: TONContractRunMessage,
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<TONContractRunResult> {
-        this.config.log('processRunMessage', params);
-        const transaction = await this.processMessage(
-            params.message,
+        this.config.log('processRunMessage', runMessage);
+        await this.sendMessage(runMessage.message, parentSpan);
+        return this.waitForRunTransaction(runMessage, parentSpan, retryIndex);
+    }
+
+    async waitForRunTransaction(
+        runMessage: TONContractRunMessage,
+        parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
+    ): Promise<TONContractRunResult> {
+        const transaction = await this.waitForTransaction(
+            runMessage.message,
             transactionDetails,
             parentSpan,
             retryIndex,
@@ -742,12 +777,12 @@ export default class TONContractsModule extends TONModule implements TONContract
         this.config.log('processRunMessage. Before messages parse');
         const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
             return this.decodeOutputMessageBody({
-                abi: params.abi,
+                abi: runMessage.abi,
                 bodyBase64: x.body || '',
             });
         }));
         const resultOutput = outputs.find((x: TONContractDecodeMessageBodyResult) => {
-            return x.function.toLowerCase() === params.functionName.toLowerCase();
+            return x.function.toLowerCase() === runMessage.functionName.toLowerCase();
         });
         this.config.log('processRunMessage. End');
         return {
@@ -757,20 +792,20 @@ export default class TONContractsModule extends TONModule implements TONContract
     }
 
     async processRunMessageLocal(
-        params: TONContractRunMessage,
+        runMessage: TONContractRunMessage,
         waitParams?: TONContractAccountWaitParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
-        this.config.log('processRunMessageLocal', params);
+        this.config.log('processRunMessageLocal', runMessage);
 
-        const account = await this.getAccount(params.address, true, waitParams, parentSpan);
+        const account = await this.getAccount(runMessage.address, true, waitParams, parentSpan);
 
         return this.requestCore('contracts.run.local.msg', {
-            address: params.address,
+            address: runMessage.address,
             account,
-            abi: params.abi,
-            functionName: params.functionName,
-            messageBase64: params.message.messageBodyBase64,
+            abi: runMessage.abi,
+            functionName: runMessage.functionName,
+            messageBase64: runMessage.message.messageBodyBase64,
         });
     }
 
@@ -914,8 +949,9 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<TONContractDeployResult> {
         this.config.log('Deploy start');
         return this.retryCall(async (retryIndex) => {
-            const message = await this.createDeployMessage(params, retryIndex);
-            return this.processDeployMessage(message, parentSpan, retryIndex);
+            const deployMessage = await this.createDeployMessage(params, retryIndex);
+            await this.sendMessage(deployMessage.message, parentSpan);
+            return this.waitForDeployTransaction(deployMessage, parentSpan, retryIndex);
         });
     }
 
@@ -926,8 +962,9 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<TONContractRunResult> {
         this.config.log('Run start');
         return this.retryCall(async (retryIndex) => {
-            const message = await this.createRunMessage(params, retryIndex);
-            return this.processRunMessage(message, parentSpan, retryIndex);
+            const runMessage = await this.createRunMessage(params, retryIndex);
+            await this.sendMessage(runMessage.message, parentSpan);
+            return this.waitForRunTransaction(runMessage, parentSpan, retryIndex);
         });
     }
 

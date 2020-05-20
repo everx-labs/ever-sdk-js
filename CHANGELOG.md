@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ### New
 - Methods `serverNow()` and `serverTimeDelta()` of `TONClient` returns current server time.
 - Check for a clock is out of sync before sending a message (fail if out of sync).
+- Method `waitForRunTransaction` of `contracts` module. 
+- Method `waitForDeployTransaction` of `contracts` module. 
  
 ## 0.23.0 - May 15, 2020
 ### New
