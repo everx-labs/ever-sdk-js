@@ -1,11 +1,13 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.24.0 - May 16, 2020
+## 0.24.0 - May 21, 2020
 ### New
 - Methods `serverNow()` and `serverTimeDelta()` of `TONClient` returns current server time.
-- Expire calculation uses `serverNow()` instead of `Date.now()`.
-- Error log to console when `serverTimeDelta()` is more than 15 sec.
+- Check for a clock is out of sync before sending a message (fail if out of sync).
+- Method `waitForRunTransaction` of `contracts` module. 
+- Method `waitForDeployTransaction` of `contracts` module. 
+- Method `isDeployed` of `contracts` module. 
  
 ## 0.23.0 - May 15, 2020
 ### New

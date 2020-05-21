@@ -14,6 +14,7 @@ export type TONConfigData = {
     messageProcessingTimeoutGrowFactor?: number,
     waitForTimeout?: number,
     useWebSocketForQueries?: boolean,
+    outOfSyncThreshold?: number,
     accessKey?: string,
 }
 
@@ -263,7 +264,7 @@ export type TONContractABI = {
     header?: string[],
     functions: TONContractABIFunction[],
     events: TONContractABIEvent[],
-    data: TONContractABIDataItem[],
+    data?: TONContractABIDataItem[],
 };
 
 export type TONContractPackage = {
@@ -676,10 +677,32 @@ export interface TONContracts {
 
     // Message processing
 
+    getMessageId(message: TONContractMessage): Promise<string>;
+
     sendMessage(
         params: TONContractMessage,
         parentSpan?: (Span | SpanContext)
     ): Promise<string>;
+
+
+    waitForTransaction(
+        message: TONContractMessage,
+        resultFields: string,
+        parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
+    ): Promise<QTransaction>;
+
+    waitForDeployTransaction(
+        deployMessage: TONContractDeployMessage,
+        parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
+    ): Promise<TONContractDeployResult>;
+
+    waitForRunTransaction(
+        runMessage: TONContractRunMessage,
+        parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
+    ): Promise<TONContractRunResult>;
 
     processMessage(
         message: TONContractMessage,
@@ -763,11 +786,7 @@ type TONQueryAggregateFnType =
     | 'MIN'
     | 'MAX'
     | 'SUM'
-    | 'AVERAGE'
-    | 'STDDEV_POPULATION'
-    | 'STDDEV_SAMPLE'
-    | 'VARIANCE_POPULATION'
-    | 'VARIANCE_SAMPLE';
+    | 'AVERAGE';
 
 export type TONQueryAggregateField = {
     field: string,
@@ -881,6 +900,10 @@ export interface ITONClient {
     crypto: TONCrypto;
     contracts: TONContracts;
     queries: TONQueries;
+
+    serverTimeDelta(): Promise<number>;
+
+    serverNow(): Promise<number>;
 
     trace<T>(
         name: string,
