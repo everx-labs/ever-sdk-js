@@ -241,7 +241,7 @@ test('Aggregations: Transactions numeric fields', async () => {
 });
 
 
-test('Should return data about validator set', async () => {
+test('Validator set', async () => {
     if (nodeSe) {
         return;
     }
