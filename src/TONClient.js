@@ -125,6 +125,13 @@ export class TONClient implements TONModuleContext, ITONClient {
         return (module: any);
     }
 
+    serverTimeDelta(): Promise<number> {
+        return this._queries.serverTimeDelta();
+    }
+
+    serverNow(): Promise<number> {
+        return this._queries.serverNow();
+    }
 
     async getManagementAccessKey(): Promise<string> {
         const result = await this._queries.query('query{getManagementAccessKey}');
@@ -222,7 +229,7 @@ export class TONClientError {
         SERVER_DOESNT_SUPPORT_AGGREGATIONS: 1007,
         INVALID_CONS: 1008,
         ADDRESS_REQUIRED_FOR_RUN_LOCAL: 1009,
-
+        CLOCK_OUT_OF_SYNC: 1013,
     };
 
     message: string;
@@ -318,6 +325,16 @@ export class TONClientError {
         return new TONClientError(
             `Address required for run local. You haven't specified contract code or data so address is required to load missing parts from network.`,
             TONClientError.code.ADDRESS_REQUIRED_FOR_RUN_LOCAL,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static clockOutOfSync() {
+        return new TONClientError(
+            'You local clock is out of sync with the server time. ' +
+            'It is a critical condition for sending messages to the blockchain. ' +
+            'Please sync you clock with the internet time.',
+            TONClientError.code.CLOCK_OUT_OF_SYNC,
             TONClientError.source.CLIENT,
         );
     }
