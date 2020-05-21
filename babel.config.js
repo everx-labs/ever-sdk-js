@@ -22,7 +22,6 @@ const plugins = [
     ['@babel/plugin-transform-async-to-generator'],
     ['@babel/plugin-transform-block-scoping'],
     ['@babel/plugin-transform-classes'],
-    ['@babel/plugin-transform-runtime'],
 ];
 
 module.exports = {
