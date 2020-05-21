@@ -1,17 +1,5 @@
 /*
  * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
- *
- * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
- * this file except in compliance with the License.  You may obtain a copy of the
- * License at:
- *
- * http://www.ton.dev/licenses
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific TON DEV software governing permissions and
- * limitations under the License.
  */
 
 // @flow
@@ -100,6 +88,21 @@ test('load', async () => {
             .toBeGreaterThan(0);
     });
 });
+
+
+test('out of sync', async () => {
+    const cfg = tests.client.config.data;
+    const saveOutOfSyncThreshold = cfg.outOfSyncThreshold;
+    cfg.outOfSyncThreshold = -1;
+    try {
+        await expectError(TONClientError.code.CLOCK_OUT_OF_SYNC, TONClientError.source.CLIENT, async () => {
+            await tests.get_grams_from_giver(walletAddress);
+        });
+    } finally {
+        cfg.outOfSyncThreshold = saveOutOfSyncThreshold;
+    }
+});
+
 
 test.each(ABIVersions)('Test hello contract from docs.ton.dev (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;

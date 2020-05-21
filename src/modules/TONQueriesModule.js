@@ -1,17 +1,5 @@
 /*
  * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
- *
- * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
- * this file except in compliance with the License.  You may obtain a copy of the
- * License at:
- *
- * http://www.ton.dev/licenses
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific TON DEV software governing permissions and
- * limitations under the License.
  */
 
 // @flow
@@ -51,6 +39,15 @@ export type ServerInfo = {
     version: number,
     supportsOperationId: boolean,
     supportsAggregations: boolean,
+    supportsTime: boolean,
+    timeDelta: ?number,
+};
+
+type GraphQLClientConfig = {
+    httpUrl: string,
+    wsUrl: string,
+    fetch: any,
+    WebSocket: any,
 };
 
 // Keep-alive timeout used to support keep-alive connection checking:
@@ -129,14 +126,25 @@ function resolveServerInfo(versionString: string | null | typeof undefined): Ser
         version,
         supportsOperationId: version > 24004,
         supportsAggregations: version >= 25000,
+        supportsTime: version >= 26003,
+        timeDelta: null,
     };
 }
 
 export default class TONQueriesModule extends TONModule implements TONQueries {
+    transactions: TONQCollection;
+    messages: TONQCollection;
+    blocks: TONQCollection;
+    accounts: TONQCollection;
+    blocks_signatures: TONQCollection;
+
     config: TONConfigModule;
 
-    overrideWsUrl: ?string;
     graphqlClientCreation: ?MulticastPromise<ApolloClient>;
+    graphqlClient: ?ApolloClient;
+    graphqlClientConfig: ?GraphQLClientConfig;
+
+    overrideWsUrl: ?string;
     operationIdPrefix: string;
     operationIdSuffix: number;
     serverInfo: ServerInfo;
@@ -144,8 +152,9 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     constructor(context: TONModuleContext) {
         super(context);
         this.graphqlClient = null;
-        this.overrideWsUrl = null;
         this.graphqlClientCreation = null;
+        this.graphqlClientConfig = null;
+        this.overrideWsUrl = null;
         this.operationIdPrefix = (Date.now() % 60000).toString(16);
         for (let i = 0; i < 10; i += 1) {
             this.operationIdPrefix =
@@ -188,7 +197,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         return responseLocation !== sourceLocation ? response.url : '';
     }
 
-    async getClientConfig() {
+    async getClientConfig(): Promise<GraphQLClientConfig> {
         const config = this.config;
         const clientPlatform = TONClient.clientPlatform;
         if (!clientPlatform) {
@@ -196,7 +205,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }
         const fetch = clientPlatform.fetch;
 
-        function getConfigForServer(server: string) {
+        function getConfigForServer(server: string): GraphQLClientConfig {
             const httpParts = URLParts.parse(server)
                 .fixProtocol(x => (x === 'http://' ? x : 'https://'))
                 .fixPath(x => `${x}/graphql`);
@@ -246,6 +255,35 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     async getServerInfo(span?: Span | SpanContext): Promise<ServerInfo> {
         await this.graphqlClientRequired(span);
         return this.serverInfo;
+    }
+
+    async serverTimeDelta(span?: Span | SpanContext): Promise<number> {
+        const serverInfo = await this.getServerInfo(span);
+        const clientConfig = this.graphqlClientConfig;
+        if (clientConfig && serverInfo.supportsTime && serverInfo.timeDelta === null) {
+            try {
+                const start = Date.now();
+                const response = await clientConfig.fetch(`${clientConfig.httpUrl}?query=%7Binfo%7Btime%7D%7D`);
+                const end = Date.now();
+                const responseData = await response.json();
+                const serverTime = responseData.data.info.time;
+                serverInfo.timeDelta = Math.round(serverTime - (start + (end - start) / 2));
+            } catch (error) {
+                console.log('>>>', error);
+            }
+        }
+        return serverInfo.timeDelta || 0;
+    }
+
+    async serverNow(span?: Span | SpanContext): Promise<number> {
+        const timeDelta = await this.serverTimeDelta(span);
+        return Date.now() + timeDelta;
+    }
+
+    dropServerTimeDelta() {
+        if (this.serverInfo) {
+            this.serverInfo.timeDelta = null;
+        }
     }
 
     generateOperationId(): string {
@@ -458,6 +496,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     if (configIsChanged) {
                         console.log('[TONClient.queries]', 'Client config changed');
                         clientConfig = newConfig;
+                        this.graphqlClientConfig = clientConfig;
                         subscriptionClient.url = newConfig.wsUrl;
                         if (wsLink) {
                             wsLink.url = newConfig.wsUrl;
@@ -507,6 +546,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         const link = httpLink
             ? split(isSubscription, wrapLink(wsLink), wrapLink(httpLink))
             : wrapLink(wsLink);
+        this.graphqlClientConfig = clientConfig;
         this.graphqlClient = new ApolloClient({
             cache: new InMemoryCache({}),
             link,
@@ -529,18 +569,6 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             await client.clearStore();
         }
     }
-
-    transactions: TONQCollection;
-
-    messages: TONQCollection;
-
-    blocks: TONQCollection;
-
-    accounts: TONQCollection;
-
-    blocks_signatures: TONQCollection;
-
-    graphqlClient: ApolloClient;
 }
 
 

@@ -1,7 +1,15 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.23.0 - May 7, 2020
+## 0.24.0 - May 21, 2020
+### New
+- Methods `serverNow()` and `serverTimeDelta()` of `TONClient` returns current server time.
+- Check for a clock is out of sync before sending a message (fail if out of sync).
+- Method `waitForRunTransaction` of `contracts` module. 
+- Method `waitForDeployTransaction` of `contracts` module. 
+- Method `isDeployed` of `contracts` module. 
+ 
+## 0.23.0 - May 15, 2020
 ### New
 - Method `runGet` of `contracts` module executes get method on a local tvm.
 - Method `arrayFromCONS` of `contracts` module converts CONS-list to JS arrays.
