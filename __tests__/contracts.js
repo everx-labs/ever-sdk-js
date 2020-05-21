@@ -1,17 +1,5 @@
 /*
  * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
- *
- * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
- * this file except in compliance with the License.  You may obtain a copy of the
- * License at:
- *
- * http://www.ton.dev/licenses
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific TON DEV software governing permissions and
- * limitations under the License.
  */
 
 // @flow
@@ -24,6 +12,7 @@ import {TONClient, TONClientError} from '../src/TONClient';
 
 import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
 import {bv} from './_/binaries';
+import {version} from '../package.json';
 import {ABIVersions, tests} from './_/init-tests';
 
 const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
@@ -67,11 +56,12 @@ test('removeProps', () => {
         });
 });
 
-test('basic', async () => {
-    const version = await tests.client.config.getVersion();
+test('Test versions compatibility', async () => {
+    const ver_builtin = await tests.client.config.getVersion();
     expect(version.split('.')[0])
-        .toEqual(bv);
-    console.log(`Client uses expected binaries version: ${version}`);
+        .toEqual(ver_builtin.split('.')[0]);
+    console.log(`Client version ${version} uses compatible binaries version: ${ver_builtin}`,
+        `\n(requested version to download: ${bv})`);
 });
 
 test('load', async () => {
@@ -98,6 +88,21 @@ test('load', async () => {
             .toBeGreaterThan(0);
     });
 });
+
+
+test('out of sync', async () => {
+    const cfg = tests.client.config.data;
+    const saveOutOfSyncThreshold = cfg.outOfSyncThreshold;
+    cfg.outOfSyncThreshold = -1;
+    try {
+        await expectError(TONClientError.code.CLOCK_OUT_OF_SYNC, TONClientError.source.CLIENT, async () => {
+            await tests.get_grams_from_giver(walletAddress);
+        });
+    } finally {
+        cfg.outOfSyncThreshold = saveOutOfSyncThreshold;
+    }
+});
+
 
 test.each(ABIVersions)('Test hello contract from docs.ton.dev (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;

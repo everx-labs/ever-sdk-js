@@ -1,4 +1,4 @@
-import {version, binaries_version} from '../../package.json';
+import {version} from '../../package.json';
 
 const fs = require('fs');
 const path = require('path');
@@ -8,7 +8,7 @@ const zlib = require('zlib');
 
 
 export const p = os.platform();
-export const bv = (binaries_version || version).split('.')[0];
+export const bv = process.env.TON_SDK_BIN_VERSION || (version).split('.')[0];
 const binariesHost = 'sdkbinaries-ws.tonlabs.io';
 export const binariesPath = path.resolve(__dirname, '..');
 
@@ -17,7 +17,7 @@ function downloadAndGunzip(dest, url) {
         const request = http.get(url, response => {
             if (response.statusCode !== 200) {
                 reject({
-                    message: `Download failed with ${response.statusCode}: ${response.statusMessage}`,
+                    message: `Download from ${url} failed with ${response.statusCode}: ${response.statusMessage}`,
                 });
                 return;
             }
