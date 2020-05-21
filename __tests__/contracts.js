@@ -24,7 +24,7 @@ import {TONClient, TONClientError} from '../src/TONClient';
 
 import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
 import {bv} from './_/binaries';
-import {version, binaries_version} from '../package.json';
+import {version} from '../package.json';
 import {ABIVersions, tests} from './_/init-tests';
 
 const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
@@ -73,7 +73,7 @@ test('Test versions compatibility', async () => {
     expect(version.split('.')[0])
         .toEqual(ver_builtin.split('.')[0]);
     console.log(`Client version ${version} uses compatible binaries version: ${ver_builtin}`,
-        `\n(requested version: ${binaries_version}; calculated version: ${bv})`);
+        `\n(requested version to download: ${bv})`);
 });
 
 test('load', async () => {
