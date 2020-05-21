@@ -222,7 +222,7 @@ test('Aggregations: Messages numeric fields', async () => {
     await testCollection(queries.messages, 'value_other.value');
 });
 
-test('Should correctly perform aggregation queries for transactions numeric fields', async () => {
+test('Aggregations: Transactions numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.transactions, 'lt');
     await testCollection(queries.transactions, 'prev_trans_lt');
@@ -243,7 +243,6 @@ test('Should correctly perform aggregation queries for transactions numeric fiel
 
 test('Should return data about validator set', async () => {
     if (nodeSe) {
-        console.log('Should return data about validator set');
         return;
     }
     // test https://docs.ton.dev/86757ecb2/p/978847-get-config
