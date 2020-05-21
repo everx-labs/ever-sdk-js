@@ -24,6 +24,7 @@ import {TONClient, TONClientError} from '../src/TONClient';
 
 import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
 import {bv} from './_/binaries';
+import {version, binaries_version} from '../package.json';
 import {ABIVersions, tests} from './_/init-tests';
 
 const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
@@ -67,11 +68,12 @@ test('removeProps', () => {
         });
 });
 
-test('basic', async () => {
-    const version = await tests.client.config.getVersion();
+test('Test versions compatibility', async () => {
+    const ver_builtin = await tests.client.config.getVersion();
     expect(version.split('.')[0])
-        .toEqual(bv);
-    console.log(`Client uses expected binaries version: ${version}`);
+        .toEqual(ver_builtin.split('.')[0]);
+    console.log(`Client version ${version} uses compatible binaries version: ${ver_builtin}`,
+        `\n(requested version: ${binaries_version}; calculated version: ${bv})`);
 });
 
 test('load', async () => {
