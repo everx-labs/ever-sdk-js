@@ -1,7 +1,7 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.24.0 - May 21, 2020
+## 0.23.1 - May 21, 2020
 ### New
 - Methods `serverNow()` and `serverTimeDelta()` of `TONClient` returns current server time.
 - Check for a clock is out of sync before sending a message (fail if out of sync).
