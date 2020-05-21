@@ -220,16 +220,6 @@ test('Aggregations: Messages numeric fields', async () => {
     await testCollection(queries.messages, 'value');
     await testCollection(queries.messages, 'value_other.currency');
     await testCollection(queries.messages, 'value_other.value');
-
-    // todo uncomment after fix
-    /* await testCollection(queries.messages, 'src_transaction.workchain_id');
-    await testCollection(queries.messages, 'src_transaction.lt');
-    await testCollection(queries.messages, 'src_transaction.prev_trans_lt');
-    await testCollection(queries.messages, 'src_transaction.now');
-    await testCollection(queries.messages, 'src_transaction.outmsg_cnt');
-    await testCollection(queries.messages, 'src_transaction.orig_status');
-    await testCollection(queries.messages, 'src_transaction.end_status');
-    await testCollection(queries.messages, 'src_transaction.in_message.split_depth'); */
 });
 
 test('Should correctly perform aggregation queries for transactions numeric fields', async () => {
