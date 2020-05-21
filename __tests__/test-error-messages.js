@@ -16,25 +16,92 @@
 
 // @flow
 
+import {TONClientError} from "../src/TONClient";
 import {ABIVersions, tests} from './_/init-tests';
 import {TONMnemonicDictionary} from '../src/modules/TONCryptoModule';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
+const HelloContractPackage = tests.loadPackage('Hello');
+
+jest.setTimeout(100000);
 
 beforeAll(tests.init);
 afterAll(tests.done);
 
-async function expectError(code: number, source: string, message?: string, f) {
+async function expectError(code: number, source: string, message: ?string, f) {
     try {
         await f();
         //$FlowFixMe
         fail(`Expected error with code:${code} source: ${source}`);
     } catch (error) {
         expect({ code: error.code, source: error.source }).toEqual({ code, source });
-        if (message)
+        if (message) {
             expect(error.message).toMatch(message);
+        }
     }
 }
+
+async function expectClientError(code: number, f) {
+    return expectError(code, TONClientError.source.CLIENT, null, f);
+}
+
+test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
+    const { contracts, crypto } = tests.client;
+    tests.client.config.data.waitForTimeout = 5000;
+    const helloPackage = HelloContractPackage[abiVersion];
+
+    let helloKeys = await crypto.ed25519Keypair();
+    let helloAddress = (await contracts.createDeployMessage({
+        package: helloPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    })).address;
+
+    await expectClientError(TONClientError.code.ACCOUNT_MISSING, async () => {
+        await contracts.deploy({
+            package: helloPackage,
+            constructorParams: {},
+            keyPair: helloKeys,
+        });
+    });
+
+    await tests.get_grams_from_giver(helloAddress, 10);
+    await expectClientError(TONClientError.code.ACCOUNT_BALANCE_TOO_LOW, async () => {
+        await contracts.deploy({
+            package: helloPackage,
+            constructorParams: {},
+            keyPair: helloKeys,
+        });
+    });
+
+    helloKeys = await crypto.ed25519Keypair();
+    helloAddress = (await contracts.createDeployMessage({
+        package: helloPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    })).address;
+
+    await expectClientError(TONClientError.code.ACCOUNT_MISSING, async () => {
+        await contracts.run({
+            address: helloAddress,
+            abi: helloPackage.abi,
+            functionName: 'touch',
+            input: {},
+            keyPair: helloKeys,
+        });
+    });
+
+    await tests.get_grams_from_giver(helloAddress, 10);
+    await expectClientError(TONClientError.code.ACCOUNT_CODE_MISSING, async () => {
+        await contracts.run({
+            address: helloAddress,
+            abi: helloPackage.abi,
+            functionName: 'touch',
+            input: {},
+            keyPair: helloKeys,
+        });
+    });
+});
 
 test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;

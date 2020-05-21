@@ -716,12 +716,33 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<TONContractDeployResult> {
-        const transaction = await this.waitForTransaction(
-            deployMessage.message,
-            transactionDetails,
-            parentSpan,
-            retryIndex,
-        );
+        let transaction;
+        try {
+            transaction = await this.waitForTransaction(
+                deployMessage.message,
+                transactionDetails,
+                parentSpan,
+                retryIndex,
+            );
+        } catch (error) {
+            if (TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT)) {
+                const account = await this.queries.accounts.query({
+                    filter: {id: {eq:deployMessage.address}},
+                    result: 'balance',
+                    timeout: 0,
+                });
+                if (account.length > 0) {
+                    const balance = BigInt(account[0].balance);
+                    if (balance < 1000n) {
+
+                    }
+                } else {
+
+                }
+            } else {
+                throw error;
+            }
+        }
         await checkTransaction(transaction);
         this.config.log('processDeployMessage. End');
         return {

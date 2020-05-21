@@ -230,6 +230,7 @@ export class TONClientError {
         INVALID_CONS: 1008,
         ADDRESS_REQUIRED_FOR_RUN_LOCAL: 1009,
         CLOCK_OUT_OF_SYNC: 1013,
+        ACCOUNT_MISSING: 1014,
     };
 
     message: string;
