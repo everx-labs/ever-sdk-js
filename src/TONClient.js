@@ -231,6 +231,9 @@ export class TONClientError {
         ADDRESS_REQUIRED_FOR_RUN_LOCAL: 1009,
         CLOCK_OUT_OF_SYNC: 1013,
         ACCOUNT_MISSING: 1014,
+        ACCOUNT_CODE_MISSING: 1015,
+        ACCOUNT_BALANCE_TOO_LOW: 1016,
+        ACCOUNT_FROZEN_OR_DELETED: 1017,
     };
 
     message: string;
@@ -247,6 +250,11 @@ export class TONClientError {
 
     static isClientError(error: any, code: number): boolean {
         return (error.source === TONClientError.source.CLIENT)
+            && (error.code === code);
+    }
+
+    static isNodeError(error: any, code: number): boolean {
+        return (error.source === TONClientError.source.NODE)
             && (error.code === code);
     }
 
@@ -336,6 +344,37 @@ export class TONClientError {
             'It is a critical condition for sending messages to the blockchain. ' +
             'Please sync you clock with the internet time.',
             TONClientError.code.CLOCK_OUT_OF_SYNC,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static accountMissing(address: string) {
+        return new TONClientError(
+            `Account with address [${address}] doesn't exists. ` +
+            'You have to prepaid this account to have a positive balance on them and then deploy a contract code for this account.' +
+            'See SDK documentation for detailed instructions.',
+            TONClientError.code.ACCOUNT_MISSING,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static accountCodeMissing(address: string, balance: string) {
+        return new TONClientError(
+            `Account with address [${address}] exists but haven't a contract code yet. ` +
+            'You have to ensure that an account has an enough balance for deploying a contract code and then deploy a contract code for this account. ' +
+            `Current account balance is [${balance}]. ` +
+            'See SDK documentation for detailed instructions.',
+            TONClientError.code.ACCOUNT_CODE_MISSING,
+            TONClientError.source.CLIENT,
+        );
+    }
+
+    static accountBalanceTooLow(address: string, balance: string) {
+        return new TONClientError(
+            `Account with address [${address}] has too low balance [${balance}]. ` +
+            'You have to send some value to account balance from other contract (e.g. Wallet contract). ' +
+            'See SDK documentation for detailed instructions.',
+            TONClientError.code.ACCOUNT_BALANCE_TOO_LOW,
             TONClientError.source.CLIENT,
         );
     }

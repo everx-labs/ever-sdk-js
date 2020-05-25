@@ -28,7 +28,7 @@ jest.setTimeout(100000);
 beforeAll(tests.init);
 afterAll(tests.done);
 
-async function expectError(code: number, source: string, message: ?string, f) {
+async function expectError(code: number, source: ?string, message: ?string, f: () => Promise<void>) {
     try {
         await f();
         //$FlowFixMe
@@ -36,11 +36,11 @@ async function expectError(code: number, source: string, message: ?string, f) {
     } catch (error) {
         expect({
             code: error.code,
-            source: error.source
+            ...(source ? { source: error.source } : {})
         })
             .toEqual({
                 code,
-                source
+                ...(source ? { source } : {})
             });
         if (message) {
             expect(error.message)
@@ -49,8 +49,8 @@ async function expectError(code: number, source: string, message: ?string, f) {
     }
 }
 
-async function expectClientError(code: number, f) {
-    return expectError(code, TONClientError.source.CLIENT, null, f);
+async function expectErrorCode(code: number, f: () => Promise<void>) {
+    return expectError(code, null, null, f);
 }
 
 test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
@@ -65,7 +65,7 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
         keyPair: helloKeys,
     })).address;
 
-    await expectClientError(TONClientError.code.ACCOUNT_MISSING, async () => {
+    await expectErrorCode(TONClientError.code.ACCOUNT_MISSING, async () => {
         await contracts.deploy({
             package: helloPackage,
             constructorParams: {},
@@ -73,8 +73,8 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
         });
     });
 
-    await tests.get_grams_from_giver(helloAddress, 10);
-    await expectClientError(TONClientError.code.ACCOUNT_BALANCE_TOO_LOW, async () => {
+    await tests.get_grams_from_giver(helloAddress, 100);
+    await expectErrorCode(TONClientError.code.ACCOUNT_BALANCE_TOO_LOW, async () => {
         await contracts.deploy({
             package: helloPackage,
             constructorParams: {},
@@ -89,7 +89,7 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
         keyPair: helloKeys,
     })).address;
 
-    await expectClientError(TONClientError.code.ACCOUNT_MISSING, async () => {
+    await expectErrorCode(TONClientError.code.ACCOUNT_MISSING, async () => {
         await contracts.run({
             address: helloAddress,
             abi: helloPackage.abi,
@@ -99,8 +99,8 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
         });
     });
 
-    await tests.get_grams_from_giver(helloAddress, 10);
-    await expectClientError(TONClientError.code.ACCOUNT_CODE_MISSING, async () => {
+    await tests.get_grams_from_giver(helloAddress, 100);
+    await expectErrorCode(TONClientError.code.ACCOUNT_CODE_MISSING, async () => {
         await contracts.run({
             address: helloAddress,
             abi: helloPackage.abi,
@@ -360,6 +360,7 @@ test.each(ABIVersions)('Test SDK Errors 3000-3020 (ABI v%i)', async (abiVersion)
     await expectError(3002, 'client', 'Invalid contract image:', async () => {
         await contracts.createDeployMessage({
             package: {
+                //$FlowFixMe
                 abi: '',
                 imageBase64: '#',
             },
@@ -370,6 +371,7 @@ test.each(ABIVersions)('Test SDK Errors 3000-3020 (ABI v%i)', async (abiVersion)
     await expectError(3003, 'client', 'Image creation failed: failed to fill whole buffer', async () => {
         await contracts.createDeployMessage({
             package: {
+                //$FlowFixMe
                 abi: '',
                 imageBase64: '',
             },

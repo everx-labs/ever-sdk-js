@@ -684,14 +684,6 @@ export interface TONContracts {
         parentSpan?: (Span | SpanContext)
     ): Promise<string>;
 
-
-    waitForTransaction(
-        message: TONContractMessage,
-        resultFields: string,
-        parentSpan?: (Span | SpanContext),
-        retryIndex?: number,
-    ): Promise<QTransaction>;
-
     waitForDeployTransaction(
         deployMessage: TONContractDeployMessage,
         parentSpan?: (Span | SpanContext),
@@ -708,6 +700,9 @@ export interface TONContracts {
         message: TONContractMessage,
         resultFields: string,
         parentSpan?: (Span | SpanContext),
+        retryIndex?: number,
+        address?: string,
+        method?: 'run' | 'deploy',
     ): Promise<QTransaction>;
 
     processDeployMessage(

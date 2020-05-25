@@ -3,7 +3,7 @@
  */
 // @flow
 
-import { Span, SpanContext } from 'opentracing';
+import {Span, SpanContext} from 'opentracing';
 import type {
     QAccount,
     QBlock,
@@ -51,8 +51,8 @@ import type {
     TONContractRunGetParams,
     TONContractRunGetResult,
 } from '../../types';
-import { TONClientError } from '../TONClient';
-import { TONModule } from '../TONModule';
+import {TONClientError} from '../TONClient';
+import {TONModule} from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule from './TONQueriesModule';
 
@@ -573,9 +573,11 @@ export default class TONContractsModule extends TONModule implements TONContract
         resultFields: string,
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
+        address?: string,
+        method?: 'run' | 'deploy',
     ): Promise<QTransaction> {
         await this.sendMessage(message, parentSpan);
-        return this.waitForTransaction(message, resultFields, parentSpan, retryIndex);
+        return this.waitForTransaction(message, resultFields, parentSpan, retryIndex, address, method);
     }
 
 
@@ -584,6 +586,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         resultFields: string,
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
+        address?: string,
+        method?: 'run' | 'deploy',
     ): Promise<QTransaction> {
         const messageId = await this.getMessageId(message);
         const config = this.config;
@@ -594,89 +598,130 @@ export default class TONContractsModule extends TONModule implements TONContract
             ? this.queries.generateOperationId()
             : undefined;
         let transaction: ?QTransaction = null;
-        const expire = message.expire;
-        if (expire) {
-            // calculate timeout according to `expire` value (in seconds)
-            // add processing timeout as master block validation time
-            processingTimeout = expire * 1000 - Date.now() + processingTimeout;
-
-            const waitExpired = async () => {
-                // wait for block, produced after `expire` to guarantee that message is rejected
-                const block: QBlock = await this.queries.blocks.waitFor({
-                    filter: {
-                        master: { min_shard_gen_utime: { ge: expire } },
-                    },
-                    result: 'in_msg_descr { transaction_id }',
-                    timeout: processingTimeout,
-                    parentSpan,
-                    operationId,
-                });
-
-                if (transaction) {
-                    return;
-                }
-
-                const transaction_id = block.in_msg_descr
-                    && block.in_msg_descr.find(msg => !!msg.transaction_id)?.transaction_id;
-
-                if (!transaction_id) {
-                    throw TONClientError.internalError('Invalid block received: no transaction ID');
-                }
-
-                // check that transactions collection is updated
-                await this.queries.transactions.waitFor({
-                    filter: {
-                        id: { eq: transaction_id },
-                    },
-                    result: 'id',
-                    timeout: processingTimeout,
-                    parentSpan,
-                    operationId,
-                });
-            };
-
-            promises.push(waitExpired());
-        }
-
-        // wait for message processing transaction
-        promises.push(new Promise((resolve, reject) => {
-            (async () => {
-                try {
-                    transaction = await this.queries.transactions.waitFor({
-                        filter: {
-                            in_msg: { eq: messageId },
-                            status: { eq: QTransactionProcessingStatus.finalized },
-                        },
-                        result: resultFields,
-                        timeout: processingTimeout,
-                        operationId,
-                        parentSpan,
-                    });
-                    resolve();
-                } catch (error) {
-                    reject(error);
-                }
-            })();
-        }));
-
         try {
-            await Promise.race(promises);
-        } finally {
-            if (promises.length > 1 && operationId) {
-                await this.queries.finishOperations([operationId]);
-            }
-        }
+            const expire = message.expire;
+            if (expire) {
+                // calculate timeout according to `expire` value (in seconds)
+                // add processing timeout as master block validation time
+                processingTimeout = expire * 1000 - Date.now() + processingTimeout;
 
-        if (!transaction) {
-            throw TONClientError.messageExpired();
+                const waitExpired = async () => {
+                    // wait for block, produced after `expire` to guarantee that message is rejected
+                    const block: QBlock = await this.queries.blocks.waitFor({
+                        filter: {
+                            master: { min_shard_gen_utime: { ge: expire } },
+                        },
+                        result: 'in_msg_descr { transaction_id }',
+                        timeout: processingTimeout,
+                        parentSpan,
+                        operationId,
+                    });
+
+                    if (transaction) {
+                        return;
+                    }
+
+                    const transaction_id = block.in_msg_descr
+                        && block.in_msg_descr.find(msg => !!msg.transaction_id)?.transaction_id;
+
+                    if (!transaction_id) {
+                        throw TONClientError.internalError('Invalid block received: no transaction ID');
+                    }
+
+                    // check that transactions collection is updated
+                    await this.queries.transactions.waitFor({
+                        filter: {
+                            id: { eq: transaction_id },
+                        },
+                        result: 'id',
+                        timeout: processingTimeout,
+                        parentSpan,
+                        operationId,
+                    });
+                };
+
+                promises.push(waitExpired());
+            }
+
+            // wait for message processing transaction
+            promises.push(new Promise((resolve, reject) => {
+                (async () => {
+                    try {
+                        transaction = await this.queries.transactions.waitFor({
+                            filter: {
+                                in_msg: { eq: messageId },
+                                status: { eq: QTransactionProcessingStatus.finalized },
+                            },
+                            result: resultFields,
+                            timeout: processingTimeout,
+                            operationId,
+                            parentSpan,
+                        });
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                })();
+            }));
+
+            try {
+                await Promise.race(promises);
+            } finally {
+                if (promises.length > 1 && operationId) {
+                    await this.queries.finishOperations([operationId]);
+                }
+            }
+
+            if (!transaction) {
+                throw TONClientError.messageExpired();
+            }
+            const transactionNow = transaction.now || 0;
+            this.config.log('processMessage. transaction received', {
+                id: transaction.id,
+                block_id: transaction.block_id,
+                now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
+            });
+            await checkTransaction(transaction);
+            return transaction;
+        } catch (error) {
+            throw await this.resolveDetailedError(error, address, method);
         }
-        const transactionNow = transaction.now || 0;
-        this.config.log('processMessage. transaction received', {
-            id: transaction.id,
-            block_id: transaction.block_id,
-            now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
-        });
-        return transaction;
+    }
+
+    async resolveDetailedError(
+        error: Error,
+        address?: string,
+        method?: 'run' | 'deploy',
+    ) {
+        const isAccountCheckingRequired =
+            (error: any).code === TONClientError.code.ACCOUNT_CODE_MISSING
+            || TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT)
+            || TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
+        if (isAccountCheckingRequired && address) {
+            const accounts = await this.queries.accounts.query({
+                filter: { id: { eq: address } },
+                result: 'balance code_hash',
+                timeout: 1000,
+            });
+            if (accounts.length > 0) {
+                const account = accounts[0];
+                if (method === 'run' && !account.code_hash) {
+                    return TONClientError.accountCodeMissing(address, account.balance);
+                }
+                //$FlowFixMe
+                const balance = BigInt(account.balance);
+                //$FlowFixMe
+                if (balance < 1000n) {
+                    return TONClientError.accountBalanceTooLow(address, account.balance)
+                }
+            } else {
+                return TONClientError.accountMissing(address)
+            }
+        } else if (TONClientError.isNodeError(error, 13)) {
+            return TONClientError.accountBalanceTooLow(address || '', '0');
+        }
+        return error;
+
     }
 
     async isDeployed(address: string, parentSpan?: (Span | SpanContext)): Promise<bool> {
@@ -716,34 +761,14 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<TONContractDeployResult> {
-        let transaction;
-        try {
-            transaction = await this.waitForTransaction(
-                deployMessage.message,
-                transactionDetails,
-                parentSpan,
-                retryIndex,
-            );
-        } catch (error) {
-            if (TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT)) {
-                const account = await this.queries.accounts.query({
-                    filter: {id: {eq:deployMessage.address}},
-                    result: 'balance',
-                    timeout: 0,
-                });
-                if (account.length > 0) {
-                    const balance = BigInt(account[0].balance);
-                    if (balance < 1000n) {
-
-                    }
-                } else {
-
-                }
-            } else {
-                throw error;
-            }
-        }
-        await checkTransaction(transaction);
+        const transaction = await this.waitForTransaction(
+            deployMessage.message,
+            transactionDetails,
+            parentSpan,
+            retryIndex,
+            deployMessage.address,
+            'deploy'
+        );
         this.config.log('processDeployMessage. End');
         return {
             address: deployMessage.address,
@@ -773,8 +798,9 @@ export default class TONContractsModule extends TONModule implements TONContract
             transactionDetails,
             parentSpan,
             retryIndex,
+            runMessage.address,
+            'run'
         );
-        await checkTransaction(transaction);
         const outputMessages = transaction.out_messages;
         if (!outputMessages || outputMessages.length === 0) {
             return {
@@ -1016,7 +1042,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         this.config.log('getAccount. Filter', filter);
         const account = await this.queries.accounts.waitFor(
             filter,
-            'id code data balance balance_other { currency value } last_paid',
+            'id acc_type code data balance balance_other { currency value } last_paid',
             waitParams && waitParams.timeout,
             parentSpan,
         );
@@ -1079,14 +1105,14 @@ async function checkTransaction(transaction: QTransaction) {
         if (status === QAccountStatusChange.frozen) {
             throw nodeError(
                 'Account was frozen due storage phase',
-                TONClientStorageStatus.frozen,
+                TONClientError.code.ACCOUNT_FROZEN_OR_DELETED,
                 TONClientTransactionPhase.storage,
             );
         }
         if (status === QAccountStatusChange.deleted) {
             throw nodeError(
                 'Account was deleted due storage phase',
-                TONClientStorageStatus.deleted,
+                TONClientError.code.ACCOUNT_FROZEN_OR_DELETED,
                 TONClientTransactionPhase.storage,
             );
         }
@@ -1099,21 +1125,21 @@ async function checkTransaction(transaction: QTransaction) {
             if (reason === QSkipReason.noState) {
                 throw nodeError(
                     'Account has no code and data',
-                    TONClientComputeSkippedStatus.noState,
+                    TONClientError.code.ACCOUNT_CODE_MISSING,
                     TONClientTransactionPhase.computeSkipped,
                 );
             }
             if (reason === QSkipReason.badState) {
                 throw nodeError(
                     'Account has bad state: frozen or deleted',
-                    TONClientComputeSkippedStatus.badState,
+                    TONClientError.code.ACCOUNT_FROZEN_OR_DELETED,
                     TONClientTransactionPhase.computeSkipped,
                 );
             }
             if (reason === QSkipReason.noGas) {
                 throw nodeError(
                     'No gas to execute VM',
-                    TONClientComputeSkippedStatus.noGas,
+                    TONClientError.code.ACCOUNT_BALANCE_TOO_LOW,
                     TONClientTransactionPhase.computeSkipped,
                 );
             }
