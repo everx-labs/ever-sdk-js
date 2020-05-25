@@ -196,10 +196,6 @@ test('crypto', async () => {
 
     expect(await crypto.mnemonicIsValid({ phrase: 'one two' })).toBeFalsy();
 
-    const k = await crypto.mnemonicDeriveSignKeys({
-        phrase: 'onegfdgfd twotreter'
-    });
-
     const keys = await crypto.mnemonicDeriveSignKeys({
         phrase: "unit follow zone decline glare flower crisp vocal adapt magic much mesh cherry teach mechanic rain float vicious solution assume hedgehog rail sort chuckle"
     });

@@ -16,9 +16,9 @@
 
 // @flow
 
-import {TONClientError} from "../src/TONClient";
-import {ABIVersions, tests} from './_/init-tests';
-import {TONMnemonicDictionary} from '../src/modules/TONCryptoModule';
+import { TONClientError } from '../src/TONClient';
+import { ABIVersions, tests } from './_/init-tests';
+import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 const HelloContractPackage = tests.loadPackage('Hello');
@@ -301,6 +301,12 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
         expect(error.message)
             .toMatch('Invalid bip39 entropy:');
     }
+
+    await expectError(2017, 'client', 'Invalid bip39 phrase: onegfdgfd twotreter', async () => {
+        await crypto.mnemonicDeriveSignKeys({
+            phrase: 'onegfdgfd twotreter',
+        });
+    });
 
     try {
         await crypto.hdkeyXPrvDerivePath('???', '', true);
