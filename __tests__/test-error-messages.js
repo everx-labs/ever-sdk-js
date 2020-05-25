@@ -17,7 +17,7 @@
 // @flow
 
 import { TONClientError } from '../src/TONClient';
-import { ABIVersions, tests } from './_/init-tests';
+import { ABIVersions, nodeSe, tests } from './_/init-tests';
 import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -195,6 +195,33 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
         });
     });
 });
+const literallyJustDateNow = () => Date.now();
+
+test('Test SDK Error 1013/1003 for nodeSE', async () => {
+    const { crypto } = tests.client;
+    const helloKeys = await crypto.ed25519Keypair();
+    const helloPackage = HelloContractPackage[2];
+
+    const realDateNow = Date.now.bind(global.Date);
+    const start = Date.now() - 20000;
+    const dateNowStub = jest.fn(() => start);
+    global.Date.now = dateNowStub;
+
+    expect(literallyJustDateNow())
+        .toBe(start);
+    expect(dateNowStub)
+        .toHaveBeenCalled();
+
+    await expectError(nodeSe ? 1003 : 1013, 'client',
+        nodeSe ? 'Wait for operation rejected on timeout' : 'You local clock is out of sync with the server time. It is a critical condition for sending messages to the blockchain. Please sync you clock with the internet time', async () => {
+            await tests.deploy_with_giver({
+                package: helloPackage,
+                constructorParams: {},
+                keyPair: helloKeys,
+            });
+        });
+    global.Date.now = realDateNow;
+});
 
 test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
@@ -302,36 +329,34 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
             .toMatch('Invalid bip39 entropy:');
     }
 
-    await expectError(2017, 'client', 'Invalid bip39 phrase: onegfdgfd twotreter', async () => {
+    await expectError(2017, 'client', 'Invalid bip39 phrase: one two', async () => {
         await crypto.mnemonicDeriveSignKeys({
-            phrase: 'onegfdgfd twotreter',
+            phrase: 'one two',
         });
     });
 
-    try {
-        await crypto.hdkeyXPrvDerivePath('???', '', true);
-    } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2018);
-    }
-    try {
+    await expectError(2017, 'client', 'Invalid bip39 phrase:', async () => {
+        await crypto.mnemonicDeriveSignKeys({
+            phrase: '',
+        });
+    });
+
+    await expectError(2018, 'client', 'Invalid bip32 key: ', async () => {
+        await crypto.hdkeyXPrvDerivePath('', '', true);
+    });
+
+    await expectError(2019, 'client', 'Invalid bip32 derive path:', async () => {
+        await crypto.hdkeyXPrvDerivePath('xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC',
+            'm/44\'/6   0\'/0\'/0\'', false);
+    });
+
+    await expectError(2022, 'client', 'Invalid mnemonic dictionary', async () => {
         await crypto.mnemonicFromRandom({
             // $FlowFixMe
             dictionary: 255,
             wordCount: 12,
         });
-    } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2022);
-        expect(error.data)
-            .toBeNull();
-        expect(error.message)
-            .toMatch('Invalid mnemonic dictionary');
-    }
+    });
 
     for (const dict in TONMnemonicDictionary) {
         try {
