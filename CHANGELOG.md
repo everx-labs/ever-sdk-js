@@ -1,6 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.23.2 - May 25, 2020
+### New
+- Detailed errors instead of 1006.
+- Babel runtime dependency has returned.
+ 
 ## 0.23.1 - May 21, 2020
 ### New
 - Methods `serverNow()` and `serverTimeDelta()` of `TONClient` returns current server time.

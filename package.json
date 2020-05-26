@@ -1,6 +1,6 @@
 {
 	"name": "ton-client-js",
-	"version": "0.23.1",
+	"version": "0.23.2",
 	"description": "TON Client for Java Script",
 	"main": "index.js",
 	"scripts": {
@@ -79,6 +79,7 @@
 		"websocket": "1.0.31"
 	},
 	"dependencies": {
+		"@babel/runtime": "^7.9.6",
 		"apollo-cache-inmemory": "1.6.5",
 		"apollo-client": "2.6.8",
 		"apollo-link": "1.2.13",
