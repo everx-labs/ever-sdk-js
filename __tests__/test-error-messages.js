@@ -198,32 +198,31 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
 const literallyJustDateNow = () => Date.now();
 
 test.each(ABIVersions)('Test SDK Error 1013/1003 for nodeSE', async (abiVersion) => {
-    const { crypto } = tests.client;
-    const helloKeys = await crypto.ed25519Keypair();
-    const helloPackage = HelloContractPackage[abiVersion];
+    if (!nodeSe) {
+        const { crypto } = tests.client;
+        const helloKeys = await crypto.ed25519Keypair();
+        const helloPackage = HelloContractPackage[abiVersion];
 
-    const realDateNow = Date.now.bind(global.Date);
-    const start = Date.now() - 20000;
-    const dateNowStub = jest.fn(() => start);
-    global.Date.now = dateNowStub;
+        const realDateNow = Date.now.bind(global.Date);
+        const start = Date.now() - 20000;
+        const dateNowStub = jest.fn(() => start);
+        global.Date.now = dateNowStub;
 
-    expect(literallyJustDateNow())
-        .toBe(start);
-    expect(dateNowStub)
-        .toHaveBeenCalled();
+        expect(literallyJustDateNow())
+            .toBe(start);
+        expect(dateNowStub)
+            .toHaveBeenCalled();
 
-    console.log(tests.client.getCore())
-    console.log('tests.nodeSe ' + tests.nodeSe);
-
-    await expectError(tests.nodeSe ? 1003 : 1013, 'client',
-        tests.nodeSe ? 'Wait for operation rejected on timeout' : 'You local clock is out of sync with the server time. It is a critical condition for sending messages to the blockchain. Please sync you clock with the internet time', async () => {
-            await tests.deploy_with_giver({
-                package: helloPackage,
-                constructorParams: {},
-                keyPair: helloKeys,
+        await expectError(1013, 'client',
+            'You local clock is out of sync with the server time. It is a critical condition for sending messages to the blockchain. Please sync you clock with the internet time', async () => {
+                await tests.deploy_with_giver({
+                    package: helloPackage,
+                    constructorParams: {},
+                    keyPair: helloKeys,
+                });
             });
-        });
-    global.Date.now = realDateNow;
+        global.Date.now = realDateNow;
+    }
 });
 
 test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) => {
