@@ -203,7 +203,7 @@ test.each(ABIVersions)('Test SDK Error 1013/1003 for nodeSE', async (abiVersion)
     const helloPackage = HelloContractPackage[abiVersion];
 
     const realDateNow = Date.now.bind(global.Date);
-    const start = Date.now() - 50000;
+    const start = Date.now() - 20000;
     const dateNowStub = jest.fn(() => start);
     global.Date.now = dateNowStub;
 
@@ -212,8 +212,8 @@ test.each(ABIVersions)('Test SDK Error 1013/1003 for nodeSE', async (abiVersion)
     expect(dateNowStub)
         .toHaveBeenCalled();
 
-    await expectError(nodeSe ? 1003 : 1013, 'client',
-        nodeSe ? 'Wait for operation rejected on timeout' : 'You local clock is out of sync with the server time. It is a critical condition for sending messages to the blockchain. Please sync you clock with the internet time', async () => {
+    await expectError(tests.nodeSe ? 1003 : 1013, 'client',
+        tests.nodeSe ? 'Wait for operation rejected on timeout' : 'You local clock is out of sync with the server time. It is a critical condition for sending messages to the blockchain. Please sync you clock with the internet time', async () => {
             await tests.deploy_with_giver({
                 package: helloPackage,
                 constructorParams: {},
