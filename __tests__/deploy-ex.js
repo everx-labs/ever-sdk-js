@@ -15,7 +15,7 @@ const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
 beforeAll(tests.init);
 afterAll(tests.done);
 
-test('Deploy data (ABI v%i)', async () => {
+test.skip('Deploy data (ABI v%i)', async () => {
     const { contracts } = tests.client;
     const checkInitParamsPackage = CheckInitParamsPackage[2];
     const publicKey = '1111111111111111111111111111111111111111111111111111111111111111';

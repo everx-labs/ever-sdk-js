@@ -2,60 +2,48 @@ pragma solidity >=0.5.0;
 pragma AbiHeader time;
 pragma AbiHeader expire;
 
-// Type TvmCell is only supported in the new experimental ABI encoder.
-pragma experimental ABIEncoderV2;
-
 contract ContractDeployer {
-	// Runtime functions:
+		// Struct to store information about deployed contracts.
+	struct DeployedContract {
+		address addr;
+		TvmCell stateInit;
+		uint256 pubkey;
+	}
 
-	// Function that inserts public key into contracts data field.
-	function tvm_insert_pubkey(TvmCell cellTree, uint256 pubkey) private pure returns(TvmCell /*contract*/)  {}
-
-	// Functions to deploy a contract.
-	function tvm_deploy_contract(TvmCell my_contract, address addr, uint128 gram,
-								uint32 constuctor_id,
-								uint32 constuctor_param0,
-								uint256 constuctor_param1) private pure { }
-	function tvm_deploy_contract(TvmCell my_contract, address addr, uint128 grams,
-								TvmCell payload) private pure { }
-
-	// Function to generate StateInit from code and data cells.
-	function tvm_build_state_init(TvmCell /*code*/, TvmCell /*data*/) private pure returns (TvmCell /*cell*/) { }
+	// Deployed contracts database.
+	mapping(uint => DeployedContract) contracts;
+	uint public lastID = 0;
 
 	// State variable storing the address of deployed contract.
 	address contractAddress;
 
-	// Modifier that allows public function to accept all external calls.
-	modifier alwaysAccept {
-		// Runtime function that allows contract to process inbound messages spending
-		// its own resources (it's necessary if contract should process all inbound messages,
-		// not only those that carry value with them).
+	// Modifier that allows public function to accept external calls only from the contract owner.
+	modifier acceptOnlyOwner {
+		require(tvm.pubkey() == msg.pubkey(), 101);
 		tvm.accept();
 		_;
 	}
+
 
 	// First variant of contract deploying
 
 	// State variable storing the StateInin of deployed contract. It contains contract's code and data.
 	TvmCell contractStateInit;
 
-	function setContract(TvmCell _contract) public alwaysAccept {
+	function setContract(TvmCell _contract) public acceptOnlyOwner {
 		contractStateInit = _contract;
 	}
 
-	function deploy(
-		uint256 pubkey,
-		uint128 gram_amount,
-		uint32 constuctor_id,
-		uint32 constuctor_param0,
-		uint256 constuctor_param1
-	) public alwaysAccept returns (address) 
-	{
-		TvmCell contractWithKey = tvm_insert_pubkey(contractStateInit, pubkey);
+	function deploy(uint256 pubkey, uint128 gram_amount,
+	uint32 constuctor_id, uint32 constuctor_param0, uint constuctor_param1) public acceptOnlyOwner returns (address) {
+		// Runtime function that inserts public key into contracts data field.
+		TvmCell stateInitWithKey = tvm.insertPubkey(contractStateInit, pubkey);
+
 		// tvm.hash() - Runtime function that computes the representation hash ot TvmCell.
-		address addr = address(tvm.hash(contractWithKey));
-		tvm_deploy_contract(contractWithKey, addr, gram_amount, constuctor_id, constuctor_param0, constuctor_param1); //create internal msg
-		contractAddress = addr;
+		address addr = address(tvm.hash(stateInitWithKey));
+
+		// Functions to deploy a contract and call it's constructor.
+		tvm.deployAndCallConstructor(stateInitWithKey, addr, gram_amount, constuctor_id, constuctor_param0, constuctor_param1);
 		return addr;
 	}
 
@@ -65,36 +53,34 @@ contract ContractDeployer {
 	// State variable storing the code of deployed contract.
 	TvmCell contractCode;
 
-	function setCode(TvmCell _code) public alwaysAccept {
+	function setCode(TvmCell _code) public acceptOnlyOwner {
 		contractCode = _code;
 	}
 
-	function deploy2(TvmCell data, uint128 gram_amount, uint32 constuctor_id,
-		             uint32 constuctor_param0, uint constuctor_param1) public alwaysAccept returns (address) {
-		TvmCell contr = tvm_build_state_init(contractCode, data);
-		// tvm.hash() - Runtime function that computes the representation hash ot TvmCell.
-		address addr = address(tvm.hash(contr));
-		tvm_deploy_contract(contr, addr, gram_amount, constuctor_id, constuctor_param0, constuctor_param1); //create internal msg
-		contractAddress = addr;
-		return addr;
-	}
+	// Second variant of contract deployment.
+		function deploy2(TvmCell data, uint128 gram_amount,
+		uint32 constuctor_id, uint32 constuctor_param0, uint constuctor_param1) public acceptOnlyOwner returns (address) {
+			// Runtime function to generate StateInit from code and data cells.
+			TvmCell stateInit = tvm.buildStateInit(contractCode, data);
+
+			// tvm.hash() - Runtime function that computes the representation hash ot TvmCell.
+			address addr = address(tvm.hash(stateInit));
+
+			// Functions to deploy a contract and call it's constructor.
+			tvm.deployAndCallConstructor(stateInit, addr, gram_amount, constuctor_id, constuctor_param0, constuctor_param1);
+			return addr;
+		}
 
 	// Third variant of contract deploying
 
-	function deploy3(TvmCell contr, address addr, uint128 gram_amount, TvmCell payload) public alwaysAccept returns (address) {
-		// payload - is body of message
-		tvm_deploy_contract(contr, addr, gram_amount, payload); //create internal msg
-		contractAddress = addr;
+	function deploy3(TvmCell contr, address addr, uint128 gram_amount, TvmCell payload) public acceptOnlyOwner returns (address) {
+		// Runtime function to deploy contract with prepared msg body for constructor call.
+		tvm.deploy(contr, addr, gram_amount, payload);
+
 		return addr;
 	}
 
-	modifier onlyOwner {
-        require(msg.pubkey() == tvm.pubkey(), 100);
-        tvm.accept();
-        _;
-    }
-
-	function sendAllMoney(address payable dest_addr) public onlyOwner {
+	function sendAllMoney(address payable dest_addr) public acceptOnlyOwner {
 		selfdestruct(dest_addr);
 	}
 }
