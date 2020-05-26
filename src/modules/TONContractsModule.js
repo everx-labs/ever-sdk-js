@@ -710,8 +710,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 }
                 //$FlowFixMe
                 const balance = BigInt(account.balance);
-                //$FlowFixMe
-                if (balance < 1000n) {
+                if (balance < BigInt(1000)) {
                     return TONClientError.accountBalanceTooLow(address, account.balance)
                 }
             } else {
