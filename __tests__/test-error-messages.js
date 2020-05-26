@@ -212,6 +212,9 @@ test.each(ABIVersions)('Test SDK Error 1013/1003 for nodeSE', async (abiVersion)
     expect(dateNowStub)
         .toHaveBeenCalled();
 
+    console.log(tests.client.getCore())
+    console.log('tests.nodeSe ' + tests.nodeSe);
+
     await expectError(tests.nodeSe ? 1003 : 1013, 'client',
         tests.nodeSe ? 'Wait for operation rejected on timeout' : 'You local clock is out of sync with the server time. It is a critical condition for sending messages to the blockchain. Please sync you clock with the internet time', async () => {
             await tests.deploy_with_giver({
