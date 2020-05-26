@@ -48,6 +48,16 @@ test('Run Get', async () => {
     });
     expect(resultWithInput.output[0])
         .toEqual('0x0');
+
+    const resultPastElectionsId = await contracts.runGet({
+        codeBase64: ELECTOR_CODE,
+        dataBase64: ELECTOR_DATA,
+        functionName: 'past_elections',
+    });
+
+    const pastElectionsId = resultPastElectionsId.output[0][0][0];
+    expect(pastElectionsId)
+        .toEqual('0x5eab0e74');
 });
 
 test.each(ABIVersions)('RunLocal (ABI v%i)', async (abiVersion) => {
