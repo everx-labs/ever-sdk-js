@@ -197,7 +197,7 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
 });
 const literallyJustDateNow = () => Date.now();
 
-test.each(ABIVersions)('Test SDK Error 1013/1003 for nodeSE', async (abiVersion) => {
+test.each(ABIVersions)('Test SDK Error 1013', async (abiVersion) => {
     if (!nodeSe) {
         const { crypto } = tests.client;
         const helloKeys = await crypto.ed25519Keypair();
