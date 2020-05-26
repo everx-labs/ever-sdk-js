@@ -197,13 +197,13 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
 });
 const literallyJustDateNow = () => Date.now();
 
-test('Test SDK Error 1013/1003 for nodeSE', async () => {
+test.each(ABIVersions)('Test SDK Error 1013/1003 for nodeSE', async (abiVersion) => {
     const { crypto } = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
-    const helloPackage = HelloContractPackage[2];
+    const helloPackage = HelloContractPackage[abiVersion];
 
     const realDateNow = Date.now.bind(global.Date);
-    const start = Date.now() - 20000;
+    const start = Date.now() - 50000;
     const dateNowStub = jest.fn(() => start);
     global.Date.now = dateNowStub;
 
