@@ -59,6 +59,21 @@ pipeline {
                             name: 'RUN_TESTS_TON_CLIENT_JS',
                             value: true
                         ],
+                        [
+                            $class: 'BooleanParameterValue',
+                            name: 'RUN_TESTS_TON_CLIENT_NODE_JS',
+                            value: true
+                        ],
+                        [
+                            $class: 'BooleanParameterValue',
+                            name: 'RUN_TESTS_TON_CLIENT_WEB_JS',
+                            value: true
+                        ],
+                        [
+                            $class: 'BooleanParameterValue',
+                            name: 'CHANGE_JS_DEPS',
+                            value: true
+                        ],
                     ] 
 
                     build job: "Integration/integration-tests/master", parameters: params
