@@ -35,7 +35,7 @@ contract ContractDeployer {
 	}
 
 	function deploy(uint256 pubkey, uint128 gram_amount,
-	uint32 constuctor_id, uint32 constuctor_param0, uint constuctor_param1) public acceptOnlyOwner returns (address) {
+	uint32 constructor_id, uint32 constructor_param0, uint constructor_param1) public acceptOnlyOwner returns (address) {
 		// Runtime function that inserts public key into contracts data field.
 		TvmCell stateInitWithKey = tvm.insertPubkey(contractStateInit, pubkey);
 
@@ -43,7 +43,7 @@ contract ContractDeployer {
 		address addr = address(tvm.hash(stateInitWithKey));
 
 		// Functions to deploy a contract and call it's constructor.
-		tvm.deployAndCallConstructor(stateInitWithKey, addr, gram_amount, constuctor_id, constuctor_param0, constuctor_param1);
+		tvm.deployAndCallConstructor(stateInitWithKey, addr, gram_amount, constructor_id, constructor_param0, constructor_param1);
 		return addr;
 	}
 
@@ -59,7 +59,7 @@ contract ContractDeployer {
 
 	// Second variant of contract deployment.
 		function deploy2(TvmCell data, uint128 gram_amount,
-		uint32 constuctor_id, uint32 constuctor_param0, uint constuctor_param1) public acceptOnlyOwner returns (address) {
+		uint32 constructor_id, uint32 constructor_param0, uint constructor_param1) public acceptOnlyOwner returns (address) {
 			// Runtime function to generate StateInit from code and data cells.
 			TvmCell stateInit = tvm.buildStateInit(contractCode, data);
 
@@ -67,7 +67,7 @@ contract ContractDeployer {
 			address addr = address(tvm.hash(stateInit));
 
 			// Functions to deploy a contract and call it's constructor.
-			tvm.deployAndCallConstructor(stateInit, addr, gram_amount, constuctor_id, constuctor_param0, constuctor_param1);
+			tvm.deployAndCallConstructor(stateInit, addr, gram_amount, constructor_id, constructor_param0, constructor_param1);
 			return addr;
 		}
 
