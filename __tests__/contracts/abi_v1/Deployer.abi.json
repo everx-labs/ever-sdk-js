@@ -2,13 +2,6 @@
 	"ABI version": 1,
 	"functions": [
 		{
-			"name": "constructor",
-			"inputs": [
-			],
-			"outputs": [
-			]
-		},
-		{
 			"name": "setContract",
 			"inputs": [
 				{"name":"_contract","type":"cell"}
@@ -21,9 +14,9 @@
 			"inputs": [
 				{"name":"pubkey","type":"uint256"},
 				{"name":"gram_amount","type":"uint128"},
-				{"name":"constuctor_id","type":"uint32"},
-				{"name":"constuctor_param0","type":"uint32"},
-				{"name":"constuctor_param1","type":"uint256"}
+				{"name":"constructor_id","type":"uint32"},
+				{"name":"constructor_param0","type":"uint32"},
+				{"name":"constructor_param1","type":"uint256"}
 			],
 			"outputs": [
 				{"name":"value0","type":"address"}
@@ -42,9 +35,9 @@
 			"inputs": [
 				{"name":"data","type":"cell"},
 				{"name":"gram_amount","type":"uint128"},
-				{"name":"constuctor_id","type":"uint32"},
-				{"name":"constuctor_param0","type":"uint32"},
-				{"name":"constuctor_param1","type":"uint256"}
+				{"name":"constructor_id","type":"uint32"},
+				{"name":"constructor_param0","type":"uint32"},
+				{"name":"constructor_param1","type":"uint256"}
 			],
 			"outputs": [
 				{"name":"value0","type":"address"}
@@ -71,12 +64,14 @@
 			]
 		},
 		{
-			"name": "fallback",
+			"name": "constructor",
 			"inputs": [
 			],
 			"outputs": [
 			]
 		}
+	],
+	"data": [
 	],
 	"events": [
 	]
