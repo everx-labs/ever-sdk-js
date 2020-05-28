@@ -26,14 +26,9 @@
 			],
 			"outputs": [
 			]
-		},
-		{
-			"name": "fallback",
-			"inputs": [
-			],
-			"outputs": [
-			]
 		}
+	],
+	"data": [
 	],
 	"events": [
 	]
