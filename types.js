@@ -329,6 +329,7 @@ export type TONContractUnsignedRunMessage = {
 export type TONContractDeployMessage = {
     address: string,
     message: TONContractMessage;
+    creationTime?: number,
 }
 
 export type TONContractRunMessage = {
@@ -336,6 +337,7 @@ export type TONContractRunMessage = {
     abi: TONContractABI,
     functionName: string,
     message: TONContractMessage;
+    creationTime?: number,
 }
 
 export type TONContractCreateSignedMessageParams = {
@@ -702,7 +704,8 @@ export interface TONContracts {
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
         address?: string,
-        method?: 'run' | 'deploy',
+        abi?: TONContractABI,
+        functionName?: string,
     ): Promise<QTransaction>;
 
     processDeployMessage(

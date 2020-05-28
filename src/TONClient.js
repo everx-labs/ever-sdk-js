@@ -234,6 +234,8 @@ export class TONClientError {
         ACCOUNT_CODE_MISSING: 1015,
         ACCOUNT_BALANCE_TOO_LOW: 1016,
         ACCOUNT_FROZEN_OR_DELETED: 1017,
+
+        CONTRACT_EXECUTION_FAILED: 3025,
     };
 
     message: string;

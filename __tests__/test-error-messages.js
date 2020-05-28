@@ -16,9 +16,9 @@
 
 // @flow
 
-import { TONClientError } from '../src/TONClient';
-import { ABIVersions, nodeSe, tests } from './_/init-tests';
-import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
+import {TONClientError} from '../src/TONClient';
+import {ABIVersions, nodeSe, tests} from './_/init-tests';
+import {TONMnemonicDictionary} from '../src/modules/TONCryptoModule';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 const HelloContractPackage = tests.loadPackage('Hello');
@@ -107,6 +107,52 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
             functionName: 'touch',
             input: {},
             keyPair: helloKeys,
+        });
+    });
+});
+
+test.each(ABIVersions)('runGet & runLocal errors (ABI %i)', async (abiVersion) => {
+    const { contracts, crypto } = tests.client;
+    tests.client.config.data.waitForTimeout = 5000;
+    const helloPackage = HelloContractPackage[abiVersion];
+
+    let helloKeys = await crypto.ed25519Keypair();
+    let helloAddress = (await contracts.createDeployMessage({
+        package: helloPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    })).address;
+
+    await expectErrorCode(TONClientError.code.ACCOUNT_MISSING, async () => {
+        await contracts.runGet({
+            address: helloAddress,
+            functionName: 'foo',
+        });
+    });
+
+    await expectErrorCode(TONClientError.code.ACCOUNT_MISSING, async () => {
+        await contracts.runLocal({
+            address: helloAddress,
+            functionName: 'foo',
+            abi: helloPackage.abi,
+            input: {},
+        });
+    });
+
+    await tests.get_grams_from_giver(helloAddress);
+    await expectErrorCode(TONClientError.code.ACCOUNT_CODE_MISSING, async () => {
+        await contracts.runGet({
+            address: helloAddress,
+            functionName: 'foo',
+        });
+    });
+
+    await expectErrorCode(TONClientError.code.ACCOUNT_CODE_MISSING, async () => {
+        await contracts.runLocal({
+            address: helloAddress,
+            functionName: 'foo',
+            abi: helloPackage.abi,
+            input: {},
         });
     });
 });

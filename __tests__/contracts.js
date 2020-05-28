@@ -169,15 +169,15 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
             }, span);
         } catch (error) {
             expect(error.source)
-                .toEqual('node');
+                .toEqual(TONClientError.source.NODE);
             expect(error.code)
-                .toEqual(101);
-            expect(error.message)
-                .toEqual('VM terminated with exception (101) at computeVm');
+                .toEqual(TONClientError.code.CONTRACT_EXECUTION_FAILED);
             expect(error.data.phase)
                 .toEqual('computeVm');
             expect(error.data.transaction_id)
                 .toBeTruthy();
+            expect(error.data.exit_code)
+                .toEqual(101);
         }
 
         try {
@@ -904,8 +904,6 @@ test('Test expire', async () => {
     // and then change `expire` to correct value in order to send it properly
     runMsg.message.expire = Math.floor(Date.now() / 1000) + 10;
 
-    const expectedError = TONClientError.messageExpired();
-
     // no retries client
     const client = await TONClient.create({
         ...tests.config,
@@ -915,8 +913,8 @@ test('Test expire', async () => {
     // SDK will wait for message processing using modified `expire` value,
     // but message was created already expired so contract won't accept it
     await expectError(
-        expectedError.code,
-        expectedError.source,
+        TONClientError.code.CONTRACT_EXECUTION_FAILED,
+        TONClientError.source.NODE,
         async () => client.contracts.processRunMessage(runMsg),
     );
 

@@ -49,7 +49,7 @@ import type {
     TONContractUnsignedMessage,
     TONContractUnsignedRunMessage,
     TONContractRunGetParams,
-    TONContractRunGetResult,
+    TONContractRunGetResult, TONContractPackage,
 } from '../../types';
 import {TONClientError} from '../TONClient';
 import {TONModule} from '../TONModule';
@@ -187,6 +187,18 @@ export const QBounceType = {
     noFunds: 1,
     ok: 2,
 };
+
+function removeTypeName(obj: any) {
+    if (obj.__typename) {
+        delete obj.__typename;
+    }
+    Object.values(obj)
+        .forEach((value) => {
+            if (!!value && typeof value === 'object') {
+                removeTypeName(value);
+            }
+        });
+}
 
 export function removeProps(obj: {}, paths: string[]): {} {
     let result = obj;
@@ -344,6 +356,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 expire: constructorHeader?.expire,
             },
             address: message.address,
+            creationTime: Date.now(),
         };
     }
 
@@ -372,6 +385,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             abi: params.abi,
             functionName: params.functionName,
             message,
+            creationTime: Date.now(),
         };
     }
 
@@ -455,6 +469,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         return {
             address: params.unsignedMessage.address,
             message,
+            creationTime: Date.now(),
         };
     }
 
@@ -474,6 +489,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             abi: params.unsignedMessage.signParams.abi,
             functionName: params.unsignedMessage.functionName,
             message,
+            creationTime: Date.now(),
         };
     }
 
@@ -574,10 +590,21 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
         address?: string,
-        method?: 'run' | 'deploy',
+        abi?: TONContractABI,
+        functionName?: string,
+        messageCreationTime?: number,
     ): Promise<QTransaction> {
         await this.sendMessage(message, parentSpan);
-        return this.waitForTransaction(message, resultFields, parentSpan, retryIndex, address, method);
+        return this.waitForTransaction(
+            message,
+            resultFields,
+            parentSpan,
+            retryIndex,
+            address,
+            messageCreationTime,
+            abi,
+            functionName,
+        );
     }
 
 
@@ -587,7 +614,9 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
         address?: string,
-        method?: 'run' | 'deploy',
+        messageCreationTime?: number,
+        abi?: TONContractABI,
+        functionName?: string,
     ): Promise<QTransaction> {
         const messageId = await this.getMessageId(message);
         const config = this.config;
@@ -681,46 +710,52 @@ export default class TONContractsModule extends TONModule implements TONContract
                 block_id: transaction.block_id,
                 now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
             });
-            await checkTransaction(transaction);
-            return transaction;
         } catch (error) {
-            throw await this.resolveDetailedError(error, address, method);
+            throw await this.resolveDetailedError(
+                error,
+                message.messageBodyBase64,
+                messageCreationTime || Date.now(),
+                address || ''
+            );
         }
+        removeTypeName(transaction);
+        await this.requestCore('contracts.process.transaction', {
+            transaction,
+            abi: abi || null,
+            functionName: functionName || null,
+            address,
+        });
+        return transaction;
     }
 
     async resolveDetailedError(
         error: Error,
-        address?: string,
-        method?: 'run' | 'deploy',
+        messageBase64: string,
+        time: number,
+        address: string,
     ) {
-        const isAccountCheckingRequired =
-            (error: any).code === TONClientError.code.ACCOUNT_CODE_MISSING
-            || TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT)
-            || TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
-        if (isAccountCheckingRequired && address) {
-            const accounts = await this.queries.accounts.query({
-                filter: { id: { eq: address } },
-                result: 'balance code_hash',
-                timeout: 1000,
+        const accounts = await this.queries.accounts.query({
+            filter: { id: { eq: address } },
+            result: 'id acc_type balance balance_other { currency value } code data last_paid',
+            timeout: 1000,
+        });
+        if (accounts.length === 0) {
+            return TONClientError.accountMissing(address);
+        }
+        const account = accounts[0];
+        removeTypeName(account);
+        try {
+            await this.requestCore('contracts.resolve.error', {
+                address,
+                account,
+                messageBase64,
+                time,
+                mainError: error,
             });
-            if (accounts.length > 0) {
-                const account = accounts[0];
-                if (method === 'run' && !account.code_hash) {
-                    return TONClientError.accountCodeMissing(address, account.balance);
-                }
-                //$FlowFixMe
-                const balance = BigInt(account.balance);
-                if (balance < BigInt(1000)) {
-                    return TONClientError.accountBalanceTooLow(address, account.balance)
-                }
-            } else {
-                return TONClientError.accountMissing(address)
-            }
-        } else if (TONClientError.isNodeError(error, 13)) {
-            return TONClientError.accountBalanceTooLow(address || '', '0');
+        } catch (resolved) {
+            return resolved;
         }
         return error;
-
     }
 
     async isDeployed(address: string, parentSpan?: (Span | SpanContext)): Promise<bool> {
@@ -766,7 +801,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             parentSpan,
             retryIndex,
             deployMessage.address,
-            'deploy'
+            deployMessage.creationTime,
         );
         this.config.log('processDeployMessage. End');
         return {
@@ -798,7 +833,9 @@ export default class TONContractsModule extends TONModule implements TONContract
             parentSpan,
             retryIndex,
             runMessage.address,
-            'run'
+            runMessage.creationTime,
+            runMessage.abi,
+            runMessage.functionName,
         );
         const outputMessages = transaction.out_messages;
         if (!outputMessages || outputMessages.length === 0) {
@@ -1016,17 +1053,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         waitParams?: TONContractAccountWaitParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<QAccount> {
-        function removeTypeName(obj: any) {
-            if (obj.__typename) {
-                delete obj.__typename;
-            }
-            Object.values(obj)
-                .forEach((value) => {
-                    if (!!value && typeof value === 'object') {
-                        removeTypeName(value);
-                    }
-                });
-        }
 
         const filter: { [string]: any } = {
             id: { eq: address },
@@ -1075,110 +1101,6 @@ export default class TONContractsModule extends TONModule implements TONContract
 
 TONContractsModule.moduleName = 'TONContractsModule';
 
-async function checkTransaction(transaction: QTransaction) {
-    if (!transaction.aborted) {
-        return;
-    }
-
-    function nodeError(message: string, code: number, phase: string) {
-        const REPLAY_PROTECTION = 52;
-        const MESSAGE_EXPIRED = 57;
-        const isNodeSEMessageExpired = phase === TONClientTransactionPhase.computeVm
-            && (code === MESSAGE_EXPIRED || code === REPLAY_PROTECTION);
-        return isNodeSEMessageExpired
-            ? TONClientError.messageExpired()
-            : new TONClientError(
-                `${message} (${code}) at ${phase}`,
-                code,
-                TONClientError.source.NODE,
-                {
-                    phase,
-                    transaction_id: transaction.id,
-                },
-            );
-    }
-
-    const storage = transaction.storage;
-    if (storage) {
-        const status = storage.status_change;
-        if (status === QAccountStatusChange.frozen) {
-            throw nodeError(
-                'Account was frozen due storage phase',
-                TONClientError.code.ACCOUNT_FROZEN_OR_DELETED,
-                TONClientTransactionPhase.storage,
-            );
-        }
-        if (status === QAccountStatusChange.deleted) {
-            throw nodeError(
-                'Account was deleted due storage phase',
-                TONClientError.code.ACCOUNT_FROZEN_OR_DELETED,
-                TONClientTransactionPhase.storage,
-            );
-        }
-    }
-
-    const compute = transaction.compute;
-    if (compute) {
-        if (compute.compute_type === QComputeType.skipped) {
-            const reason = compute.skipped_reason;
-            if (reason === QSkipReason.noState) {
-                throw nodeError(
-                    'Account has no code and data',
-                    TONClientError.code.ACCOUNT_CODE_MISSING,
-                    TONClientTransactionPhase.computeSkipped,
-                );
-            }
-            if (reason === QSkipReason.badState) {
-                throw nodeError(
-                    'Account has bad state: frozen or deleted',
-                    TONClientError.code.ACCOUNT_FROZEN_OR_DELETED,
-                    TONClientTransactionPhase.computeSkipped,
-                );
-            }
-            if (reason === QSkipReason.noGas) {
-                throw nodeError(
-                    'No gas to execute VM',
-                    TONClientError.code.ACCOUNT_BALANCE_TOO_LOW,
-                    TONClientTransactionPhase.computeSkipped,
-                );
-            }
-            throw nodeError(
-                'Compute phase skipped by unknown reason',
-                -1,
-                TONClientTransactionPhase.computeSkipped,
-            );
-        }
-        if (compute.compute_type === QComputeType.vm) {
-            if (!compute.success) {
-                throw nodeError(
-                    'VM terminated with exception',
-                    compute.exit_code || 0,
-                    TONClientTransactionPhase.computeVm,
-                );
-            }
-        }
-    }
-
-    const action = transaction.action;
-    if (action) {
-        if (!action.success) {
-            throw nodeError(
-                action.no_funds
-                    ? 'Too low balance to send outbound message'
-                    : (!action.valid ? 'Outbound message is invalid' : 'Action phase failed'),
-                action.result_code || 0,
-                TONClientTransactionPhase.action,
-            );
-        }
-    }
-
-    throw nodeError(
-        'Transaction aborted',
-        -1,
-        TONClientTransactionPhase.unknown,
-    );
-}
-
 const transactionDetails = `
     id
     in_msg
@@ -1211,5 +1133,6 @@ const transactionDetails = `
         id
         msg_type
         body
+        value
     }
    `;
