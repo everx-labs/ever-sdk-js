@@ -1,5 +1,5 @@
-pragma solidity ^0.5.0;
-pragma experimental ABIEncoderV2;
+pragma solidity >=0.5.0;
+pragma AbiHeader v1;
 
 contract Simple {
 
@@ -32,6 +32,4 @@ contract Simple {
 	function sendAllMoney(address payable dest_addr) public OnlyOwner {
 		selfdestruct(dest_addr);
 	}
-
-	function() external payable {}
 }
