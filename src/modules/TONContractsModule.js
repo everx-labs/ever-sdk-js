@@ -556,7 +556,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async getMessageId(message: TONContractMessage): Promise<string> {
         return message.messageId || (await this.getBocHash({
             bocBase64: message.messageBodyBase64,
-        })).hash
+        })).hash;
     }
 
     async sendMessage(
@@ -573,7 +573,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             throw TONClientError.clockOutOfSync();
         }
         const id = await this.getMessageId(params);
-        const idBase64 = Buffer.from(id, 'hex').toString('base64');
+        const idBase64 = Buffer.from(id, 'hex')
+            .toString('base64');
         await this.queries.postRequests([
             {
                 id: idBase64,
@@ -654,7 +655,8 @@ export default class TONContractsModule extends TONModule implements TONContract
                         && block.in_msg_descr.find(msg => !!msg.transaction_id)?.transaction_id;
 
                     if (!transaction_id) {
-                        throw TONClientError.internalError('Invalid block received: no transaction ID');
+                        throw TONClientError.internalError(
+                            'Invalid block received: no transaction ID');
                     }
 
                     // check that transactions collection is updated
@@ -715,16 +717,30 @@ export default class TONContractsModule extends TONModule implements TONContract
                 error,
                 message.messageBodyBase64,
                 messageCreationTime || Date.now(),
-                address || ''
+                address || '',
             );
         }
         removeTypeName(transaction);
-        await this.requestCore('contracts.process.transaction', {
-            transaction,
-            abi: abi || null,
-            functionName: functionName || null,
-            address,
-        });
+        try {
+            await this.requestCore('contracts.process.transaction', {
+                transaction,
+                abi: abi || null,
+                functionName: functionName || null,
+                address,
+            });
+        } catch (error) {
+            if (error.code === TONClientError.code.ACCOUNT_CODE_MISSING) {
+                const accounts = await this.queries.accounts.query({
+                    filter: { id: { eq: address } },
+                    result: 'acc_type',
+                    timeout: 1000,
+                });
+                if (accounts.length === 0) {
+                    throw TONClientError.accountMissing(address);
+                }
+            }
+            throw error;
+        }
         return transaction;
     }
 
@@ -1008,7 +1024,11 @@ export default class TONContractsModule extends TONModule implements TONContract
             try {
                 return await call(i);
             } catch (error) {
-                if (!TONClientError.isMessageExpired(error)) {
+                const code = error.code || 0;
+                const exit_code = error.data && error.data.exit_code || 0;
+                const useRetry = code === TONClientError.code.MESSAGE_EXPIRED
+                    || (code === TONClientError.code.CONTRACT_EXECUTION_FAILED && exit_code === 52);
+                if (!useRetry) {
                     throw error;
                 }
             }
@@ -1053,7 +1073,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         waitParams?: TONContractAccountWaitParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<QAccount> {
-
         const filter: { [string]: any } = {
             id: { eq: address },
         };
@@ -1065,13 +1084,16 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
 
         this.config.log('getAccount. Filter', filter);
-        const account = await this.queries.accounts.waitFor(
+        const accounts = await this.queries.accounts.query({
             filter,
-            'id acc_type code data balance balance_other { currency value } last_paid',
-            waitParams && waitParams.timeout,
+            result: 'id acc_type code data balance balance_other { currency value } last_paid',
+            ...(waitParams && waitParams.timeout ? { timeout: waitParams.timeout } : {}),
             parentSpan,
-        );
-
+        });
+        if (accounts.length === 0) {
+            throw TONClientError.accountMissing(address);
+        }
+        const account = accounts[0];
         removeTypeName(account);
         this.config.log('getAccount. Account received', account);
         return account;

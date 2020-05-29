@@ -384,6 +384,4 @@ export class TONClientError {
     static isMessageExpired(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
     }
-
 }
-
