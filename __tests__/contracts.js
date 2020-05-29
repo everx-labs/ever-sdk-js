@@ -7,7 +7,13 @@
 import {Span} from 'opentracing';
 import {removeProps, TONAddressStringVariant} from '../src/modules/TONContractsModule';
 import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
-import {TONClient, TONClientError} from '../src/TONClient';
+import {
+    TONClient,
+    TONClientError,
+    TONContractExitCode,
+    TONErrorCode,
+    TONErrorSource
+} from '../src/TONClient';
 
 
 import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
@@ -838,6 +844,7 @@ async function expectError(code: number, source: string, f) {
         await f();
         fail(`Expected error with code:${code} source: ${source}`);
     } catch (error) {
+        console.log('>>>', error);
         expect({
             code: error.code,
             source: error.source,
@@ -912,11 +919,28 @@ test('Test expire', async () => {
 
     // SDK will wait for message processing using modified `expire` value,
     // but message was created already expired so contract won't accept it
-    await expectError(
-        TONClientError.code.CONTRACT_EXECUTION_FAILED,
-        TONClientError.source.NODE,
-        async () => client.contracts.processRunMessage(runMsg),
-    );
+    try {
+        await client.contracts.processRunMessage(runMsg);
+        fail('error expected');
+    } catch (error) {
+        expect(error).toMatchObject({
+            code: TONErrorCode.MESSAGE_EXPIRED,
+            source: TONErrorSource.NODE,
+            data: {
+                extended_code: TONErrorCode.CONTRACT_EXECUTION_FAILED,
+                exit_code: TONContractExitCode.MESSAGE_EXPIRED,
+            }
+        })
+    }
+
+    try {
+        await client.contracts.processRunMessage(runMsg);
+    } catch (error) {
+        expect(error).toMatchObject({
+            code: TONErrorCode.MESSAGE_ALREADY_EXPIRED,
+            source: TONErrorSource.CLIENT,
+        });
+    }
 
     // check that expired message wasn't processed by the contract
     const ltExpire = (await queries.accounts.query(

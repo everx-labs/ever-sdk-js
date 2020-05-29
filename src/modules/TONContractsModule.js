@@ -36,7 +36,6 @@ import type {
     TONContractLoadParams,
     TONContractLoadResult,
     TONContractCalcRunFeeParams,
-    TONContractTransactionFees,
     TONContractCalcFeeResult,
     TONContractCalcMsgProcessingFeesParams,
     TONContractMessage,
@@ -49,9 +48,9 @@ import type {
     TONContractUnsignedMessage,
     TONContractUnsignedRunMessage,
     TONContractRunGetParams,
-    TONContractRunGetResult, TONContractPackage,
+    TONContractRunGetResult,
 } from '../../types';
-import {TONClientError} from '../TONClient';
+import {TONClientError, TONContractExitCode, TONErrorCode} from '../TONClient';
 import {TONModule} from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule from './TONQueriesModule';
@@ -294,10 +293,14 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<TONContractRunGetResult> {
         let coreParams: TONContractRunGetParams = params;
         if (!params.codeBase64 || !params.dataBase64) {
-            if (!params.address) {
+            const address = params.address;
+            if (!address) {
                 throw TONClientError.addressRequiredForRunLocal();
             }
-            const account: any = await this.getAccount(params.address, true);
+            const account: any = await this.getAccount(address, false);
+            if (!account.code) {
+                throw TONClientError.accountCodeMissing(address, account.balance);
+            }
             account.codeBase64 = account.code;
             account.dataBase64 = account.data;
             delete account.code;
@@ -597,11 +600,11 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<QTransaction> {
         await this.sendMessage(message, parentSpan);
         return this.waitForTransaction(
+            address || '',
             message,
             resultFields,
             parentSpan,
             retryIndex,
-            address,
             messageCreationTime,
             abi,
             functionName,
@@ -610,11 +613,11 @@ export default class TONContractsModule extends TONModule implements TONContract
 
 
     async waitForTransaction(
+        address: string,
         message: TONContractMessage,
         resultFields: string,
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
-        address?: string,
         messageCreationTime?: number,
         abi?: TONContractABI,
         functionName?: string,
@@ -717,10 +720,20 @@ export default class TONContractsModule extends TONModule implements TONContract
                 error,
                 message.messageBodyBase64,
                 messageCreationTime || Date.now(),
-                address || '',
+                address,
             );
         }
         removeTypeName(transaction);
+        await this.checkTransaction(address, transaction, abi, functionName);
+        return transaction;
+    }
+
+    async checkTransaction(
+        address: string,
+        transaction: QTransaction,
+        abi?: TONContractABI,
+        functionName?: string,
+    ) {
         try {
             await this.requestCore('contracts.process.transaction', {
                 transaction,
@@ -729,19 +742,19 @@ export default class TONContractsModule extends TONModule implements TONContract
                 address,
             });
         } catch (error) {
-            if (error.code === TONClientError.code.ACCOUNT_CODE_MISSING) {
-                const accounts = await this.queries.accounts.query({
-                    filter: { id: { eq: address } },
-                    result: 'acc_type',
-                    timeout: 1000,
-                });
-                if (accounts.length === 0) {
-                    throw TONClientError.accountMissing(address);
-                }
+            const accounts = await this.queries.accounts.query({
+                filter: { id: { eq: address } },
+                result: 'acc_type balance',
+                timeout: 1000,
+            });
+            if (accounts.length === 0) {
+                throw TONClientError.accountMissing(address);
+            }
+            if (TONClientError.isContractError(error, TONContractExitCode.NO_GAS)) {
+                throw TONClientError.accountBalanceTooLow(address, accounts[0].balance)
             }
             throw error;
         }
-        return transaction;
     }
 
     async resolveDetailedError(
@@ -765,7 +778,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 address,
                 account,
                 messageBase64,
-                time,
+                time: Math.round(time / 1000),
                 mainError: error,
             });
         } catch (resolved) {
@@ -812,11 +825,11 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractDeployResult> {
         const transaction = await this.waitForTransaction(
+            deployMessage.address,
             deployMessage.message,
             transactionDetails,
             parentSpan,
             retryIndex,
-            deployMessage.address,
             deployMessage.creationTime,
         );
         this.config.log('processDeployMessage. End');
@@ -844,11 +857,11 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractRunResult> {
         const transaction = await this.waitForTransaction(
+            runMessage.address,
             runMessage.message,
             transactionDetails,
             parentSpan,
             retryIndex,
-            runMessage.address,
             runMessage.creationTime,
             runMessage.abi,
             runMessage.functionName,
@@ -1024,10 +1037,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             try {
                 return await call(i);
             } catch (error) {
-                const code = error.code || 0;
-                const exit_code = error.data && error.data.exit_code || 0;
-                const useRetry = code === TONClientError.code.MESSAGE_EXPIRED
-                    || (code === TONClientError.code.CONTRACT_EXECUTION_FAILED && exit_code === 52);
+                const useRetry = error.code === TONErrorCode.MESSAGE_EXPIRED
+                    || TONClientError.isContractError(error, TONContractExitCode.REPLAY_PROTECTION);
                 if (!useRetry) {
                     throw error;
                 }
@@ -1103,15 +1114,21 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
+        const address = params.address;
+        if (!address) {
+            throw TONClientError.addressRequiredForRunLocal();
+        }
         const account = await this.getAccount(
-            params.address,
-            true,
+            address,
+            false,
             params.waitParams,
             parentSpan,
         );
-
+        if (!account.code) {
+            throw TONClientError.accountCodeMissing(address, (account:any).balance);
+        }
         return this.requestCore('contracts.run.local', {
-            address: params.address,
+            address,
             account,
             abi: params.abi,
             functionName: params.functionName,
@@ -1134,8 +1151,10 @@ const transactionDetails = `
     now
     aborted
     lt
+    total_fees
     storage {
         status_change
+        storage_fees_collected
     }
     compute {
         compute_type
@@ -1150,6 +1169,8 @@ const transactionDetails = `
         valid
         result_code
         no_funds
+        total_fwd_fees
+        total_action_fees
     }
     out_messages {
         id

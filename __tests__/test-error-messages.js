@@ -4,7 +4,7 @@
 
 // @flow
 
-import {TONClientError} from '../src/TONClient';
+import {TONErrorCode, TONErrorSource} from '../src/TONClient';
 import {ABIVersions, nodeSe, tests} from './_/init-tests';
 import {TONMnemonicDictionary} from '../src/modules/TONCryptoModule';
 
@@ -22,6 +22,7 @@ async function expectError(code: number, source: ?string, message: ?string, f: (
         //$FlowFixMe
         fail(`Expected error with code:${code} source: ${source}`);
     } catch (error) {
+        console.log('>>>', error);
         expect({
             code: error.code,
             ...(source ? { source: error.source } : {})
@@ -53,50 +54,74 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
         keyPair: helloKeys,
     })).address;
 
-    await expectErrorCode(TONClientError.code.ACCOUNT_MISSING, async () => {
+    try {
         await contracts.deploy({
             package: helloPackage,
             constructorParams: {},
             keyPair: helloKeys,
         });
-    });
+        fail('error expected');
+    } catch (error) {
+        expect(error).toMatchObject({
+            code: TONErrorCode.ACCOUNT_MISSING,
+        });
+    }
 
     await tests.get_grams_from_giver(helloAddress, 100);
-    await expectErrorCode(TONClientError.code.ACCOUNT_BALANCE_TOO_LOW, async () => {
+    try {
         await contracts.deploy({
             package: helloPackage,
             constructorParams: {},
             keyPair: helloKeys,
         });
-    });
+        fail('error expected');
+    } catch (error) {
+        expect(error).toMatchObject({
+            code: TONErrorCode.ACCOUNT_BALANCE_TOO_LOW,
+            data: {
+                original_code: TONErrorCode.WAIT_FOR_TIMEOUT,
+            },
+        });
+    }
 
-    // helloKeys = await crypto.ed25519Keypair();
-    // helloAddress = (await contracts.createDeployMessage({
-    //     package: helloPackage,
-    //     constructorParams: {},
-    //     keyPair: helloKeys,
-    // })).address;
-    //
-    // await expectErrorCode(TONClientError.code.ACCOUNT_MISSING, async () => {
-    //     await contracts.run({
-    //         address: helloAddress,
-    //         abi: helloPackage.abi,
-    //         functionName: 'touch',
-    //         input: {},
-    //         keyPair: helloKeys,
-    //     });
-    // });
-    //
-    // await tests.get_grams_from_giver(helloAddress, 100);
-    // await expectErrorCode(TONClientError.code.ACCOUNT_CODE_MISSING, async () => {
-    //     await contracts.run({
-    //         address: helloAddress,
-    //         abi: helloPackage.abi,
-    //         functionName: 'touch',
-    //         input: {},
-    //         keyPair: helloKeys,
-    //     });
-    // });
+    helloKeys = await crypto.ed25519Keypair();
+    helloAddress = (await contracts.createDeployMessage({
+        package: helloPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    })).address;
+
+
+    try {
+        await contracts.run({
+            address: helloAddress,
+            abi: helloPackage.abi,
+            functionName: 'touch',
+            input: {},
+            keyPair: helloKeys,
+        });
+        fail('error expected');
+    } catch (error) {
+        expect(error).toMatchObject({
+            code: TONErrorCode.ACCOUNT_MISSING,
+        });
+    }
+
+    await tests.get_grams_from_giver(helloAddress, 100);
+    try {
+        await contracts.run({
+            address: helloAddress,
+            abi: helloPackage.abi,
+            functionName: 'touch',
+            input: {},
+            keyPair: helloKeys,
+        });
+        fail('error expected');
+    } catch (error) {
+        expect(error).toMatchObject({
+            code: TONErrorCode.ACCOUNT_CODE_MISSING,
+        });
+    }
 });
 
 test.each(ABIVersions)('runGet & runLocal errors (ABI %i)', async (abiVersion) => {
@@ -111,14 +136,14 @@ test.each(ABIVersions)('runGet & runLocal errors (ABI %i)', async (abiVersion) =
         keyPair: helloKeys,
     })).address;
 
-    await expectErrorCode(TONClientError.code.ACCOUNT_MISSING, async () => {
+    await expectErrorCode(TONErrorCode.ACCOUNT_MISSING, async () => {
         await contracts.runGet({
             address: helloAddress,
             functionName: 'foo',
         });
     });
 
-    await expectErrorCode(TONClientError.code.ACCOUNT_MISSING, async () => {
+    await expectErrorCode(TONErrorCode.ACCOUNT_MISSING, async () => {
         await contracts.runLocal({
             address: helloAddress,
             functionName: 'foo',
@@ -128,14 +153,14 @@ test.each(ABIVersions)('runGet & runLocal errors (ABI %i)', async (abiVersion) =
     });
 
     await tests.get_grams_from_giver(helloAddress);
-    await expectErrorCode(TONClientError.code.ACCOUNT_CODE_MISSING, async () => {
+    await expectErrorCode(TONErrorCode.ACCOUNT_CODE_MISSING, async () => {
         await contracts.runGet({
             address: helloAddress,
             functionName: 'foo',
         });
     });
 
-    await expectErrorCode(TONClientError.code.ACCOUNT_CODE_MISSING, async () => {
+    await expectErrorCode(TONErrorCode.ACCOUNT_CODE_MISSING, async () => {
         await contracts.runLocal({
             address: helloAddress,
             functionName: 'foo',
