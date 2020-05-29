@@ -924,13 +924,15 @@ test('Test expire', async () => {
         fail('error expected');
     } catch (error) {
         expect(error).toMatchObject({
-            code: TONErrorCode.MESSAGE_EXPIRED,
+            code: TONErrorCode.CONTRACT_EXECUTION_FAILED,
             source: TONErrorSource.NODE,
             data: {
-                extended_code: TONErrorCode.CONTRACT_EXECUTION_FAILED,
                 exit_code: TONContractExitCode.MESSAGE_EXPIRED,
-            }
-        })
+                original_error: {
+                    code: TONErrorCode.MESSAGE_EXPIRED,
+                },
+            },
+        });
     }
 
     try {
