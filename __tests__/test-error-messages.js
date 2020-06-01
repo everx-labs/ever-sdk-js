@@ -4,15 +4,17 @@
 
 // @flow
 
-import {TONErrorCode, TONErrorSource} from '../src/TONClient';
-import {ABIVersions, nodeSe, tests} from './_/init-tests';
-import {TONMnemonicDictionary} from '../src/modules/TONCryptoModule';
+import { TONErrorCode, TONErrorSource } from '../src/TONClient';
+import { ABIVersions, nodeSe, tests } from './_/init-tests';
+import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 const HelloContractPackage = tests.loadPackage('Hello');
 
 beforeAll(tests.init);
 afterAll(tests.done);
+
+declare function fail(message: string): void;
 
 async function expectError(
     code: number,
@@ -22,10 +24,9 @@ async function expectError(
 ) {
     try {
         await f();
-        //$FlowFixMe
+        // $FlowFixMe
         fail(`Expected error with code:${code} source: ${source}`);
     } catch (error) {
-        console.log('>>>', error);
         expect({
             code: error.code,
             ...(source ? { source: error.source } : {}),
@@ -57,6 +58,11 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
         constructorParams: {},
         keyPair: helloKeys,
     })).address;
+
+    // TODO: Remove this guard when node se will work like a regular node
+    if (nodeSe) {
+        return;
+    }
 
     try {
         await contracts.deploy({
@@ -180,8 +186,8 @@ test.each(ABIVersions)('runGet & runLocal errors (ABI %i)', async (abiVersion) =
     tests.client.config.data.waitForTimeout = 5000;
     const helloPackage = HelloContractPackage[abiVersion];
 
-    let helloKeys = await crypto.ed25519Keypair();
-    let helloAddress = (await contracts.createDeployMessage({
+    const helloKeys = await crypto.ed25519Keypair();
+    const helloAddress = (await contracts.createDeployMessage({
         package: helloPackage,
         constructorParams: {},
         keyPair: helloKeys,
@@ -307,7 +313,7 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
             await contracts.createDeployMessage({
                 package: walletPackage,
                 constructorParams: {},
-                //$FlowFixMe
+                // $FlowFixMe
                 keyPair: null,
             });
         },
@@ -317,7 +323,7 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
         await contracts.createDeployMessage({
             package: walletPackage,
             constructorParams: {},
-            //$FlowFixMe
+            // $FlowFixMe
             keyPair: {},
         });
     });
@@ -326,7 +332,7 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
         await contracts.createDeployMessage({
             package: walletPackage,
             constructorParams: {},
-            //$FlowFixMe
+            // $FlowFixMe
             keyPair: '',
         });
     });
@@ -345,44 +351,45 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
 });
 const literallyJustDateNow = () => Date.now();
 
-test.skip.each(ABIVersions)('Test SDK Error 1013', async (abiVersion) => {
-    if (!nodeSe) {
-        const { crypto } = tests.client;
-        const helloKeys = await crypto.ed25519Keypair();
-        const helloPackage = HelloContractPackage[abiVersion];
-
-        const realDateNow = Date.now.bind(global.Date);
-        const start = Date.now() - 20000;
-        const dateNowStub = jest.fn(() => start);
-        global.Date.now = dateNowStub;
-
-        expect(literallyJustDateNow())
-            .toBe(start);
-        expect(dateNowStub)
-            .toHaveBeenCalled();
-
-        await expectError(
-            1013,
-            'client',
-            'You local clock is out of sync with the server time. It is a critical condition for sending messages to the blockchain. Please sync you clock with the internet time',
-            async () => {
-                await tests.deploy_with_giver({
-                    package: helloPackage,
-                    constructorParams: {},
-                    keyPair: helloKeys,
-                });
-            },
-        );
-        global.Date.now = realDateNow;
+test.each(ABIVersions)('Test SDK Error 1013', async (abiVersion) => {
+    if (nodeSe) {
+        return;
     }
+    const { crypto } = tests.client;
+    const helloKeys = await crypto.ed25519Keypair();
+    const helloPackage = HelloContractPackage[abiVersion];
+
+    const realDateNow = Date.now.bind(global.Date);
+    const start = Date.now() - 20000;
+    const dateNowStub = jest.fn(() => start);
+    global.Date.now = dateNowStub;
+
+    expect(literallyJustDateNow())
+        .toBe(start);
+    expect(dateNowStub)
+        .toHaveBeenCalled();
+
+    await expectError(
+        1013,
+        'client',
+        'You local clock is out of sync with the server time. It is a critical condition for sending messages to the blockchain. Please sync you clock with the internet time',
+        async () => {
+            await tests.deploy_with_giver({
+                package: helloPackage,
+                constructorParams: {},
+                keyPair: helloKeys,
+            });
+        },
+    );
+    global.Date.now = realDateNow;
 });
 
 test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const walletPackage = WalletContractPackage[abiVersion];
     let wrongKeys = {
-        'public': '',
-        'secret': '6396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83',
+        public: '',
+        secret: '6396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83',
     };
     try {
         await contracts.createDeployMessage({
@@ -403,8 +410,8 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
 
 
     wrongKeys = {
-        'public': '6396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83',
-        'secret': '',
+        public: '6396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83',
+        secret: '',
     };
     try {
         await contracts.createDeployMessage({
@@ -424,8 +431,8 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
     }
 
     wrongKeys = {
-        'public': '/396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83',
-        'secret': '*396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83',
+        public: '/396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83',
+        secret: '*396991e831869ba7ca116767bdbceecc2d880146b34479a0063bdd8407fcc83',
     };
     try {
         await contracts.createDeployMessage({
@@ -519,7 +526,7 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
         try {
             await crypto.mnemonicFromRandom({
                 dictionary: TONMnemonicDictionary[dict],
-                //$FlowFixMe
+                // $FlowFixMe
                 wordCount: 1,
             });
         } catch (error) {
@@ -548,7 +555,7 @@ test.each(ABIVersions)('Test SDK Errors 3000-3020 (ABI v%i)', async (abiVersion)
     await expectError(3002, 'client', 'Invalid contract image:', async () => {
         await contracts.createDeployMessage({
             package: {
-                //$FlowFixMe
+                // $FlowFixMe
                 abi: '',
                 imageBase64: '#',
             },
@@ -563,7 +570,7 @@ test.each(ABIVersions)('Test SDK Errors 3000-3020 (ABI v%i)', async (abiVersion)
         async () => {
             await contracts.createDeployMessage({
                 package: {
-                    //$FlowFixMe
+                    // $FlowFixMe
                     abi: '',
                     imageBase64: '',
                 },

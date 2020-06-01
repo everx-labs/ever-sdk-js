@@ -751,7 +751,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 throw TONClientError.accountMissing(address);
             }
             if (TONClientError.isContractError(error, TONContractExitCode.NO_GAS)) {
-                throw TONClientError.accountBalanceTooLow(address, accounts[0].balance)
+                throw TONClientError.accountBalanceTooLow(address, accounts[0].balance);
             }
             throw error;
         }
@@ -1125,7 +1125,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             parentSpan,
         );
         if (!account.code) {
-            throw TONClientError.accountCodeMissing(address, (account:any).balance);
+            throw TONClientError.accountCodeMissing(address, (account: any).balance);
         }
         return this.requestCore('contracts.run.local', {
             address,

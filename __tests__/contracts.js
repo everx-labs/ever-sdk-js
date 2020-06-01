@@ -12,14 +12,14 @@ import {
     TONClientError,
     TONContractExitCode,
     TONErrorCode,
-    TONErrorSource
+    TONErrorSource,
 } from '../src/TONClient';
 
 
 import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
 import {bv} from './_/binaries';
 import {version} from '../package.json';
-import {ABIVersions, tests} from './_/init-tests';
+import {ABIVersions, nodeSe, tests} from './_/init-tests';
 
 const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -66,8 +66,10 @@ test('Test versions compatibility', async () => {
     const ver_builtin = await tests.client.config.getVersion();
     expect(version.split('.')[0])
         .toEqual(ver_builtin.split('.')[0]);
-    console.log(`Client version ${version} uses compatible binaries version: ${ver_builtin}`,
-        `\n(requested version to download: ${bv})`);
+    console.log(
+        `Client version ${version} uses compatible binaries version: ${ver_builtin}`,
+        `\n(requested version to download: ${bv})`,
+    );
 });
 
 test('load', async () => {
@@ -101,9 +103,13 @@ test('out of sync', async () => {
     const saveOutOfSyncThreshold = cfg.outOfSyncThreshold;
     cfg.outOfSyncThreshold = -1;
     try {
-        await expectError(TONClientError.code.CLOCK_OUT_OF_SYNC, TONClientError.source.CLIENT, async () => {
-            await tests.get_grams_from_giver(walletAddress);
-        });
+        await expectError(
+            TONClientError.code.CLOCK_OUT_OF_SYNC,
+            TONClientError.source.CLIENT,
+            async () => {
+                await tests.get_grams_from_giver(walletAddress);
+            },
+        );
     } finally {
         cfg.outOfSyncThreshold = saveOutOfSyncThreshold;
     }
@@ -388,7 +394,9 @@ test('Should change InitState of contract', async () => {
         keyPair: keys,
     });
 
-    expect(deployed1.address).not.toEqual(deployed2.address);
+    expect(deployed1.address)
+        .not
+        .toEqual(deployed2.address);
 
     let result1 = await contracts.runLocal({
         address: deployed1.address,
@@ -803,7 +811,7 @@ test.each(ABIVersions)('test send boc (ABI v%i)', async (abiVersion) => {
         address: message.address,
         message: {
             messageBodyBase64: message.message.messageBodyBase64,
-            expire: message.message.expire
+            expire: message.message.expire,
         },
     });
 });
@@ -923,37 +931,40 @@ test('Test expire', async () => {
         await client.contracts.processRunMessage(runMsg);
         fail('error expected');
     } catch (error) {
-        expect(error).toMatchObject({
-            code: TONErrorCode.CONTRACT_EXECUTION_FAILED,
-            source: TONErrorSource.NODE,
-            data: {
-                exit_code: TONContractExitCode.MESSAGE_EXPIRED,
-                original_error: {
-                    code: TONErrorCode.MESSAGE_EXPIRED,
+        expect(error)
+            .toMatchObject({
+                code: TONErrorCode.CONTRACT_EXECUTION_FAILED,
+                source: TONErrorSource.NODE,
+                data: {
+                    exit_code: TONContractExitCode.MESSAGE_EXPIRED,
                 },
+            });
+    }
+
+    // TODO: uncomment it when node se will work like a regular node
+    if (!nodeSe) {
+        try {
+            await client.contracts.processRunMessage(runMsg);
+            fail('error expected');
+        } catch (error) {
+            expect(error)
+                .toMatchObject({
+                    code: TONErrorCode.MESSAGE_ALREADY_EXPIRED,
+                    source: TONErrorSource.CLIENT,
+                });
+        }
+
+        // check that expired message wasn't processed by the contract
+        const ltExpire = (await queries.accounts.query(
+            {
+                id: { eq: contractData.address },
             },
-        });
+            'last_trans_lt',
+        ))[0].last_trans_lt;
+
+        expect(ltExpire)
+            .toEqual(ltRun);
     }
-
-    try {
-        await client.contracts.processRunMessage(runMsg);
-    } catch (error) {
-        expect(error).toMatchObject({
-            code: TONErrorCode.MESSAGE_ALREADY_EXPIRED,
-            source: TONErrorSource.CLIENT,
-        });
-    }
-
-    // check that expired message wasn't processed by the contract
-    const ltExpire = (await queries.accounts.query(
-        {
-            id: { eq: contractData.address },
-        },
-        'last_trans_lt',
-    ))[0].last_trans_lt;
-
-    expect(ltExpire)
-        .toEqual(ltRun);
 });
 
 test('Test expire retries', async () => {
