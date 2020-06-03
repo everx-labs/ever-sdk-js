@@ -907,6 +907,13 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
     }
 
+    /**
+     * Deprecated. Use `runMessageLocal` instead.
+     * @param params
+     * @param waitParams
+     * @param parentSpan
+     * @returns {Promise<unknown>}
+     */
     async processRunMessageLocal(
         params: TONContractRunMessage,
         waitParams?: TONContractAccountWaitParams,

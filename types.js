@@ -740,6 +740,12 @@ export interface TONContracts {
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult>;
 
+    /**
+     * Deprecated. Use `runMessageLocal` instead.
+     * @param params
+     * @param waitParams
+     * @param parentSpan
+     */
     processRunMessageLocal(
         params: TONContractRunMessage,
         waitParams?: TONContractAccountWaitParams,
