@@ -3,7 +3,7 @@
  */
 // @flow
 
-import { Tags, Span, SpanContext } from "opentracing";
+import {Tags, Span, SpanContext} from "opentracing";
 import type {
     ITONClient,
     TONAccessKeysManagementParams,
@@ -21,8 +21,8 @@ import TONCryptoModule from './modules/TONCryptoModule';
 /* eslint-disable class-methods-use-this, no-use-before-define */
 import TONQueriesModule from "./modules/TONQueriesModule";
 
-import type { TONClientLibrary, TONModuleContext } from './TONModule';
-import { TONModule } from './TONModule';
+import type {TONClientLibrary, TONModuleContext} from './TONModule';
+import {TONModule} from './TONModule';
 
 /**
  * JavaScript platform specific configuration
@@ -213,28 +213,43 @@ export class TONClient implements TONModuleContext, ITONClient {
     modules: Map<string, TONModule>;
 }
 
+
+export const TONErrorSource = {
+    CLIENT: 'client',
+    NODE: 'node'
+};
+
+export const TONErrorCode = {
+    CLIENT_DOES_NOT_CONFIGURED: 1000,
+    SEND_NODE_REQUEST_FAILED: 1001,
+    MESSAGE_ALREADY_EXPIRED: 1001,
+    RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS: 1002,
+    WAIT_FOR_TIMEOUT: 1003,
+    INTERNAL_ERROR: 1004,
+    QUERY_FAILED: 1005,
+    MESSAGE_EXPIRED: 1006,
+    SERVER_DOESNT_SUPPORT_AGGREGATIONS: 1007,
+    INVALID_CONS: 1008,
+    ADDRESS_REQUIRED_FOR_RUN_LOCAL: 1009,
+    CLOCK_OUT_OF_SYNC: 1013,
+    ACCOUNT_MISSING: 1014,
+    ACCOUNT_CODE_MISSING: 1015,
+    ACCOUNT_BALANCE_TOO_LOW: 1016,
+    ACCOUNT_FROZEN_OR_DELETED: 1017,
+
+    CONTRACT_EXECUTION_FAILED: 3025,
+
+};
+
+export const TONContractExitCode = {
+    REPLAY_PROTECTION: 52,
+    MESSAGE_EXPIRED: 57,
+    NO_GAS: 13,
+}
+
 export class TONClientError {
-    static source = {
-        CLIENT: 'client',
-        NODE: 'node'
-    };
-    static code = {
-        CLIENT_DOES_NOT_CONFIGURED: 1000,
-        SEND_NODE_REQUEST_FAILED: 1001,
-        RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS: 1002,
-        WAIT_FOR_TIMEOUT: 1003,
-        INTERNAL_ERROR: 1004,
-        QUERY_FAILED: 1005,
-        MESSAGE_EXPIRED: 1006,
-        SERVER_DOESNT_SUPPORT_AGGREGATIONS: 1007,
-        INVALID_CONS: 1008,
-        ADDRESS_REQUIRED_FOR_RUN_LOCAL: 1009,
-        CLOCK_OUT_OF_SYNC: 1013,
-        ACCOUNT_MISSING: 1014,
-        ACCOUNT_CODE_MISSING: 1015,
-        ACCOUNT_BALANCE_TOO_LOW: 1016,
-        ACCOUNT_FROZEN_OR_DELETED: 1017,
-    };
+    static source = TONErrorSource;
+    static code = TONErrorCode;
 
     message: string;
     source: string;
@@ -256,6 +271,12 @@ export class TONClientError {
     static isNodeError(error: any, code: number): boolean {
         return (error.source === TONClientError.source.NODE)
             && (error.code === code);
+    }
+
+    static isContractError(error: any, exitCode: number): boolean {
+        return (error.source === TONClientError.source.NODE)
+            && (error.code === TONClientError.code.CONTRACT_EXECUTION_FAILED)
+            && (error.data && error.data.exit_code === exitCode);
     }
 
     static internalError(message: string): TONClientError {
@@ -382,6 +403,4 @@ export class TONClientError {
     static isMessageExpired(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
     }
-
 }
-
