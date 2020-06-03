@@ -1,6 +1,13 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.24.0 - Jun 3, 2020
+### New
+- Detailed errors produced by core library.
+- Optional parameter `fullRun` for `runLocal` method allows to emulate an execution on a real node with all required checks and fees calculations. 
+- Optional parameter `account` for `runLocal` method allows to provide the specified account data instead of loading them from a blockchain. 
+- Method `runMessageLocal` as a replacement for the `processRunMessage` with `fullRun` and `account` parameters. 
+ 
 ## 0.23.2 - May 25, 2020
 ### New
 - Detailed errors instead of 1006.

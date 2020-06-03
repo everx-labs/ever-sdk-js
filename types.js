@@ -328,7 +328,7 @@ export type TONContractUnsignedRunMessage = {
 
 export type TONContractDeployMessage = {
     address: string,
-    message: TONContractMessage;
+    message: TONContractMessage,
     creationTime?: number,
 }
 
@@ -336,7 +336,7 @@ export type TONContractRunMessage = {
     address: string,
     abi: TONContractABI,
     functionName: string,
-    message: TONContractMessage;
+    message: TONContractMessage,
     creationTime?: number,
 }
 
@@ -379,6 +379,18 @@ export type TONContractCalcRunFeeParams = TONContractRunParams & {
 }
 
 export type TONContractRunLocalParams = TONContractRunParams & {
+    account?: QAccount,
+    fullRun?: boolean,
+    waitParams?: TONContractAccountWaitParams
+}
+
+export type TONContractRunMessageLocalParams = {
+    address: string,
+    messageBodyBase64: string,
+    abi?: TONContractABI,
+    functionName?: string,
+    account?: QAccount,
+    fullRun?: boolean,
     waitParams?: TONContractAccountWaitParams
 }
 
@@ -604,6 +616,11 @@ export interface TONContracts {
 
     runLocal(
         params: TONContractRunLocalParams,
+        parentSpan?: (Span | SpanContext),
+    ): Promise<TONContractRunResult>;
+
+    runMessageLocal(
+        params: TONContractRunMessageLocalParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult>;
 
