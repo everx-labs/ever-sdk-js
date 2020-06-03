@@ -447,6 +447,11 @@ export type TONContractRunResult = {
     transaction: QTransaction
 }
 
+export type TONContractRunLocalResult = TONContractRunResult & {
+    fees?: any,
+    account?: QAccount,
+}
+
 export type TONContractDecodeMessageBodyResult = {
     function: string,
     output: any,
@@ -617,12 +622,12 @@ export interface TONContracts {
     runLocal(
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext),
-    ): Promise<TONContractRunResult>;
+    ): Promise<TONContractRunLocalResult>;
 
     runMessageLocal(
         params: TONContractRunMessageLocalParams,
         parentSpan?: (Span | SpanContext),
-    ): Promise<TONContractRunResult>;
+    ): Promise<TONContractRunLocalResult>;
 
     runGet(
         params: TONContractRunGetParams,

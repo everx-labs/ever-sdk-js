@@ -50,6 +50,7 @@ import type {
     TONContractRunGetParams,
     TONContractRunGetResult,
     TONContractRunMessageLocalParams,
+    TONContractRunLocalResult,
 } from '../../types';
 
 import { TONClientError, TONContractExitCode, TONErrorCode } from '../TONClient';
@@ -283,7 +284,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async runLocal(
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext),
-    ): Promise<TONContractRunResult> {
+    ): Promise<TONContractRunLocalResult> {
         return this.context.trace('contracts.runLocal', async (span: Span) => {
             span.setTag('params', removeProps(params, ['keyPair.secret']));
             return this.internalRunLocalJs(params, span);
@@ -293,7 +294,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async runMessageLocal(
         params: TONContractRunMessageLocalParams,
         parentSpan?: (Span | SpanContext),
-    ): Promise<TONContractRunResult> {
+    ): Promise<TONContractRunLocalResult> {
         return this.context.trace('runMessageLocal', async (span: Span) => {
             span.setTag('params', removeProps(params, ['keyPair.secret']));
             return this.internalRunMessageLocalJs(params, span);
@@ -1126,7 +1127,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async internalRunLocalJs(
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext),
-    ): Promise<TONContractRunResult> {
+    ): Promise<TONContractRunLocalResult> {
         const address = params.address;
         if (!address) {
             throw TONClientError.addressRequiredForRunLocal();
@@ -1154,7 +1155,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async internalRunMessageLocalJs(
         params: TONContractRunMessageLocalParams,
         parentSpan?: (Span | SpanContext),
-    ): Promise<TONContractRunResult> {
+    ): Promise<TONContractRunLocalResult> {
         const address = params.address;
         if (!address) {
             throw TONClientError.addressRequiredForRunLocal();

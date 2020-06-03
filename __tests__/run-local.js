@@ -62,10 +62,11 @@ test('Run Get', async () => {
         .toEqual('0x5eab0e74');
 });
 
-function replaceNumbersWithBools(fees: { [string]: any }) {
-    Array.from(Object.entries(fees)).forEach(([key, value]) => {
-        fees[key] = (value || '0x0') !== '0x0';
-    });
+function replaceBigIntsWithNonZeroFlags(fees: { [string]: any }) {
+    Array.from(Object.entries(fees))
+        .forEach(([key, value]) => {
+            fees[key] = BigInt(value || 0) !== BigInt(0);
+        });
 }
 
 test.each(ABIVersions)('RunLocal (ABI v%i)', async (abiVersion) => {
@@ -112,7 +113,7 @@ test.each(ABIVersions)('RunLocal (ABI v%i)', async (abiVersion) => {
         period: '0x456',
     };
 
-    const resultFull = await ton.contracts.runLocal({
+    const local1 = await ton.contracts.runLocal({
         address: packageAddress,
         abi: subscriptionPackage.abi,
         functionName: 'subscribe',
@@ -120,9 +121,9 @@ test.each(ABIVersions)('RunLocal (ABI v%i)', async (abiVersion) => {
         keyPair: keys,
         fullRun: true,
     });
-    replaceNumbersWithBools(resultFull.fees);
-    expect(resultFull)
-        .toEqual({
+    replaceBigIntsWithNonZeroFlags(local1.fees);
+    expect(local1)
+        .toMatchObject({
             output: null,
             fees: {
                 inMsgFwdFee: true,
@@ -132,7 +133,24 @@ test.each(ABIVersions)('RunLocal (ABI v%i)', async (abiVersion) => {
                 totalAccountFees: true,
                 totalOutput: false,
             },
+            account: {
+                id: packageAddress,
+            },
         });
+
+    const local2 = await ton.contracts.runLocal({
+        address: packageAddress,
+        account: local1.account,
+        abi: subscriptionPackage.abi,
+        functionName: 'getSubscription',
+        input: {
+            subscriptionId: subscriptionParams.subscriptionId,
+        },
+        keyPair: keys,
+    });
+
+    expect(local2.output.value0.pubkey)
+        .toEqual(subscriptionParams.pubkey);
 
     const subscribeResult = await ton.contracts.run({
         address: packageAddress,
@@ -161,100 +179,3 @@ test.each(ABIVersions)('RunLocal (ABI v%i)', async (abiVersion) => {
 });
 jest.setTimeout(100000);
 
-type ContractSnapshot = {
-    keys: TONKeyPairData,
-    account: {
-        id: string,
-        acc_type: number,
-        code: string,
-        data: string,
-        balance: string,
-        balance_other: any,
-        last_paid: number,
-    },
-};
-
-const subscriptionSnapshots: { [number]: ContractSnapshot } = {
-    1: {
-        keys: {
-            public: '05f2c5b575c2edb7e4842d3392fdc07c807c68a7199440d6cdae52daccabe37e',
-            secret: '481ca709af6f15eb9f79142e104de7381bd35f6e8f5d90400b547d67e3558fe9',
-        },
-        account: {
-            id: '0:bd8a2f8fdb623e788931cef5b8ca85d66ec58b13fa7f21cdea4dbb9fc05265ff',
-            acc_type: 1,
-            code: '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',
-            data: 'te6ccgEBBgEA/QACo4AAALk8XQODAAAAAAANu6BBfLFtXXC7bfkhC0zkv3AfIB8aKcZlEDWza5S2syr436ABERERERERERERERERERERERERERERERERERERERERERYCAQDnoAIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiJERERERERERERERERERERERERERERERERERERERERERQAMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMAAAAAAAABIwAABFYAAAAAAYCA88gBQMBAd4EAAPQIABB2C+WLauuF22/JCFpnJfuA+QD40U4zKIGtm1yltZlXxv0',
-            balance: '0x1dca9f26',
-            balance_other: null,
-            last_paid: 0,
-        },
-    },
-    2: {
-        keys: {
-            public: '012d320dcb634aece61274c020ec2adc3c8629eacda545dbda2ce75e1c79e23b',
-            secret: '4390ca043042560409ac7d79692c8cde8126a446afccce9fc5c57a2ca20ded25',
-        },
-        account: {
-            id: '0:74968a0c871ae63fc4bc22ff5b46d993ca8f3a6dd3ba61b5fb7b5b571ef0142e',
-            acc_type: 1,
-            code: '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',
-            data: 'te6ccgEBAgEA4wAB0wEtMg3LY0rs5hJ0wCDsKtw8hinqzaVF29os514ceeI7AAABcni6EveAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEACIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiwBAOegAiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIkRERERERERERERERERERERERERERERERERERERERERFAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMwAAAAAAAAEjAAAEVgAAAAABg==',
-            balance: '0x1dcb7086',
-            balance_other: null,
-            last_paid: 0,
-        },
-    },
-};
-
-test.each(ABIVersions)('RunLocal(full) (ABI v%i)', async (abiVersion) => {
-    const ton = tests.client;
-    const subscriptionPackage = SubscriptionContractPackage[abiVersion];
-    const subscription = subscriptionSnapshots[abiVersion];
-    const keys = subscription.keys;
-
-    const result = await ton.contracts.runLocal({
-        address: subscription.account.id,
-        account: subscription.account,
-        abi: subscriptionPackage.abi,
-        functionName: 'getWallet',
-        input: {},
-        keyPair: keys,
-    });
-
-    expect(result.output)
-        .toEqual({
-            value0: '0:2222222222222222222222222222222222222222222222222222222222222222',
-        });
-    const resultFull = await ton.contracts.runLocal({
-        address: subscription.account.id,
-        account: {
-            ...subscription.account,
-            last_paid: Math.round(Date.now() / 1000) - 60,
-        },
-        abi: subscriptionPackage.abi,
-        functionName: 'subscribe',
-        input: {
-            subscriptionId: '0x1111111111111111111111111111111111111111111111111111111111111111',
-            pubkey: '0x2222222222222222222222222222222222222222222222222222222222222222',
-            to: '0:3333333333333333333333333333333333333333333333333333333333333333',
-            value: '0x123',
-            period: '0x456',
-        },
-        keyPair: keys,
-        fullRun: true,
-    });
-    replaceNumbersWithBools(resultFull.fees);
-    expect(resultFull)
-        .toEqual({
-            output: null,
-            fees: {
-                inMsgFwdFee: true,
-                storageFee: true,
-                gasFee: true,
-                outMsgsFwdFee: false,
-                totalAccountFees: true,
-                totalOutput: false,
-            },
-        });
-});
