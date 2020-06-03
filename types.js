@@ -328,7 +328,7 @@ export type TONContractUnsignedRunMessage = {
 
 export type TONContractDeployMessage = {
     address: string,
-    message: TONContractMessage;
+    message: TONContractMessage,
     creationTime?: number,
 }
 
@@ -336,7 +336,7 @@ export type TONContractRunMessage = {
     address: string,
     abi: TONContractABI,
     functionName: string,
-    message: TONContractMessage;
+    message: TONContractMessage,
     creationTime?: number,
 }
 
@@ -379,6 +379,18 @@ export type TONContractCalcRunFeeParams = TONContractRunParams & {
 }
 
 export type TONContractRunLocalParams = TONContractRunParams & {
+    account?: QAccount,
+    fullRun?: boolean,
+    waitParams?: TONContractAccountWaitParams
+}
+
+export type TONContractRunMessageLocalParams = {
+    address: string,
+    messageBodyBase64: string,
+    abi?: TONContractABI,
+    functionName?: string,
+    account?: QAccount,
+    fullRun?: boolean,
     waitParams?: TONContractAccountWaitParams
 }
 
@@ -433,6 +445,11 @@ export type TONContractDecodeMessageBodyParams = {
 export type TONContractRunResult = {
     output: any,
     transaction: QTransaction
+}
+
+export type TONContractRunLocalResult = TONContractRunResult & {
+    fees?: any,
+    account?: QAccount,
 }
 
 export type TONContractDecodeMessageBodyResult = {
@@ -605,7 +622,12 @@ export interface TONContracts {
     runLocal(
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext),
-    ): Promise<TONContractRunResult>;
+    ): Promise<TONContractRunLocalResult>;
+
+    runMessageLocal(
+        params: TONContractRunMessageLocalParams,
+        parentSpan?: (Span | SpanContext),
+    ): Promise<TONContractRunLocalResult>;
 
     runGet(
         params: TONContractRunGetParams,
@@ -718,6 +740,12 @@ export interface TONContracts {
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult>;
 
+    /**
+     * Deprecated. Use `runMessageLocal` instead.
+     * @param params
+     * @param waitParams
+     * @param parentSpan
+     */
     processRunMessageLocal(
         params: TONContractRunMessage,
         waitParams?: TONContractAccountWaitParams,

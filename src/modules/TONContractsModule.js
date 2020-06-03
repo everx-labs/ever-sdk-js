@@ -3,7 +3,7 @@
  */
 // @flow
 
-import {Span, SpanContext} from 'opentracing';
+import { Span, SpanContext } from 'opentracing';
 import type {
     QAccount,
     QBlock,
@@ -49,9 +49,12 @@ import type {
     TONContractUnsignedRunMessage,
     TONContractRunGetParams,
     TONContractRunGetResult,
+    TONContractRunMessageLocalParams,
+    TONContractRunLocalResult,
 } from '../../types';
-import {TONClientError, TONContractExitCode, TONErrorCode} from '../TONClient';
-import {TONModule} from '../TONModule';
+
+import { TONClientError, TONContractExitCode, TONErrorCode } from '../TONClient';
+import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule from './TONQueriesModule';
 
@@ -281,10 +284,20 @@ export default class TONContractsModule extends TONModule implements TONContract
     async runLocal(
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext),
-    ): Promise<TONContractRunResult> {
+    ): Promise<TONContractRunLocalResult> {
         return this.context.trace('contracts.runLocal', async (span: Span) => {
             span.setTag('params', removeProps(params, ['keyPair.secret']));
             return this.internalRunLocalJs(params, span);
+        }, parentSpan);
+    }
+
+    async runMessageLocal(
+        params: TONContractRunMessageLocalParams,
+        parentSpan?: (Span | SpanContext),
+    ): Promise<TONContractRunLocalResult> {
+        return this.context.trace('runMessageLocal', async (span: Span) => {
+            span.setTag('params', removeProps(params, ['keyPair.secret']));
+            return this.internalRunMessageLocalJs(params, span);
         }, parentSpan);
     }
 
@@ -659,7 +672,8 @@ export default class TONContractsModule extends TONModule implements TONContract
 
                     if (!transaction_id) {
                         throw TONClientError.internalError(
-                            'Invalid block received: no transaction ID');
+                            'Invalid block received: no transaction ID',
+                        );
                     }
 
                     // check that transactions collection is updated
@@ -893,21 +907,28 @@ export default class TONContractsModule extends TONModule implements TONContract
         };
     }
 
+    /**
+     * Deprecated. Use `runMessageLocal` instead.
+     * @param params
+     * @param waitParams
+     * @param parentSpan
+     * @returns {Promise<unknown>}
+     */
     async processRunMessageLocal(
-        runMessage: TONContractRunMessage,
+        params: TONContractRunMessage,
         waitParams?: TONContractAccountWaitParams,
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
-        this.config.log('processRunMessageLocal', runMessage);
+        this.config.log('processRunMessageLocal', params);
 
-        const account = await this.getAccount(runMessage.address, true, waitParams, parentSpan);
+        const account = await this.getAccount(params.address, true, waitParams, parentSpan);
 
         return this.requestCore('contracts.run.local.msg', {
-            address: runMessage.address,
+            address: params.address,
             account,
-            abi: runMessage.abi,
-            functionName: runMessage.functionName,
-            messageBase64: runMessage.message.messageBodyBase64,
+            abi: params.abi,
+            functionName: params.functionName,
+            messageBase64: params.message.messageBodyBase64,
         });
     }
 
@@ -1113,17 +1134,17 @@ export default class TONContractsModule extends TONModule implements TONContract
     async internalRunLocalJs(
         params: TONContractRunLocalParams,
         parentSpan?: (Span | SpanContext),
-    ): Promise<TONContractRunResult> {
+    ): Promise<TONContractRunLocalResult> {
         const address = params.address;
         if (!address) {
             throw TONClientError.addressRequiredForRunLocal();
         }
-        const account = await this.getAccount(
+        const account = params.account || (await this.getAccount(
             address,
             false,
             params.waitParams,
             parentSpan,
-        );
+        ));
         if (!account.code) {
             throw TONClientError.accountCodeMissing(address, (account: any).balance);
         }
@@ -1134,6 +1155,34 @@ export default class TONContractsModule extends TONModule implements TONContract
             functionName: params.functionName,
             input: params.input,
             keyPair: params.keyPair,
+            fullRun: params.fullRun,
+        });
+    }
+
+    async internalRunMessageLocalJs(
+        params: TONContractRunMessageLocalParams,
+        parentSpan?: (Span | SpanContext),
+    ): Promise<TONContractRunLocalResult> {
+        const address = params.address;
+        if (!address) {
+            throw TONClientError.addressRequiredForRunLocal();
+        }
+        const account = params.account || (await this.getAccount(
+            address,
+            false,
+            params.waitParams,
+            parentSpan,
+        ));
+        if (!account.code) {
+            throw TONClientError.accountCodeMissing(address, (account: any).balance);
+        }
+        return this.requestCore('contracts.run.local.msg', {
+            address,
+            account,
+            abi: params.abi,
+            functionName: params.functionName,
+            messageBase64: params.messageBodyBase64,
+            fullRun: params.fullRun,
         });
     }
 }
