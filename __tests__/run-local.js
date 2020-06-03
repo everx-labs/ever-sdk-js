@@ -127,7 +127,6 @@ test.each(ABIVersions)('RunLocal (ABI v%i)', async (abiVersion) => {
             output: null,
             fees: {
                 inMsgFwdFee: true,
-                storageFee: false,
                 gasFee: true,
                 outMsgsFwdFee: false,
                 totalAccountFees: true,

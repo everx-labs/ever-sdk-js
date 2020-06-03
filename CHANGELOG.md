@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 - Optional parameter `fullRun` for `runLocal` method allows to emulate an execution on a real node with all required checks and fees calculations. 
 - Optional parameter `account` for `runLocal` method allows to provide the specified account data instead of loading them from a blockchain. 
 - Optional result field `account` for `runLocal` and `runMessageLocal` methods returns state of an account after contract execution has finished. Presented only when the `fullRun` parameter has specified.  
-- Method `runMessageLocal` as a replacement for the `processRunMessage` with `fullRun` and `account` parameters. 
+- Method `runMessageLocal` as a replacement for the `processRunMessageLocal` with `fullRun` and `account` parameters. 
  
 ## 0.23.2 - May 25, 2020
 ### New
