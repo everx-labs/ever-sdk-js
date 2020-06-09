@@ -597,7 +597,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 body: params.messageBodyBase64,
             },
         ], parentSpan);
-        this.config.log('sendMessage. Request posted');
+        this.config.log('sendMessage. Request posted', id);
         return id;
     }
 
@@ -644,24 +644,39 @@ export default class TONContractsModule extends TONModule implements TONContract
             ? this.queries.generateOperationId()
             : undefined;
         let transaction: ?QTransaction = null;
+        let sendTime = Date.now() / 1000;
         try {
             const expire = message.expire;
             if (expire) {
                 // calculate timeout according to `expire` value (in seconds)
                 // add processing timeout as master block validation time
-                processingTimeout = expire * 1000 - Date.now() + processingTimeout;
+                let blockTimeout = expire * 1000 - Date.now() + processingTimeout;
+                // transaction timeout must be greater then block timeout
+                processingTimeout = blockTimeout + 10000;
+
 
                 const waitExpired = async () => {
                     // wait for block, produced after `expire` to guarantee that message is rejected
-                    const block: QBlock = await this.queries.blocks.waitFor({
-                        filter: {
-                            master: { min_shard_gen_utime: { ge: expire } },
-                        },
-                        result: 'in_msg_descr { transaction_id }',
-                        timeout: processingTimeout,
-                        parentSpan,
-                        operationId,
-                    });
+                    let block: ?QBlock = null;
+                    try {
+                        block = await this.queries.blocks.waitFor({
+                            filter: {
+                                master: { min_shard_gen_utime: { ge: expire } },
+                            },
+                            result: 'id in_msg_descr { transaction_id }',
+                            timeout: blockTimeout,
+                            parentSpan,
+                            operationId,
+                        });
+                    }
+                    catch(error) {
+                        if(TONClientError.isWaitforTimeout(error)) {
+                            throw TONClientError.networkSilent(
+                                messageId, sendTime, expire, blockTimeout);
+                        } else {
+                            throw error;
+                        }
+                    }
 
                     if (transaction) {
                         return;
@@ -677,15 +692,26 @@ export default class TONContractsModule extends TONModule implements TONContract
                     }
 
                     // check that transactions collection is updated
-                    await this.queries.transactions.waitFor({
-                        filter: {
-                            id: { eq: transaction_id },
-                        },
-                        result: 'id',
-                        timeout: processingTimeout,
-                        parentSpan,
-                        operationId,
-                    });
+                    try {
+                       await this.queries.transactions.waitFor({
+                            filter: {
+                                id: { eq: transaction_id },
+                            },
+                            result: 'id',
+                            timeout: 5000,
+                            parentSpan,
+                            operationId,
+                        }); 
+                    }
+                    catch(error) {
+                        if(TONClientError.isWaitforTimeout(error)) {
+                            throw TONClientError.transactionLag(
+                                messageId, block.id, transaction_id, 5000);
+                        } else {
+                            throw error;
+                        }
+                    }
+                    
                 };
 
                 promises.push(waitExpired());
@@ -724,12 +750,13 @@ export default class TONContractsModule extends TONModule implements TONContract
                 throw TONClientError.messageExpired();
             }
             const transactionNow = transaction.now || 0;
-            this.config.log('processMessage. transaction received', {
+            this.config.log('waitForTransaction. transaction received', {
                 id: transaction.id,
                 block_id: transaction.block_id,
                 now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
             });
         } catch (error) {
+            this.config.log('waitForTransaction. Error recieved', error, '\n Resoving');
             throw await this.resolveDetailedError(
                 error,
                 message.messageBodyBase64,

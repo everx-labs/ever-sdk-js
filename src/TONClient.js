@@ -231,6 +231,9 @@ export const TONErrorCode = {
     SERVER_DOESNT_SUPPORT_AGGREGATIONS: 1007,
     INVALID_CONS: 1008,
     ADDRESS_REQUIRED_FOR_RUN_LOCAL: 1009,
+    NETWORK_SILENT: 1010,
+    TRANSACTION_LAG: 1011,
+    TRANSACTION_WAIT_TIMEOUT: 1012,
     CLOCK_OUT_OF_SYNC: 1013,
     ACCOUNT_MISSING: 1014,
     ACCOUNT_CODE_MISSING: 1015,
@@ -359,6 +362,47 @@ export class TONClientError {
         );
     }
 
+    static networkSilent(msgId: string, sendTime: number, expire: number, timeout: number) {
+        return new TONClientError(
+            'Network silent: no blocks produced during timeout.',
+            TONClientError.code.NETWORK_SILENT,
+            TONClientError.source.CLIENT,
+            {
+                message_id: msgId,
+                send_time: sendTime,
+                expiration_time: expire,
+                timeout,
+            }
+        );
+    }
+
+    static transactionLag(msgId: string, blockId: string, transactionId: string, timeout: number) {
+        return new TONClientError(
+            'Existing block transaction not found.',
+            TONClientError.code.TRANSACTION_LAG,
+            TONClientError.source.CLIENT,
+            {
+                message_id: msgId,
+                block_id: blockId,
+                transaction_id: transactionId,
+                timeout,
+            }
+        );
+    }
+
+    static transactionWaitTimeout(msgId: string, sendTime: number, timeout: number) {
+        return new TONClientError(
+            'Transaction did not produced during specified timeout',
+            TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
+            TONClientError.source.CLIENT,
+            {
+                message_id: msgId,
+                send_time: sendTime,
+                timeout,
+            }
+        );
+    }
+
     static clockOutOfSync() {
         return new TONClientError(
             'You local clock is out of sync with the server time. ' +
@@ -402,5 +446,9 @@ export class TONClientError {
 
     static isMessageExpired(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
+    }
+
+    static isWaitforTimeout(error: any): boolean {
+        return TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT);
     }
 }
