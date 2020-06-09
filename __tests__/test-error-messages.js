@@ -351,13 +351,13 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
 });
 const literallyJustDateNow = () => Date.now();
 
-test.each(ABIVersions)('Test SDK Error 1013', async (abiVersion) => {
+test('Test SDK Error 1013', async () => {
     if (nodeSe) {
         return;
     }
-    const { crypto } = tests.client;
+    const { crypto, contracts } = await tests.createClient();
     const helloKeys = await crypto.ed25519Keypair();
-    const helloPackage = HelloContractPackage[abiVersion];
+    const helloPackage = HelloContractPackage[2];
 
     const realDateNow = Date.now.bind(global.Date);
     const start = Date.now() - 20000;
@@ -374,9 +374,11 @@ test.each(ABIVersions)('Test SDK Error 1013', async (abiVersion) => {
         'client',
         'You local clock is out of sync with the server time. It is a critical condition for sending messages to the blockchain. Please sync you clock with the internet time',
         async () => {
-            await tests.deploy_with_giver({
-                package: helloPackage,
-                constructorParams: {},
+            await contracts.run({
+                address: "0:2222222222222222222222222222222222222222222222222222222222222222",
+                abi: helloPackage.abi,
+                functionName: 'touch',
+                input: {},
                 keyPair: helloKeys,
             });
         },
