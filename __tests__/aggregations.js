@@ -68,7 +68,7 @@ test('Aggregations: Account numeric fields', async () => {
     await testCollection(queries.accounts, 'split_depth');
 });
 
-test('Aggregations: Block numeric fields', async () => {
+test.skip('Aggregations: Block numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.blocks, 'global_id');
     await testCollection(queries.blocks, 'seq_no');
@@ -96,7 +96,7 @@ test('Aggregations: Block numeric fields', async () => {
     await testCollection(queries.blocks, 'gen_software_version');
 });
 
-test('Aggregations: Block value_flow numeric fields', async () => {
+test.skip('Aggregations: Block value_flow numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.blocks, 'value_flow.to_next_blk');
     await testCollection(queries.blocks, 'value_flow.to_next_blk_other.currency');
@@ -124,7 +124,7 @@ test('Aggregations: Block value_flow numeric fields', async () => {
     await testCollection(queries.blocks, 'value_flow.fees_imported_other.value');
 });
 
-test('Aggregations: Block in_msg_descr numeric fields', async () => {
+test.skip('Aggregations: Block in_msg_descr numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.blocks, 'in_msg_descr.ihr_fee');
     await testCollection(queries.blocks, 'in_msg_descr.in_msg.fwd_fee_remaining');
@@ -147,7 +147,7 @@ test('Aggregations: Block in_msg_descr numeric fields', async () => {
     await testCollection(queries.blocks, 'out_msg_descr.next_addr_pfx');
 });
 
-test('Aggregations: Block account_blocks & state_update numeric fields', async () => {
+test.skip('Aggregations: Block account_blocks & state_update numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.blocks, 'account_blocks.transactions.lt');
     await testCollection(queries.blocks, 'account_blocks.transactions.total_fees');
@@ -159,7 +159,7 @@ test('Aggregations: Block account_blocks & state_update numeric fields', async (
     await testCollection(queries.blocks, 'state_update.old_depth');
 });
 
-test('Aggregations: Block master numeric fields', async () => {
+test.skip('Aggregations: Block master numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.blocks, 'master.min_shard_gen_utime');
     await testCollection(queries.blocks, 'master.max_shard_gen_utime');
@@ -197,7 +197,7 @@ test('Aggregations: Block master numeric fields', async () => {
     await testCollection(queries.blocks, 'master.config.p10');
 });
 
-test('Aggregations: Blocks_signatures numeric fields', async () => {
+test.skip('Aggregations: Blocks_signatures numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.blocks_signatures, 'gen_utime');
     await testCollection(queries.blocks_signatures, 'seq_no');
@@ -207,7 +207,7 @@ test('Aggregations: Blocks_signatures numeric fields', async () => {
     await testCollection(queries.blocks_signatures, 'sig_weight');
 });
 
-test('Aggregations: Messages numeric fields', async () => {
+test.skip('Aggregations: Messages numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.messages, 'split_depth');
     await testCollection(queries.messages, 'src_workchain_id');
@@ -222,7 +222,7 @@ test('Aggregations: Messages numeric fields', async () => {
     await testCollection(queries.messages, 'value_other.value');
 });
 
-test('Aggregations: Transactions numeric fields', async () => {
+test.skip('Aggregations: Transactions numeric fields', async () => {
     const queries = tests.client.queries;
     await testCollection(queries.transactions, 'lt');
     await testCollection(queries.transactions, 'prev_trans_lt');
