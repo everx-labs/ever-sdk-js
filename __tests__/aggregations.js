@@ -55,7 +55,7 @@ const testCollection = async (c, field) => {
         .toBeDefined();
     expect(Number(tr[3]))
         .toBeDefined();
-    console.log(`${field}: MIN ${Number(tr[0])} MAX ${Number(tr[1])} SUM ${Number(tr[2])} AVERAGE ${Number(tr[3])}`);
+    //console.log(`${field}: MIN ${Number(tr[0])} MAX ${Number(tr[1])} SUM ${Number(tr[2])} AVERAGE ${Number(tr[3])}`);
 };
 test('Aggregations: Account numeric fields', async () => {
     const queries = tests.client.queries;
