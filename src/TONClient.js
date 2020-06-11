@@ -352,10 +352,10 @@ export class TONClientError {
             TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
             {
-                message_id: msgId,
-                send_time: TONClientError.formatTime(sendTime),
-                expiration_time: TONClientError.formatTime(expire),
-                block_time: TONClientError.formatTime(blockTime),
+                messageId: msgId,
+                sendTime: TONClientError.formatTime(sendTime),
+                expirationTime: TONClientError.formatTime(expire),
+                blockTime: TONClientError.formatTime(blockTime),
             }
         );
     }
@@ -382,9 +382,9 @@ export class TONClientError {
             TONClientError.code.NETWORK_SILENT,
             TONClientError.source.CLIENT,
             {
-                message_id: msgId,
-                send_time: TONClientError.formatTime(sendTime),
-                expiration_time: TONClientError.formatTime(expire),
+                messageId: msgId,
+                sendTime: TONClientError.formatTime(sendTime),
+                expirationTime: TONClientError.formatTime(expire),
                 timeout,
             }
         );
@@ -396,9 +396,9 @@ export class TONClientError {
             TONClientError.code.TRANSACTION_LAG,
             TONClientError.source.CLIENT,
             {
-                message_id: msgId,
-                block_id: blockId,
-                transaction_id: transactionId,
+                messageId: msgId,
+                blockId: blockId,
+                transactionId: transactionId,
                 timeout,
             }
         );
@@ -410,8 +410,8 @@ export class TONClientError {
             TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
             TONClientError.source.CLIENT,
             {
-                message_id: msgId,
-                send_time: TONClientError.formatTime(sendTime),
+                messageId: msgId,
+                sendTime: TONClientError.formatTime(sendTime),
                 timeout,
             }
         );
