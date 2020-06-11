@@ -190,6 +190,9 @@ export const QBounceType = {
     ok: 2,
 };
 
+const EXTRA_TRANSACTION_WAITING_TIME = 10000;
+const BLOCK_TRANSACTION_WAITING_TIME = 5000;
+
 function removeTypeName(obj: any) {
     if (obj.__typename) {
         delete obj.__typename;
@@ -624,7 +627,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         );
     }
 
-
     async waitForTransaction(
         address: string,
         message: TONContractMessage,
@@ -653,7 +655,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 // add processing timeout as master block validation time
                 let blockTimeout = expire * 1000 - Date.now() + processingTimeout;
                 // transaction timeout must be greater then block timeout
-                processingTimeout = blockTimeout + 10000;
+                processingTimeout = blockTimeout + EXTRA_TRANSACTION_WAITING_TIME;
 
 
                 const waitExpired = async () => {
@@ -671,9 +673,13 @@ export default class TONContractsModule extends TONModule implements TONContract
                         });
                     }
                     catch(error) {
-                        if(TONClientError.isWaitforTimeout(error)) {
-                            throw TONClientError.networkSilent(
-                                messageId, sendTime, expire, blockTimeout);
+                        if(TONClientError.isWaitForTimeout(error)) {
+                            throw TONClientError.networkSilent({
+                                msgId: messageId,
+                                sendTime,
+                                expire,
+                                timeout: blockTimeout
+                            });
                         } else {
                             throw error;
                         }
@@ -683,10 +689,10 @@ export default class TONContractsModule extends TONModule implements TONContract
                         return;
                     }
 
-                    const transaction_id = block.in_msg_descr
+                    const transactionId = block.in_msg_descr
                         && block.in_msg_descr.find(msg => !!msg.transaction_id)?.transaction_id;
 
-                    if (!transaction_id) {
+                    if (!transactionId) {
                         throw TONClientError.internalError(
                             'Invalid block received: no transaction ID',
                         );
@@ -696,18 +702,22 @@ export default class TONContractsModule extends TONModule implements TONContract
                     try {
                        await this.queries.transactions.waitFor({
                             filter: {
-                                id: { eq: transaction_id },
+                                id: { eq: transactionId },
                             },
                             result: 'id',
-                            timeout: 5000,
+                            timeout: BLOCK_TRANSACTION_WAITING_TIME,
                             parentSpan,
                             operationId,
                         }); 
                     }
                     catch(error) {
-                        if(TONClientError.isWaitforTimeout(error)) {
-                            throw TONClientError.transactionLag(
-                                messageId, block.id, transaction_id, 5000);
+                        if(TONClientError.isWaitForTimeout(error)) {
+                            throw TONClientError.transactionLag({
+                                msgId: messageId,
+                                blockId: block.id,
+                                transactionId,
+                                timeout: BLOCK_TRANSACTION_WAITING_TIME
+                            });
                         } else {
                             throw error;
                         }
@@ -734,9 +744,12 @@ export default class TONContractsModule extends TONModule implements TONContract
                         });
                         resolve();
                     } catch (error) {
-                        if(TONClientError.isWaitforTimeout(error)) {
-                            reject(TONClientError.transactionWaitTimeout(
-                                messageId, sendTime, processingTimeout));
+                        if(TONClientError.isWaitForTimeout(error)) {
+                            reject(TONClientError.transactionWaitTimeout({
+                                msgId: messageId,
+                                sendTime,
+                                timeout: processingTimeout
+                            }));
                         } else {
                             reject(error);
                         }
@@ -753,12 +766,17 @@ export default class TONContractsModule extends TONModule implements TONContract
             }
 
             if (!transaction) {
-                throw TONClientError.messageExpired(messageId, sendTime, expire, blockTime);
+                throw TONClientError.messageExpired({
+                    msgId: messageId,
+                    sendTime,
+                    expire,
+                    blockTime
+                });
             }
             const transactionNow = transaction.now || 0;
             this.config.log('waitForTransaction. transaction received', {
                 id: transaction.id,
-                block_id: transaction.block_id,
+                blockId: transaction.block_id,
                 now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
             });
         } catch (error) {

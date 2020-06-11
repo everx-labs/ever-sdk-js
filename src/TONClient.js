@@ -346,16 +346,16 @@ export class TONClientError {
         }
     }
 
-    static messageExpired(msgId: string, sendTime: number, expire: ?number, blockTime: ?number) {
+    static messageExpired(data: { msgId: string, sendTime: number, expire: ?number, blockTime: ?number }) {
         return new TONClientError(
             'Message expired',
             TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
             {
-                messageId: msgId,
-                sendTime: TONClientError.formatTime(sendTime),
-                expirationTime: TONClientError.formatTime(expire),
-                blockTime: TONClientError.formatTime(blockTime),
+                messageId: data.msgId,
+                sendTime: TONClientError.formatTime(data.sendTime),
+                expirationTime: TONClientError.formatTime(data.expire),
+                blockTime: TONClientError.formatTime(data.blockTime),
             }
         );
     }
@@ -376,43 +376,43 @@ export class TONClientError {
         );
     }
 
-    static networkSilent(msgId: string, sendTime: number, expire: number, timeout: number) {
+    static networkSilent(data: { msgId: string, sendTime: number, expire: number, timeout: number }) {
         return new TONClientError(
             'Network silent: no blocks produced during timeout.',
             TONClientError.code.NETWORK_SILENT,
             TONClientError.source.CLIENT,
             {
-                messageId: msgId,
-                sendTime: TONClientError.formatTime(sendTime),
-                expirationTime: TONClientError.formatTime(expire),
-                timeout,
+                messageId: data.msgId,
+                sendTime: TONClientError.formatTime(data.sendTime),
+                expirationTime: TONClientError.formatTime(data.expire),
+                timeout: data.timeout,
             }
         );
     }
 
-    static transactionLag(msgId: string, blockId: string, transactionId: string, timeout: number) {
+    static transactionLag(data: { msgId: string, blockId: string, transactionId: string, timeout: number }) {
         return new TONClientError(
             'Existing block transaction not found.',
             TONClientError.code.TRANSACTION_LAG,
             TONClientError.source.CLIENT,
             {
-                messageId: msgId,
-                blockId: blockId,
-                transactionId: transactionId,
-                timeout,
+                messageId: data.msgId,
+                blockId: data.blockId,
+                transactionId: data.transactionId,
+                timeout: data.timeout,
             }
         );
     }
 
-    static transactionWaitTimeout(msgId: string, sendTime: number, timeout: number) {
+    static transactionWaitTimeout(data: { msgId: string, sendTime: number, timeout: number }) {
         return new TONClientError(
             'Transaction did not produced during specified timeout',
             TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
             TONClientError.source.CLIENT,
             {
-                messageId: msgId,
-                sendTime: TONClientError.formatTime(sendTime),
-                timeout,
+                messageId: data.msgId,
+                sendTime: TONClientError.formatTime(data.sendTime),
+                timeout: data.timeout,
             }
         );
     }
@@ -462,7 +462,7 @@ export class TONClientError {
         return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
     }
 
-    static isWaitforTimeout(error: any): boolean {
+    static isWaitForTimeout(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT);
     }
 }
