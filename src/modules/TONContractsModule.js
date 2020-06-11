@@ -190,6 +190,9 @@ export const QBounceType = {
     ok: 2,
 };
 
+const EXTRA_TRANSACTION_WAITING_TIME = 10000;
+const BLOCK_TRANSACTION_WAITING_TIME = 5000;
+
 function removeTypeName(obj: any) {
     if (obj.__typename) {
         delete obj.__typename;
@@ -597,7 +600,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 body: params.messageBodyBase64,
             },
         ], parentSpan);
-        this.config.log('sendMessage. Request posted');
+        this.config.log('sendMessage. Request posted', id);
         return id;
     }
 
@@ -624,7 +627,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         );
     }
 
-
     async waitForTransaction(
         address: string,
         message: TONContractMessage,
@@ -644,48 +646,83 @@ export default class TONContractsModule extends TONModule implements TONContract
             ? this.queries.generateOperationId()
             : undefined;
         let transaction: ?QTransaction = null;
+        let sendTime = Math.round(Date.now() / 1000);
+        let blockTime = null;
         try {
             const expire = message.expire;
             if (expire) {
                 // calculate timeout according to `expire` value (in seconds)
                 // add processing timeout as master block validation time
-                processingTimeout = expire * 1000 - Date.now() + processingTimeout;
+                let blockTimeout = expire * 1000 - Date.now() + processingTimeout;
+                // transaction timeout must be greater then block timeout
+                processingTimeout = blockTimeout + EXTRA_TRANSACTION_WAITING_TIME;
+
 
                 const waitExpired = async () => {
                     // wait for block, produced after `expire` to guarantee that message is rejected
-                    const block: QBlock = await this.queries.blocks.waitFor({
-                        filter: {
-                            master: { min_shard_gen_utime: { ge: expire } },
-                        },
-                        result: 'in_msg_descr { transaction_id }',
-                        timeout: processingTimeout,
-                        parentSpan,
-                        operationId,
-                    });
+                    let block: ?QBlock = null;
+                    try {
+                        block = await this.queries.blocks.waitFor({
+                            filter: {
+                                master: { min_shard_gen_utime: { ge: expire } },
+                            },
+                            result: 'id gen_utime in_msg_descr { transaction_id }',
+                            timeout: blockTimeout,
+                            parentSpan,
+                            operationId,
+                        });
+                    }
+                    catch(error) {
+                        if(TONClientError.isWaitForTimeout(error)) {
+                            throw TONClientError.networkSilent({
+                                msgId: messageId,
+                                sendTime,
+                                expire,
+                                timeout: blockTimeout
+                            });
+                        } else {
+                            throw error;
+                        }
+                    }
 
                     if (transaction) {
                         return;
                     }
 
-                    const transaction_id = block.in_msg_descr
+                    const transactionId = block.in_msg_descr
                         && block.in_msg_descr.find(msg => !!msg.transaction_id)?.transaction_id;
 
-                    if (!transaction_id) {
+                    if (!transactionId) {
                         throw TONClientError.internalError(
                             'Invalid block received: no transaction ID',
                         );
                     }
 
                     // check that transactions collection is updated
-                    await this.queries.transactions.waitFor({
-                        filter: {
-                            id: { eq: transaction_id },
-                        },
-                        result: 'id',
-                        timeout: processingTimeout,
-                        parentSpan,
-                        operationId,
-                    });
+                    try {
+                       await this.queries.transactions.waitFor({
+                            filter: {
+                                id: { eq: transactionId },
+                            },
+                            result: 'id',
+                            timeout: BLOCK_TRANSACTION_WAITING_TIME,
+                            parentSpan,
+                            operationId,
+                        }); 
+                    }
+                    catch(error) {
+                        if(TONClientError.isWaitForTimeout(error)) {
+                            throw TONClientError.transactionLag({
+                                msgId: messageId,
+                                blockId: block.id,
+                                transactionId,
+                                timeout: BLOCK_TRANSACTION_WAITING_TIME
+                            });
+                        } else {
+                            throw error;
+                        }
+                    }
+                    blockTime = block.gen_utime;
                 };
 
                 promises.push(waitExpired());
@@ -707,7 +744,15 @@ export default class TONContractsModule extends TONModule implements TONContract
                         });
                         resolve();
                     } catch (error) {
-                        reject(error);
+                        if(TONClientError.isWaitForTimeout(error)) {
+                            reject(TONClientError.transactionWaitTimeout({
+                                msgId: messageId,
+                                sendTime,
+                                timeout: processingTimeout
+                            }));
+                        } else {
+                            reject(error);
+                        }
                     }
                 })();
             }));
@@ -721,21 +766,33 @@ export default class TONContractsModule extends TONModule implements TONContract
             }
 
             if (!transaction) {
-                throw TONClientError.messageExpired();
+                throw TONClientError.messageExpired({
+                    msgId: messageId,
+                    sendTime,
+                    expire,
+                    blockTime
+                });
             }
             const transactionNow = transaction.now || 0;
-            this.config.log('processMessage. transaction received', {
+            this.config.log('waitForTransaction. transaction received', {
                 id: transaction.id,
-                block_id: transaction.block_id,
+                blockId: transaction.block_id,
                 now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
             });
         } catch (error) {
-            throw await this.resolveDetailedError(
-                error,
-                message.messageBodyBase64,
-                messageCreationTime || Date.now(),
-                address,
-            );
+            this.config.log('waitForTransaction. Error recieved', error);
+            if (TONClientError.isMessageExpired(error) || 
+                TONClientError.isClientError(error, TONClientError.code.TRANSACTION_WAIT_TIMEOUT))
+            {
+                throw await this.resolveDetailedError(
+                    error,
+                    message.messageBodyBase64,
+                    messageCreationTime || Date.now(),
+                    address,
+                );
+            } else {
+                throw error
+            }
         }
         removeTypeName(transaction);
         await this.checkTransaction(address, transaction, abi, functionName);
@@ -1059,13 +1116,14 @@ export default class TONContractsModule extends TONModule implements TONContract
                 return await call(i);
             } catch (error) {
                 const useRetry = error.code === TONErrorCode.MESSAGE_EXPIRED
-                    || TONClientError.isContractError(error, TONContractExitCode.REPLAY_PROTECTION);
-                if (!useRetry) {
+                    || TONClientError.isContractError(error, TONContractExitCode.REPLAY_PROTECTION)
+                    || TONClientError.isContractError(error, TONContractExitCode.MESSAGE_EXPIRED);
+                if (!useRetry || i === retriesCount) {
                     throw error;
                 }
             }
         }
-        throw TONClientError.messageExpired();
+        throw TONClientError.internalError("retryCall: unreachable");
     }
 
     async internalDeployJs(

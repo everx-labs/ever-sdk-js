@@ -231,6 +231,9 @@ export const TONErrorCode = {
     SERVER_DOESNT_SUPPORT_AGGREGATIONS: 1007,
     INVALID_CONS: 1008,
     ADDRESS_REQUIRED_FOR_RUN_LOCAL: 1009,
+    NETWORK_SILENT: 1010,
+    TRANSACTION_LAG: 1011,
+    TRANSACTION_WAIT_TIMEOUT: 1012,
     CLOCK_OUT_OF_SYNC: 1013,
     ACCOUNT_MISSING: 1014,
     ACCOUNT_CODE_MISSING: 1015,
@@ -335,11 +338,25 @@ export class TONClientError {
         );
     }
 
-    static messageExpired() {
+    static formatTime(time: ?number): ?string {
+        if (time) {
+            return `${new Date(time * 1000).toISOString()} (${time})`;
+        } else {
+            return null;
+        }
+    }
+
+    static messageExpired(data: { msgId: string, sendTime: number, expire: ?number, blockTime: ?number }) {
         return new TONClientError(
             'Message expired',
             TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
+            {
+                messageId: data.msgId,
+                sendTime: TONClientError.formatTime(data.sendTime),
+                expirationTime: TONClientError.formatTime(data.expire),
+                blockTime: TONClientError.formatTime(data.blockTime),
+            }
         );
     }
 
@@ -356,6 +373,47 @@ export class TONClientError {
             `Address required for run local. You haven't specified contract code or data so address is required to load missing parts from network.`,
             TONClientError.code.ADDRESS_REQUIRED_FOR_RUN_LOCAL,
             TONClientError.source.CLIENT,
+        );
+    }
+
+    static networkSilent(data: { msgId: string, sendTime: number, expire: number, timeout: number }) {
+        return new TONClientError(
+            'Network silent: no blocks produced during timeout.',
+            TONClientError.code.NETWORK_SILENT,
+            TONClientError.source.CLIENT,
+            {
+                messageId: data.msgId,
+                sendTime: TONClientError.formatTime(data.sendTime),
+                expirationTime: TONClientError.formatTime(data.expire),
+                timeout: data.timeout,
+            }
+        );
+    }
+
+    static transactionLag(data: { msgId: string, blockId: string, transactionId: string, timeout: number }) {
+        return new TONClientError(
+            'Existing block transaction not found.',
+            TONClientError.code.TRANSACTION_LAG,
+            TONClientError.source.CLIENT,
+            {
+                messageId: data.msgId,
+                blockId: data.blockId,
+                transactionId: data.transactionId,
+                timeout: data.timeout,
+            }
+        );
+    }
+
+    static transactionWaitTimeout(data: { msgId: string, sendTime: number, timeout: number }) {
+        return new TONClientError(
+            'Transaction did not produced during specified timeout',
+            TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
+            TONClientError.source.CLIENT,
+            {
+                messageId: data.msgId,
+                sendTime: TONClientError.formatTime(data.sendTime),
+                timeout: data.timeout,
+            }
         );
     }
 
@@ -402,5 +460,9 @@ export class TONClientError {
 
     static isMessageExpired(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
+    }
+
+    static isWaitForTimeout(error: any): boolean {
+        return TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT);
     }
 }

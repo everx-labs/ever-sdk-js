@@ -47,9 +47,10 @@ async function expectErrorCode(code: number, f: () => Promise<void>) {
 }
 
 test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
-    const { contracts, crypto } = tests.client;
-    const saveTimeout = tests.client.config.data.waitForTimeout;
-    tests.client.config.data.waitForTimeout = 5000;
+    const { contracts, crypto } = await tests.createClient({
+        messageExpirationTimeout: 2000,
+        messageProcessingTimeout: 10000,      
+    });
     const helloPackage = HelloContractPackage[abiVersion];
 
     let helloKeys = await crypto.ed25519Keypair();
@@ -78,9 +79,8 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
             });
     }
 
-    tests.client.config.data.waitForTimeout = saveTimeout;
     await tests.get_grams_from_giver(helloAddress, 100);
-    tests.client.config.data.waitForTimeout = 5000;
+
     try {
         await contracts.deploy({
             package: helloPackage,
@@ -95,7 +95,7 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
                 data: {
                     original_error: {
                         code: abiVersion === 1
-                            ? TONErrorCode.WAIT_FOR_TIMEOUT
+                            ? TONErrorCode.TRANSACTION_WAIT_TIMEOUT
                             : TONErrorCode.MESSAGE_EXPIRED,
                     },
                 },
@@ -126,9 +126,8 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
             });
     }
 
-    tests.client.config.data.waitForTimeout = saveTimeout;
     await tests.get_grams_from_giver(helloAddress, 100);
-    tests.client.config.data.waitForTimeout = 5000;
+
     try {
         await contracts.run({
             address: helloAddress,
@@ -145,16 +144,15 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
                 data: {
                     original_error: {
                         code: abiVersion === 1
-                            ? TONErrorCode.WAIT_FOR_TIMEOUT
+                            ? TONErrorCode.TRANSACTION_WAIT_TIMEOUT
                             : TONErrorCode.MESSAGE_EXPIRED,
                     },
                 },
             });
     }
 
-    tests.client.config.data.waitForTimeout = saveTimeout;
     await tests.get_grams_from_giver(helloAddress, 1000000000);
-    tests.client.config.data.waitForTimeout = 5000;
+
     try {
         await contracts.run({
             address: helloAddress,
@@ -171,13 +169,12 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
                 data: {
                     original_error: {
                         code: abiVersion === 1
-                            ? TONErrorCode.WAIT_FOR_TIMEOUT
+                            ? TONErrorCode.TRANSACTION_WAIT_TIMEOUT
                             : TONErrorCode.MESSAGE_EXPIRED,
                     },
                 },
             });
     }
-    tests.client.config.data.waitForTimeout = saveTimeout;
 });
 
 test.each(ABIVersions)('runGet & runLocal errors (ABI %i)', async (abiVersion) => {
