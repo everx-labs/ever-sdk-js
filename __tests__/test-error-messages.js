@@ -95,7 +95,7 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
                 data: {
                     original_error: {
                         code: abiVersion === 1
-                            ? TONErrorCode.WAIT_FOR_TIMEOUT
+                            ? TONErrorCode.TRANSACTION_WAIT_TIMEOUT
                             : TONErrorCode.MESSAGE_EXPIRED,
                     },
                 },
@@ -145,7 +145,7 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
                 data: {
                     original_error: {
                         code: abiVersion === 1
-                            ? TONErrorCode.WAIT_FOR_TIMEOUT
+                            ? TONErrorCode.TRANSACTION_WAIT_TIMEOUT
                             : TONErrorCode.MESSAGE_EXPIRED,
                     },
                 },
@@ -171,7 +171,7 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
                 data: {
                     original_error: {
                         code: abiVersion === 1
-                            ? TONErrorCode.WAIT_FOR_TIMEOUT
+                            ? TONErrorCode.TRANSACTION_WAIT_TIMEOUT
                             : TONErrorCode.MESSAGE_EXPIRED,
                     },
                 },
