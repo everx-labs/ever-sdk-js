@@ -59,13 +59,7 @@ const testCollection = async (c, field) => {
 };
 test('Aggregations: Account numeric fields', async () => {
     const queries = tests.client.queries;
-    await testCollection(queries.accounts, 'workchain_id');
-    await testCollection(queries.accounts, 'last_paid');
-    await testCollection(queries.accounts, 'due_payment');
-    await testCollection(queries.accounts, 'last_trans_lt');
     await testCollection(queries.accounts, 'balance');
-    await testCollection(queries.accounts, 'balance_other.currency');
-    await testCollection(queries.accounts, 'split_depth');
 });
 
 test('Validator set', async () => {
