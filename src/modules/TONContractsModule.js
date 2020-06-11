@@ -644,7 +644,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             ? this.queries.generateOperationId()
             : undefined;
         let transaction: ?QTransaction = null;
-        let sendTime = Date.now() / 1000;
+        let sendTime = Math.round(Date.now() / 1000);
+        let blockTime = null;
         try {
             const expire = message.expire;
             if (expire) {
@@ -663,7 +664,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                             filter: {
                                 master: { min_shard_gen_utime: { ge: expire } },
                             },
-                            result: 'id in_msg_descr { transaction_id }',
+                            result: 'id gen_utime in_msg_descr { transaction_id }',
                             timeout: blockTimeout,
                             parentSpan,
                             operationId,
@@ -711,7 +712,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                             throw error;
                         }
                     }
-                    
+                    blockTime = block.gen_utime;
                 };
 
                 promises.push(waitExpired());
@@ -733,7 +734,12 @@ export default class TONContractsModule extends TONModule implements TONContract
                         });
                         resolve();
                     } catch (error) {
-                        reject(error);
+                        if(TONClientError.isWaitforTimeout(error)) {
+                            reject(TONClientError.transactionWaitTimeout(
+                                messageId, sendTime, processingTimeout));
+                        } else {
+                            reject(error);
+                        }
                     }
                 })();
             }));
@@ -747,7 +753,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             }
 
             if (!transaction) {
-                throw TONClientError.messageExpired();
+                throw TONClientError.messageExpired(messageId, sendTime, expire, blockTime);
             }
             const transactionNow = transaction.now || 0;
             this.config.log('waitForTransaction. transaction received', {
@@ -756,13 +762,19 @@ export default class TONContractsModule extends TONModule implements TONContract
                 now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
             });
         } catch (error) {
-            this.config.log('waitForTransaction. Error recieved', error, '\n Resoving');
-            throw await this.resolveDetailedError(
-                error,
-                message.messageBodyBase64,
-                messageCreationTime || Date.now(),
-                address,
-            );
+            this.config.log('waitForTransaction. Error recieved', error);
+            if (TONClientError.isMessageExpired(error) || 
+                TONClientError.isClientError(error, TONClientError.code.TRANSACTION_WAIT_TIMEOUT))
+            {
+                throw await this.resolveDetailedError(
+                    error,
+                    message.messageBodyBase64,
+                    messageCreationTime || Date.now(),
+                    address,
+                );
+            } else {
+                throw error
+            }
         }
         removeTypeName(transaction);
         await this.checkTransaction(address, transaction, abi, functionName);
@@ -1086,13 +1098,14 @@ export default class TONContractsModule extends TONModule implements TONContract
                 return await call(i);
             } catch (error) {
                 const useRetry = error.code === TONErrorCode.MESSAGE_EXPIRED
-                    || TONClientError.isContractError(error, TONContractExitCode.REPLAY_PROTECTION);
-                if (!useRetry) {
+                    || TONClientError.isContractError(error, TONContractExitCode.REPLAY_PROTECTION)
+                    || TONClientError.isContractError(error, TONContractExitCode.MESSAGE_EXPIRED);
+                if (!useRetry || i === retriesCount) {
                     throw error;
                 }
             }
         }
-        throw TONClientError.messageExpired();
+        throw TONClientError.internalError("retryCall: unreachable");
     }
 
     async internalDeployJs(

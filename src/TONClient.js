@@ -338,11 +338,17 @@ export class TONClientError {
         );
     }
 
-    static messageExpired() {
+    static messageExpired(msgId: string, sendTime: number, expire: ?number, blockTime: ?number) {
         return new TONClientError(
             'Message expired',
             TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
+            {
+                message_id: msgId,
+                send_time: sendTime,
+                expiration_time: expire,
+                block_time: blockTime,
+            }
         );
     }
 
