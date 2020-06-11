@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Optional parameter `account` for `runLocal` method allows to provide the specified account data instead of loading them from a blockchain. 
 - Optional result field `account` for `runLocal` and `runMessageLocal` methods returns state of an account after contract execution has finished. Presented only when the `fullRun` parameter has specified.  
 - Method `runMessageLocal` as a replacement for the `processRunMessageLocal` with `fullRun` and `account` parameters. 
+- `1003` error on contract run is replaced with more specific `1010`-`1012` errors
  
 ## 0.23.2 - May 25, 2020
 ### New
