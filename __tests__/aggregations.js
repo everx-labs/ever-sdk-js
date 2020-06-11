@@ -25,7 +25,7 @@ test('Aggregations', async () => {
     await testCollection(queries.messages, 1);
     await testCollection(queries.blocks_signatures, 0);
 });
-const testCollection = async (c, field) => {
+const testAggregateFunctions = async (c, field) => {
     const tr = (await c.aggregate({
         filter: {},
         fields: [
@@ -55,11 +55,10 @@ const testCollection = async (c, field) => {
         .toBeDefined();
     expect(Number(tr[3]))
         .toBeDefined();
-    //console.log(`${field}: MIN ${Number(tr[0])} MAX ${Number(tr[1])} SUM ${Number(tr[2])} AVERAGE ${Number(tr[3])}`);
 };
 test('Aggregations: Account numeric fields', async () => {
     const queries = tests.client.queries;
-    await testCollection(queries.accounts, 'balance');
+    await testAggregateFunctions(queries.accounts, 'balance');
 });
 
 test('Validator set', async () => {
