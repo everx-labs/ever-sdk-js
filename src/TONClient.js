@@ -338,6 +338,14 @@ export class TONClientError {
         );
     }
 
+    static formatTime(time: ?number): ?string {
+        if (time) {
+            return `${new Date(time * 1000).toISOString()} (${time})`;
+        } else {
+            return null;
+        }
+    }
+
     static messageExpired(msgId: string, sendTime: number, expire: ?number, blockTime: ?number) {
         return new TONClientError(
             'Message expired',
@@ -345,9 +353,9 @@ export class TONClientError {
             TONClientError.source.CLIENT,
             {
                 message_id: msgId,
-                send_time: sendTime,
-                expiration_time: expire,
-                block_time: blockTime,
+                send_time: TONClientError.formatTime(sendTime),
+                expiration_time: TONClientError.formatTime(expire),
+                block_time: TONClientError.formatTime(blockTime),
             }
         );
     }
@@ -375,8 +383,8 @@ export class TONClientError {
             TONClientError.source.CLIENT,
             {
                 message_id: msgId,
-                send_time: sendTime,
-                expiration_time: expire,
+                send_time: TONClientError.formatTime(sendTime),
+                expiration_time: TONClientError.formatTime(expire),
                 timeout,
             }
         );
@@ -403,7 +411,7 @@ export class TONClientError {
             TONClientError.source.CLIENT,
             {
                 message_id: msgId,
-                send_time: sendTime,
+                send_time: TONClientError.formatTime(sendTime),
                 timeout,
             }
         );
