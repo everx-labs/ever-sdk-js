@@ -57,7 +57,8 @@ pipeline {
                         [
                             $class: 'StringParameterValue',
                             name: 'ton_client_node_js_branch',
-                            value: "${GIT_BRANCH}"
+                            value: "0.24.0-rc"
+                            // value: "${GIT_BRANCH}"
                         ],
                         [
                             $class: 'BooleanParameterValue',
@@ -67,7 +68,8 @@ pipeline {
                         [
                             $class: 'StringParameterValue',
                             name: 'ton_client_web_js_branch',
-                            value: "${GIT_BRANCH}"
+                            value: "0.24.0-rc"
+                            // value: "${GIT_BRANCH}"
                         ],
                         [
                             $class: 'BooleanParameterValue',
