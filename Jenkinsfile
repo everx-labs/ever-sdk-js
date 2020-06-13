@@ -68,7 +68,7 @@ pipeline {
                         [
                             $class: 'StringParameterValue',
                             name: 'ton_client_web_js_branch',
-                            value: "0.24.0-rc"
+                            // value: "0.24.0-rc"
                             // value: "${GIT_BRANCH}"
                             value: "${GIT_BRANCH}" ==~ /\d+\.\d+\.\d+\.-rc/ ? "${GIT_BRANCH}" : "master"
                         ],
