@@ -30,6 +30,16 @@ pipeline {
                 script {
                     def params = [
                         [
+                            $class: 'BooleanParameterValue',
+                            name: 'RUN_TESTS_ALL',
+                            value: false
+                        ],
+                        [
+                            $class: 'BooleanParameterValue',
+                            name: 'RUN_TESTS_TON_CLIENT_JS',
+                            value: true
+                        ],
+                        [
                             $class: 'StringParameterValue',
                             name: 'ton_client_js_branch',
                             value: "${GIT_BRANCH}"
@@ -41,24 +51,13 @@ pipeline {
                         ],
                         [
                             $class: 'BooleanParameterValue',
-                            name: 'RUN_TESTS_ALL',
-                            value: false
-                        ],
-                        [
-                            $class: 'BooleanParameterValue',
-                            name: 'RUN_TESTS_TON_CLIENT_JS',
-                            value: true
-                        ],
-                        [
-                            $class: 'BooleanParameterValue',
                             name: 'RUN_TESTS_TON_CLIENT_NODE_JS',
                             value: true
                         ],
                         [
                             $class: 'StringParameterValue',
                             name: 'ton_client_node_js_branch',
-                            value: "0.24.0-rc"
-                            // value: "${GIT_BRANCH}"
+                            value: "${GIT_BRANCH}" ==~ /\d+\.\d+\.\d+-rc/ ? "${GIT_BRANCH}" : "master"
                         ],
                         [
                             $class: 'BooleanParameterValue',
@@ -68,9 +67,7 @@ pipeline {
                         [
                             $class: 'StringParameterValue',
                             name: 'ton_client_web_js_branch',
-                            // value: "0.24.0-rc"
-                            // value: "${GIT_BRANCH}"
-                            value: "${GIT_BRANCH}" ==~ /\d+\.\d+\.\d+-rc-fix-dependant-branches/ ? "${GIT_BRANCH}" : "master"
+                            value: "${GIT_BRANCH}" ==~ /\d+\.\d+\.\d+-rc/ ? "${GIT_BRANCH}" : "master"
                         ],
                         [
                             $class: 'BooleanParameterValue',
