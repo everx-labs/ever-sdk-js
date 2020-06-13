@@ -70,7 +70,7 @@ pipeline {
                             name: 'ton_client_web_js_branch',
                             // value: "0.24.0-rc"
                             // value: "${GIT_BRANCH}"
-                            value: "${GIT_BRANCH}" ==~ /\d+\.\d+\.\d+\.-rc-fix-dependant-branches/ ? "${GIT_BRANCH}" : "master"
+                            value: "${GIT_BRANCH}" ==~ /\d+\.\d+\.\d+-rc-fix-dependant-branches/ ? "${GIT_BRANCH}" : "master"
                         ],
                         [
                             $class: 'BooleanParameterValue',
