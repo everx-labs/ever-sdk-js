@@ -392,7 +392,7 @@ export class TONClientError {
 
     static transactionLag(data: { msgId: string, blockId: string, transactionId: string, timeout: number }) {
         return new TONClientError(
-            'Existing block transaction not found.',
+            'Existing block transaction not found (no transaction appeared for the masterchain block with gen_utime > message expiration time)',
             TONClientError.code.TRANSACTION_LAG,
             TONClientError.source.CLIENT,
             {
