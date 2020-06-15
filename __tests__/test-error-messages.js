@@ -352,7 +352,7 @@ test('Test SDK Error 1013', async () => {
     if (nodeSe) {
         return;
     }
-    const { crypto, contracts } = await tests.createClient();
+    const { crypto, contracts } = await tests.createClient({});
     const helloKeys = await crypto.ed25519Keypair();
     const helloPackage = HelloContractPackage[2];
 
