@@ -18,7 +18,7 @@
 /* eslint-disable class-methods-use-this, no-use-before-define, no-undef */
 
 // Deprecated: TONClientCore v0.17.0
-import { Span, SpanContext, SpanOptions, Tracer } from "opentracing";
+import {Span, SpanContext, SpanOptions, Tracer} from "opentracing";
 
 export interface TONClientLibrary {
     request(
@@ -46,13 +46,13 @@ export interface TONClientCore {
     /**
      * Create new context and returns handle to it
      */
-    createContext(): number;
+    coreCreateContext(): number;
 
     /**
      * Destroy context with specified handle
      * @param context
      */
-    destroyContext(context: number): void;
+    coreDestroyContext(context: number): void;
 
     /**
      * Post async request to core
@@ -61,7 +61,7 @@ export interface TONClientCore {
      * @param {string} paramsJson
      * @param {function} onResult
      */
-    request(
+    coreRequest(
         context: number,
         method: string,
         paramsJson: string,
@@ -69,19 +69,16 @@ export interface TONClientCore {
     ): void;
 
     /**
-     * Perform sync request to core and return result
-     * @param {number} context
-     * @param {string} method
-     * @param {string} paramsJson
+     * Backward compatibility
+     * @param method
+     * @param paramsJson
+     * @param onResult
      */
-    requestSync(
-        context: number,
+    request(
         method: string,
-        paramsJson: string
-    ): {
-        resultJson: string,
-        errorJson: string
-    };
+        paramsJson: string,
+        onResult: (resultJson: string, errorJson: string) => void,
+    ): void;
 }
 
 /**

@@ -21,7 +21,7 @@ import TONCryptoModule from './modules/TONCryptoModule';
 /* eslint-disable class-methods-use-this, no-use-before-define */
 import TONQueriesModule from "./modules/TONQueriesModule";
 
-import type {TONClientLibrary, TONModuleContext} from './TONModule';
+import type {TONClientCore, TONClientLibrary, TONModuleContext} from './TONModule';
 import {TONModule} from './TONModule';
 
 /**
@@ -60,6 +60,8 @@ export class TONClient implements TONModuleContext, ITONClient {
     contracts: TONContracts;
     queries: TONQueries;
     _queries: TONQueriesModule;
+    _context: number;
+    _core: ?TONClientLibrary;
 
     constructor() {
         this.modules = new Map();
@@ -68,6 +70,8 @@ export class TONClient implements TONModuleContext, ITONClient {
         this.contracts = this.getModule(TONContractsModule);
         this._queries = this.getModule(TONQueriesModule);
         this.queries = this._queries;
+        this._context = 0;
+        this._core = null;
     }
 
     /**
@@ -93,6 +97,24 @@ export class TONClient implements TONModuleContext, ITONClient {
             }
             TONClient.core = await TONClient.clientPlatform.createLibrary();
         }
+        if (!this._core) {
+            if ((TONClient.core: any).coreCreateContext1) {
+                this._context = ((TONClient.core: any): TONClientCore).coreCreateContext();
+                console.log('>>>', this._context);
+                this._core = {
+                    request: (
+                        method: string,
+                        paramsJson: string,
+                        onResult: (resultJson: string, errorJson: string) => void,
+                    ): void => {
+                        ((TONClient.core: any): TONClientCore).coreRequest(this._context, method, paramsJson, onResult);
+                    }
+                }
+            } else {
+                console.log('>>>', 'legacy mode');
+                this._core = TONClient.core;
+            }
+        }
         const modules: TONModule[] = [...this.modules.values()];
         for (const module of modules) {
             await module.setup();
@@ -106,12 +128,16 @@ export class TONClient implements TONModuleContext, ITONClient {
      */
     async close(): Promise<void> {
         await this.queries.close();
+        if (this._context > 0) {
+            ((TONClient.core: any): TONClientCore).coreDestroyContext(this._context);
+            this._context = 0;
+        }
     }
 
     // TONModuleContext
 
     getCore(): ?TONClientLibrary {
-        return TONClient.core;
+        return this._core;
     }
 
     getModule<T>(ModuleClass: typeof TONModule): T {
