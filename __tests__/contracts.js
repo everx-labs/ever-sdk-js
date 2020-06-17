@@ -7,13 +7,19 @@
 import {Span} from 'opentracing';
 import {removeProps, TONAddressStringVariant} from '../src/modules/TONContractsModule';
 import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
-import {TONClient, TONClientError} from '../src/TONClient';
+import {
+    TONClient,
+    TONClientError,
+    TONContractExitCode,
+    TONErrorCode,
+    TONErrorSource,
+} from '../src/TONClient';
 
 
 import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
 import {bv} from './_/binaries';
 import {version} from '../package.json';
-import {ABIVersions, tests} from './_/init-tests';
+import {ABIVersions, nodeSe, tests} from './_/init-tests';
 
 const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
 const WalletContractPackage = tests.loadPackage('WalletContract');
@@ -60,8 +66,10 @@ test('Test versions compatibility', async () => {
     const ver_builtin = await tests.client.config.getVersion();
     expect(version.split('.')[0])
         .toEqual(ver_builtin.split('.')[0]);
-    console.log(`Client version ${version} uses compatible binaries version: ${ver_builtin}`,
-        `\n(requested version to download: ${bv})`);
+    console.log(
+        `Client version ${version} uses compatible binaries version: ${ver_builtin}`,
+        `\n(requested version to download: ${bv})`,
+    );
 });
 
 test('load', async () => {
@@ -95,9 +103,13 @@ test('out of sync', async () => {
     const saveOutOfSyncThreshold = cfg.outOfSyncThreshold;
     cfg.outOfSyncThreshold = -1;
     try {
-        await expectError(TONClientError.code.CLOCK_OUT_OF_SYNC, TONClientError.source.CLIENT, async () => {
-            await tests.get_grams_from_giver(walletAddress);
-        });
+        await expectError(
+            TONClientError.code.CLOCK_OUT_OF_SYNC,
+            TONClientError.source.CLIENT,
+            async () => {
+                await tests.get_grams_from_giver(walletAddress);
+            },
+        );
     } finally {
         cfg.outOfSyncThreshold = saveOutOfSyncThreshold;
     }
@@ -169,15 +181,15 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
             }, span);
         } catch (error) {
             expect(error.source)
-                .toEqual('node');
+                .toEqual(TONClientError.source.NODE);
             expect(error.code)
-                .toEqual(101);
-            expect(error.message)
-                .toEqual('VM terminated with exception (101) at computeVm');
+                .toEqual(TONClientError.code.CONTRACT_EXECUTION_FAILED);
             expect(error.data.phase)
                 .toEqual('computeVm');
             expect(error.data.transaction_id)
                 .toBeTruthy();
+            expect(error.data.exit_code)
+                .toEqual(101);
         }
 
         try {
@@ -382,7 +394,9 @@ test('Should change InitState of contract', async () => {
         keyPair: keys,
     });
 
-    expect(deployed1.address).not.toEqual(deployed2.address);
+    expect(deployed1.address)
+        .not
+        .toEqual(deployed2.address);
 
     let result1 = await contracts.runLocal({
         address: deployed1.address,
@@ -797,7 +811,7 @@ test.each(ABIVersions)('test send boc (ABI v%i)', async (abiVersion) => {
         address: message.address,
         message: {
             messageBodyBase64: message.message.messageBodyBase64,
-            expire: message.message.expire
+            expire: message.message.expire,
         },
     });
 });
@@ -838,6 +852,7 @@ async function expectError(code: number, source: string, f) {
         await f();
         fail(`Expected error with code:${code} source: ${source}`);
     } catch (error) {
+        console.log('>>>', error);
         expect({
             code: error.code,
             source: error.source,
@@ -904,8 +919,6 @@ test('Test expire', async () => {
     // and then change `expire` to correct value in order to send it properly
     runMsg.message.expire = Math.floor(Date.now() / 1000) + 10;
 
-    const expectedError = TONClientError.messageExpired();
-
     // no retries client
     const client = await TONClient.create({
         ...tests.config,
@@ -914,22 +927,44 @@ test('Test expire', async () => {
 
     // SDK will wait for message processing using modified `expire` value,
     // but message was created already expired so contract won't accept it
-    await expectError(
-        expectedError.code,
-        expectedError.source,
-        async () => client.contracts.processRunMessage(runMsg),
-    );
+    try {
+        await client.contracts.processRunMessage(runMsg);
+        fail('error expected');
+    } catch (error) {
+        expect(error)
+            .toMatchObject({
+                code: TONErrorCode.CONTRACT_EXECUTION_FAILED,
+                source: TONErrorSource.NODE,
+                data: {
+                    exit_code: TONContractExitCode.MESSAGE_EXPIRED,
+                },
+            });
+    }
 
-    // check that expired message wasn't processed by the contract
-    const ltExpire = (await queries.accounts.query(
-        {
-            id: { eq: contractData.address },
-        },
-        'last_trans_lt',
-    ))[0].last_trans_lt;
+    // TODO: uncomment it when node se will work like a regular node
+    if (!nodeSe) {
+        try {
+            await client.contracts.processRunMessage(runMsg);
+            fail('error expected');
+        } catch (error) {
+            expect(error)
+                .toMatchObject({
+                    code: TONErrorCode.MESSAGE_ALREADY_EXPIRED,
+                    source: TONErrorSource.CLIENT,
+                });
+        }
 
-    expect(ltExpire)
-        .toEqual(ltRun);
+        // check that expired message wasn't processed by the contract
+        const ltExpire = (await queries.accounts.query(
+            {
+                id: { eq: contractData.address },
+            },
+            'last_trans_lt',
+        ))[0].last_trans_lt;
+
+        expect(ltExpire)
+            .toEqual(ltRun);
+    }
 });
 
 test('Test expire retries', async () => {

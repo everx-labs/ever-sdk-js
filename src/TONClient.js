@@ -3,7 +3,7 @@
  */
 // @flow
 
-import { Tags, Span, SpanContext } from "opentracing";
+import {Tags, Span, SpanContext} from "opentracing";
 import type {
     ITONClient,
     TONAccessKeysManagementParams,
@@ -21,8 +21,8 @@ import TONCryptoModule from './modules/TONCryptoModule';
 /* eslint-disable class-methods-use-this, no-use-before-define */
 import TONQueriesModule from "./modules/TONQueriesModule";
 
-import type { TONClientLibrary, TONModuleContext } from './TONModule';
-import { TONModule } from './TONModule';
+import type {TONClientLibrary, TONModuleContext} from './TONModule';
+import {TONModule} from './TONModule';
 
 /**
  * JavaScript platform specific configuration
@@ -213,28 +213,46 @@ export class TONClient implements TONModuleContext, ITONClient {
     modules: Map<string, TONModule>;
 }
 
+
+export const TONErrorSource = {
+    CLIENT: 'client',
+    NODE: 'node'
+};
+
+export const TONErrorCode = {
+    CLIENT_DOES_NOT_CONFIGURED: 1000,
+    SEND_NODE_REQUEST_FAILED: 1001,
+    MESSAGE_ALREADY_EXPIRED: 1001,
+    RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS: 1002,
+    WAIT_FOR_TIMEOUT: 1003,
+    INTERNAL_ERROR: 1004,
+    QUERY_FAILED: 1005,
+    MESSAGE_EXPIRED: 1006,
+    SERVER_DOESNT_SUPPORT_AGGREGATIONS: 1007,
+    INVALID_CONS: 1008,
+    ADDRESS_REQUIRED_FOR_RUN_LOCAL: 1009,
+    NETWORK_SILENT: 1010,
+    TRANSACTION_LAG: 1011,
+    TRANSACTION_WAIT_TIMEOUT: 1012,
+    CLOCK_OUT_OF_SYNC: 1013,
+    ACCOUNT_MISSING: 1014,
+    ACCOUNT_CODE_MISSING: 1015,
+    ACCOUNT_BALANCE_TOO_LOW: 1016,
+    ACCOUNT_FROZEN_OR_DELETED: 1017,
+
+    CONTRACT_EXECUTION_FAILED: 3025,
+
+};
+
+export const TONContractExitCode = {
+    REPLAY_PROTECTION: 52,
+    MESSAGE_EXPIRED: 57,
+    NO_GAS: 13,
+}
+
 export class TONClientError {
-    static source = {
-        CLIENT: 'client',
-        NODE: 'node'
-    };
-    static code = {
-        CLIENT_DOES_NOT_CONFIGURED: 1000,
-        SEND_NODE_REQUEST_FAILED: 1001,
-        RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS: 1002,
-        WAIT_FOR_TIMEOUT: 1003,
-        INTERNAL_ERROR: 1004,
-        QUERY_FAILED: 1005,
-        MESSAGE_EXPIRED: 1006,
-        SERVER_DOESNT_SUPPORT_AGGREGATIONS: 1007,
-        INVALID_CONS: 1008,
-        ADDRESS_REQUIRED_FOR_RUN_LOCAL: 1009,
-        CLOCK_OUT_OF_SYNC: 1013,
-        ACCOUNT_MISSING: 1014,
-        ACCOUNT_CODE_MISSING: 1015,
-        ACCOUNT_BALANCE_TOO_LOW: 1016,
-        ACCOUNT_FROZEN_OR_DELETED: 1017,
-    };
+    static source = TONErrorSource;
+    static code = TONErrorCode;
 
     message: string;
     source: string;
@@ -256,6 +274,12 @@ export class TONClientError {
     static isNodeError(error: any, code: number): boolean {
         return (error.source === TONClientError.source.NODE)
             && (error.code === code);
+    }
+
+    static isContractError(error: any, exitCode: number): boolean {
+        return (error.source === TONClientError.source.NODE)
+            && (error.code === TONClientError.code.CONTRACT_EXECUTION_FAILED)
+            && (error.data && error.data.exit_code === exitCode);
     }
 
     static internalError(message: string): TONClientError {
@@ -314,11 +338,25 @@ export class TONClientError {
         );
     }
 
-    static messageExpired() {
+    static formatTime(time: ?number): ?string {
+        if (time) {
+            return `${new Date(time * 1000).toISOString()} (${time})`;
+        } else {
+            return null;
+        }
+    }
+
+    static messageExpired(data: { msgId: string, sendTime: number, expire: ?number, blockTime: ?number }) {
         return new TONClientError(
             'Message expired',
             TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
+            {
+                messageId: data.msgId,
+                sendTime: TONClientError.formatTime(data.sendTime),
+                expirationTime: TONClientError.formatTime(data.expire),
+                blockTime: TONClientError.formatTime(data.blockTime),
+            }
         );
     }
 
@@ -335,6 +373,47 @@ export class TONClientError {
             `Address required for run local. You haven't specified contract code or data so address is required to load missing parts from network.`,
             TONClientError.code.ADDRESS_REQUIRED_FOR_RUN_LOCAL,
             TONClientError.source.CLIENT,
+        );
+    }
+
+    static networkSilent(data: { msgId: string, sendTime: number, expire: number, timeout: number }) {
+        return new TONClientError(
+            'Network silent: no blocks produced during timeout.',
+            TONClientError.code.NETWORK_SILENT,
+            TONClientError.source.CLIENT,
+            {
+                messageId: data.msgId,
+                sendTime: TONClientError.formatTime(data.sendTime),
+                expirationTime: TONClientError.formatTime(data.expire),
+                timeout: data.timeout,
+            }
+        );
+    }
+
+    static transactionLag(data: { msgId: string, blockId: string, transactionId: string, timeout: number }) {
+        return new TONClientError(
+            'Existing block transaction not found (no transaction appeared for the masterchain block with gen_utime > message expiration time)',
+            TONClientError.code.TRANSACTION_LAG,
+            TONClientError.source.CLIENT,
+            {
+                messageId: data.msgId,
+                blockId: data.blockId,
+                transactionId: data.transactionId,
+                timeout: data.timeout,
+            }
+        );
+    }
+
+    static transactionWaitTimeout(data: { msgId: string, sendTime: number, timeout: number }) {
+        return new TONClientError(
+            'Transaction did not produced during specified timeout',
+            TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
+            TONClientError.source.CLIENT,
+            {
+                messageId: data.msgId,
+                sendTime: TONClientError.formatTime(data.sendTime),
+                timeout: data.timeout,
+            }
         );
     }
 
@@ -383,5 +462,7 @@ export class TONClientError {
         return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
     }
 
+    static isWaitForTimeout(error: any): boolean {
+        return TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT);
+    }
 }
-
