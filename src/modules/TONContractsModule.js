@@ -3,7 +3,7 @@
  */
 // @flow
 
-import { Span, SpanContext } from 'opentracing';
+import {Span, SpanContext} from 'opentracing';
 import type {
     QAccount,
     QBlock,
@@ -50,11 +50,11 @@ import type {
     TONContractRunGetParams,
     TONContractRunGetResult,
     TONContractRunMessageLocalParams,
-    TONContractRunLocalResult,
+    TONContractRunLocalResult, TONContractTransactionFees,
 } from '../../types';
 
-import { TONClientError, TONContractExitCode, TONErrorCode } from '../TONClient';
-import { TONModule } from '../TONModule';
+import {TONClientError, TONContractExitCode, TONErrorCode} from '../TONClient';
+import {TONModule} from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule from './TONQueriesModule';
 
@@ -375,7 +375,6 @@ export default class TONContractsModule extends TONModule implements TONContract
                 expire: constructorHeader?.expire,
             },
             address: message.address,
-            creationTime: Date.now(),
         };
     }
 
@@ -404,7 +403,6 @@ export default class TONContractsModule extends TONModule implements TONContract
             abi: params.abi,
             functionName: params.functionName,
             message,
-            creationTime: Date.now(),
         };
     }
 
@@ -488,7 +486,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         return {
             address: params.unsignedMessage.address,
             message,
-            creationTime: Date.now(),
         };
     }
 
@@ -508,7 +505,6 @@ export default class TONContractsModule extends TONModule implements TONContract
             abi: params.unsignedMessage.signParams.abi,
             functionName: params.unsignedMessage.functionName,
             message,
-            creationTime: Date.now(),
         };
     }
 
@@ -612,31 +608,26 @@ export default class TONContractsModule extends TONModule implements TONContract
         address?: string,
         abi?: TONContractABI,
         functionName?: string,
-        messageCreationTime?: number,
     ): Promise<QTransaction> {
         await this.sendMessage(message, parentSpan);
-        return this.waitForTransaction(
+        const { transaction } = await this.waitForTransaction(
             address || '',
             message,
-            resultFields,
             parentSpan,
             retryIndex,
-            messageCreationTime,
-            abi,
-            functionName,
+            abi || null,
+            functionName || null,
         );
+        return transaction;
     }
 
     async waitForTransaction(
-        address: string,
         message: TONContractMessage,
-        resultFields: string,
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
-        messageCreationTime?: number,
-        abi?: TONContractABI,
-        functionName?: string,
-    ): Promise<QTransaction> {
+        abi: ?TONContractABI,
+        functionName: ?string,
+    ): Promise<{ transaction: QTransaction, output: any, fees: TONContractTransactionFees }> {
         const messageId = await this.getMessageId(message);
         const config = this.config;
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
@@ -671,9 +662,8 @@ export default class TONContractsModule extends TONModule implements TONContract
                             parentSpan,
                             operationId,
                         });
-                    }
-                    catch(error) {
-                        if(TONClientError.isWaitForTimeout(error)) {
+                    } catch (error) {
+                        if (TONClientError.isWaitForTimeout(error)) {
                             throw TONClientError.networkSilent({
                                 msgId: messageId,
                                 sendTime,
@@ -700,7 +690,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
                     // check that transactions collection is updated
                     try {
-                       await this.queries.transactions.waitFor({
+                        await this.queries.transactions.waitFor({
                             filter: {
                                 id: { eq: transactionId },
                             },
@@ -708,10 +698,9 @@ export default class TONContractsModule extends TONModule implements TONContract
                             timeout: BLOCK_TRANSACTION_WAITING_TIME,
                             parentSpan,
                             operationId,
-                        }); 
-                    }
-                    catch(error) {
-                        if(TONClientError.isWaitForTimeout(error)) {
+                        });
+                    } catch (error) {
+                        if (TONClientError.isWaitForTimeout(error)) {
                             throw TONClientError.transactionLag({
                                 msgId: messageId,
                                 blockId: block.id,
@@ -737,14 +726,14 @@ export default class TONContractsModule extends TONModule implements TONContract
                                 in_msg: { eq: messageId },
                                 status: { eq: QTransactionProcessingStatus.finalized },
                             },
-                            result: resultFields,
+                            result: transactionDetails,
                             timeout: processingTimeout,
                             operationId,
                             parentSpan,
                         });
                         resolve();
                     } catch (error) {
-                        if(TONClientError.isWaitForTimeout(error)) {
+                        if (TONClientError.isWaitForTimeout(error)) {
                             reject(TONClientError.transactionWaitTimeout({
                                 msgId: messageId,
                                 sendTime,
@@ -781,13 +770,12 @@ export default class TONContractsModule extends TONModule implements TONContract
             });
         } catch (error) {
             this.config.log('waitForTransaction. Error recieved', error);
-            if (TONClientError.isMessageExpired(error) || 
-                TONClientError.isClientError(error, TONClientError.code.TRANSACTION_WAIT_TIMEOUT))
-            {
+            if (TONClientError.isMessageExpired(error) ||
+                TONClientError.isClientError(error, TONClientError.code.TRANSACTION_WAIT_TIMEOUT)) {
                 throw await this.resolveDetailedError(
                     error,
                     message.messageBodyBase64,
-                    messageCreationTime || Date.now(),
+                    Date.now(),
                     address,
                 );
             } else {
@@ -795,21 +783,25 @@ export default class TONContractsModule extends TONModule implements TONContract
             }
         }
         removeTypeName(transaction);
-        await this.checkTransaction(address, transaction, abi, functionName);
-        return transaction;
+        const { output, fees } = await this.processTransaction(address, transaction, abi, functionName);
+        return {
+            transaction,
+            output,
+            fees,
+        };
     }
 
-    async checkTransaction(
+    async processTransaction(
         address: string,
         transaction: QTransaction,
-        abi?: TONContractABI,
-        functionName?: string,
-    ) {
+        abi: ?TONContractABI,
+        functionName: ?string,
+    ): Promise<{ output: any, fees: TONContractTransactionFees }> {
         try {
-            await this.requestCore('contracts.process.transaction', {
+            return await this.requestCore('contracts.process.transaction', {
                 transaction,
-                abi: abi || null,
-                functionName: functionName || null,
+                abi: abi,
+                functionName: functionName,
                 address,
             });
         } catch (error) {
@@ -895,15 +887,12 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<TONContractDeployResult> {
-        const transaction = await this.waitForTransaction(
+        const { transaction } = await this.waitForTransaction(
             deployMessage.address,
             deployMessage.message,
-            transactionDetails,
             parentSpan,
             retryIndex,
-            deployMessage.creationTime,
         );
-        this.config.log('processDeployMessage. End');
         return {
             address: deployMessage.address,
             alreadyDeployed: false,
@@ -927,41 +916,14 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<TONContractRunResult> {
-        const transaction = await this.waitForTransaction(
+        return this.waitForTransaction(
             runMessage.address,
             runMessage.message,
-            transactionDetails,
             parentSpan,
             retryIndex,
-            runMessage.creationTime,
             runMessage.abi,
             runMessage.functionName,
         );
-        const outputMessages = transaction.out_messages;
-        if (!outputMessages || outputMessages.length === 0) {
-            return {
-                output: null,
-                transaction,
-            };
-        }
-        const externalMessages: QMessage[] = outputMessages.filter((x: QMessage) => {
-            return x.msg_type === QMessageType.extOut;
-        });
-        this.config.log('processRunMessage. Before messages parse');
-        const outputs = await Promise.all(externalMessages.map((x: QMessage) => {
-            return this.decodeOutputMessageBody({
-                abi: runMessage.abi,
-                bodyBase64: x.body || '',
-            });
-        }));
-        const resultOutput = outputs.find((x: TONContractDecodeMessageBodyResult) => {
-            return x.function.toLowerCase() === runMessage.functionName.toLowerCase();
-        });
-        this.config.log('processRunMessage. End');
-        return {
-            output: resultOutput ? resultOutput.output : null,
-            transaction,
-        };
     }
 
     /**

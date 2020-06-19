@@ -329,7 +329,6 @@ export type TONContractUnsignedRunMessage = {
 export type TONContractDeployMessage = {
     address: string,
     message: TONContractMessage,
-    creationTime?: number,
 }
 
 export type TONContractRunMessage = {
@@ -337,7 +336,6 @@ export type TONContractRunMessage = {
     abi: TONContractABI,
     functionName: string,
     message: TONContractMessage,
-    creationTime?: number,
 }
 
 export type TONContractCreateSignedMessageParams = {
@@ -444,11 +442,11 @@ export type TONContractDecodeMessageBodyParams = {
 
 export type TONContractRunResult = {
     output: any,
-    transaction: QTransaction
+    transaction: QTransaction,
+    fees: TONContractTransactionFees,
 }
 
 export type TONContractRunLocalResult = TONContractRunResult & {
-    fees?: any,
     account?: QAccount,
 }
 

@@ -100,7 +100,6 @@ export class TONClient implements TONModuleContext, ITONClient {
         if (!this._core) {
             if ((TONClient.core: any).coreCreateContext1) {
                 this._context = ((TONClient.core: any): TONClientCore).coreCreateContext();
-                console.log('>>>', this._context);
                 this._core = {
                     request: (
                         method: string,
@@ -111,7 +110,6 @@ export class TONClient implements TONModuleContext, ITONClient {
                     }
                 }
             } else {
-                console.log('>>>', 'legacy mode');
                 this._core = TONClient.core;
             }
         }
