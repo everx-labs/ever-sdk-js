@@ -4,12 +4,16 @@
 
 // @flow
 
-import { TONErrorCode, TONErrorSource } from '../src/TONClient';
-import { ABIVersions, nodeSe, tests } from './_/init-tests';
-import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
+import {TONErrorCode} from '../src/TONClient';
+import {ABIVersions, nodeSe, tests} from './_/init-tests';
+import {TONMnemonicDictionary} from '../src/modules/TONCryptoModule';
 
-const WalletContractPackage = tests.loadPackage('WalletContract');
-const HelloContractPackage = tests.loadPackage('Hello');
+async function loadPackages() {
+    return {
+        WalletContractPackage: await tests.loadPackage('WalletContract'),
+        HelloContractPackage: await tests.loadPackage('Hello'),
+    }
+}
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -49,8 +53,9 @@ async function expectErrorCode(code: number, f: () => Promise<void>) {
 test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = await tests.createClient({
         messageExpirationTimeout: 2000,
-        messageProcessingTimeout: 10000,      
+        messageProcessingTimeout: 10000,
     });
+    const { HelloContractPackage } = await loadPackages();
     const helloPackage = HelloContractPackage[abiVersion];
 
     let helloKeys = await crypto.ed25519Keypair();
@@ -181,6 +186,7 @@ test.each(ABIVersions)('runGet & runLocal errors (ABI %i)', async (abiVersion) =
     const { contracts, crypto } = tests.client;
     const saveTimeout = tests.client.config.data.waitForTimeout;
     tests.client.config.data.waitForTimeout = 5000;
+    const {HelloContractPackage} = await loadPackages();
     const helloPackage = HelloContractPackage[abiVersion];
 
     const helloKeys = await crypto.ed25519Keypair();
@@ -254,6 +260,7 @@ test.each(ABIVersions)('runGet & runLocal errors (ABI %i)', async (abiVersion) =
 
 test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
+    const {WalletContractPackage} = await loadPackages();
     const walletPackage = WalletContractPackage[abiVersion];
     const keys = await crypto.ed25519Keypair();
 
@@ -354,6 +361,7 @@ test('Test SDK Error 1013', async () => {
     }
     const { crypto, contracts } = await tests.createClient({});
     const helloKeys = await crypto.ed25519Keypair();
+    const {HelloContractPackage} = await loadPackages();
     const helloPackage = HelloContractPackage[2];
 
     const realDateNow = Date.now.bind(global.Date);
@@ -385,6 +393,7 @@ test('Test SDK Error 1013', async () => {
 
 test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
+    const {WalletContractPackage} = await loadPackages();
     const walletPackage = WalletContractPackage[abiVersion];
     let wrongKeys = {
         public: '',
@@ -545,6 +554,7 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
 
 test.each(ABIVersions)('Test SDK Errors 3000-3020 (ABI v%i)', async (abiVersion) => {
     const { contracts } = tests.client;
+    const {WalletContractPackage} = await loadPackages();
     const walletPackage = WalletContractPackage[abiVersion];
 
     const keyPair = {

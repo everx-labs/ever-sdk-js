@@ -18,7 +18,7 @@
 /* eslint-disable class-methods-use-this, no-use-before-define, no-undef */
 
 // Deprecated: TONClientCore v0.17.0
-import {Span, SpanContext, SpanOptions, Tracer} from "opentracing";
+import {Span, SpanContext} from "opentracing";
 
 export interface TONClientLibrary {
     request(

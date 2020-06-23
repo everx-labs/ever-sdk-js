@@ -1,11 +1,15 @@
 /*
  * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  */
-import { QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
-import { get_grams_from_giver } from './_/giver';
-import { ABIVersions, tests } from './_/init-tests';
+import {QTransactionProcessingStatus} from '../src/modules/TONContractsModule';
+import {get_grams_from_giver} from './_/giver';
+import {ABIVersions, tests} from './_/init-tests';
 
-const WalletContractPackage = tests.loadPackage('WalletContract');
+async function loadPackages() {
+    return {
+        WalletContractPackage: await tests.loadPackage('WalletContract'),
+    }
+}
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -117,6 +121,7 @@ const transactionWithAddresses = `
 
 test.each(ABIVersions)('Subscribe for transactions with addresses (ABIv%i)', async (abiVersion) => {
     const { contracts, queries, crypto } = tests.client;
+    const { WalletContractPackage } = await loadPackages();
     const walletPackage = WalletContractPackage[abiVersion];
     const walletKeys = await crypto.ed25519Keypair();
 
@@ -158,6 +163,7 @@ test.each(ABIVersions)('Subscribe for transactions with addresses (ABIv%i)', asy
 
 test.each(ABIVersions)('Subscribe for messages (ABI v%i)', async (abiVersion) => {
     const { contracts, queries, crypto } = tests.client;
+    const { WalletContractPackage } = await loadPackages();
     const walletPackage = WalletContractPackage[abiVersion];
     const docs = [];
     const subscription = (await queries.messages.subscribe({
