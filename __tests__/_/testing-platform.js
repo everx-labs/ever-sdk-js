@@ -158,14 +158,14 @@ async function initTONClient(tonClientClass) {
     });
 }
 
-async function loadContractPackage(name, version) {
+async function loadContractPackage(name, abiVersion) {
     const base = path.resolve(__dirname, '..', 'contracts');
-    const abi = path.resolve(base, `abi_v${version}`, `${name}.abi.json`);
-    const tvc = path.resolve(base, `abi_v${version}`, `${name}.tvc`);
+    const abi = path.resolve(base, `abi_v${abiVersion}`, `${name}.abi.json`);
+    const tvc = path.resolve(base, `abi_v${abiVersion}`, `${name}.tvc`);
     return {
         abi: JSON.parse(fs.readFileSync(abi, 'utf8')),
         imageBase64: fs.readFileSync(tvc).toString('base64'),
-    }
+    };
 }
 
 
