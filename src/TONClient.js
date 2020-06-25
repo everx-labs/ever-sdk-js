@@ -21,7 +21,11 @@ import TONCryptoModule from './modules/TONCryptoModule';
 /* eslint-disable class-methods-use-this, no-use-before-define */
 import TONQueriesModule from "./modules/TONQueriesModule";
 
-import type {TONClientCore, TONClientLibrary, TONModuleContext} from './TONModule';
+import type {
+    TONClientCoreLibrary,
+    TONClientCoreBridge,
+    TONModuleContext
+} from './TONModule';
 import {TONModule} from './TONModule';
 
 /**
@@ -40,7 +44,7 @@ type TONClientPlatform = {
     /**
      * Request creation of the client core
      */
-    createLibrary: () => Promise<TONClientLibrary>,
+    createLibrary: () => Promise<TONClientCoreLibrary>,
 };
 
 /**
@@ -61,7 +65,7 @@ export class TONClient implements TONModuleContext, ITONClient {
     queries: TONQueries;
     _queries: TONQueriesModule;
     _context: number;
-    _core: ?TONClientLibrary;
+    _coreBridge: ?TONClientCoreBridge;
 
     constructor() {
         this.modules = new Map();
@@ -71,7 +75,7 @@ export class TONClient implements TONModuleContext, ITONClient {
         this._queries = this.getModule(TONQueriesModule);
         this.queries = this._queries;
         this._context = 0;
-        this._core = null;
+        this._coreBridge = null;
     }
 
     /**
@@ -91,26 +95,34 @@ export class TONClient implements TONModuleContext, ITONClient {
      * @return {Promise<void>}
      */
     async setup(): Promise<void> {
-        if (!TONClient.core) {
-            if (!TONClient.clientPlatform) {
-                return;
+        const tryCreateLibrary = async () => {
+            const platform = TONClient.clientPlatform;
+            if (platform === null || platform === undefined) {
+                return null;
             }
-            TONClient.core = await TONClient.clientPlatform.createLibrary();
+            TONClient.coreLibrary = await platform.createLibrary();
+            return TONClient.coreLibrary;
+        };
+        const library = TONClient.coreLibrary || await tryCreateLibrary();
+        if (!library) {
+            return;
         }
-        if (!this._core) {
-            if ((TONClient.core: any).coreCreateContext1) {
-                this._context = ((TONClient.core: any): TONClientCore).coreCreateContext();
-                this._core = {
+        if (this._coreBridge === null || this._coreBridge === undefined) {
+            if (library.coreCreateContext) {
+                this._context = await new Promise((resolve) => library.coreCreateContext(resolve));
+                this._coreBridge = {
                     request: (
                         method: string,
                         paramsJson: string,
                         onResult: (resultJson: string, errorJson: string) => void,
                     ): void => {
-                        ((TONClient.core: any): TONClientCore).coreRequest(this._context, method, paramsJson, onResult);
+                        if (TONClient.coreLibrary) {
+                            TONClient.coreLibrary.coreRequest(this._context, method, paramsJson, onResult);
+                        }
                     }
                 }
             } else {
-                this._core = TONClient.core;
+                this._coreBridge = library;
             }
         }
         const modules: TONModule[] = [...this.modules.values()];
@@ -126,16 +138,19 @@ export class TONClient implements TONModuleContext, ITONClient {
      */
     async close(): Promise<void> {
         await this.queries.close();
-        if (this._context > 0) {
-            ((TONClient.core: any): TONClientCore).coreDestroyContext(this._context);
+        const library = TONClient.coreLibrary;
+        if (this._context > 0 && library !== null && library !== undefined) {
+            const context = this._context;
+            this._coreBridge = null;
             this._context = 0;
+            await new Promise(resolve => library.coreDestroyContext(context, resolve));
         }
     }
 
     // TONModuleContext
 
-    getCore(): ?TONClientLibrary {
-        return this._core;
+    getCoreBridge(): ?TONClientCoreBridge {
+        return this._coreBridge;
     }
 
     getModule<T>(ModuleClass: typeof TONModule): T {
@@ -232,7 +247,7 @@ export class TONClient implements TONModuleContext, ITONClient {
     // Internals
 
     static clientPlatform: ?TONClientPlatform = null;
-    static core: ?TONClientLibrary = null;
+    static coreLibrary: ?TONClientCoreLibrary = null;
 
     modules: Map<string, TONModule>;
 }

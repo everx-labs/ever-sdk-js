@@ -68,7 +68,8 @@ test('Run Get', async () => {
 function replaceBigIntsWithNonZeroFlags(fees: { [string]: any }) {
     Array.from(Object.entries(fees))
         .forEach(([key, value]) => {
-            fees[key] = BigInt(value || 0) !== BigInt(0);
+            const s = (value || '').toString();
+            fees[key] = s !== '' && s !== '0' && s !== '0x0';
         });
 }
 

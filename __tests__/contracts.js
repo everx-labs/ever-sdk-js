@@ -87,7 +87,6 @@ test('load', async () => {
             .toBeNull();
 
         await tests.get_grams_from_giver(walletAddress, undefined, span);
-
         const w: TONContractLoadResult = await contracts.load({
             address: walletAddress,
             includeImage: false,
@@ -819,11 +818,12 @@ test.each(ABIVersions)('test send boc (ABI v%i)', async (abiVersion) => {
 
     // send message without id - it should be computed inside
     await contracts.processDeployMessage({
-        address: message.address,
         message: {
+            address: message.address,
             messageBodyBase64: message.message.messageBodyBase64,
             expire: message.message.expire,
         },
+        address: message.address,
     });
 });
 

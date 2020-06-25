@@ -302,40 +302,43 @@ export type TONContractDeployResult = {
     transaction?: QTransaction,
 }
 
-export type TONContractUnsignedMessage = {
-    abi: TONContractABI,
-    unsignedBytesBase64: string,
-    bytesToSignBase64: string,
+// Messages
+
+export type TONContractMessage = {
+    messageBodyBase64: string,
+    address: string,
+    messageId?: string,
     expire?: number,
 }
 
-export type TONContractMessage = {
-    messageId?: string,
-    messageBodyBase64: string,
+export type TONContractUnsignedMessage = {
+    unsignedBytesBase64: string,
+    bytesToSignBase64: string,
+    abi: TONContractABI,
     expire?: number,
 }
 
 export type TONContractUnsignedDeployMessage = {
-    address: string,
     signParams: TONContractUnsignedMessage,
+    address: string,
 }
 
 export type TONContractUnsignedRunMessage = {
+    signParams: TONContractUnsignedMessage,
     address: string,
     functionName: string,
-    signParams: TONContractUnsignedMessage,
 }
 
 export type TONContractDeployMessage = {
-    address: string,
     message: TONContractMessage,
+    address: string,
 }
 
 export type TONContractRunMessage = {
+    message: TONContractMessage,
     address: string,
     abi: TONContractABI,
     functionName: string,
-    message: TONContractMessage,
 }
 
 export type TONContractCreateSignedMessageParams = {
@@ -699,7 +702,7 @@ export interface TONContracts {
 
     // Message processing
 
-    getMessageId(message: TONContractMessage): Promise<string>;
+    ensureMessageId(message: TONContractMessage): Promise<string>;
 
     sendMessage(
         params: TONContractMessage,

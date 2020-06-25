@@ -77,7 +77,7 @@ async function createClient(config: { accessKey?: string }): Promise<TONClient> 
 }
 
 async function done() {
-    console.time('Test contract self destruct time:');
+    console.time('Test contracts self destruct time:');
     for (const contract of tests.deployedContracts) {
         console.log(`Self destruct contract with address ${contract.address}`);
         try {

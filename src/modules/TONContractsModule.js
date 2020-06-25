@@ -355,11 +355,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             params.constructorHeader,
             retryIndex,
         );
-        const message: {
-            address: string,
-            messageId: string,
-            messageBodyBase64: string,
-        } = await this.requestCore('contracts.deploy.message', {
+        const message: TONContractMessage = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
             constructorHeader,
             constructorParams: params.constructorParams,
@@ -368,12 +364,9 @@ export default class TONContractsModule extends TONModule implements TONContract
             keyPair: params.keyPair,
             workchainId: params.workchainId,
         });
+        message.expire = constructorHeader?.expire;
         return {
-            message: {
-                messageId: message.messageId,
-                messageBodyBase64: message.messageBodyBase64,
-                expire: constructorHeader?.expire,
-            },
+            message,
             address: message.address,
         };
     }
@@ -397,6 +390,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             input: params.input,
             keyPair: params.keyPair,
         });
+        message.address = params.address;
         message.expire = header?.expire;
         return {
             address: params.address,
@@ -568,10 +562,14 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     // Message processing
 
-    async getMessageId(message: TONContractMessage): Promise<string> {
-        return message.messageId || (await this.getBocHash({
-            bocBase64: message.messageBodyBase64,
-        })).hash;
+    async ensureMessageId(message: TONContractMessage): Promise<string> {
+        return message.messageId || await (async () => {
+            const id = (await this.getBocHash({
+                bocBase64: message.messageBodyBase64,
+            })).hash;
+            message.messageId = id;
+            return id;
+        })();
     }
 
     async sendMessage(
@@ -587,7 +585,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             this.queries.dropServerTimeDelta();
             throw TONClientError.clockOutOfSync();
         }
-        const id = await this.getMessageId(params);
+        const id = await this.ensureMessageId(params);
         const idBase64 = Buffer.from(id, 'hex')
             .toString('base64');
         await this.queries.postRequests([
@@ -611,7 +609,6 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<QTransaction> {
         await this.sendMessage(message, parentSpan);
         const { transaction } = await this.waitForTransaction(
-            address || '',
             message,
             parentSpan,
             retryIndex,
@@ -627,9 +624,14 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
         abi: ?TONContractABI,
         functionName: ?string,
-    ): Promise<{ transaction: QTransaction, output: any, fees: TONContractTransactionFees }> {
-        const messageId = await this.getMessageId(message);
+    ): Promise<{
+        transaction: QTransaction,
+        output: any,
+        fees: TONContractTransactionFees
+    }> {
+        const messageId = await this.ensureMessageId(message);
         const config = this.config;
+        config.log('[waitForTransaction]', functionName, message);
         let processingTimeout = config.messageProcessingTimeout(retryIndex);
         const promises = [];
         const serverInfo = await this.queries.getServerInfo(parentSpan);
@@ -763,27 +765,27 @@ export default class TONContractsModule extends TONModule implements TONContract
                 });
             }
             const transactionNow = transaction.now || 0;
-            this.config.log('waitForTransaction. transaction received', {
+            this.config.log('[waitForTransaction]', 'TRANSACTION_RECEIVED', {
                 id: transaction.id,
                 blockId: transaction.block_id,
                 now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
             });
         } catch (error) {
-            this.config.log('waitForTransaction. Error recieved', error);
+            this.config.log('[waitForTransaction]', 'FAILED', error);
             if (TONClientError.isMessageExpired(error) ||
                 TONClientError.isClientError(error, TONClientError.code.TRANSACTION_WAIT_TIMEOUT)) {
                 throw await this.resolveDetailedError(
                     error,
                     message.messageBodyBase64,
                     Date.now(),
-                    address,
+                    message.address,
                 );
             } else {
                 throw error
             }
         }
         removeTypeName(transaction);
-        const { output, fees } = await this.processTransaction(address, transaction, abi, functionName);
+        const { output, fees } = await this.processTransaction(message.address, transaction, abi, functionName);
         return {
             transaction,
             output,
@@ -887,16 +889,15 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<TONContractDeployResult> {
-        const { transaction } = await this.waitForTransaction(
-            deployMessage.address,
+        const result = await this.waitForTransaction(
             deployMessage.message,
             parentSpan,
             retryIndex,
         );
         return {
+            ...result,
             address: deployMessage.address,
             alreadyDeployed: false,
-            transaction,
         };
     }
 
@@ -917,7 +918,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractRunResult> {
         return this.waitForTransaction(
-            runMessage.address,
             runMessage.message,
             parentSpan,
             retryIndex,
