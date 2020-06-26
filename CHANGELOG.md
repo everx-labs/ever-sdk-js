@@ -1,6 +1,16 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.25.0 - Jun 26, 2020
+
+### New
+- `TONContractMessage` includes the `address` field (equals to the `dst`)
+- `sendMessage` returns an instance of `TONMessageProcessingState` that can be used in resumable transaction waiting.
+- `watForTransaction` accepts new parameter `processingState` that can helps to resume interrupted transaction waiting.
+- `TONClientContract` includes new optional `data` field `resumeProcessingState` that can be passed to the `waitForTransaction` to resume interrupted waiting.
+- Supports for core contexts.
+- Test suite have refactored and can be easy adopted to run in several Js targets.
+
 ## 0.24.0 - Jun 3, 2020
 ### New
 - Detailed errors produced by core library.
