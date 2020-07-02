@@ -47,10 +47,19 @@ async function expectErrorCode(code: number, f: () => Promise<void>) {
 }
 
 test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
-    const { contracts, crypto } = await tests.createClient({
-        messageExpirationTimeout: 2000,
-        messageProcessingTimeout: 10000,      
-    });
+    let config = {};
+    if (abiVersion == 1) {
+        config = {
+            messageProcessingTimeout: 10000,      
+        }
+    } else {
+        config = {
+            messageExpirationTimeout: 2000
+        };
+    };
+
+    const { contracts, crypto } = await tests.createClient(config);
+    
     const helloPackage = HelloContractPackage[abiVersion];
 
     let helloKeys = await crypto.ed25519Keypair();
