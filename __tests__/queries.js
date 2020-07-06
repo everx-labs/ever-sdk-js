@@ -1,9 +1,10 @@
 /*
  * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  */
-import { QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
+import { QMessageType, QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
 import { get_grams_from_giver } from './_/giver';
 import { ABIVersions, tests } from './_/init-tests';
+import type { TONContractRunResult } from '../types';
 
 const WalletContractPackage = tests.loadPackage('WalletContract');
 
@@ -155,11 +156,12 @@ test.each(ABIVersions)('Subscribe for transactions with addresses (ABIv%i)', asy
     expect(transactions.length)
         .toBeGreaterThan(0);
 });
-
+jest.setTimeout(300000);
 test.each(ABIVersions)('Should received 1 message in subscription', async (abiVersion) => {
     const { contracts, queries, crypto } = tests.client;
     const walletPackage = WalletContractPackage[abiVersion];
     const walletKeys = await crypto.ed25519Keypair();
+
 
     const message = await contracts.createDeployMessage({
         package: walletPackage,
@@ -175,6 +177,7 @@ test.each(ABIVersions)('Should received 1 message in subscription', async (abiVe
         keyPair: walletKeys,
     })).address;
     console.log(walletAddressHex);
+    console.log(walletKeys);
 
     const docs = [];
     const subscription = (await queries.messages.subscribe({
@@ -202,9 +205,20 @@ test.each(ABIVersions)('Should received 1 message in subscription', async (abiVe
         keyPair: walletKeys,
     };
     const result: TONContractRunResult = await contracts.run(params, undefined);
-
+    for (const msg of (result.transaction.out_messages || [])) {
+        if (msg.msg_type === QMessageType.internal) {
+            console.log(`Wait for ${msg.id || 'Empty ID'}`);
+            await queries.transactions.waitFor(
+                {
+                    in_msg: { eq: msg.id },
+                    status: { eq: QTransactionProcessingStatus.finalized },
+                },
+                'lt',
+            );
+        }
+    }
     expect(docs.length)
-        .toEqual(1);
+        .toEqual(2);
     subscription.unsubscribe();
 });
 
