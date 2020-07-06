@@ -156,6 +156,58 @@ test.each(ABIVersions)('Subscribe for transactions with addresses (ABIv%i)', asy
         .toBeGreaterThan(0);
 });
 
+test.each(ABIVersions)('Should received 1 message in subscription', async (abiVersion) => {
+    const { contracts, queries, crypto } = tests.client;
+    const walletPackage = WalletContractPackage[abiVersion];
+    const walletKeys = await crypto.ed25519Keypair();
+
+    const message = await contracts.createDeployMessage({
+        package: walletPackage,
+        constructorParams: {},
+        keyPair: walletKeys,
+    });
+
+    await get_grams_from_giver(message.address);
+
+    const walletAddressHex = (await contracts.deploy({
+        package: walletPackage,
+        constructorParams: {},
+        keyPair: walletKeys,
+    })).address;
+    console.log(walletAddressHex);
+
+    const docs = [];
+    const subscription = (await queries.messages.subscribe({
+        filter: {
+            src: { eq: walletAddressHex },
+            dst: { eq: '-1:3333333333333333333333333333333333333333333333333333333333333333' },
+        },
+        result: 'id created_at',
+        onDocEvent(e, doc) {
+            console.log(e);
+            console.log(doc);
+            docs.push(doc);
+        },
+    }));
+
+    const params = {
+        address: walletAddressHex,
+        functionName: 'sendTransaction',
+        abi: walletPackage.abi,
+        input: {
+            dest: '-1:3333333333333333333333333333333333333333333333333333333333333333',
+            value: 100_000_000,
+            bounce: false,
+        },
+        keyPair: walletKeys,
+    };
+    const result: TONContractRunResult = await contracts.run(params, undefined);
+
+    expect(docs.length)
+        .toEqual(1);
+    subscription.unsubscribe();
+});
+
 test.each(ABIVersions)('Subscribe for messages (ABI v%i)', async (abiVersion) => {
     const { contracts, queries, crypto } = tests.client;
     const walletPackage = WalletContractPackage[abiVersion];
