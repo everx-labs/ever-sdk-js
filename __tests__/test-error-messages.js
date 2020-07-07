@@ -312,7 +312,7 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
     await expectError(
         2,
         'client',
-        'Invalid params: invalid type: null, expected struct KeyPair',
+        'Invalid parameters: invalid type: null, expected struct KeyPair',
         async () => {
             await contracts.createDeployMessage({
                 package: walletPackage,
@@ -323,7 +323,7 @@ test.each(ABIVersions)('Test SDK Errors 1-3 (ABI v%i)', async (abiVersion) => {
         },
     );
 
-    await expectError(2, 'client', 'Invalid params: missing field `public`', async () => {
+    await expectError(2, 'client', 'Invalid parameters: missing field `public`', async () => {
         await contracts.createDeployMessage({
             package: walletPackage,
             constructorParams: {},

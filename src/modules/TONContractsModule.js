@@ -612,6 +612,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             message,
             parentSpan,
             retryIndex,
+            undefined,
             abi || null,
             functionName || null,
         );
@@ -622,6 +623,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         message: TONContractMessage,
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
+        infiniteWait?: boolean, // default = true
         abi: ?TONContractABI,
         functionName: ?string,
     ): Promise<{
@@ -888,15 +890,18 @@ export default class TONContractsModule extends TONModule implements TONContract
         deployMessage: TONContractDeployMessage,
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
+        infiniteWait?: boolean,
     ): Promise<TONContractDeployResult> {
+        const message = deployMessage.message;
         const result = await this.waitForTransaction(
-            deployMessage.message,
+            message,
             parentSpan,
             retryIndex,
+            infiniteWait,
         );
         return {
             ...result,
-            address: deployMessage.address,
+            address: message.address,
             alreadyDeployed: false,
         };
     }
@@ -916,11 +921,13 @@ export default class TONContractsModule extends TONModule implements TONContract
         runMessage: TONContractRunMessage,
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
+        infiniteWait?: boolean,
     ): Promise<TONContractRunResult> {
         return this.waitForTransaction(
             runMessage.message,
             parentSpan,
             retryIndex,
+            infiniteWait,
             runMessage.abi,
             runMessage.functionName,
         );
