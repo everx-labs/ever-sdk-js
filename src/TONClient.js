@@ -279,8 +279,9 @@ export const TONErrorCode = {
     ACCOUNT_BALANCE_TOO_LOW: 1016,
     ACCOUNT_FROZEN_OR_DELETED: 1017,
 
-    CONTRACT_EXECUTION_FAILED: 3025,
+    // Contracts
 
+    CONTRACT_EXECUTION_FAILED: 3025,
 };
 
 export const TONContractExitCode = {
@@ -298,10 +299,10 @@ export class TONClientError {
     code: number;
     data: any;
 
-    constructor(message: string, code: number, source: string, data?: any) {
+    constructor(message: string, code: number, source?: string, data?: any) {
         this.message = message;
         this.code = code;
-        this.source = source;
+        this.source = source || TONErrorSource.CLIENT;
         this.data = data;
     }
 
@@ -497,6 +498,19 @@ export class TONClientError {
         );
     }
 
+    static noBlocks(workchain: number) {
+        const workchainName = workchain === -1 ? 'masterchain' : `workchain ${workchain}`;
+        return new TONClientError(
+            `"No blocks for ${workchainName} found".`,
+            TONErrorCode.NETWORK_SILENT,
+            TONErrorSource.CLIENT,
+        );
+    }
+
+    static invalidBlockchain(message: string) {
+        return new TONClientError(message, TONErrorCode.NETWORK_SILENT);
+    }
+
     static isMessageExpired(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
     }
@@ -504,4 +518,5 @@ export class TONClientError {
     static isWaitForTimeout(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT);
     }
+
 }

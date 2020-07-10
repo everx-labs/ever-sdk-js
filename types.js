@@ -1,7 +1,7 @@
 // @flow
 
-import { Span, SpanContext } from 'opentracing';
-import type { Request } from './src/modules/TONQueriesModule';
+import {Span, SpanContext} from 'opentracing';
+import type {Request} from './src/modules/TONQueriesModule';
 
 export type TONConfigData = {
     servers: string[],
@@ -311,6 +311,11 @@ export type TONContractMessage = {
     expire?: number,
 }
 
+export type TONMessageProcessingState = {
+    lastBlockId: string,
+    sentTime: number,
+};
+
 export type TONContractUnsignedMessage = {
     unsignedBytesBase64: string,
     bytesToSignBase64: string,
@@ -442,6 +447,15 @@ export type TONContractDecodeMessageBodyParams = {
     bodyBase64: string,
     internal?: boolean,
 }
+
+export type TONWaitForTransactionParams = {
+    message: TONContractMessage,
+    processingState: TONMessageProcessingState,
+    infiniteWait?: boolean, // default = true
+    abi?: TONContractABI,
+    functionName?: string,
+    parentSpan?: (Span | SpanContext),
+};
 
 export type TONContractRunResult = {
     output: any,
@@ -593,13 +607,44 @@ export type QMessage = {
 }
 
 export type InMsg = {
-    transaction_id?: string
+    msg_id?: string,
+    transaction_id?: string,
 }
+
+export type QShardHash = {
+    workchain_id: number,
+    shard: string,
+    descr?: {
+        seq_no: number,
+        reg_mc_seqno: number,
+        start_lt: string,
+        end_lt: string,
+        root_hash: string,
+        file_hash: string,
+        before_split: boolean,
+        before_merge: boolean,
+        want_split: boolean,
+        want_merge: boolean,
+        nx_cc_updated: boolean,
+        flags: number,
+        next_catchain_seqno: number,
+        next_validator_shard: string,
+        min_ref_mc_seqno: number,
+        gen_utime: number,
+        split_type: number,
+        split: number,
+        fees_collected: string,
+        funds_created: string,
+    },
+};
 
 export type QBlock = {
     id?: string,
     tr_count?: number,
-    in_msg_descr?: InMsg[]
+    in_msg_descr?: InMsg[],
+    workchain_id?: number,
+    shard?: string,
+    gen_utime?: number,
 }
 
 export interface TONContracts {
@@ -707,18 +752,22 @@ export interface TONContracts {
     sendMessage(
         params: TONContractMessage,
         parentSpan?: (Span | SpanContext)
-    ): Promise<string>;
+    ): Promise<TONMessageProcessingState>;
+
+    waitForTransaction(params: TONWaitForTransactionParams): Promise<TONContractRunResult>;
 
     waitForDeployTransaction(
         deployMessage: TONContractDeployMessage,
+        processingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
-        retryIndex?: number,
+        infiniteWait?: boolean,
     ): Promise<TONContractDeployResult>;
 
     waitForRunTransaction(
         runMessage: TONContractRunMessage,
+        processingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
-        retryIndex?: number,
+        infiniteWait?: boolean,
     ): Promise<TONContractRunResult>;
 
     processMessage(
@@ -791,7 +840,7 @@ export type DocEvent = (changeType: string, doc: any) => void;
 
 export type OrderBy = {
     path: string,
-    sort: 'ASC' | 'DESC'
+    direction: 'ASC' | 'DESC'
 }
 
 export type Subscription = {

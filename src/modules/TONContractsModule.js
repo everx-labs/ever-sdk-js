@@ -50,13 +50,17 @@ import type {
     TONContractRunGetParams,
     TONContractRunGetResult,
     TONContractRunMessageLocalParams,
-    TONContractRunLocalResult, TONContractTransactionFees,
+    TONContractRunLocalResult,
+    TONContractTransactionFees,
+    TONWaitForTransactionParams,
+    QShardHash,
+    TONMessageProcessingState,
 } from '../../types';
 
 import {TONClientError, TONContractExitCode, TONErrorCode} from '../TONClient';
 import {TONModule} from '../TONModule';
 import TONConfigModule from './TONConfigModule';
-import TONQueriesModule from './TONQueriesModule';
+import TONQueriesModule, {MAX_TIMEOUT} from './TONQueriesModule';
 
 export const TONAddressStringVariant = {
     AccountId: 'AccountId',
@@ -190,6 +194,8 @@ export const QBounceType = {
     ok: 2,
 };
 
+const MASTERCHAIN_ID = -1;
+
 const EXTRA_TRANSACTION_WAITING_TIME = 10000;
 const BLOCK_TRANSACTION_WAITING_TIME = 5000;
 
@@ -246,8 +252,12 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractLoadResult> {
         const accounts: QAccount[] = await this.queries.accounts.query({
-            id: { eq: params.address },
-        }, 'balance', undefined, undefined, undefined, parentSpan);
+            filter: {
+                id: { eq: params.address },
+            },
+            result: 'balance',
+            parentSpan,
+        });
         if (accounts && accounts.length > 0) {
             return {
                 id: params.address,
@@ -313,7 +323,9 @@ export default class TONContractsModule extends TONModule implements TONContract
             if (!address) {
                 throw TONClientError.addressRequiredForRunLocal();
             }
-            const account: any = await this.getAccount(address, false);
+            const account: any = await this.getAccount(address, false, {
+                timeout: this.config.waitForTimeout(),
+            });
             if (!account.code) {
                 throw TONClientError.accountCodeMissing(address, account.balance);
             }
@@ -575,7 +587,7 @@ export default class TONContractsModule extends TONModule implements TONContract
     async sendMessage(
         params: TONContractMessage,
         parentSpan?: (Span | SpanContext),
-    ): Promise<string> {
+    ): Promise<TONMessageProcessingState> {
         const expire = params.expire;
         if (expire && (Date.now() > expire * 1000)) {
             throw TONClientError.sendNodeRequestFailed('Message already expired');
@@ -585,6 +597,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             this.queries.dropServerTimeDelta();
             throw TONClientError.clockOutOfSync();
         }
+        const start = Date.now();
+        let lastBlockId = await this.findLastShardBlock(params.address);
         const id = await this.ensureMessageId(params);
         const idBase64 = Buffer.from(id, 'hex')
             .toString('base64');
@@ -595,7 +609,10 @@ export default class TONContractsModule extends TONModule implements TONContract
             },
         ], parentSpan);
         this.config.log('sendMessage. Request posted', id);
-        return id;
+        return {
+            lastBlockId,
+            sentTime: Math.round(Date.now() / 1000),
+        };
     }
 
     async processMessage(
@@ -607,30 +624,229 @@ export default class TONContractsModule extends TONModule implements TONContract
         abi?: TONContractABI,
         functionName?: string,
     ): Promise<QTransaction> {
-        await this.sendMessage(message, parentSpan);
-        const { transaction } = await this.waitForTransaction(
+        const processingState = await this.sendMessage(message, parentSpan);
+        const { transaction } = await this.waitForTransaction({
             message,
+            processingState,
             parentSpan,
-            retryIndex,
-            undefined,
-            abi || null,
-            functionName || null,
-        );
+            abi,
+            functionName,
+        });
         return transaction;
     }
 
-    async waitForTransaction(
-        message: TONContractMessage,
-        parentSpan?: (Span | SpanContext),
-        retryIndex?: number,
-        infiniteWait?: boolean, // default = true
-        abi: ?TONContractABI,
-        functionName: ?string,
-    ): Promise<{
-        transaction: QTransaction,
-        output: any,
-        fees: TONContractTransactionFees
-    }> {
+
+    async findLastBlock(chain: number, result: string, additionalFilter?: any): Promise<?any> {
+        const blocks = await this.queries.blocks.query({
+            filter: { workchain_id: { eq: chain }, ...(additionalFilter || {}) },
+            result,
+            orderBy: [
+                { path: 'seq_no', direction: "DESC" }
+            ],
+            limit: 1,
+        });
+        return blocks.length > 0 ? blocks[0] : null;
+    }
+
+    async findMatchingShard(shards: QShardHash[], address: string): Promise<?QShardHash> {
+        return this.requestCore('contracts.find.shard', {
+            shards,
+            address,
+        });
+    }
+
+    async findLastShardBlock(address: string): Promise<string> {
+        const addressParts = address.split(':');
+        const workchain = addressParts.length > 1 ? Number.parseInt(addressParts[0]) : 0;
+
+
+        // if account resides in master chain then starting point is last master chain block
+        // generated before message was sent
+        const masterchainLastBlock = await this.findLastBlock(
+            MASTERCHAIN_ID,
+            'id master { shard_hashes { workchain_id shard descr { root_hash } } }',
+        );
+
+        // if account resides in masterchain then starting point is last masterchain block
+        if (workchain === MASTERCHAIN_ID) {
+            if (!masterchainLastBlock) {
+                throw TONClientError.noBlocks(MASTERCHAIN_ID);
+            }
+            return masterchainLastBlock.id;
+        }
+
+        // if account is from other chains then starting point is last account's shard block
+        // To obtain it we take masterchain block to get shards configuration and select matching shard
+        if (!masterchainLastBlock) {
+
+            // Node SE case - no masterchain, no sharding. Check that only one shard
+            let workchainLastBlock = await this.findLastBlock(workchain, 'after_merge shard');
+            if (!workchainLastBlock) {
+                throw TONClientError.noBlocks(workchain);
+            }
+
+            // if workchain is sharded then it is not Node SE and masterchain blocks missing is error
+            if (workchainLastBlock.after_merge || workchainLastBlock.shard !== '8000000000000000') {
+                throw TONClientError.noBlocks(MASTERCHAIN_ID);
+            }
+
+            // Take last block by seq_no
+            workchainLastBlock = await this.findLastBlock(workchain, 'id', {
+                shard: { eq: '8000000000000000' },
+            });
+            if (!workchainLastBlock) {
+                throw TONClientError.invalidBlockchain('No starting Node SE block found');
+            }
+            return workchainLastBlock.id;
+        }
+
+        const shards: ?QShardHash[] = masterchainLastBlock?.master?.shard_hashes;
+        if (!shards || shards.length === 0) {
+            throw TONClientError.invalidBlockchain('No `shard_hashes` field in masterchain block');
+        }
+        const shardBlock = await this.findMatchingShard(shards, address);
+        const root_hash = shardBlock?.descr?.root_hash;
+        if (!root_hash) {
+            throw TONClientError.invalidBlockchain('No `root_hash` field in shard descr');
+        }
+        return root_hash;
+
+    }
+
+    async checkShardMatch(block: QBlock, address: string): Promise<boolean> {
+        return !!(await this.findMatchingShard([{
+            workchain_id: block.workchain_id || 0,
+            shard: block.shard || '',
+        }], address));
+    }
+
+    async waitNextBlock(current: string, address: string, timeout?: number): Promise<QBlock> {
+        const block = await this.queries.blocks.waitFor({
+            filter: {
+                prev_ref: {
+                    root_hash: { eq: current }
+                }
+            },
+            result: BLOCK_FIELDS,
+            timeout,
+        });
+
+        if (block?.after_split && !(await this.checkShardMatch(block, address))) {
+            return this.queries.blocks.waitFor({
+                filter: {
+                    id: { ne: block.id },
+                    prev_ref: {
+                        root_hash: { eq: current }
+                    }
+                },
+                result: BLOCK_FIELDS,
+                timeout
+            });
+        }
+        return block;
+    }
+
+    async waitForTransaction(params: TONWaitForTransactionParams): Promise<TONContractRunResult> {
+        // const legacyStart = Date.now();
+        // const result = await this.legacyWaitForTransaction(params);
+        // console.log('>>>', `Legacy wait for a: ${Date.now() - legacyStart} ms`);
+        // return result;
+
+        const timeReport = ['Modern time report:'];
+
+        const totalStart = Date.now();
+        const expire = params.message.expire || 0;
+        const msgId = await this.ensureMessageId(params.message);
+        const address = params.message.address;
+        const stopTime = expire
+            || Math.round((Date.now() + this.config.messageProcessingTimeout()) / 1000);
+
+        const processing = { ...params.processingState };
+        let transaction = null;
+        let addTimeout = this.config.messageProcessingTimeout();
+        while (true) {
+            const now = Date.now();
+            const timeout = Math.max(stopTime, now) - now + addTimeout;
+            let block: QBlock;
+            try {
+                const start = Date.now();
+                block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
+                timeReport.push(`block received for a: ${Date.now() - start} ms`);
+            } catch (error) {
+                if (params.infiniteWait) {
+                    continue;
+                }
+                throw TONClientError.networkSilent({
+                    msgId,
+                    blockId: processing.lastBlockId,
+                    timeout,
+                    state: processing,
+                    expire,
+                    sendTime: processing.sentTime,
+                });
+            }
+
+            processing.lastBlockId = block.id || '';
+
+            for (const inMsg of (block.in_msg_descr || [])) {
+                const messageId = inMsg.msg_id;
+                if (messageId) {
+                    const transactionId = inMsg.transaction_id;
+                    if (!transactionId) {
+                        throw TONClientError.invalidBlockchain('No field `transaction_id` in block');
+                    }
+                    const trStart = Date.now();
+                    transaction = await this.queries.transactions.waitFor({
+                        filter: { id: { eq: transactionId } },
+                        result: TRANSACTION_FIELDS_ORDINARY,
+                        timeout: MAX_TIMEOUT,
+                    });
+                    timeReport.push(`transaction received for a: ${Date.now() - trStart} ms`);
+                    break;
+                }
+            }
+            if (transaction) {
+                break;
+            }
+
+            if ((block.gen_utime || 0) > stopTime) {
+                if (expire) {
+                    throw TONClientError.messageExpired({
+                        msgId,
+                        sendTime: processing.sentTime,
+                        expire: stopTime,
+                        blockTime: block.gen_utime,
+                        blockId: processing.lastBlockId,
+                    });
+                }
+                throw TONClientError.transactionWaitTimeout({
+                    msgId,
+                    sendTime: processing.sentTime,
+                    timeout,
+                    state: processing,
+                });
+            }
+        }
+
+        if (!transaction) {
+            throw TONClientError.internalError('Unreachable code');
+        }
+
+        timeReport.push(`total waiting time: ${Date.now() - totalStart} ms`);
+
+        console.log('>>> time report:');
+        console.log(timeReport.join('\n'));
+        return this.processTransaction(
+            address,
+            transaction,
+            params.abi,
+            params.functionName
+        );
+    }
+
+    async legacyWaitForTransaction(params: TONWaitForTransactionParams): Promise<TONContractRunResult> {
+        const { message, abi, functionName, parentSpan } = params;
+        const retryIndex = 1;
         const messageId = await this.ensureMessageId(message);
         const config = this.config;
         config.log('[waitForTransaction]', functionName, message);
@@ -800,14 +1016,18 @@ export default class TONContractsModule extends TONModule implements TONContract
         transaction: QTransaction,
         abi: ?TONContractABI,
         functionName: ?string,
-    ): Promise<{ output: any, fees: TONContractTransactionFees }> {
+    ): Promise<TONContractRunResult> {
         try {
-            return await this.requestCore('contracts.process.transaction', {
+            const result = await this.requestCore('contracts.process.transaction', {
                 transaction,
                 abi: abi,
                 functionName: functionName,
                 address,
             });
+            return {
+                transaction,
+                ...result,
+            };
         } catch (error) {
             const accounts = await this.queries.accounts.query({
                 filter: { id: { eq: address } },
@@ -867,38 +1087,34 @@ export default class TONContractsModule extends TONModule implements TONContract
     }
 
     async processDeployMessage(
-        params: TONContractDeployMessage,
+        message: TONContractDeployMessage,
         parentSpan?: (Span | SpanContext),
         retryIndex?: number,
     ): Promise<TONContractDeployResult> {
-        this.config.log('processDeployMessage', params);
-        if (await this.isDeployed(params.address, parentSpan)) {
+        this.config.log('processDeployMessage', message);
+        if (await this.isDeployed(message.address, parentSpan)) {
             return {
-                address: params.address,
+                address: message.address,
                 alreadyDeployed: true,
             };
         }
-        await this.sendMessage(params.message, parentSpan);
-        return this.waitForDeployTransaction(
-            params,
-            parentSpan,
-            retryIndex,
-        );
+        const processingState = await this.sendMessage(message.message, parentSpan);
+        return this.waitForDeployTransaction(message, processingState, parentSpan);
     }
 
     async waitForDeployTransaction(
         deployMessage: TONContractDeployMessage,
+        processingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
-        retryIndex?: number,
         infiniteWait?: boolean,
     ): Promise<TONContractDeployResult> {
         const message = deployMessage.message;
-        const result = await this.waitForTransaction(
+        const result = await this.waitForTransaction({
             message,
+            processingState,
             parentSpan,
-            retryIndex,
             infiniteWait,
-        );
+        });
         return {
             ...result,
             address: message.address,
@@ -910,27 +1126,26 @@ export default class TONContractsModule extends TONModule implements TONContract
     async processRunMessage(
         runMessage: TONContractRunMessage,
         parentSpan?: (Span | SpanContext),
-        retryIndex?: number,
     ): Promise<TONContractRunResult> {
         this.config.log('processRunMessage', runMessage);
-        await this.sendMessage(runMessage.message, parentSpan);
-        return this.waitForRunTransaction(runMessage, parentSpan, retryIndex);
+        const processingState = await this.sendMessage(runMessage.message, parentSpan);
+        return this.waitForRunTransaction(runMessage, processingState, parentSpan);
     }
 
     async waitForRunTransaction(
         runMessage: TONContractRunMessage,
+        processingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
-        retryIndex?: number,
         infiniteWait?: boolean,
     ): Promise<TONContractRunResult> {
-        return this.waitForTransaction(
-            runMessage.message,
+        return this.waitForTransaction({
+            message: runMessage.message,
+            processingState,
             parentSpan,
-            retryIndex,
             infiniteWait,
-            runMessage.abi,
-            runMessage.functionName,
-        );
+            abi: runMessage.abi,
+            functionName: runMessage.functionName,
+        });
     }
 
     /**
@@ -1108,8 +1323,8 @@ export default class TONContractsModule extends TONModule implements TONContract
                     alreadyDeployed: true,
                 };
             }
-            await this.sendMessage(deployMessage.message, parentSpan);
-            return this.waitForDeployTransaction(deployMessage, parentSpan, retryIndex);
+            const processingState = await this.sendMessage(deployMessage.message, parentSpan);
+            return this.waitForDeployTransaction(deployMessage, processingState, parentSpan);
         });
     }
 
@@ -1121,8 +1336,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         this.config.log('Run start');
         return this.retryCall(async (retryIndex) => {
             const runMessage = await this.createRunMessage(params, retryIndex);
-            await this.sendMessage(runMessage.message, parentSpan);
-            return this.waitForRunTransaction(runMessage, parentSpan, retryIndex);
+            const processingState = await this.sendMessage(runMessage.message, parentSpan);
+            return this.waitForRunTransaction(runMessage, processingState, parentSpan);
         });
     }
 
@@ -1255,3 +1470,49 @@ const transactionDetails = `
         value
     }
    `;
+
+const BLOCK_FIELDS = `
+    id
+    gen_utime
+    after_split
+    workchain_id
+    shard
+    in_msg_descr {
+        msg_id
+        transaction_id
+    }
+`;
+
+const TRANSACTION_FIELDS_ORDINARY = `
+    id
+    aborted
+    compute {
+        skipped_reason
+        exit_code
+        success
+        gas_fees
+    }
+    storage {
+       status_change
+       storage_fees_collected
+    }
+    action {
+        success
+        valid
+        no_funds
+        result_code
+        total_fwd_fees
+        total_action_fees
+    }
+    in_msg
+    now
+    out_msgs
+    out_messages {
+        id
+        body
+        msg_type
+        value
+    }
+    status
+    total_fees
+`;
