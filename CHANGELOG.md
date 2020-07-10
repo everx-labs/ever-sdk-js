@@ -1,7 +1,7 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.25.0 - Jun 26, 2020
+## 0.25.0 - Jul 8, 2020
 
 ### New
 - `TONContractMessage` includes the `address` field (equals to the `dst`)
