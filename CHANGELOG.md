@@ -1,6 +1,13 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.25.0 - Jul 8, 2020
+
+### New
+- `TONContractMessage` includes the `address` field (equals to the `dst`)
+- Support for core contexts.
+- Test suite have been refactored and can be easily adopted to run on several Js targets.
+
 ## 0.24.0 - Jun 3, 2020
 ### New
 - Detailed errors produced by core library.

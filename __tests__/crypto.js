@@ -49,6 +49,7 @@ test('crypto', async () => {
     expect(result5.public.length).toEqual(64);
     expect(result5.secret.length).toEqual(64);
     expect(result5.public).not.toEqual(result5.secret);
+
     // sha
 
     const hex1 = await crypto.sha512({ text: 'Message to hash with sha 512' });

@@ -16,18 +16,21 @@ import {
 } from '../src/TONClient';
 
 
-import type {TONContractABI, TONContractLoadResult, TONKeyPairData} from '../types';
-import {bv} from './_/binaries';
+import type {TONContractLoadResult} from '../types';
 import {version} from '../package.json';
 import {ABIVersions, nodeSe, tests} from './_/init-tests';
 
-const CheckInitParamsPackage = tests.loadPackage('CheckInitParams');
-const WalletContractPackage = tests.loadPackage('WalletContract');
-const HelloContractPackage = tests.loadPackage('Hello');
-const SubscriptionContractPackage = tests.loadPackage('Subscription');
-const SetCodePackage = tests.loadPackage('Setcode');
-const SetCode2Package = tests.loadPackage('Setcode2');
-const EventsPackage = tests.loadPackage('Events');
+async function loadPackages() {
+    return {
+        CheckInitParamsPackage: await tests.loadPackage('CheckInitParams'),
+        WalletContractPackage: await tests.loadPackage('WalletContract'),
+        HelloContractPackage: await tests.loadPackage('Hello'),
+        SubscriptionContractPackage: await tests.loadPackage('Subscription'),
+        SetCodePackage: await tests.loadPackage('Setcode'),
+        SetCode2Package: await tests.loadPackage('Setcode2'),
+        EventsPackage: await tests.loadPackage('Events'),
+    }
+}
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -68,7 +71,6 @@ test('Test versions compatibility', async () => {
         .toEqual(ver_builtin.split('.')[0]);
     console.log(
         `Client version ${version} uses compatible binaries version: ${ver_builtin}`,
-        `\n(requested version to download: ${bv})`,
     );
 });
 
@@ -85,7 +87,6 @@ test('load', async () => {
             .toBeNull();
 
         await tests.get_grams_from_giver(walletAddress, undefined, span);
-
         const w: TONContractLoadResult = await contracts.load({
             address: walletAddress,
             includeImage: false,
@@ -119,6 +120,7 @@ test('out of sync', async () => {
 test.each(ABIVersions)('Test hello contract from docs.ton.dev (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
+    const { HelloContractPackage } = await loadPackages();
     const helloPackage = HelloContractPackage[abiVersion];
     const contractData = await tests.deploy_with_giver({
         package: helloPackage,
@@ -160,6 +162,7 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
     const { contracts, crypto } = tests.client;
     await tests.client.trace('tests.contracts.run-aborted-transaction', async (span: Span) => {
         const keys = await crypto.ed25519Keypair();
+        const { WalletContractPackage } = await loadPackages();
         const walletPackage = WalletContractPackage[abiVersion];
         const address = await tests.deploy_with_giver({
             package: walletPackage,
@@ -215,6 +218,7 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
 test.each(ABIVersions)('filterOutput (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
+    const { EventsPackage } = await loadPackages();
     const eventsPackage = EventsPackage[abiVersion];
     const deployed = await tests.deploy_with_giver({
         package: eventsPackage,
@@ -254,6 +258,7 @@ test('External Signing on ABI v1', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
+    const { EventsPackage } = await loadPackages();
     const eventsPackage = EventsPackage[1];
     eventsPackage.abi.setTime = false;
 
@@ -308,6 +313,7 @@ test('External Signing on ABI v1', async () => {
 test('External Signing on ABI v2', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
+    const { EventsPackage } = await loadPackages();
     const eventsPackage = EventsPackage[2];
     const deployParams = {
         package: eventsPackage,
@@ -365,6 +371,7 @@ test('Should change InitState of contract', async () => {
     jest.setTimeout(2000000);
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
+    const { CheckInitParamsPackage } = await loadPackages();
     const walletPackage = CheckInitParamsPackage[2];
 
     const initParams1 = {
@@ -488,6 +495,7 @@ test.each(ABIVersions)('testSetCode (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
+    const { SetCodePackage, SetCode2Package } = await loadPackages();
     const setCodePackage = SetCodePackage[abiVersion];
     const setCode2Package = SetCode2Package[abiVersion];
 
@@ -531,6 +539,7 @@ test.each(ABIVersions)('testSetCode (ABI v%i)', async (abiVersion) => {
 test.each(ABIVersions)('testRunBody (ABI v%i)', async (abiVersion) => {
     const { contracts } = tests.client;
 
+    const { SubscriptionContractPackage } = await loadPackages();
     const subscriptionPackage = SubscriptionContractPackage[abiVersion];
     const result = await contracts.createRunBody({
         abi: subscriptionPackage.abi,
@@ -790,6 +799,7 @@ test.each(ABIVersions)('test send boc (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
+    const { WalletContractPackage } = await loadPackages();
     const walletPackage = WalletContractPackage[abiVersion];
     const address = (await contracts.createDeployMessage({
         package: walletPackage,
@@ -808,11 +818,12 @@ test.each(ABIVersions)('test send boc (ABI v%i)', async (abiVersion) => {
 
     // send message without id - it should be computed inside
     await contracts.processDeployMessage({
-        address: message.address,
         message: {
+            address: message.address,
             messageBodyBase64: message.message.messageBodyBase64,
             expire: message.message.expire,
         },
+        address: message.address,
     });
 });
 
@@ -822,6 +833,7 @@ test.each(ABIVersions)('test deploy lags (ABI v%i)', async (abiVersion) => {
 
     config.log('Start');
     const keys = await crypto.ed25519Keypair();
+    const { WalletContractPackage } = await loadPackages();
     const walletPackage = WalletContractPackage[abiVersion];
     const message = await contracts.createDeployMessage({
         package: walletPackage,
@@ -867,6 +879,7 @@ async function expectError(code: number, source: string, f) {
 test('Test expire', async () => {
     const { contracts, crypto, queries } = tests.client;
 
+    const { HelloContractPackage } = await loadPackages();
     const helloKeys = await crypto.ed25519Keypair();
     const helloPackage = HelloContractPackage[2];
 
@@ -968,6 +981,7 @@ test('Test expire', async () => {
 });
 
 test('Test expire retries', async () => {
+    const { HelloContractPackage } = await loadPackages();
     const helloPackage = HelloContractPackage[2];
 
     const helloKeys = await tests.client.crypto.ed25519Keypair();
@@ -1001,6 +1015,7 @@ test.each(ABIVersions)('test parse message (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
 
     const keys = await crypto.ed25519Keypair();
+    const { WalletContractPackage } = await loadPackages();
     const walletPackage = WalletContractPackage[abiVersion];
     const message = await contracts.createDeployMessage({
         package: walletPackage,
@@ -1020,6 +1035,7 @@ test.each(ABIVersions)('Check deployed (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
 
+    const { HelloContractPackage } = await loadPackages();
     const helloPackage = HelloContractPackage[abiVersion];
     const deployed = await tests.deploy_with_giver({
         package: helloPackage,

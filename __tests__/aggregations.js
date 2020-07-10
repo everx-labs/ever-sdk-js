@@ -128,7 +128,7 @@ test('Validator set', async () => {
         const p34ConfigParams = config[0].master.config.p34;
         expect(p34ConfigParams.total)
             .toEqual(validatorSetList.length);
-        let weight = 0n;
+        let weight = BigInt(0);
         for (let i = 0; i < validatorSetList.length; i++) {
             expect(validatorSetList[i].adnl_addr)
                 .toBeDefined();
