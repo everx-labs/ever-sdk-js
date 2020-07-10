@@ -339,7 +339,7 @@ export class TONClientError {
 
     static clientDoesNotConfigured(): TONClientError {
         return new TONClientError(
-            'TON Client does not configured',
+            'TON Client isn\'t configured',
             TONClientError.code.CLIENT_DOES_NOT_CONFIGURED,
             TONClientError.source.CLIENT,
         );

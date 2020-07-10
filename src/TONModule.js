@@ -148,7 +148,7 @@ export class TONModule {
     requestCore<Params, Result>(method: string, params?: Params): Promise<Result> {
         const coreBridge = this.context.getCoreBridge();
         if (!coreBridge) {
-            throw new Error('TON Client Library doesn\'t set up properly');
+            throw new Error('TON Client Library isn\'t set up properly');
         }
         return new Promise((resolve: (Result) => void, reject: (Error) => void) => {
             coreBridge.request(

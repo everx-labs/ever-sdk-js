@@ -5,9 +5,6 @@ All notable changes to this project will be documented in this file.
 
 ### New
 - `TONContractMessage` includes the `address` field (equals to the `dst`)
-- `sendMessage` returns an instance of `TONMessageProcessingState` that can be used in resumable transaction waiting.
-- `waitForTransaction` accepts new parameter `processingState` that can help to resume interrupted transaction waiting.
-- `TONClientContract` includes new optional `data` field `resumeProcessingState` that can be passed to the `waitForTransaction` to resume interrupted waiting.
 - Support for core contexts.
 - Test suite have been refactored and can be easily adopted to run on several Js targets.
 

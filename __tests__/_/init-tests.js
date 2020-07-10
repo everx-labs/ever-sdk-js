@@ -118,6 +118,7 @@ export const tests: {
         defaultWorkchain: 0,
         servers: serversConfig,
         log_verbose: false,
+        useWebSocketForQueries: true,
         tracer: createJaegerTracer(''),
         accessKey: 'bypass',
     },
