@@ -4,12 +4,14 @@
 
 /* eslint-disable no-bitwise */
 
-import {ABIVersions, tests} from './_/init-tests';
+import { ABIVersions, tests } from './_/init-tests';
+import { QAccountType } from '../src/modules/TONContractsModule';
 
 async function loadPackages() {
     return {
         SubscriptionContractPackage: await tests.loadPackage('Subscription'),
-    }
+        HelloContractPackage: await tests.loadPackage('Hello'),
+    };
 }
 
 beforeAll(tests.init);
@@ -181,5 +183,96 @@ test.each(ABIVersions)('RunLocal (ABI v%i)', async (abiVersion) => {
     expect(getSubscriptionResult.output.value0.pubkey)
         .toEqual(subscriptionParams.pubkey);
 });
-jest.setTimeout(100000);
+jest.setTimeout(300000);
 
+
+test.each(ABIVersions)('Check fullRun (ABI v%i)', async (abiVersion) => {
+    const { contracts, crypto } = tests.client;
+    const helloKeys = await crypto.ed25519Keypair();
+    const { HelloContractPackage } = await loadPackages();
+    const helloPackage = HelloContractPackage[abiVersion];
+    const contractData = await tests.deploy_with_giver({
+        package: helloPackage,
+        constructorParams: {},
+        keyPair: helloKeys,
+    });
+
+    const responseRunLocal1 = await contracts.runLocal({
+        address: contractData.address,
+        abi: helloPackage.abi,
+        functionName: 'touch',
+        fullRun: true,
+        input: {},
+        keyPair: helloKeys,
+    });
+    expect(responseRunLocal1.output)
+        .toBeNull();
+    expect(responseRunLocal1.account.id)
+        .toEqual(contractData.address);
+    expect(responseRunLocal1.account.acc_type)
+        .toEqual(QAccountType.active);
+    expect(responseRunLocal1)
+        .toBeDefined();
+    const responseRunLocal2 = await contracts.runLocal({
+        address: contractData.address,
+        abi: helloPackage.abi,
+        functionName: 'touch',
+        fullRun: true,
+        input: {},
+        keyPair: helloKeys,
+    });
+    expect(responseRunLocal1.fees)
+        .toEqual((responseRunLocal2.fees));
+
+    const responseRun = await contracts.run({
+        address: contractData.address,
+        abi: helloPackage.abi,
+        functionName: 'touch',
+        input: {},
+        keyPair: helloKeys,
+    });
+    if (!tests.nodeSe) {
+        expect(responseRun.fees)
+            .toEqual((responseRunLocal1.fees));
+    }
+
+    const responsefullRunFalse = await contracts.runLocal({
+        address: contractData.address,
+        abi: helloPackage.abi,
+        functionName: 'touch',
+        fullRun: false,
+        input: {},
+        keyPair: helloKeys,
+    });
+    expect(responsefullRunFalse.fees)
+        .toBeNull();
+
+    const responseSayHello = await contracts.runLocal({
+        address: contractData.address,
+        abi: helloPackage.abi,
+        functionName: 'sayHello',
+        fullRun: false,
+        input: {},
+        keyPair: helloKeys,
+    });
+    expect(responseSayHello.output.value0)
+        .toBeDefined();
+    expect(responseSayHello.fees)
+        .toBeNull();
+
+    try {
+        await contracts.runLocal({
+            address: contractData.address,
+            abi: helloPackage.abi,
+            functionName: 'sayHello',
+            fullRun: true,
+            input: {},
+            keyPair: helloKeys,
+        });
+    } catch (e) {
+        expect(e.code)
+            .toBe(3025);
+        expect(e.data.exit_code)
+            .toBe(13);
+    }
+});
