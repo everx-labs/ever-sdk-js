@@ -232,8 +232,16 @@ test.each(ABIVersions)('Check fullRun (ABI v%i)', async (abiVersion) => {
         keyPair: helloKeys,
     });
     if (!tests.nodeSe) {
-        expect(responseRun.fees)
-            .toEqual((responseRunLocal1.fees));
+        expect(responseRunLocal1.fees.inMsgFwdFee)
+            .toEqual((responseRun.fees.inMsgFwdFee));
+        expect(BigInt(responseRunLocal1.fees.storageFee))
+            .toBeLessThanOrEqual(BigInt(responseRun.fees.storageFee));
+        expect(responseRunLocal1.fees.gasFee)
+            .toEqual(responseRun.fees.gasFee);
+        expect(responseRunLocal1.fees.outMsgsFwdFee)
+            .toEqual(responseRun.fees.outMsgsFwdFee);
+        expect(BigInt(responseRunLocal1.fees.totalAccountFees))
+            .toBeLessThanOrEqual(BigInt(responseRun.fees.totalAccountFees));
     }
 
     const responsefullRunFalse = await contracts.runLocal({
