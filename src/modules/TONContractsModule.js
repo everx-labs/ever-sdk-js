@@ -362,21 +362,15 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractDeployMessage> {
         this.config.log('createDeployMessage', params);
-        const constructorHeader = this.makeExpireHeader(
-            params.package.abi,
-            params.constructorHeader,
-            retryIndex,
-        );
         const message: TONContractMessage = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
-            constructorHeader,
+            constructorHeader: params.constructorHeader,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
             keyPair: params.keyPair,
             workchainId: params.workchainId,
         });
-        message.expire = constructorHeader?.expire;
         return {
             message,
             address: message.address,
@@ -389,21 +383,15 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractRunMessage> {
         this.config.log('createRunMessage', params);
-        const header = this.makeExpireHeader(
-            params.abi,
-            params.header,
-            retryIndex,
-        );
         const message = await this.requestCore('contracts.run.message', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
-            header,
+            header: params.header,
+            tryIndex: retryIndex,
             input: params.input,
             keyPair: params.keyPair,
         });
-        message.address = params.address;
-        message.expire = header?.expire;
         return {
             address: params.address,
             abi: params.abi,
@@ -416,17 +404,13 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractDeployParams,
         retryIndex?: number,
     ): Promise<TONContractUnsignedDeployMessage> {
-        const constructorHeader = this.makeExpireHeader(
-            params.package.abi,
-            params.constructorHeader,
-            retryIndex,
-        );
         const result: {
             encoded: TONContractUnsignedMessage,
             addressHex: string,
         } = await this.requestCore('contracts.deploy.encode_unsigned_message', {
             abi: params.package.abi,
-            constructorHeader,
+            constructorHeader: params.constructorHeader,
+            tryIndex: retryIndex,
             constructorParams: params.constructorParams,
             initParams: params.initParams,
             imageBase64: params.package.imageBase64,
@@ -438,7 +422,6 @@ export default class TONContractsModule extends TONModule implements TONContract
             signParams: {
                 ...result.encoded,
                 abi: params.package.abi,
-                expire: constructorHeader?.expire,
             },
         };
     }
@@ -448,16 +431,12 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunParams,
         retryIndex?: number,
     ): Promise<TONContractUnsignedRunMessage> {
-        const header = this.makeExpireHeader(
-            params.abi,
-            params.header,
-            retryIndex,
-        );
         const signParams = await this.requestCore('contracts.run.encode_unsigned_message', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
-            header,
+            header: params.header,
+            tryIndex: retryIndex,
             input: params.input,
         });
         return {
@@ -466,7 +445,6 @@ export default class TONContractsModule extends TONModule implements TONContract
             signParams: {
                 ...signParams,
                 abi: params.abi,
-                expire: header?.expire,
             },
         };
     }
@@ -597,7 +575,6 @@ export default class TONContractsModule extends TONModule implements TONContract
             this.queries.dropServerTimeDelta();
             throw TONClientError.clockOutOfSync();
         }
-        const start = Date.now();
         let lastBlockId = await this.findLastShardBlock(params.address);
         const id = await this.ensureMessageId(params);
         const idBase64 = Buffer.from(id, 'hex')
@@ -1275,20 +1252,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         });
     }
 
-    makeExpireHeader(
-        abi: TONContractABI,
-        userHeader?: any,
-        retryIndex?: number,
-    ): any {
-        const timeout = this.config.messageExpirationTimeout(retryIndex);
-        if (abi.header && abi.header.includes('expire') && !userHeader?.expire) {
-            return {
-                ...userHeader,
-                expire: Math.floor((Date.now() + timeout) / 1000) + 1,
-            };
-        }
-        return userHeader;
-    }
 
     async retryCall(call: (index: number) => Promise<any>): Promise<any> {
         const retriesCount = this.config.messageRetriesCount();
@@ -1309,6 +1272,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
         throw TONClientError.internalError("retryCall: unreachable");
     }
+
 
     async internalDeployJs(
         params: TONContractDeployParams,
@@ -1340,6 +1304,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             return this.waitForRunTransaction(runMessage, processingState, parentSpan);
         });
     }
+
 
     async getAccount(
         address: string,
