@@ -213,16 +213,6 @@ test.each(ABIVersions)('Check fullRun (ABI v%i)', async (abiVersion) => {
         .toEqual(QAccountType.active);
     expect(responseRunLocal1)
         .toBeDefined();
-    const responseRunLocal2 = await contracts.runLocal({
-        address: contractData.address,
-        abi: helloPackage.abi,
-        functionName: 'touch',
-        fullRun: true,
-        input: {},
-        keyPair: helloKeys,
-    });
-    expect(responseRunLocal1.fees)
-        .toEqual((responseRunLocal2.fees));
 
     const responseRun = await contracts.run({
         address: contractData.address,
@@ -231,6 +221,7 @@ test.each(ABIVersions)('Check fullRun (ABI v%i)', async (abiVersion) => {
         input: {},
         keyPair: helloKeys,
     });
+    console.log(responseRunLocal1.fees);
     if (!tests.nodeSe) {
         expect(responseRunLocal1.fees.inMsgFwdFee)
             .toEqual((responseRun.fees.inMsgFwdFee));
@@ -242,6 +233,8 @@ test.each(ABIVersions)('Check fullRun (ABI v%i)', async (abiVersion) => {
             .toEqual(responseRun.fees.outMsgsFwdFee);
         expect(BigInt(responseRunLocal1.fees.totalAccountFees))
             .toBeLessThanOrEqual(BigInt(responseRun.fees.totalAccountFees));
+        expect(responseRunLocal1.fees.totalOutput)
+            .toEqual(responseRun.fees.totalOutput);
     }
 
     const responsefullRunFalse = await contracts.runLocal({
