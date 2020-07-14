@@ -738,6 +738,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         const stopTime = expire
             || Math.round((Date.now() + this.config.messageProcessingTimeout()) / 1000);
 
+        const infiniteWait = params.infiniteWait !== false;
         const processing = { ...params.processingState };
         let transaction = null;
         let addTimeout = this.config.messageProcessingTimeout();
@@ -750,17 +751,21 @@ export default class TONContractsModule extends TONModule implements TONContract
                 block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
                 timeReport.push(`block received for a: ${Date.now() - start} ms`);
             } catch (error) {
-                if (params.infiniteWait) {
+                if (infiniteWait) {
                     continue;
                 }
-                throw TONClientError.networkSilent({
-                    msgId,
-                    blockId: processing.lastBlockId,
-                    timeout,
-                    state: processing,
-                    expire,
-                    sendTime: processing.sentTime,
-                });
+                let resolvedError = error;
+                if (error.code === TONErrorCode.WAIT_FOR_TIMEOUT) {
+                    resolvedError = TONClientError.networkSilent({
+                        msgId,
+                        blockId: processing.lastBlockId,
+                        timeout,
+                        state: processing,
+                        expire,
+                        sendTime: processing.sentTime,
+                    });
+                }
+                throw resolvedError;
             }
 
             processing.lastBlockId = block.id || '';
@@ -811,8 +816,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
         timeReport.push(`total waiting time: ${Date.now() - totalStart} ms`);
 
-        console.log('>>> time report:');
-        console.log(timeReport.join('\n'));
+        this.config.log(timeReport.join('\n'));
         return this.processTransaction(
             address,
             transaction,

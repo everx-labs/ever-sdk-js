@@ -421,11 +421,11 @@ export class TONClientError {
             'Network silent: no blocks produced during timeout.',
             TONClientError.code.NETWORK_SILENT,
             TONClientError.source.CLIENT,
-            {
+            data && {
+                ...data,
                 messageId: data.msgId,
                 sendTime: TONClientError.formatTime(data.sendTime),
                 expirationTime: TONClientError.formatTime(data.expire),
-                timeout: data.timeout,
             }
         );
     }
@@ -435,11 +435,9 @@ export class TONClientError {
             'Existing block transaction not found (no transaction appeared for the masterchain block with gen_utime > message expiration time)',
             TONClientError.code.TRANSACTION_LAG,
             TONClientError.source.CLIENT,
-            {
+            data && {
+                ...data,
                 messageId: data.msgId,
-                blockId: data.blockId,
-                transactionId: data.transactionId,
-                timeout: data.timeout,
             }
         );
     }
@@ -449,10 +447,10 @@ export class TONClientError {
             'Transaction did not produced during specified timeout',
             TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
             TONClientError.source.CLIENT,
-            {
+            data && {
+                ...data,
                 messageId: data.msgId,
                 sendTime: TONClientError.formatTime(data.sendTime),
-                timeout: data.timeout,
             }
         );
     }

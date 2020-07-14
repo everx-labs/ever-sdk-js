@@ -64,8 +64,6 @@ export async function loadPackage(name: string): Promise<PackageByABIVersion> {
     return packages;
 }
 
-jest.setTimeout(100000);
-
 async function init() {
     await initTONClient(TONClient);
     const client: TONClient = await TONClient.create(tests.config);
