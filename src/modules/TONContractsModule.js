@@ -733,7 +733,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
         const totalStart = Date.now();
         const expire = params.message.expire || 0;
-        const msgId = await this.ensureMessageId(params.message);
+        const messageId = await this.ensureMessageId(params.message);
         const address = params.message.address;
         const stopTime = expire
             || Math.round((Date.now() + this.config.messageProcessingTimeout()) / 1000);
@@ -757,7 +757,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 let resolvedError = error;
                 if (error.code === TONErrorCode.WAIT_FOR_TIMEOUT) {
                     resolvedError = TONClientError.networkSilent({
-                        msgId,
+                        messageId,
                         blockId: processing.lastBlockId,
                         timeout,
                         state: processing,
@@ -771,8 +771,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             processing.lastBlockId = block.id || '';
 
             for (const inMsg of (block.in_msg_descr || [])) {
-                const messageId = inMsg.msg_id;
-                if (messageId) {
+                const blockMessageId = inMsg.msg_id;
+                if (blockMessageId) {
                     const transactionId = inMsg.transaction_id;
                     if (!transactionId) {
                         throw TONClientError.invalidBlockchain('No field `transaction_id` in block');
@@ -794,7 +794,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             if ((block.gen_utime || 0) > stopTime) {
                 if (expire) {
                     throw TONClientError.messageExpired({
-                        msgId,
+                        messageId,
                         sendTime: processing.sentTime,
                         expire: stopTime,
                         blockTime: block.gen_utime,
@@ -802,7 +802,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     });
                 }
                 throw TONClientError.transactionWaitTimeout({
-                    msgId,
+                    messageId,
                     sendTime: processing.sentTime,
                     timeout,
                     state: processing,
@@ -866,7 +866,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     } catch (error) {
                         if (TONClientError.isWaitForTimeout(error)) {
                             throw TONClientError.networkSilent({
-                                msgId: messageId,
+                                messageId,
                                 sendTime,
                                 expire,
                                 timeout: blockTimeout
@@ -903,7 +903,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     } catch (error) {
                         if (TONClientError.isWaitForTimeout(error)) {
                             throw TONClientError.transactionLag({
-                                msgId: messageId,
+                                messageId,
                                 blockId: block.id,
                                 transactionId,
                                 timeout: BLOCK_TRANSACTION_WAITING_TIME
@@ -936,7 +936,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     } catch (error) {
                         if (TONClientError.isWaitForTimeout(error)) {
                             reject(TONClientError.transactionWaitTimeout({
-                                msgId: messageId,
+                                messageId,
                                 sendTime,
                                 timeout: processingTimeout
                             }));
@@ -957,7 +957,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
             if (!transaction) {
                 throw TONClientError.messageExpired({
-                    msgId: messageId,
+                    messageId,
                     sendTime,
                     expire,
                     blockTime

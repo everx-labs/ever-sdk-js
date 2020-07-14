@@ -386,13 +386,12 @@ export class TONClientError {
         }
     }
 
-    static messageExpired(data: { msgId: string, sendTime: number, expire: ?number, blockTime: ?number }) {
+    static messageExpired(data: { messageId: string, sendTime: number, expire: ?number, blockTime: ?number }) {
         return new TONClientError(
             'Message expired',
             TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
             {
-                messageId: data.msgId,
                 sendTime: TONClientError.formatTime(data.sendTime),
                 expirationTime: TONClientError.formatTime(data.expire),
                 blockTime: TONClientError.formatTime(data.blockTime),
@@ -416,40 +415,35 @@ export class TONClientError {
         );
     }
 
-    static networkSilent(data: { msgId: string, sendTime: number, expire: number, timeout: number }) {
+    static networkSilent(data: { messageId: string, sendTime: number, expire: number, timeout: number }) {
         return new TONClientError(
             'Network silent: no blocks produced during timeout.',
             TONClientError.code.NETWORK_SILENT,
             TONClientError.source.CLIENT,
             data && {
                 ...data,
-                messageId: data.msgId,
                 sendTime: TONClientError.formatTime(data.sendTime),
                 expirationTime: TONClientError.formatTime(data.expire),
             }
         );
     }
 
-    static transactionLag(data: { msgId: string, blockId: string, transactionId: string, timeout: number }) {
+    static transactionLag(data: { messageId: string, blockId: string, transactionId: string, timeout: number }) {
         return new TONClientError(
             'Existing block transaction not found (no transaction appeared for the masterchain block with gen_utime > message expiration time)',
             TONClientError.code.TRANSACTION_LAG,
             TONClientError.source.CLIENT,
-            data && {
-                ...data,
-                messageId: data.msgId,
-            }
+            data,
         );
     }
 
-    static transactionWaitTimeout(data: { msgId: string, sendTime: number, timeout: number }) {
+    static transactionWaitTimeout(data: { messageId: string, sendTime: number, timeout: number }) {
         return new TONClientError(
             'Transaction did not produced during specified timeout',
             TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
             TONClientError.source.CLIENT,
             data && {
                 ...data,
-                messageId: data.msgId,
                 sendTime: TONClientError.formatTime(data.sendTime),
             }
         );
