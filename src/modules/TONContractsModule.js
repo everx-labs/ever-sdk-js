@@ -805,7 +805,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     messageId,
                     sendTime: processing.sentTime,
                     timeout,
-                    state: processing,
+                    messageProcessingState: processing,
                 });
             }
         }
@@ -902,11 +902,13 @@ export default class TONContractsModule extends TONModule implements TONContract
                         });
                     } catch (error) {
                         if (TONClientError.isWaitForTimeout(error)) {
-                            throw TONClientError.transactionLag({
+                            throw TONClientError.networkSilent({
                                 messageId,
                                 blockId: block.id,
                                 transactionId,
-                                timeout: BLOCK_TRANSACTION_WAITING_TIME
+                                timeout: BLOCK_TRANSACTION_WAITING_TIME,
+                                sendTime,
+                                expire,
                             });
                         } else {
                             throw error;

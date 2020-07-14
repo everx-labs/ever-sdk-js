@@ -9,7 +9,7 @@ import type {
     TONAccessKeysManagementParams,
     TONConfigData,
     TONContracts,
-    TONCrypto,
+    TONCrypto, TONMessageProcessingState,
     TONQueries,
     TONRegisterAccessKeysParams,
     TONRevokeAccessKeysParams,
@@ -386,7 +386,12 @@ export class TONClientError {
         }
     }
 
-    static messageExpired(data: { messageId: string, sendTime: number, expire: ?number, blockTime: ?number }) {
+    static messageExpired(data: {
+        messageId: string,
+        sendTime: number,
+        expire: ?number,
+        blockTime: ?number,
+    }) {
         return new TONClientError(
             'Message expired',
             TONClientError.code.MESSAGE_EXPIRED,
@@ -415,7 +420,14 @@ export class TONClientError {
         );
     }
 
-    static networkSilent(data: { messageId: string, sendTime: number, expire: number, timeout: number }) {
+    static networkSilent(data: {
+        messageId: string,
+        sendTime: number,
+        expire: number,
+        timeout: number,
+        blockId?: string,
+        messageProcessingState?: TONMessageProcessingState,
+    }) {
         return new TONClientError(
             'Network silent: no blocks produced during timeout.',
             TONClientError.code.NETWORK_SILENT,
@@ -428,16 +440,13 @@ export class TONClientError {
         );
     }
 
-    static transactionLag(data: { messageId: string, blockId: string, transactionId: string, timeout: number }) {
-        return new TONClientError(
-            'Existing block transaction not found (no transaction appeared for the masterchain block with gen_utime > message expiration time)',
-            TONClientError.code.TRANSACTION_LAG,
-            TONClientError.source.CLIENT,
-            data,
-        );
-    }
+    static transactionWaitTimeout(data: {
+        messageId: string,
+        sendTime: number,
+        timeout: number,
+        messageProcessingState?: TONMessageProcessingState,
 
-    static transactionWaitTimeout(data: { messageId: string, sendTime: number, timeout: number }) {
+    }) {
         return new TONClientError(
             'Transaction did not produced during specified timeout',
             TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
