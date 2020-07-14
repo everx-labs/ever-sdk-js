@@ -136,9 +136,6 @@ test.each(ABIVersions)('Test hello contract from docs.ton.dev (ABI v%i)', async 
         keyPair: helloKeys,
     });
 
-    expect(response.transaction.status)
-        .toEqual(3);
-
     const localResponse = await contracts.runLocal({
         address: contractData.address,
         abi: helloPackage.abi,
@@ -864,7 +861,6 @@ async function expectError(code: number, source: string, f) {
         await f();
         fail(`Expected error with code:${code} source: ${source}`);
     } catch (error) {
-        console.log('>>>', error);
         expect({
             code: error.code,
             source: error.source,
@@ -947,7 +943,6 @@ test('Test expire', async () => {
         expect(error)
             .toMatchObject({
                 code: TONErrorCode.CONTRACT_EXECUTION_FAILED,
-                source: TONErrorSource.NODE,
                 data: {
                     exit_code: TONContractExitCode.MESSAGE_EXPIRED,
                 },

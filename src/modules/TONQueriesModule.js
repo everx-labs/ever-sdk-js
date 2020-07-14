@@ -22,7 +22,8 @@ import type {
     Subscription,
     TONQueryParams,
     TONSubscribeParams,
-    TONWaitForParams, TONQueryAggregateParams,
+    TONWaitForParams,
+    TONQueryAggregateParams,
 } from '../../types';
 import { TONClient, TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
@@ -177,7 +178,9 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {
         const response = await fetch(sourceUrl);
         try {
-            this.serverInfo = resolveServerInfo((await response.json()).data.info.version);
+            const responseText = await response.text();
+            const responseJson = JSON.parse(responseText);
+            this.serverInfo = resolveServerInfo(responseJson.data.info.version);
         } catch {
         }
         if (response.redirected === true) {

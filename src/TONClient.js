@@ -9,7 +9,7 @@ import type {
     TONAccessKeysManagementParams,
     TONConfigData,
     TONContracts,
-    TONCrypto,
+    TONCrypto, TONMessageProcessingState,
     TONQueries,
     TONRegisterAccessKeysParams,
     TONRevokeAccessKeysParams,
@@ -279,8 +279,9 @@ export const TONErrorCode = {
     ACCOUNT_BALANCE_TOO_LOW: 1016,
     ACCOUNT_FROZEN_OR_DELETED: 1017,
 
-    CONTRACT_EXECUTION_FAILED: 3025,
+    // Contracts
 
+    CONTRACT_EXECUTION_FAILED: 3025,
 };
 
 export const TONContractExitCode = {
@@ -298,10 +299,10 @@ export class TONClientError {
     code: number;
     data: any;
 
-    constructor(message: string, code: number, source: string, data?: any) {
+    constructor(message: string, code: number, source?: string, data?: any) {
         this.message = message;
         this.code = code;
-        this.source = source;
+        this.source = source || TONErrorSource.CLIENT;
         this.data = data;
     }
 
@@ -385,13 +386,17 @@ export class TONClientError {
         }
     }
 
-    static messageExpired(data: { msgId: string, sendTime: number, expire: ?number, blockTime: ?number }) {
+    static messageExpired(data: {
+        messageId: string,
+        sendTime: number,
+        expire: ?number,
+        blockTime: ?number,
+    }) {
         return new TONClientError(
             'Message expired',
             TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
             {
-                messageId: data.msgId,
                 sendTime: TONClientError.formatTime(data.sendTime),
                 expirationTime: TONClientError.formatTime(data.expire),
                 blockTime: TONClientError.formatTime(data.blockTime),
@@ -415,43 +420,40 @@ export class TONClientError {
         );
     }
 
-    static networkSilent(data: { msgId: string, sendTime: number, expire: number, timeout: number }) {
+    static networkSilent(data: {
+        messageId: string,
+        sendTime: number,
+        expire: number,
+        timeout: number,
+        blockId?: string,
+        messageProcessingState?: TONMessageProcessingState,
+    }) {
         return new TONClientError(
             'Network silent: no blocks produced during timeout.',
             TONClientError.code.NETWORK_SILENT,
             TONClientError.source.CLIENT,
-            {
-                messageId: data.msgId,
+            data && {
+                ...data,
                 sendTime: TONClientError.formatTime(data.sendTime),
                 expirationTime: TONClientError.formatTime(data.expire),
-                timeout: data.timeout,
             }
         );
     }
 
-    static transactionLag(data: { msgId: string, blockId: string, transactionId: string, timeout: number }) {
-        return new TONClientError(
-            'Existing block transaction not found (no transaction appeared for the masterchain block with gen_utime > message expiration time)',
-            TONClientError.code.TRANSACTION_LAG,
-            TONClientError.source.CLIENT,
-            {
-                messageId: data.msgId,
-                blockId: data.blockId,
-                transactionId: data.transactionId,
-                timeout: data.timeout,
-            }
-        );
-    }
+    static transactionWaitTimeout(data: {
+        messageId: string,
+        sendTime: number,
+        timeout: number,
+        messageProcessingState?: TONMessageProcessingState,
 
-    static transactionWaitTimeout(data: { msgId: string, sendTime: number, timeout: number }) {
+    }) {
         return new TONClientError(
             'Transaction did not produced during specified timeout',
             TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
             TONClientError.source.CLIENT,
-            {
-                messageId: data.msgId,
+            data && {
+                ...data,
                 sendTime: TONClientError.formatTime(data.sendTime),
-                timeout: data.timeout,
             }
         );
     }
@@ -497,6 +499,19 @@ export class TONClientError {
         );
     }
 
+    static noBlocks(workchain: number) {
+        const workchainName = workchain === -1 ? 'masterchain' : `workchain ${workchain}`;
+        return new TONClientError(
+            `"No blocks for ${workchainName} found".`,
+            TONErrorCode.NETWORK_SILENT,
+            TONErrorSource.CLIENT,
+        );
+    }
+
+    static invalidBlockchain(message: string) {
+        return new TONClientError(message, TONErrorCode.NETWORK_SILENT);
+    }
+
     static isMessageExpired(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
     }
@@ -504,4 +519,5 @@ export class TONClientError {
     static isWaitForTimeout(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT);
     }
+
 }
