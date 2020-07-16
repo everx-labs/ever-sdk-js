@@ -773,7 +773,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
             for (const inMsg of (block.in_msg_descr || [])) {
                 const blockMessageId = inMsg.msg_id;
-                if (blockMessageId) {
+                if (blockMessageId === messageId) {
                     const transactionId = inMsg.transaction_id;
                     if (!transactionId) {
                         throw TONClientError.invalidBlockchain('No field `transaction_id` in block');
