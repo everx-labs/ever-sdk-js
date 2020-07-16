@@ -119,7 +119,7 @@ export const tests: {
         servers: serversConfig,
         log_verbose: false,
         useWebSocketForQueries: true,
-        tracer: createJaegerTracer(''),
+        tracer: createJaegerTracer('http://grafana.services.tonlabs.io:14268/api/traces'),
         accessKey: 'bypass',
     },
     createClient,

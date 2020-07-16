@@ -577,14 +577,19 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
         let lastBlockId = await this.findLastShardBlock(params.address);
         const id = await this.ensureMessageId(params);
-        const idBase64 = Buffer.from(id, 'hex')
-            .toString('base64');
+        const idBase64 = Buffer.from(id, 'hex').toString('base64');
+        const messageSpan = this.context.startRootSpan(
+            id.substr(0, 16),
+            id.substr(16, 16),
+            'sendMessage',
+        );
         await this.queries.postRequests([
             {
                 id: idBase64,
                 body: params.messageBodyBase64,
             },
         ], parentSpan);
+        messageSpan.finish();
         this.config.log('sendMessage. Request posted', id);
         return {
             lastBlockId,

@@ -3,7 +3,7 @@
  */
 // @flow
 
-import {Tags, Span, SpanContext} from "opentracing";
+import {Tags, Span, SpanContext, FORMAT_TEXT_MAP} from "opentracing";
 import type {
     ITONClient,
     TONAccessKeysManagementParams,
@@ -221,6 +221,36 @@ export class TONClient implements TONModuleContext, ITONClient {
                 signedManagementAccessKey,
             });
         return result.data.revokeAccessKeys;
+    }
+
+    startRootSpan(traceId: string, spanId: string, operationName: string): Span {
+        const tracer = this.config.tracer;
+        let span: ?Span = null;
+        if (tracer._startInternalSpan) {
+            try {
+                const references = [];
+                const userTags = undefined;
+                const startTime = Date.now();
+                const internalTags: any = {};
+                const hasValidParent = false;
+                const isRpcServer = false;
+                const ctx = tracer.extract(FORMAT_TEXT_MAP, {
+                    'uber-trace-id': `${traceId}:${spanId}:0:1`,
+                });
+                span = this.config.tracer._startInternalSpan(
+                    ctx,
+                    operationName,
+                    startTime,
+                    userTags,
+                    internalTags,
+                    references,
+                    hasValidParent,
+                    isRpcServer,
+                );
+            } catch {
+            }
+        }
+        return span || tracer.startSpan(operationName);
     }
 
     async trace<T>(
