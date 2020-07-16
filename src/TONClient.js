@@ -129,6 +129,7 @@ export class TONClient implements TONModuleContext, ITONClient {
         for (const module of modules) {
             await module.setup();
         }
+        TONClientError.coreVersion = await this.config.getVersion();
     }
 
     /**
@@ -293,16 +294,20 @@ export const TONContractExitCode = {
 export class TONClientError {
     static source = TONErrorSource;
     static code = TONErrorCode;
+    static coreVersion = '';
+
 
     message: string;
     source: string;
     code: number;
     data: any;
+    coreVersion: string;
 
     constructor(message: string, code: number, source?: string, data?: any) {
         this.message = message;
         this.code = code;
         this.source = source || TONErrorSource.CLIENT;
+        this.coreVersion = TONClientError.coreVersion;
         this.data = data;
     }
 
