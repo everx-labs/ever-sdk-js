@@ -734,7 +734,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         // console.log('>>>', `Legacy wait for a: ${Date.now() - legacyStart} ms`);
         // return result;
 
-        const timeReport = ['Modern time report:'];
+        const timeReport = [];
 
         const totalStart = Date.now();
         const expire = params.message.expire || 0;
@@ -754,7 +754,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             try {
                 const start = Date.now();
                 block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
-                timeReport.push(`block received for a: ${Date.now() - start} ms`);
+                const now = Date.now();
+                timeReport.push(`Block [${block.id || ''}] has been received: ${now - start} ms, client time: ${now}, gen_utime: ${block.gen_utime || 0}`);
             } catch (error) {
                 if (infiniteWait) {
                     continue;
@@ -788,7 +789,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                         result: TRANSACTION_FIELDS_ORDINARY,
                         timeout: MAX_TIMEOUT,
                     });
-                    timeReport.push(`transaction received for a: ${Date.now() - trStart} ms`);
+                    timeReport.push(`Transaction [${transactionId}] has been received: ${Date.now() - trStart} ms`);
                     break;
                 }
             }
@@ -819,7 +820,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             throw TONClientError.internalError('Unreachable code');
         }
 
-        timeReport.push(`total waiting time: ${Date.now() - totalStart} ms`);
+        timeReport.splice(0, 0, `Transaction waiting time: ${Date.now() - totalStart} ms`);
 
         this.config.log(timeReport.join('\n'));
         return this.processTransaction(
@@ -1281,7 +1282,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 }
             }
         }
-        throw TONClientError.internalError("retryCall: unreachable");
+        throw TONClientError.internalError("All retry attempts failed");
     }
 
 
