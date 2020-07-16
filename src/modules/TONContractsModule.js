@@ -729,7 +729,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         // console.log('>>>', `Legacy wait for a: ${Date.now() - legacyStart} ms`);
         // return result;
 
-        const timeReport = ['Transaction waiting log:'];
+        const timeReport = [];
 
         const totalStart = Date.now();
         const expire = params.message.expire || 0;
@@ -750,7 +750,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 const start = Date.now();
                 block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
                 const now = Date.now();
-                timeReport.push(`Block [${block.id || ''}] has been received: ${now - start}} ms, client time: ${now}, gen_utime: ${block.gen_utime || 0}`);
+                timeReport.push(`Block [${block.id || ''}] has been received: ${now - start} ms, client time: ${now}, gen_utime: ${block.gen_utime || 0}`);
             } catch (error) {
                 if (infiniteWait) {
                     continue;
@@ -815,7 +815,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             throw TONClientError.internalError('Unreachable code');
         }
 
-        timeReport.push(`total waiting time: ${Date.now() - totalStart} ms`);
+        timeReport.splice(0, 0, `Transaction waiting time: ${Date.now() - totalStart} ms`);
 
         this.config.log(timeReport.join('\n'));
         return this.processTransaction(
