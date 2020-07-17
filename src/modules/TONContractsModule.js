@@ -1051,16 +1051,22 @@ export default class TONContractsModule extends TONModule implements TONContract
             this.config.log('[waitForTransaction]', 'FAILED', error);
             if (TONClientError.isMessageExpired(error)
                 || TONClientError.isClientError(error, TONErrorCode.TRANSACTION_WAIT_TIMEOUT)) {
-                const detailedError = await this.resolveDetailedError(
+                const detailedError: any = await this.resolveDetailedError(
                     error,
                     message.messageBodyBase64,
                     Date.now(),
                     message.address,
                 );
-                (detailedError: any).data = {
-                    ...(detailedError: any).data,
-                    ...error.data,
-                };
+                const messageProcessingState = error.data?.messageProcessingState;
+                if (messageProcessingState) {
+                    if (detailedError.data) {
+                        detailedError.data.messageProcessingState = messageProcessingState;
+                    } else {
+                        detailedError.data = {
+                            messageProcessingState,
+                        }
+                    }
+                }
                 throw detailedError;
             } else {
                 throw error;
