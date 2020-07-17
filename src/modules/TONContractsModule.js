@@ -3,7 +3,7 @@
  */
 // @flow
 
-import { Span, SpanContext } from 'opentracing';
+import { Tracer, FORMAT_TEXT_MAP, Span, SpanContext } from 'opentracing';
 import type {
     QAccount,
     QBlock,
@@ -235,6 +235,47 @@ export function removeProps(obj: {}, paths: string[]): {} {
         }
     });
     return result;
+}
+
+function startMessageTraceSpan(
+    tracer: Tracer,
+    messageId: string,
+    operationName: string,
+    tags: { [string]: any },
+): ?Span {
+    if (!messageId) {
+        return null;
+    }
+    const traceId = messageId.substr(0, 16);
+    const spanId = messageId.substr(16, 16);
+    let rootContext: ?SpanContext = null;
+    try {
+        rootContext = tracer.extract(FORMAT_TEXT_MAP, {
+            'uber-trace-id': `${traceId}:${spanId}:0:1`,
+        });
+    } catch {
+        // tracer can't create jaeger compatible span,
+        // so we are fallback to return null
+    }
+    if (!rootContext) {
+        return null;
+    }
+    return tracer.startSpan(operationName, {
+        childOf: rootContext,
+        tags,
+    })
+}
+
+function traceMessage(
+    tracer: Tracer,
+    messageId: string,
+    operationName: string,
+    tags: { [string]: any },
+) {
+    const span = startMessageTraceSpan(tracer, messageId, operationName, tags);
+    if (span) {
+        span.finish();
+    }
 }
 
 export default class TONContractsModule extends TONModule implements TONContracts {
@@ -581,8 +622,14 @@ export default class TONContractsModule extends TONModule implements TONContract
         const messageSpan = this.context.startRootSpan(
             id.substr(0, 16),
             id.substr(16, 16),
-            'sendMessage',
+            'messageProcessing',
         );
+        messageSpan.addTags({
+            messageId: id,
+            messageSize: Math.ceil(params.messageBodyBase64.length * 3 / 4),
+            address: params.address,
+            expire: params.expire,
+        })
         await this.queries.postRequests([
             {
                 id: idBase64,
@@ -739,86 +786,106 @@ export default class TONContractsModule extends TONModule implements TONContract
         // console.log('>>>', `Legacy wait for a: ${Date.now() - legacyStart} ms`);
         // return result;
 
-        const timeReport = [];
-
         const totalStart = Date.now();
         const expire = params.message.expire || 0;
         const messageId = await this.ensureMessageId(params.message);
         const address = params.message.address;
-        const stopTime = expire
-            || Math.round((Date.now() + this.config.messageProcessingTimeout()) / 1000);
-
-        const infiniteWait = params.infiniteWait !== false;
         const processing = { ...params.messageProcessingState };
         let transaction = null;
-        const addTimeout = this.config.messageProcessingTimeout();
-        while (!transaction) {
-            const now = Date.now();
-            const timeout = Math.max(stopTime, now) - now + addTimeout;
-            let block: ?QBlock = null;
-            try {
-                const start = Date.now();
-                block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
-                const end = Date.now();
-                timeReport.push(`Block [${block.id || ''}] has been received: ${end - start} ms, client time: ${end}, gen_utime: ${block.gen_utime || 0}`);
-            } catch (error) {
-                this.config.log('Block waiting failed: ', error);
-                if (!infiniteWait) {
-                    let resolvedError = error;
-                    if (error.code === TONErrorCode.WAIT_FOR_TIMEOUT) {
-                        resolvedError = TONClientError.networkSilent({
+        try {
+            const timeReport = [];
+
+            const stopTime = expire
+                || Math.round((Date.now() + this.config.messageProcessingTimeout()) / 1000);
+
+            const infiniteWait = params.infiniteWait !== false;
+            const addTimeout = this.config.messageProcessingTimeout();
+            while (!transaction) {
+                const now = Date.now();
+                const timeout = Math.max(stopTime, now) - now + addTimeout;
+                let block: ?QBlock = null;
+                try {
+                    const start = Date.now();
+                    block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
+                    const end = Date.now();
+                    timeReport.push(`Block [${block.id || ''}] has been received: ${end - start} ms, client time: ${end}, gen_utime: ${block.gen_utime || 0}`);
+                } catch (error) {
+                    this.config.log('Block waiting failed: ', error);
+                    if (!infiniteWait) {
+                        let resolvedError = error;
+                        if (error.code === TONErrorCode.WAIT_FOR_TIMEOUT) {
+                            resolvedError = TONClientError.networkSilent({
+                                messageId,
+                                blockId: processing.lastBlockId,
+                                timeout,
+                                messageProcessingState: processing,
+                                expire,
+                                sendingTime: processing.sendingTime,
+                            });
+                        }
+                        throw resolvedError;
+                    }
+                    this.config.log('Retry waiting.');
+                }
+
+                if (block) {
+                    processing.lastBlockId = block.id || '';
+
+                    const inMsg = (block.in_msg_descr || []).find(x => x.msg_id === messageId);
+                    if (inMsg) {
+                        const transactionId = inMsg.transaction_id;
+                        if (!transactionId) {
+                            throw TONClientError.invalidBlockchain('No field `transaction_id` in block');
+                        }
+                        const trStart = Date.now();
+                        transaction = await this.queries.transactions.waitFor({
+                            filter: { id: { eq: transactionId } },
+                            result: TRANSACTION_FIELDS_ORDINARY,
+                            timeout: MAX_TIMEOUT,
+                        });
+                        traceMessage(this.config.tracer, messageId, 'transactionReceived', {
+                            transactionId,
+                        })
+                        timeReport.push(`Transaction [${transactionId}] has been received: ${Date.now() - trStart} ms`);
+                    } else if ((block.gen_utime || 0) > stopTime) {
+                        if (expire) {
+                            traceMessage(this.config.tracer, messageId, 'messageExpired', {
+                            });
+                            throw TONClientError.messageExpired({
+                                messageId,
+                                sendingTime: processing.sendingTime,
+                                expire: stopTime,
+                                blockTime: block.gen_utime,
+                                blockId: processing.lastBlockId,
+                            });
+                        }
+                        throw TONClientError.transactionWaitTimeout({
                             messageId,
-                            blockId: processing.lastBlockId,
+                            sendingTime: processing.sendingTime,
                             timeout,
                             messageProcessingState: processing,
-                            expire,
-                            sendingTime: processing.sendingTime,
                         });
                     }
-                    throw resolvedError;
                 }
-                this.config.log('Retry waiting.');
             }
 
-            if (block) {
-                processing.lastBlockId = block.id || '';
-
-                const inMsg = (block.in_msg_descr || []).find(x => x.msg_id === messageId);
-                if (inMsg) {
-                    const transactionId = inMsg.transaction_id;
-                    if (!transactionId) {
-                        throw TONClientError.invalidBlockchain('No field `transaction_id` in block');
-                    }
-                    const trStart = Date.now();
-                    transaction = await this.queries.transactions.waitFor({
-                        filter: { id: { eq: transactionId } },
-                        result: TRANSACTION_FIELDS_ORDINARY,
-                        timeout: MAX_TIMEOUT,
-                    });
-                    timeReport.push(`Transaction [${transactionId}] has been received: ${Date.now() - trStart} ms`);
-                } else if ((block.gen_utime || 0) > stopTime) {
-                    if (expire) {
-                        throw TONClientError.messageExpired({
-                            messageId,
-                            sendingTime: processing.sendingTime,
-                            expire: stopTime,
-                            blockTime: block.gen_utime,
-                            blockId: processing.lastBlockId,
-                        });
-                    }
-                    throw TONClientError.transactionWaitTimeout({
-                        messageId,
-                        sendingTime: processing.sendingTime,
-                        timeout,
-                        messageProcessingState: processing,
-                    });
-                }
+            timeReport.splice(0, 0, `Transaction waiting time: ${Date.now() - totalStart} ms`);
+            this.config.log(timeReport.join('\n'));
+        } catch (error) {
+            this.config.log('[waitForTransaction]', 'FAILED', error);
+            if (error.code === TONErrorCode.MESSAGE_EXPIRED
+                || error.code === TONErrorCode.TRANSACTION_WAIT_TIMEOUT) {
+                throw await this.resolveDetailedError(
+                    error,
+                    params.message.messageBodyBase64,
+                    processing.sendingTime,
+                    address,
+                );
+            } else {
+                throw error;
             }
         }
 
-        timeReport.splice(0, 0, `Transaction waiting time: ${Date.now() - totalStart} ms`);
-
-        this.config.log(timeReport.join('\n'));
         return this.processTransaction(
             address,
             transaction,
@@ -984,12 +1051,17 @@ export default class TONContractsModule extends TONModule implements TONContract
             this.config.log('[waitForTransaction]', 'FAILED', error);
             if (TONClientError.isMessageExpired(error)
                 || TONClientError.isClientError(error, TONErrorCode.TRANSACTION_WAIT_TIMEOUT)) {
-                throw await this.resolveDetailedError(
+                const detailedError = await this.resolveDetailedError(
                     error,
                     message.messageBodyBase64,
                     Date.now(),
                     message.address,
                 );
+                (detailedError: any).data = {
+                    ...(detailedError: any).data,
+                    ...error.data,
+                };
+                throw detailedError;
             } else {
                 throw error;
             }

@@ -16,6 +16,7 @@ const DEFAULT_MESSAGE_EXPIRATION_GROW_FACTOR = 1.5;
 const DEFAULT_MESSAGE_PROCESSING_TIMEOUT = 40000;
 const DEFAULT_MESSAGE_PROCESSING_GROW_FACTOR = 1.5;
 const DEFAULT_WAIT_FOR_TIMEOUT = 40000;
+const DEFAULT_NETWORK_TIMEOUT = 0;
 
 const DEFAULT_OUT_OF_SYNC_THRESHOLD = 15000;
 
@@ -166,6 +167,18 @@ export default class TONConfigModule extends TONModule {
 
     waitForTimeout(): number {
         return valueOrDefault(this.data.waitForTimeout, DEFAULT_WAIT_FOR_TIMEOUT);
+    }
+
+    networkTimeout(): number {
+        return valueOrDefault(this.data.networkTimeout, DEFAULT_NETWORK_TIMEOUT);
+    }
+
+    isNetworkTimeoutExpiredSince(startTime: number): boolean {
+        const timeout = this.networkTimeout();
+        if (timeout === 0) {
+            return false;
+        }
+        return Date.now() > (startTime + timeout);
     }
 
     log(...args: any[]) {

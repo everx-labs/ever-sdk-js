@@ -387,6 +387,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         const query = gql([ql]);
         return this.graphQl(async (client) => {
             let nextTimeout = 100;
+            const startTime = Date.now();
             while (true) {
                 try {
                     return await client.query({
@@ -397,7 +398,8 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                         },
                     });
                 } catch (error) {
-                    if (TONQueriesModule.isNetworkError(error)) {
+                    if (TONQueriesModule.isNetworkError(error)
+                        && !this.config.isNetworkTimeoutExpiredSince(startTime)) {
                         console.warn(error.networkError);
                         const timeout = nextTimeout;
                         await new Promise(x => setTimeout(x, timeout));
