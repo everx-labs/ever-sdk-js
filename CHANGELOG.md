@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 - `TONContractMessage` includes the `address` field (equals to the `dst`)
 - Support for core contexts.
 - Test suite have been refactored and can be easily adopted to run on several Js targets.
+- `networkTimeout` configuration parameter for retrying GraphQL requests in case of network errors. Default value is `0` which means infinite retries until network connection will be succeeded.
+- New message processing tracing. Client starts root processing span with `traceId` and `spanId` calculated from messageId. Other components can report child span without passing parent context through pipeline. 
 
 ## 0.24.0 - Jun 3, 2020
 ### New

@@ -3,7 +3,7 @@
  */
 // @flow
 
-import {Span, SpanContext} from 'opentracing';
+import { Tracer, FORMAT_TEXT_MAP, Span, SpanContext } from 'opentracing';
 import type {
     QAccount,
     QBlock,
@@ -57,10 +57,10 @@ import type {
     TONMessageProcessingState,
 } from '../../types';
 
-import {TONClientError, TONContractExitCode, TONErrorCode} from '../TONClient';
-import {TONModule} from '../TONModule';
+import { TONClientError, TONContractExitCode, TONErrorCode } from '../TONClient';
+import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
-import TONQueriesModule, {MAX_TIMEOUT} from './TONQueriesModule';
+import TONQueriesModule, { MAX_TIMEOUT } from './TONQueriesModule';
 
 export const TONAddressStringVariant = {
     AccountId: 'AccountId',
@@ -235,6 +235,47 @@ export function removeProps(obj: {}, paths: string[]): {} {
         }
     });
     return result;
+}
+
+function startMessageTraceSpan(
+    tracer: Tracer,
+    messageId: string,
+    operationName: string,
+    tags: { [string]: any },
+): ?Span {
+    if (!messageId) {
+        return null;
+    }
+    const traceId = messageId.substr(0, 16);
+    const spanId = messageId.substr(16, 16);
+    let rootContext: ?SpanContext = null;
+    try {
+        rootContext = tracer.extract(FORMAT_TEXT_MAP, {
+            'uber-trace-id': `${traceId}:${spanId}:0:1`,
+        });
+    } catch {
+        // tracer can't create jaeger compatible span,
+        // so we are fallback to return null
+    }
+    if (!rootContext) {
+        return null;
+    }
+    return tracer.startSpan(operationName, {
+        childOf: rootContext,
+        tags,
+    })
+}
+
+function traceMessage(
+    tracer: Tracer,
+    messageId: string,
+    operationName: string,
+    tags: { [string]: any },
+) {
+    const span = startMessageTraceSpan(tracer, messageId, operationName, tags);
+    if (span) {
+        span.finish();
+    }
 }
 
 export default class TONContractsModule extends TONModule implements TONContracts {
@@ -575,20 +616,31 @@ export default class TONContractsModule extends TONModule implements TONContract
             this.queries.dropServerTimeDelta();
             throw TONClientError.clockOutOfSync();
         }
-        let lastBlockId = await this.findLastShardBlock(params.address);
+        const lastBlockId = await this.findLastShardBlock(params.address);
         const id = await this.ensureMessageId(params);
-        const idBase64 = Buffer.from(id, 'hex')
-            .toString('base64');
+        const idBase64 = Buffer.from(id, 'hex').toString('base64');
+        const messageSpan = this.context.startRootSpan(
+            id.substr(0, 16),
+            id.substr(16, 16),
+            'messageProcessing',
+        );
+        messageSpan.addTags({
+            messageId: id,
+            messageSize: Math.ceil(params.messageBodyBase64.length * 3 / 4),
+            address: params.address,
+            expire: params.expire,
+        })
         await this.queries.postRequests([
             {
                 id: idBase64,
                 body: params.messageBodyBase64,
             },
         ], parentSpan);
+        messageSpan.finish();
         this.config.log('sendMessage. Request posted', id);
         return {
             lastBlockId,
-            sentTime: Math.round(Date.now() / 1000),
+            sendingTime: Math.round(Date.now() / 1000),
         };
     }
 
@@ -601,10 +653,10 @@ export default class TONContractsModule extends TONModule implements TONContract
         abi?: TONContractABI,
         functionName?: string,
     ): Promise<QTransaction> {
-        const processingState = await this.sendMessage(message, parentSpan);
+        const processing = await this.sendMessage(message, parentSpan);
         const { transaction } = await this.waitForTransaction({
             message,
-            processingState,
+            messageProcessingState: processing,
             parentSpan,
             abi,
             functionName,
@@ -618,7 +670,10 @@ export default class TONContractsModule extends TONModule implements TONContract
             filter: { workchain_id: { eq: chain }, ...(additionalFilter || {}) },
             result,
             orderBy: [
-                { path: 'seq_no', direction: "DESC" }
+                {
+                    path: 'seq_no',
+                    direction: 'DESC',
+                },
             ],
             limit: 1,
         });
@@ -634,7 +689,7 @@ export default class TONContractsModule extends TONModule implements TONContract
 
     async findLastShardBlock(address: string): Promise<string> {
         const addressParts = address.split(':');
-        const workchain = addressParts.length > 1 ? Number.parseInt(addressParts[0]) : 0;
+        const workchain = addressParts.length > 1 ? Number.parseInt(addressParts[0], 10) : 0;
 
 
         // if account resides in master chain then starting point is last master chain block
@@ -653,16 +708,17 @@ export default class TONContractsModule extends TONModule implements TONContract
         }
 
         // if account is from other chains then starting point is last account's shard block
-        // To obtain it we take masterchain block to get shards configuration and select matching shard
+        // To obtain it we take masterchain block to get shards configuration and select
+        // matching shard
         if (!masterchainLastBlock) {
-
             // Node SE case - no masterchain, no sharding. Check that only one shard
             let workchainLastBlock = await this.findLastBlock(workchain, 'after_merge shard');
             if (!workchainLastBlock) {
                 throw TONClientError.noBlocks(workchain);
             }
 
-            // if workchain is sharded then it is not Node SE and masterchain blocks missing is error
+            // if workchain is sharded then it is not Node SE and masterchain blocks missing
+            // is error
             if (workchainLastBlock.after_merge || workchainLastBlock.shard !== '8000000000000000') {
                 throw TONClientError.noBlocks(MASTERCHAIN_ID);
             }
@@ -687,22 +743,23 @@ export default class TONContractsModule extends TONModule implements TONContract
             throw TONClientError.invalidBlockchain('No `root_hash` field in shard descr');
         }
         return root_hash;
-
     }
 
     async checkShardMatch(block: QBlock, address: string): Promise<boolean> {
-        return !!(await this.findMatchingShard([{
-            workchain_id: block.workchain_id || 0,
-            shard: block.shard || '',
-        }], address));
+        return !!(await this.findMatchingShard([
+            {
+                workchain_id: block.workchain_id || 0,
+                shard: block.shard || '',
+            },
+        ], address));
     }
 
     async waitNextBlock(current: string, address: string, timeout?: number): Promise<QBlock> {
         const block = await this.queries.blocks.waitFor({
             filter: {
                 prev_ref: {
-                    root_hash: { eq: current }
-                }
+                    root_hash: { eq: current },
+                },
             },
             result: BLOCK_FIELDS,
             timeout,
@@ -713,11 +770,11 @@ export default class TONContractsModule extends TONModule implements TONContract
                 filter: {
                     id: { ne: block.id },
                     prev_ref: {
-                        root_hash: { eq: current }
-                    }
+                        root_hash: { eq: current },
+                    },
                 },
                 result: BLOCK_FIELDS,
-                timeout
+                timeout,
             });
         }
         return block;
@@ -729,105 +786,123 @@ export default class TONContractsModule extends TONModule implements TONContract
         // console.log('>>>', `Legacy wait for a: ${Date.now() - legacyStart} ms`);
         // return result;
 
-        const timeReport = [];
-
         const totalStart = Date.now();
         const expire = params.message.expire || 0;
         const messageId = await this.ensureMessageId(params.message);
         const address = params.message.address;
-        const stopTime = expire
-            || Math.round((Date.now() + this.config.messageProcessingTimeout()) / 1000);
-
-        const infiniteWait = params.infiniteWait !== false;
-        const processing = { ...params.processingState };
+        const processing = { ...params.messageProcessingState };
         let transaction = null;
-        let addTimeout = this.config.messageProcessingTimeout();
-        while (true) {
-            const now = Date.now();
-            const timeout = Math.max(stopTime, now) - now + addTimeout;
-            let block: QBlock;
-            try {
-                const start = Date.now();
-                block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
+        try {
+            const timeReport = [];
+
+            const stopTime = expire
+                || Math.round((Date.now() + this.config.messageProcessingTimeout()) / 1000);
+
+            const infiniteWait = params.infiniteWait !== false;
+            const addTimeout = this.config.messageProcessingTimeout();
+            while (!transaction) {
                 const now = Date.now();
-                timeReport.push(`Block [${block.id || ''}] has been received: ${now - start} ms, client time: ${now}, gen_utime: ${block.gen_utime || 0}`);
-            } catch (error) {
-                if (infiniteWait) {
-                    continue;
-                }
-                let resolvedError = error;
-                if (error.code === TONErrorCode.WAIT_FOR_TIMEOUT) {
-                    resolvedError = TONClientError.networkSilent({
-                        messageId,
-                        blockId: processing.lastBlockId,
-                        timeout,
-                        state: processing,
-                        expire,
-                        sendTime: processing.sentTime,
-                    });
-                }
-                throw resolvedError;
-            }
-
-            processing.lastBlockId = block.id || '';
-
-            for (const inMsg of (block.in_msg_descr || [])) {
-                const blockMessageId = inMsg.msg_id;
-                if (blockMessageId === messageId) {
-                    const transactionId = inMsg.transaction_id;
-                    if (!transactionId) {
-                        throw TONClientError.invalidBlockchain('No field `transaction_id` in block');
+                const timeout = Math.max(stopTime, now) - now + addTimeout;
+                let block: ?QBlock = null;
+                try {
+                    const start = Date.now();
+                    block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
+                    const end = Date.now();
+                    timeReport.push(`Block [${block.id || ''}] has been received: ${end - start} ms, client time: ${end}, gen_utime: ${block.gen_utime || 0}`);
+                } catch (error) {
+                    this.config.log('Block waiting failed: ', error);
+                    if (!infiniteWait) {
+                        let resolvedError = error;
+                        if (error.code === TONErrorCode.WAIT_FOR_TIMEOUT) {
+                            resolvedError = TONClientError.networkSilent({
+                                messageId,
+                                blockId: processing.lastBlockId,
+                                timeout,
+                                messageProcessingState: processing,
+                                expire,
+                                sendingTime: processing.sendingTime,
+                            });
+                        }
+                        throw resolvedError;
                     }
-                    const trStart = Date.now();
-                    transaction = await this.queries.transactions.waitFor({
-                        filter: { id: { eq: transactionId } },
-                        result: TRANSACTION_FIELDS_ORDINARY,
-                        timeout: MAX_TIMEOUT,
-                    });
-                    timeReport.push(`Transaction [${transactionId}] has been received: ${Date.now() - trStart} ms`);
-                    break;
+                    this.config.log('Retry waiting.');
                 }
-            }
-            if (transaction) {
-                break;
+
+                if (block) {
+                    processing.lastBlockId = block.id || '';
+
+                    const inMsg = (block.in_msg_descr || []).find(x => x.msg_id === messageId);
+                    if (inMsg) {
+                        const transactionId = inMsg.transaction_id;
+                        if (!transactionId) {
+                            throw TONClientError.invalidBlockchain('No field `transaction_id` in block');
+                        }
+                        const trStart = Date.now();
+                        transaction = await this.queries.transactions.waitFor({
+                            filter: { id: { eq: transactionId } },
+                            result: TRANSACTION_FIELDS_ORDINARY,
+                            timeout: MAX_TIMEOUT,
+                        });
+                        traceMessage(this.config.tracer, messageId, 'transactionReceived', {
+                            transactionId,
+                        })
+                        timeReport.push(`Transaction [${transactionId}] has been received: ${Date.now() - trStart} ms`);
+                    } else if ((block.gen_utime || 0) > stopTime) {
+                        if (expire) {
+                            traceMessage(this.config.tracer, messageId, 'messageExpired', {
+                            });
+                            throw TONClientError.messageExpired({
+                                messageId,
+                                sendingTime: processing.sendingTime,
+                                expire: stopTime,
+                                blockTime: block.gen_utime,
+                                blockId: processing.lastBlockId,
+                            });
+                        }
+                        throw TONClientError.transactionWaitTimeout({
+                            messageId,
+                            sendingTime: processing.sendingTime,
+                            timeout,
+                            messageProcessingState: processing,
+                        });
+                    }
+                }
             }
 
-            if ((block.gen_utime || 0) > stopTime) {
-                if (expire) {
-                    throw TONClientError.messageExpired({
-                        messageId,
-                        sendTime: processing.sentTime,
-                        expire: stopTime,
-                        blockTime: block.gen_utime,
-                        blockId: processing.lastBlockId,
-                    });
-                }
-                throw TONClientError.transactionWaitTimeout({
-                    messageId,
-                    sendTime: processing.sentTime,
-                    timeout,
-                    messageProcessingState: processing,
-                });
+            timeReport.splice(0, 0, `Transaction waiting time: ${Date.now() - totalStart} ms`);
+            this.config.log(timeReport.join('\n'));
+        } catch (error) {
+            this.config.log('[waitForTransaction]', 'FAILED', error);
+            if (error.code === TONErrorCode.MESSAGE_EXPIRED
+                || error.code === TONErrorCode.TRANSACTION_WAIT_TIMEOUT) {
+                throw await this.resolveDetailedError(
+                    error,
+                    params.message.messageBodyBase64,
+                    processing.sendingTime,
+                    address,
+                );
+            } else {
+                throw error;
             }
         }
 
-        if (!transaction) {
-            throw TONClientError.internalError('Unreachable code');
-        }
-
-        timeReport.splice(0, 0, `Transaction waiting time: ${Date.now() - totalStart} ms`);
-
-        this.config.log(timeReport.join('\n'));
         return this.processTransaction(
             address,
             transaction,
             params.abi,
-            params.functionName
+            params.functionName,
         );
     }
 
-    async legacyWaitForTransaction(params: TONWaitForTransactionParams): Promise<TONContractRunResult> {
-        const { message, abi, functionName, parentSpan } = params;
+    async legacyWaitForTransaction(
+        params: TONWaitForTransactionParams,
+    ): Promise<TONContractRunResult> {
+        const {
+            message,
+            abi,
+            functionName,
+            parentSpan,
+        } = params;
         const retryIndex = 1;
         const messageId = await this.ensureMessageId(message);
         const config = this.config;
@@ -839,14 +914,14 @@ export default class TONContractsModule extends TONModule implements TONContract
             ? this.queries.generateOperationId()
             : undefined;
         let transaction: ?QTransaction = null;
-        let sendTime = Math.round(Date.now() / 1000);
+        const sendingTime = Math.round(Date.now() / 1000);
         let blockTime = null;
         try {
             const expire = message.expire;
             if (expire) {
                 // calculate timeout according to `expire` value (in seconds)
                 // add processing timeout as master block validation time
-                let blockTimeout = expire * 1000 - Date.now() + processingTimeout;
+                const blockTimeout = expire * 1000 - Date.now() + processingTimeout;
                 // transaction timeout must be greater then block timeout
                 processingTimeout = blockTimeout + EXTRA_TRANSACTION_WAITING_TIME;
 
@@ -868,9 +943,9 @@ export default class TONContractsModule extends TONModule implements TONContract
                         if (TONClientError.isWaitForTimeout(error)) {
                             throw TONClientError.networkSilent({
                                 messageId,
-                                sendTime,
+                                sendingTime: sendingTime,
                                 expire,
-                                timeout: blockTimeout
+                                timeout: blockTimeout,
                             });
                         } else {
                             throw error;
@@ -908,7 +983,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                                 blockId: block.id,
                                 transactionId,
                                 timeout: BLOCK_TRANSACTION_WAITING_TIME,
-                                sendTime,
+                                sendingTime: sendingTime,
                                 expire,
                             });
                         } else {
@@ -940,8 +1015,8 @@ export default class TONContractsModule extends TONModule implements TONContract
                         if (TONClientError.isWaitForTimeout(error)) {
                             reject(TONClientError.transactionWaitTimeout({
                                 messageId,
-                                sendTime,
-                                timeout: processingTimeout
+                                sendingTime,
+                                timeout: processingTimeout,
                             }));
                         } else {
                             reject(error);
@@ -961,9 +1036,9 @@ export default class TONContractsModule extends TONModule implements TONContract
             if (!transaction) {
                 throw TONClientError.messageExpired({
                     messageId,
-                    sendTime,
+                    sendingTime: sendingTime,
                     expire,
-                    blockTime
+                    blockTime,
                 });
             }
             const transactionNow = transaction.now || 0;
@@ -974,20 +1049,36 @@ export default class TONContractsModule extends TONModule implements TONContract
             });
         } catch (error) {
             this.config.log('[waitForTransaction]', 'FAILED', error);
-            if (TONClientError.isMessageExpired(error) ||
-                TONClientError.isClientError(error, TONClientError.code.TRANSACTION_WAIT_TIMEOUT)) {
-                throw await this.resolveDetailedError(
+            if (TONClientError.isMessageExpired(error)
+                || TONClientError.isClientError(error, TONErrorCode.TRANSACTION_WAIT_TIMEOUT)) {
+                const detailedError: any = await this.resolveDetailedError(
                     error,
                     message.messageBodyBase64,
                     Date.now(),
                     message.address,
                 );
+                const messageProcessingState = error.data?.messageProcessingState;
+                if (messageProcessingState) {
+                    if (detailedError.data) {
+                        detailedError.data.messageProcessingState = messageProcessingState;
+                    } else {
+                        detailedError.data = {
+                            messageProcessingState,
+                        }
+                    }
+                }
+                throw detailedError;
             } else {
-                throw error
+                throw error;
             }
         }
         removeTypeName(transaction);
-        const { output, fees } = await this.processTransaction(message.address, transaction, abi, functionName);
+        const { output, fees } = await this.processTransaction(
+            message.address,
+            transaction,
+            abi,
+            functionName,
+        );
         return {
             transaction,
             output,
@@ -1004,8 +1095,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         try {
             const result = await this.requestCore('contracts.process.transaction', {
                 transaction,
-                abi: abi,
-                functionName: functionName,
+                abi,
+                functionName,
                 address,
             });
             return {
@@ -1082,20 +1173,20 @@ export default class TONContractsModule extends TONModule implements TONContract
                 alreadyDeployed: true,
             };
         }
-        const processingState = await this.sendMessage(message.message, parentSpan);
-        return this.waitForDeployTransaction(message, processingState, parentSpan);
+        const processing = await this.sendMessage(message.message, parentSpan);
+        return this.waitForDeployTransaction(message, processing, parentSpan);
     }
 
     async waitForDeployTransaction(
         deployMessage: TONContractDeployMessage,
-        processingState: TONMessageProcessingState,
+        messageProcessingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
         infiniteWait?: boolean,
     ): Promise<TONContractDeployResult> {
         const message = deployMessage.message;
         const result = await this.waitForTransaction({
             message,
-            processingState,
+            messageProcessingState,
             parentSpan,
             infiniteWait,
         });
@@ -1112,19 +1203,19 @@ export default class TONContractsModule extends TONModule implements TONContract
         parentSpan?: (Span | SpanContext),
     ): Promise<TONContractRunResult> {
         this.config.log('processRunMessage', runMessage);
-        const processingState = await this.sendMessage(runMessage.message, parentSpan);
-        return this.waitForRunTransaction(runMessage, processingState, parentSpan);
+        const processing = await this.sendMessage(runMessage.message, parentSpan);
+        return this.waitForRunTransaction(runMessage, processing, parentSpan);
     }
 
     async waitForRunTransaction(
         runMessage: TONContractRunMessage,
-        processingState: TONMessageProcessingState,
+        messageProcessingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
         infiniteWait?: boolean,
     ): Promise<TONContractRunResult> {
         return this.waitForTransaction({
             message: runMessage.message,
-            processingState,
+            messageProcessingState,
             parentSpan,
             infiniteWait,
             abi: runMessage.abi,
@@ -1277,7 +1368,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 }
             }
         }
-        throw TONClientError.internalError("All retry attempts failed");
+        throw TONClientError.internalError('All retry attempts failed');
     }
 
 
@@ -1294,8 +1385,8 @@ export default class TONContractsModule extends TONModule implements TONContract
                     alreadyDeployed: true,
                 };
             }
-            const processingState = await this.sendMessage(deployMessage.message, parentSpan);
-            return this.waitForDeployTransaction(deployMessage, processingState, parentSpan);
+            const processing = await this.sendMessage(deployMessage.message, parentSpan);
+            return this.waitForDeployTransaction(deployMessage, processing, parentSpan);
         });
     }
 
@@ -1307,8 +1398,8 @@ export default class TONContractsModule extends TONModule implements TONContract
         this.config.log('Run start');
         return this.retryCall(async (retryIndex) => {
             const runMessage = await this.createRunMessage(params, retryIndex);
-            const processingState = await this.sendMessage(runMessage.message, parentSpan);
-            return this.waitForRunTransaction(runMessage, processingState, parentSpan);
+            const processing = await this.sendMessage(runMessage.message, parentSpan);
+            return this.waitForRunTransaction(runMessage, processing, parentSpan);
         });
     }
 

@@ -23,6 +23,7 @@
 			"error",
 			4
 		],
+		"no-await-in-loop": "off",
 		"no-underscore-dangle": "off",
 		"no-use-before-define": "off",
 		"lines-between-class-members": "off",

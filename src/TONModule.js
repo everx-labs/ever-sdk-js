@@ -98,6 +98,8 @@ export interface TONModuleContext {
 
     serverNow(): Promise<number>,
 
+    startRootSpan(traceId: string, spanId: string, name: string): Span,
+
     trace<T>(
         name: string,
         f: (span: Span) => Promise<T>,
