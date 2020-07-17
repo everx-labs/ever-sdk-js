@@ -1,14 +1,14 @@
 // @flow
 
-import {Span} from "opentracing";
-import {TONClient} from '../../src/TONClient';
+import { Span } from 'opentracing';
+import { TONClient } from '../../src/TONClient';
 import type {
     TONConfigData,
     TONContractABI,
     TONContractDeployParams,
     TONContractDeployResult,
     TONContractPackage,
-    TONKeyPairData
+    TONKeyPairData,
 } from '../../types';
 
 import {
@@ -23,7 +23,7 @@ import {
     get_grams_from_giver,
     readGiverKeys,
     get_giver_address,
-    add_deployed_contract
+    add_deployed_contract,
 } from './giver';
 
 
@@ -68,12 +68,18 @@ async function init() {
     await initTONClient(TONClient);
     const client: TONClient = await TONClient.create(tests.config);
     tests.client = client;
-    console.log('[Init] Created client is connected to: ', client.config.data && client.config.data.servers);
+    console.log(
+        '[Init] Created client is connected to: ',
+        client.config.data && client.config.data.servers,
+    );
     await readGiverKeys();
 }
 
 async function createClient(config: { accessKey?: string }): Promise<TONClient> {
-    return TONClient.create(Object.assign({}, tests.config, config));
+    return TONClient.create({
+        ...tests.config,
+        ...(config: any),
+    });
 }
 
 async function done() {
@@ -107,7 +113,10 @@ export const tests: {
     init(): Promise<void>,
     done(): Promise<void>,
     get_grams_from_giver(account: string, amount?: number, parentSpan?: Span): Promise<void>,
-    deploy_with_giver(params: TONContractDeployParams, parentSpan?: Span): Promise<TONContractDeployResult>,
+    deploy_with_giver(
+        params: TONContractDeployParams,
+        parentSpan?: Span,
+    ): Promise<TONContractDeployResult>,
     add_deployed_contract(key: TONKeyPairData, address: string, abi: TONContractABI): void,
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,

@@ -3,7 +3,9 @@
  */
 // @flow
 
-import {Tags, Span, SpanContext, FORMAT_TEXT_MAP} from "opentracing";
+import {
+    Tags, Span, SpanContext, FORMAT_TEXT_MAP,
+} from 'opentracing';
 import type {
     ITONClient,
     TONAccessKeysManagementParams,
@@ -13,20 +15,20 @@ import type {
     TONQueries,
     TONRegisterAccessKeysParams,
     TONRevokeAccessKeysParams,
-} from "../types";
+} from '../types';
 
 import TONConfigModule from './modules/TONConfigModule';
 import TONContractsModule from './modules/TONContractsModule';
 import TONCryptoModule from './modules/TONCryptoModule';
 /* eslint-disable class-methods-use-this, no-use-before-define */
-import TONQueriesModule from "./modules/TONQueriesModule";
+import TONQueriesModule from './modules/TONQueriesModule';
 
 import type {
     TONClientCoreLibrary,
     TONClientCoreBridge,
-    TONModuleContext
+    TONModuleContext,
 } from './TONModule';
-import {TONModule} from './TONModule';
+import { TONModule } from './TONModule';
 
 /**
  * JavaScript platform specific configuration
@@ -117,10 +119,15 @@ export class TONClient implements TONModuleContext, ITONClient {
                         onResult: (resultJson: string, errorJson: string) => void,
                     ): void => {
                         if (TONClient.coreLibrary) {
-                            TONClient.coreLibrary.coreRequest(this._context, method, paramsJson, onResult);
+                            TONClient.coreLibrary.coreRequest(
+                                this._context,
+                                method,
+                                paramsJson,
+                                onResult,
+                            );
                         }
-                    }
-                }
+                    },
+                };
             } else {
                 this._coreBridge = library;
             }
@@ -179,7 +186,9 @@ export class TONClient implements TONModuleContext, ITONClient {
     }
 
 
-    async _resolveSignedManagementAccessKey(params: TONAccessKeysManagementParams): Promise<string> {
+    async _resolveSignedManagementAccessKey(
+        params: TONAccessKeysManagementParams,
+    ): Promise<string> {
         if (params.signedManagementAccessKey) {
             return params.signedManagementAccessKey;
         }
@@ -189,13 +198,14 @@ export class TONClient implements TONModuleContext, ITONClient {
             return this.crypto.naclSign(
                 { text: managementAccessKey },
                 `${signKeys.secret}${signKeys.public}`,
-                'Hex');
+                'Hex',
+            );
         }
         return '';
     }
 
     async registerAccessKeys(
-        params: TONRegisterAccessKeysParams
+        params: TONRegisterAccessKeysParams,
     ): Promise<number> {
         const signedManagementAccessKey = await this._resolveSignedManagementAccessKey(params);
         const result = await this._queries.mutation(
@@ -205,12 +215,13 @@ export class TONClient implements TONModuleContext, ITONClient {
                 account: params.account,
                 keys: params.keys,
                 signedManagementAccessKey,
-            });
+            },
+        );
         return result.data.registerAccessKeys;
     }
 
     async revokeAccessKeys(
-        params: TONRevokeAccessKeysParams
+        params: TONRevokeAccessKeysParams,
     ): Promise<number> {
         const signedManagementAccessKey = await this._resolveSignedManagementAccessKey(params);
         const result = await this._queries.mutation(
@@ -220,7 +231,8 @@ export class TONClient implements TONModuleContext, ITONClient {
                 account: params.account,
                 keys: params.keys,
                 signedManagementAccessKey,
-            });
+            },
+        );
         return result.data.revokeAccessKeys;
     }
 
@@ -229,26 +241,24 @@ export class TONClient implements TONModuleContext, ITONClient {
         let span: ?Span = null;
         if (tracer._startInternalSpan) {
             try {
-                const references = [];
-                const userTags = undefined;
-                const startTime = Date.now();
-                const internalTags: any = {};
-                const hasValidParent = false;
-                const isRpcServer = false;
                 const ctx = tracer.extract(FORMAT_TEXT_MAP, {
                     'uber-trace-id': `${traceId}:${spanId}:0:1`,
                 });
-                span = this.config.tracer._startInternalSpan(
-                    ctx,
-                    operationName,
-                    startTime,
-                    userTags,
-                    internalTags,
-                    references,
-                    hasValidParent,
-                    isRpcServer,
-                );
+                if (ctx) {
+                    span = this.config.tracer._startInternalSpan(
+                        ctx,
+                        operationName,
+                        Date.now(), // startTime
+                        undefined, // userTags
+                        {}, // internalTags
+                        [], // references
+                        false, // hasValidParent
+                        false, // isRpcServer
+                    );
+                }
             } catch {
+                // tracer can't create message span using private method,
+                // so we are fallback to create span using regular method
             }
         }
         return span || tracer.startSpan(operationName);
@@ -257,7 +267,7 @@ export class TONClient implements TONModuleContext, ITONClient {
     async trace<T>(
         name: string,
         f: (span: Span) => Promise<T>,
-        parentSpan?: (Span | SpanContext)
+        parentSpan?: (Span | SpanContext),
     ): Promise<T> {
         const span = this.config.tracer.startSpan(name, { childOf: parentSpan });
         try {
@@ -269,7 +279,10 @@ export class TONClient implements TONModuleContext, ITONClient {
             span.finish();
             return result;
         } catch (error) {
-            span.log({ event: 'failed', payload: error });
+            span.log({
+                event: 'failed',
+                payload: error,
+            });
             span.finish();
             throw error;
         }
@@ -286,7 +299,7 @@ export class TONClient implements TONModuleContext, ITONClient {
 
 export const TONErrorSource = {
     CLIENT: 'client',
-    NODE: 'node'
+    NODE: 'node',
 };
 
 export const TONErrorCode = {
@@ -319,7 +332,7 @@ export const TONContractExitCode = {
     REPLAY_PROTECTION: 52,
     MESSAGE_EXPIRED: 57,
     NO_GAS: 13,
-}
+};
 
 export class TONClientError {
     static source = TONErrorSource;
@@ -416,14 +429,13 @@ export class TONClientError {
     static formatTime(time: ?number): ?string {
         if (time) {
             return `${new Date(time * 1000).toISOString()} (${time})`;
-        } else {
-            return null;
         }
+        return null;
     }
 
     static messageExpired(data: {
         messageId: string,
-        sendTime: number,
+        sendingTime: number,
         expire: ?number,
         blockTime: ?number,
     }) {
@@ -432,10 +444,10 @@ export class TONClientError {
             TONClientError.code.MESSAGE_EXPIRED,
             TONClientError.source.CLIENT,
             {
-                sendTime: TONClientError.formatTime(data.sendTime),
+                sendingTime: TONClientError.formatTime(data.sendingTime),
                 expirationTime: TONClientError.formatTime(data.expire),
                 blockTime: TONClientError.formatTime(data.blockTime),
-            }
+            },
         );
     }
 
@@ -449,7 +461,8 @@ export class TONClientError {
 
     static addressRequiredForRunLocal() {
         return new TONClientError(
-            `Address required for run local. You haven't specified contract code or data so address is required to load missing parts from network.`,
+            'Address required for run local. You haven\'t specified contract code or data '
+            + 'so address is required to load missing parts from network.',
             TONClientError.code.ADDRESS_REQUIRED_FOR_RUN_LOCAL,
             TONClientError.source.CLIENT,
         );
@@ -457,7 +470,7 @@ export class TONClientError {
 
     static networkSilent(data: {
         messageId: string,
-        sendTime: number,
+        sendingTime: number,
         expire: number,
         timeout: number,
         blockId?: string,
@@ -469,18 +482,17 @@ export class TONClientError {
             TONClientError.source.CLIENT,
             data && {
                 ...data,
-                sendTime: TONClientError.formatTime(data.sendTime),
+                sendingTime: TONClientError.formatTime(data.sendingTime),
                 expirationTime: TONClientError.formatTime(data.expire),
-            }
+            },
         );
     }
 
     static transactionWaitTimeout(data: {
         messageId: string,
-        sendTime: number,
+        sendingTime: number,
         timeout: number,
         messageProcessingState?: TONMessageProcessingState,
-
     }) {
         return new TONClientError(
             'Transaction did not produced during specified timeout',
@@ -488,16 +500,16 @@ export class TONClientError {
             TONClientError.source.CLIENT,
             data && {
                 ...data,
-                sendTime: TONClientError.formatTime(data.sendTime),
-            }
+                sendingTime: TONClientError.formatTime(data.sendingTime),
+            },
         );
     }
 
     static clockOutOfSync() {
         return new TONClientError(
-            'You local clock is out of sync with the server time. ' +
-            'It is a critical condition for sending messages to the blockchain. ' +
-            'Please sync you clock with the internet time.',
+            'You local clock is out of sync with the server time. '
+            + 'It is a critical condition for sending messages to the blockchain. '
+            + 'Please sync you clock with the internet time.',
             TONClientError.code.CLOCK_OUT_OF_SYNC,
             TONClientError.source.CLIENT,
         );
@@ -505,9 +517,10 @@ export class TONClientError {
 
     static accountMissing(address: string) {
         return new TONClientError(
-            `Account with address [${address}] doesn't exists. ` +
-            'You have to prepaid this account to have a positive balance on them and then deploy a contract code for this account.' +
-            'See SDK documentation for detailed instructions.',
+            `Account with address [${address}] doesn't exists. `
+            + 'You have to prepaid this account to have a positive balance on them and then deploy '
+            + 'a contract code for this account.'
+            + 'See SDK documentation for detailed instructions.',
             TONClientError.code.ACCOUNT_MISSING,
             TONClientError.source.CLIENT,
         );
@@ -515,10 +528,11 @@ export class TONClientError {
 
     static accountCodeMissing(address: string, balance: string) {
         return new TONClientError(
-            `Account with address [${address}] exists but haven't a contract code yet. ` +
-            'You have to ensure that an account has an enough balance for deploying a contract code and then deploy a contract code for this account. ' +
-            `Current account balance is [${balance}]. ` +
-            'See SDK documentation for detailed instructions.',
+            `Account with address [${address}] exists but haven't a contract code yet. `
+            + 'You have to ensure that an account has an enough balance for deploying '
+            + 'a contract code and then deploy a contract code for this account. '
+            + `Current account balance is [${balance}]. `
+            + 'See SDK documentation for detailed instructions.',
             TONClientError.code.ACCOUNT_CODE_MISSING,
             TONClientError.source.CLIENT,
         );
@@ -526,9 +540,10 @@ export class TONClientError {
 
     static accountBalanceTooLow(address: string, balance: string) {
         return new TONClientError(
-            `Account with address [${address}] has too low balance [${balance}]. ` +
-            'You have to send some value to account balance from other contract (e.g. Wallet contract). ' +
-            'See SDK documentation for detailed instructions.',
+            `Account with address [${address}] has too low balance [${balance}]. `
+            + 'You have to send some value to account balance from other contract '
+            + '(e.g. Wallet contract). '
+            + 'See SDK documentation for detailed instructions.',
             TONClientError.code.ACCOUNT_BALANCE_TOO_LOW,
             TONClientError.source.CLIENT,
         );
@@ -554,5 +569,4 @@ export class TONClientError {
     static isWaitForTimeout(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT);
     }
-
 }

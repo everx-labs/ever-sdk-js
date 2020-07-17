@@ -313,7 +313,7 @@ export type TONContractMessage = {
 
 export type TONMessageProcessingState = {
     lastBlockId: string,
-    sentTime: number,
+    sendingTime: number,
 };
 
 export type TONContractUnsignedMessage = {
@@ -450,7 +450,7 @@ export type TONContractDecodeMessageBodyParams = {
 
 export type TONWaitForTransactionParams = {
     message: TONContractMessage,
-    processingState: TONMessageProcessingState,
+    messageProcessingState: TONMessageProcessingState,
     infiniteWait?: boolean, // default = true
     abi?: TONContractABI,
     functionName?: string,
@@ -758,14 +758,14 @@ export interface TONContracts {
 
     waitForDeployTransaction(
         deployMessage: TONContractDeployMessage,
-        processingState: TONMessageProcessingState,
+        messageProcessingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
         infiniteWait?: boolean,
     ): Promise<TONContractDeployResult>;
 
     waitForRunTransaction(
         runMessage: TONContractRunMessage,
-        processingState: TONMessageProcessingState,
+        messageProcessingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
         infiniteWait?: boolean,
     ): Promise<TONContractRunResult>;
