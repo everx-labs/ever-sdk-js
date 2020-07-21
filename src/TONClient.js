@@ -364,10 +364,17 @@ export class TONClientError {
             && (error.code === code);
     }
 
-    static isContractError(error: any, exitCode: number): boolean {
+    static isContractError(error: any, exitCode: number, originalError: boolean): boolean {
         return (error.source === TONClientError.source.NODE)
             && (error.code === TONClientError.code.CONTRACT_EXECUTION_FAILED)
-            && (error.data && error.data.exit_code === exitCode);
+            && (error.data && error.data.exit_code === exitCode)
+            && (!originalError || !error.data.original_error);
+    }
+
+    static isResolvedContractErrorAfterExpire(error: any, exitCode: number): boolean {
+        return TONClientError.isContractError(error, exitCode, false)
+            && (error.data && error.data.original_error
+                && TONClientError.isMessageExpired(error.data.original_error));
     }
 
     static internalError(message: string): TONClientError {

@@ -987,7 +987,11 @@ test('Test expire retries', async () => {
         keyPair: helloKeys,
     });
 
-    const client = await TONClient.create(tests.config);
+    const client = await TONClient.create({
+            ...tests.config,
+            messageExpirationTimeoutGrowFactor: 1.1
+        });
+    let completed = 0;
     const run = async () => {
         const result = await client.contracts.run({
             address: contractData.address,
@@ -996,11 +1000,11 @@ test('Test expire retries', async () => {
             input: {},
             keyPair: helloKeys,
         });
-        console.log('>>> run complete');
+        console.log(`>>> run complete ${++completed}`);
         return result;
     };
     const runs = [];
-    for (let i = 0; i < 20; i += 1) {
+    for (let i = 0; i < 10; i += 1) {
         runs.push(run());
     }
     await Promise.all(runs);

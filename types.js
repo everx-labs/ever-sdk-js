@@ -11,7 +11,6 @@ export type TONConfigData = {
     messageExpirationTimeout?: number,
     messageExpirationTimeoutGrowFactor?: number,
     messageProcessingTimeout?: number,
-    messageProcessingTimeoutGrowFactor?: number,
     waitForTimeout?: number,
     networkTimeout?: number,
     useWebSocketForQueries?: boolean,
