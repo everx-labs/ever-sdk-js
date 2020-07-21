@@ -808,7 +808,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     const start = Date.now();
                     block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
                     const end = Date.now();
-                    timeReport.push(`Block [${block.id || ''}] has been received: ${end - start} ms, client time: ${end}, gen_utime: ${block.gen_utime || 0}`);
+                    timeReport.push(`Block [${block.id || ''}] has been received: ${end - start} ms, client time: ${Math.round(end / 1000)}, gen_utime: ${block.gen_utime || 0}`);
                 } catch (error) {
                     this.config.log('Block waiting failed: ', error);
                     if (!infiniteWait) {
@@ -903,11 +903,10 @@ export default class TONContractsModule extends TONModule implements TONContract
             functionName,
             parentSpan,
         } = params;
-        const retryIndex = 1;
         const messageId = await this.ensureMessageId(message);
         const config = this.config;
         config.log('[waitForTransaction]', functionName, message);
-        let processingTimeout = config.messageProcessingTimeout(retryIndex);
+        let processingTimeout = config.messageProcessingTimeout();
         const promises = [];
         const serverInfo = await this.queries.getServerInfo(parentSpan);
         const operationId = serverInfo.supportsOperationId
@@ -1111,9 +1110,6 @@ export default class TONContractsModule extends TONModule implements TONContract
             });
             if (accounts.length === 0) {
                 throw TONClientError.accountMissing(address);
-            }
-            if (TONClientError.isContractError(error, TONContractExitCode.NO_GAS)) {
-                throw TONClientError.accountBalanceTooLow(address, accounts[0].balance);
             }
             throw error;
         }
@@ -1360,9 +1356,14 @@ export default class TONContractsModule extends TONModule implements TONContract
             try {
                 return await call(i);
             } catch (error) {
+                // retry if message expired or if resolving returned that message expired/replay 
+                // protection error or if transaction with message expired/replay protection error
+                // returned
                 const useRetry = error.code === TONErrorCode.MESSAGE_EXPIRED
-                    || TONClientError.isContractError(error, TONContractExitCode.REPLAY_PROTECTION)
-                    || TONClientError.isContractError(error, TONContractExitCode.MESSAGE_EXPIRED);
+                    || TONClientError.isOriginalContractError(error, TONContractExitCode.REPLAY_PROTECTION)
+                    || TONClientError.isOriginalContractError(error, TONContractExitCode.MESSAGE_EXPIRED)
+                    || TONClientError.isResolvedContractErrorAfterExpire(error, TONContractExitCode.REPLAY_PROTECTION)
+                    || TONClientError.isResolvedContractErrorAfterExpire(error, TONContractExitCode.MESSAGE_EXPIRED);
                 if (!useRetry || i === retriesCount) {
                     throw error;
                 }
