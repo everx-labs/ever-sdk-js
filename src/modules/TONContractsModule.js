@@ -1053,7 +1053,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 const detailedError: any = await this.resolveDetailedError(
                     error,
                     message.messageBodyBase64,
-                    Date.now(),
+                    Date.now() / 1000,
                     message.address,
                 );
                 const messageProcessingState = error.data?.messageProcessingState;
@@ -1136,7 +1136,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 address,
                 account,
                 messageBase64,
-                time: Math.round(time / 1000),
+                time: time,
                 mainError: error,
             });
         } catch (resolved) {
