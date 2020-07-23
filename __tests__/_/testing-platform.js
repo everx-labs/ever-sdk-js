@@ -150,7 +150,10 @@ async function initTONClient(tonClientClass) {
     //$FlowFixMe
     const library = require('../tonclient.node');
     tonClientClass.setLibrary({
-        fetch,
+        fetch: (...args) => {
+            console.log('>>>', 'fetch', AbortController);
+            return fetch(...args);
+        },
         WebSocket: WebSocket.w3cwebsocket,
         createLibrary: () => {
             return Promise.resolve(library);
