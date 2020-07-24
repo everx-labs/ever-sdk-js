@@ -427,13 +427,10 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 const client = await this.graphqlClientRequired(span);
                 const context: any = {
                     traceSpan: span,
-                };
-                if (timeout) {
-                    context.fetchOptions = {
-                        ...context.fetchOptions,
+                    fetchOptions: {
                         queryTimeout: forceTerminateTimeout + forceTerminateExtraTimeout,
                     }
-                }
+                };
                 return await client.query({
                     query,
                     variables,
