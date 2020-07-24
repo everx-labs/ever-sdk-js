@@ -25,7 +25,7 @@ export async function readGiverKeys() {
     const keys = await findGiverKeys();
     if (keys) {
         giverWalletKeys = keys;
-        console.log('Use custom giver keys from');
+        console.log('Use provided giver keys.');
     } else {
         console.log('Custom giver keys not provided. Use default');
     }
