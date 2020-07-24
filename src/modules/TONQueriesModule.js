@@ -25,7 +25,7 @@ import type {
     TONWaitForParams,
     TONQueryAggregateParams,
 } from '../../types';
-import { TONClient, TONClientError } from '../TONClient';
+import { TONClient, TONClientError, TONErrorCode } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import TONConfigModule, { URLParts } from './TONConfigModule';
@@ -43,6 +43,7 @@ export type ServerInfo = {
     supportsTime: boolean,
     timeDelta: ?number,
 };
+
 
 type GraphQLClientConfig = {
     httpUrl: string,
@@ -129,6 +130,29 @@ function resolveServerInfo(versionString: string | null | typeof undefined): Ser
         supportsAggregations: version >= 25000,
         supportsTime: version >= 26003,
         timeDelta: null,
+    };
+}
+
+function abortableFetch(fetch) {
+    return (input, options) => {
+        return new Promise((resolve, reject) => {
+            const queryTimeout: number | typeof undefined = options.queryTimeout;
+            let fetchOptions = options;
+            if (queryTimeout) {
+                const controller = global.AbortController ? new global.AbortController() : null;
+                if (controller) {
+                    fetchOptions = {
+                        ...options,
+                        signal: controller.signal,
+                    }
+                }
+                setTimeout(() => {
+                    reject(TONClientError.QUERY_FORCIBLY_ABORTED)
+                    controller && controller.abort();
+                }, queryTimeout);
+            }
+            fetch(input, fetchOptions).then(resolve, reject);
+        });
     };
 }
 
@@ -351,13 +375,14 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         ql: string,
         variables: { [string]: any } = {},
         parentSpan?: (Span | SpanContext),
+        timeout?: number,
     ): Promise<any> {
         return this.context.trace('queries.query', async (span: Span) => {
             span.setTag('params', {
                 query: ql,
                 variables,
             });
-            return this.graphqlQuery(ql, variables, span);
+            return this.graphqlQuery(ql, variables, span, timeout);
         }, parentSpan);
     }
 
@@ -373,6 +398,9 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     }
 
     static isNetworkError(error: any): boolean {
+        if (error.code === TONErrorCode.QUERY_FORCIBLY_ABORTED) {
+            return true;
+        }
         const networkError = error.networkError;
         if (!networkError) {
             return false;
@@ -383,35 +411,71 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         return !('response' in networkError || 'result' in networkError);
     }
 
-    async graphqlQuery(ql: string, variables: { [string]: any } = {}, span: Span): Promise<any> {
+    async graphqlQuery(
+        ql: string,
+        variables: { [string]: any } = {},
+        span: Span,
+        timeout?: number,
+    ): Promise<any> {
         const query = gql([ql]);
-        return this.graphQl(async (client) => {
-            let nextTimeout = 100;
-            const startTime = Date.now();
-            while (true) {
-                try {
-                    return await client.query({
-                        query,
-                        variables,
-                        context: {
-                            traceSpan: span,
-                        },
-                    });
-                } catch (error) {
-                    if (TONQueriesModule.isNetworkError(error)
-                        && !this.config.isNetworkTimeoutExpiredSince(startTime)) {
-                        console.warn(error.networkError);
-                        const timeout = nextTimeout;
-                        await new Promise(x => setTimeout(x, timeout));
-                        if (nextTimeout < 3200) {
-                            nextTimeout *= 2;
-                        }
-                    } else {
-                        throw error;
+        let nextTimeout = 100;
+        const startTime = Date.now();
+        let forceTerminateExtraTimeout = 5000;
+        const forceTerminateTimeout = timeout || this.config.waitForTimeout();
+        while (true) {
+            try {
+                const client = await this.graphqlClientRequired(span);
+                const context: any = {
+                    traceSpan: span,
+                    fetchOptions: {
+                        queryTimeout: forceTerminateTimeout + forceTerminateExtraTimeout,
                     }
+                };
+                return await client.query({
+                    query,
+                    variables,
+                    context,
+                });
+            } catch (error) {
+                let resolvedError = this.resolveGraphQLError(error);
+                if (TONQueriesModule.isNetworkError(resolvedError)
+                    && !this.config.isNetworkTimeoutExpiredSince(startTime)) {
+                    this.config.log(resolvedError);
+                    const retryDelayTimeout = nextTimeout;
+                    await new Promise(resolve => setTimeout(resolve, retryDelayTimeout));
+                    if (nextTimeout < 3200) {
+                        nextTimeout *= 2;
+                    }
+                    if (forceTerminateExtraTimeout < this.config.waitForTimeout()) {
+                        forceTerminateExtraTimeout += 5000;
+                    }
+                } else {
+                    throw resolvedError;
                 }
             }
-        }, span);
+        }
+    }
+
+    resolveGraphQLError(error: any) {
+        const gqlErr = error.graphQLErrors && error.graphQLErrors[0];
+        if (gqlErr) {
+            const clientErr = new Error(gqlErr.message);
+            const gqlExc = (gqlErr.extensions && gqlErr.extensions.exception) || {};
+            (clientErr: any).number = gqlExc.code || 0;
+            (clientErr: any).code = gqlExc.code || 0;
+            (clientErr: any).source = gqlExc.source || 'client';
+            return clientErr;
+        }
+        const errors = error
+            && error.networkError
+            && error.networkError.result
+            && error.networkError.result.errors;
+        if (errors) {
+            return TONClientError.queryFailed(errors);
+        } else {
+            return error;
+        }
+
     }
 
     async graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {
@@ -419,24 +483,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         try {
             return await request(client);
         } catch (error) {
-            const gqlErr = error.graphQLErrors && error.graphQLErrors[0];
-            if (gqlErr) {
-                const clientErr = new Error(gqlErr.message);
-                const gqlExc = (gqlErr.extensions && gqlErr.extensions.exception) || {};
-                (clientErr: any).number = gqlExc.code || 0;
-                (clientErr: any).code = gqlExc.code || 0;
-                (clientErr: any).source = gqlExc.source || 'client';
-                throw clientErr;
-            }
-            const errors = error
-                && error.networkError
-                && error.networkError.result
-                && error.networkError.result.errors;
-            if (errors) {
-                throw TONClientError.queryFailed(errors);
-            } else {
-                throw error;
-            }
+            throw this.resolveGraphQLError(error);
         }
     }
 
@@ -540,14 +587,14 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 && definition.operation === 'subscription'
             );
         };
+
         wsLink = new WebSocketLink(subscriptionClient);
         httpLink = useHttp
             ? new HttpLink({
                 uri: clientConfig.httpUrl,
-                fetch: clientConfig.fetch,
+                fetch: abortableFetch(clientConfig.fetch),
             })
             : null;
-
         const link = httpLink
             ? split(isSubscription, wrapLink(wsLink), wrapLink(httpLink))
             : wrapLink(wsLink);
@@ -661,7 +708,7 @@ class TONQueriesModuleCollection implements TONQCollection {
             if (timeout) {
                 variables.timeout = Math.min(MAX_TIMEOUT, timeout);
             }
-            return (await this.module.graphqlQuery(ql, variables, span)).data[c];
+            return (await this.module.graphqlQuery(ql, variables, span, timeout)).data[c];
         }, parentSpan);
     }
 

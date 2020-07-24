@@ -8,9 +8,9 @@
  * const env
  */
 
-import {Tracer} from "opentracing";
-import {version} from '../../package.json';
-import {initTracer as initJaegerTracer} from 'jaeger-client';
+import { Tracer } from 'opentracing';
+import { version } from '../../package.json';
+import { initTracer as initJaegerTracer } from 'jaeger-client';
 
 const fs = require('fs');
 const path = require('path');
@@ -34,7 +34,7 @@ function downloadAndGunzip(dest, url) {
                 return;
             }
             fs.mkdirSync(path.dirname(path.resolve(dest)), ({ recursive: true }: any));
-            let file = fs.createWriteStream(dest, { flags: "w" });
+            let file = fs.createWriteStream(dest, { flags: 'w' });
             let opened = false;
             const failed = (err) => {
                 if (file) {
@@ -55,26 +55,26 @@ function downloadAndGunzip(dest, url) {
             response.pipe(unzip);
 
 
-            request.on("error", err => {
+            request.on('error', err => {
                 failed(err);
             });
 
-            file.on("finish", () => {
+            file.on('finish', () => {
                 if (opened && file) {
                     resolve();
                 }
             });
 
-            file.on("open", () => {
+            file.on('open', () => {
                 opened = true;
             });
 
-            file.on("error", err => {
-                if (err.code === "EEXIST") {
+            file.on('error', err => {
+                if (err.code === 'EEXIST') {
                     if (file) {
                         file.close();
                     }
-                    reject("File already exists");
+                    reject('File already exists');
                 } else {
                     failed(err);
                 }
