@@ -155,14 +155,9 @@ export default class TONConfigModule extends TONModule {
         );
     }
 
-    messageProcessingTimeout(retryIndex?: number): number {
-        return resolveTimeout(
-            this.data.messageProcessingTimeout,
-            DEFAULT_MESSAGE_PROCESSING_TIMEOUT,
-            this.data.messageProcessingTimeoutGrowFactor,
-            DEFAULT_MESSAGE_PROCESSING_GROW_FACTOR,
-            retryIndex,
-        );
+    messageProcessingTimeout(): number {
+        const timeout = this.data.messageProcessingTimeout;
+        return timeout === 0 ? 0 : (timeout || DEFAULT_MESSAGE_PROCESSING_TIMEOUT);
     }
 
     waitForTimeout(): number {

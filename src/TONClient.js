@@ -378,6 +378,17 @@ export class TONClientError {
             && (error.data && error.data.exit_code === exitCode);
     }
 
+    static isOriginalContractError(error: any, exitCode: number): boolean {
+        return TONClientError.isContractError(error, exitCode)
+            && (!error.data?.original_error);
+    }
+
+    static isResolvedContractErrorAfterExpire(error: any, exitCode: number): boolean {
+        return TONClientError.isContractError(error, exitCode)
+            && (error.data && error.data.original_error
+                && TONClientError.isMessageExpired(error.data.original_error));
+    }
+
     static internalError(message: string): TONClientError {
         return new TONClientError(
             `Internal error: ${message}`,
