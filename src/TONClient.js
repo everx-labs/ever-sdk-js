@@ -3,26 +3,32 @@
  */
 // @flow
 
-import {Tags, Span, SpanContext} from "opentracing";
+import {
+    Tags, Span, SpanContext, FORMAT_TEXT_MAP,
+} from 'opentracing';
 import type {
     ITONClient,
     TONAccessKeysManagementParams,
     TONConfigData,
     TONContracts,
-    TONCrypto,
+    TONCrypto, TONMessageProcessingState,
     TONQueries,
     TONRegisterAccessKeysParams,
     TONRevokeAccessKeysParams,
-} from "../types";
+} from '../types';
 
 import TONConfigModule from './modules/TONConfigModule';
 import TONContractsModule from './modules/TONContractsModule';
 import TONCryptoModule from './modules/TONCryptoModule';
 /* eslint-disable class-methods-use-this, no-use-before-define */
-import TONQueriesModule from "./modules/TONQueriesModule";
+import TONQueriesModule from './modules/TONQueriesModule';
 
-import type {TONClientLibrary, TONModuleContext} from './TONModule';
-import {TONModule} from './TONModule';
+import type {
+    TONClientCoreLibrary,
+    TONClientCoreBridge,
+    TONModuleContext,
+} from './TONModule';
+import { TONModule } from './TONModule';
 
 /**
  * JavaScript platform specific configuration
@@ -40,7 +46,7 @@ type TONClientPlatform = {
     /**
      * Request creation of the client core
      */
-    createLibrary: () => Promise<TONClientLibrary>,
+    createLibrary: () => Promise<TONClientCoreLibrary>,
 };
 
 /**
@@ -60,6 +66,8 @@ export class TONClient implements TONModuleContext, ITONClient {
     contracts: TONContracts;
     queries: TONQueries;
     _queries: TONQueriesModule;
+    _context: number;
+    _coreBridge: ?TONClientCoreBridge;
 
     constructor() {
         this.modules = new Map();
@@ -68,6 +76,8 @@ export class TONClient implements TONModuleContext, ITONClient {
         this.contracts = this.getModule(TONContractsModule);
         this._queries = this.getModule(TONQueriesModule);
         this.queries = this._queries;
+        this._context = 0;
+        this._coreBridge = null;
     }
 
     /**
@@ -87,16 +97,46 @@ export class TONClient implements TONModuleContext, ITONClient {
      * @return {Promise<void>}
      */
     async setup(): Promise<void> {
-        if (!TONClient.core) {
-            if (!TONClient.clientPlatform) {
-                return;
+        const tryCreateLibrary = async () => {
+            const platform = TONClient.clientPlatform;
+            if (platform === null || platform === undefined) {
+                return null;
             }
-            TONClient.core = await TONClient.clientPlatform.createLibrary();
+            TONClient.coreLibrary = await platform.createLibrary();
+            return TONClient.coreLibrary;
+        };
+        const library = TONClient.coreLibrary || await tryCreateLibrary();
+        if (!library) {
+            return;
+        }
+        if (this._coreBridge === null || this._coreBridge === undefined) {
+            if (library.coreCreateContext) {
+                this._context = await new Promise((resolve) => library.coreCreateContext(resolve));
+                this._coreBridge = {
+                    request: (
+                        method: string,
+                        paramsJson: string,
+                        onResult: (resultJson: string, errorJson: string) => void,
+                    ): void => {
+                        if (TONClient.coreLibrary) {
+                            TONClient.coreLibrary.coreRequest(
+                                this._context,
+                                method,
+                                paramsJson,
+                                onResult,
+                            );
+                        }
+                    },
+                };
+            } else {
+                this._coreBridge = library;
+            }
         }
         const modules: TONModule[] = [...this.modules.values()];
         for (const module of modules) {
             await module.setup();
         }
+        TONClientError.coreVersion = await this.config.getVersion();
     }
 
     /**
@@ -106,12 +146,19 @@ export class TONClient implements TONModuleContext, ITONClient {
      */
     async close(): Promise<void> {
         await this.queries.close();
+        const library = TONClient.coreLibrary;
+        if (this._context > 0 && library !== null && library !== undefined) {
+            const context = this._context;
+            this._coreBridge = null;
+            this._context = 0;
+            await new Promise(resolve => library.coreDestroyContext(context, resolve));
+        }
     }
 
     // TONModuleContext
 
-    getCore(): ?TONClientLibrary {
-        return TONClient.core;
+    getCoreBridge(): ?TONClientCoreBridge {
+        return this._coreBridge;
     }
 
     getModule<T>(ModuleClass: typeof TONModule): T {
@@ -139,7 +186,9 @@ export class TONClient implements TONModuleContext, ITONClient {
     }
 
 
-    async _resolveSignedManagementAccessKey(params: TONAccessKeysManagementParams): Promise<string> {
+    async _resolveSignedManagementAccessKey(
+        params: TONAccessKeysManagementParams,
+    ): Promise<string> {
         if (params.signedManagementAccessKey) {
             return params.signedManagementAccessKey;
         }
@@ -149,13 +198,14 @@ export class TONClient implements TONModuleContext, ITONClient {
             return this.crypto.naclSign(
                 { text: managementAccessKey },
                 `${signKeys.secret}${signKeys.public}`,
-                'Hex');
+                'Hex',
+            );
         }
         return '';
     }
 
     async registerAccessKeys(
-        params: TONRegisterAccessKeysParams
+        params: TONRegisterAccessKeysParams,
     ): Promise<number> {
         const signedManagementAccessKey = await this._resolveSignedManagementAccessKey(params);
         const result = await this._queries.mutation(
@@ -165,12 +215,13 @@ export class TONClient implements TONModuleContext, ITONClient {
                 account: params.account,
                 keys: params.keys,
                 signedManagementAccessKey,
-            });
+            },
+        );
         return result.data.registerAccessKeys;
     }
 
     async revokeAccessKeys(
-        params: TONRevokeAccessKeysParams
+        params: TONRevokeAccessKeysParams,
     ): Promise<number> {
         const signedManagementAccessKey = await this._resolveSignedManagementAccessKey(params);
         const result = await this._queries.mutation(
@@ -180,14 +231,43 @@ export class TONClient implements TONModuleContext, ITONClient {
                 account: params.account,
                 keys: params.keys,
                 signedManagementAccessKey,
-            });
+            },
+        );
         return result.data.revokeAccessKeys;
+    }
+
+    startRootSpan(traceId: string, spanId: string, operationName: string): Span {
+        const tracer = this.config.tracer;
+        let span: ?Span = null;
+        if (tracer._startInternalSpan) {
+            try {
+                const ctx = tracer.extract(FORMAT_TEXT_MAP, {
+                    'uber-trace-id': `${traceId}:${spanId}:0:1`,
+                });
+                if (ctx) {
+                    span = this.config.tracer._startInternalSpan(
+                        ctx,
+                        operationName,
+                        Date.now(), // startTime
+                        undefined, // userTags
+                        {}, // internalTags
+                        [], // references
+                        false, // hasValidParent
+                        false, // isRpcServer
+                    );
+                }
+            } catch {
+                // tracer can't create message span using private method,
+                // so we are fallback to create span using regular method
+            }
+        }
+        return span || tracer.startSpan(operationName);
     }
 
     async trace<T>(
         name: string,
         f: (span: Span) => Promise<T>,
-        parentSpan?: (Span | SpanContext)
+        parentSpan?: (Span | SpanContext),
     ): Promise<T> {
         const span = this.config.tracer.startSpan(name, { childOf: parentSpan });
         try {
@@ -199,7 +279,10 @@ export class TONClient implements TONModuleContext, ITONClient {
             span.finish();
             return result;
         } catch (error) {
-            span.log({ event: 'failed', payload: error });
+            span.log({
+                event: 'failed',
+                payload: error,
+            });
             span.finish();
             throw error;
         }
@@ -208,7 +291,7 @@ export class TONClient implements TONModuleContext, ITONClient {
     // Internals
 
     static clientPlatform: ?TONClientPlatform = null;
-    static core: ?TONClientLibrary = null;
+    static coreLibrary: ?TONClientCoreLibrary = null;
 
     modules: Map<string, TONModule>;
 }
@@ -216,7 +299,7 @@ export class TONClient implements TONModuleContext, ITONClient {
 
 export const TONErrorSource = {
     CLIENT: 'client',
-    NODE: 'node'
+    NODE: 'node',
 };
 
 export const TONErrorCode = {
@@ -240,29 +323,42 @@ export const TONErrorCode = {
     ACCOUNT_BALANCE_TOO_LOW: 1016,
     ACCOUNT_FROZEN_OR_DELETED: 1017,
 
+    // Contracts
+
     CONTRACT_EXECUTION_FAILED: 3025,
 
+    // Queries
+
+    QUERY_FORCIBLY_ABORTED: 4005,
 };
 
 export const TONContractExitCode = {
     REPLAY_PROTECTION: 52,
     MESSAGE_EXPIRED: 57,
     NO_GAS: 13,
-}
+};
 
 export class TONClientError {
     static source = TONErrorSource;
     static code = TONErrorCode;
+    static coreVersion = '';
+    static QUERY_FORCIBLY_ABORTED = new TONClientError(
+        'GraphQL query was forcibly aborted on timeout.',
+        TONErrorCode.QUERY_FORCIBLY_ABORTED,
+    );
+
 
     message: string;
     source: string;
     code: number;
     data: any;
+    coreVersion: string;
 
-    constructor(message: string, code: number, source: string, data?: any) {
+    constructor(message: string, code: number, source?: string, data?: any) {
         this.message = message;
         this.code = code;
-        this.source = source;
+        this.source = source || TONErrorSource.CLIENT;
+        this.coreVersion = TONClientError.coreVersion;
         this.data = data;
     }
 
@@ -282,180 +378,194 @@ export class TONClientError {
             && (error.data && error.data.exit_code === exitCode);
     }
 
+    static isOriginalContractError(error: any, exitCode: number): boolean {
+        return TONClientError.isContractError(error, exitCode)
+            && (!error.data?.original_error);
+    }
+
+    static isResolvedContractErrorAfterExpire(error: any, exitCode: number): boolean {
+        return TONClientError.isContractError(error, exitCode)
+            && (error.data && error.data.original_error
+                && TONClientError.isMessageExpired(error.data.original_error));
+    }
+
     static internalError(message: string): TONClientError {
         return new TONClientError(
             `Internal error: ${message}`,
-            TONClientError.code.INTERNAL_ERROR,
-            TONClientError.source.CLIENT,
+            TONErrorCode.INTERNAL_ERROR,
         );
     }
 
     static invalidCons(): TONClientError {
         return new TONClientError(
             'Invalid CONS structure. Each CONS item must contains of two elements.',
-            TONClientError.code.INVALID_CONS,
-            TONClientError.source.CLIENT,
+            TONErrorCode.INVALID_CONS,
         );
     }
 
     static clientDoesNotConfigured(): TONClientError {
         return new TONClientError(
-            'TON Client does not configured',
-            TONClientError.code.CLIENT_DOES_NOT_CONFIGURED,
-            TONClientError.source.CLIENT,
+            'TON Client isn\'t configured',
+            TONErrorCode.CLIENT_DOES_NOT_CONFIGURED,
         );
     }
 
     static sendNodeRequestFailed(responseText: string): TONClientError {
         return new TONClientError(
             `Send node request failed: ${responseText}`,
-            TONClientError.code.SEND_NODE_REQUEST_FAILED,
-            TONClientError.source.CLIENT,
+            TONErrorCode.SEND_NODE_REQUEST_FAILED,
         );
     }
 
     static runLocalAccountDoesNotExists(functionName: string, address: string): TONClientError {
         return new TONClientError(
             `[${functionName}] run local failed: account [${address}] does not exists`,
-            TONClientError.code.RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS,
-            TONClientError.source.CLIENT,
+            TONErrorCode.RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS,
         );
     }
 
     static waitForTimeout() {
         return new TONClientError(
             'Wait for operation rejected on timeout',
-            TONClientError.code.WAIT_FOR_TIMEOUT,
-            TONClientError.source.CLIENT,
+            TONErrorCode.WAIT_FOR_TIMEOUT,
         );
     }
 
     static queryFailed(errors: Error[]) {
         return new TONClientError(
             `Query failed: ${errors.map(x => x.message || x.toString()).join('\n')}`,
-            TONClientError.code.QUERY_FAILED,
-            TONClientError.source.CLIENT,
+            TONErrorCode.QUERY_FAILED,
         );
     }
 
     static formatTime(time: ?number): ?string {
         if (time) {
             return `${new Date(time * 1000).toISOString()} (${time})`;
-        } else {
-            return null;
         }
+        return null;
     }
 
-    static messageExpired(data: { msgId: string, sendTime: number, expire: ?number, blockTime: ?number }) {
+    static messageExpired(data: {
+        messageId: string,
+        sendingTime: number,
+        expire: ?number,
+        blockTime: ?number,
+    }) {
         return new TONClientError(
             'Message expired',
-            TONClientError.code.MESSAGE_EXPIRED,
-            TONClientError.source.CLIENT,
+            TONErrorCode.MESSAGE_EXPIRED,
+            TONErrorSource.CLIENT,
             {
-                messageId: data.msgId,
-                sendTime: TONClientError.formatTime(data.sendTime),
+                sendingTime: TONClientError.formatTime(data.sendingTime),
                 expirationTime: TONClientError.formatTime(data.expire),
                 blockTime: TONClientError.formatTime(data.blockTime),
-            }
+            },
         );
     }
 
     static serverDoesntSupportAggregations() {
         return new TONClientError(
             'Server doesn\'t support aggregations',
-            TONClientError.code.SERVER_DOESNT_SUPPORT_AGGREGATIONS,
-            TONClientError.source.CLIENT,
+            TONErrorCode.SERVER_DOESNT_SUPPORT_AGGREGATIONS,
         );
     }
 
     static addressRequiredForRunLocal() {
         return new TONClientError(
-            `Address required for run local. You haven't specified contract code or data so address is required to load missing parts from network.`,
+            'Address required for run local. You haven\'t specified contract code or data '
+            + 'so address is required to load missing parts from network.',
             TONClientError.code.ADDRESS_REQUIRED_FOR_RUN_LOCAL,
             TONClientError.source.CLIENT,
         );
     }
 
-    static networkSilent(data: { msgId: string, sendTime: number, expire: number, timeout: number }) {
+    static networkSilent(data: {
+        messageId: string,
+        sendingTime: number,
+        expire: number,
+        timeout: number,
+        blockId?: string,
+        messageProcessingState?: TONMessageProcessingState,
+    }) {
         return new TONClientError(
             'Network silent: no blocks produced during timeout.',
-            TONClientError.code.NETWORK_SILENT,
-            TONClientError.source.CLIENT,
-            {
-                messageId: data.msgId,
-                sendTime: TONClientError.formatTime(data.sendTime),
+            TONErrorCode.NETWORK_SILENT,
+            TONErrorSource.CLIENT,
+            data && {
+                ...data,
+                sendingTime: TONClientError.formatTime(data.sendingTime),
                 expirationTime: TONClientError.formatTime(data.expire),
-                timeout: data.timeout,
-            }
+            },
         );
     }
 
-    static transactionLag(data: { msgId: string, blockId: string, transactionId: string, timeout: number }) {
-        return new TONClientError(
-            'Existing block transaction not found (no transaction appeared for the masterchain block with gen_utime > message expiration time)',
-            TONClientError.code.TRANSACTION_LAG,
-            TONClientError.source.CLIENT,
-            {
-                messageId: data.msgId,
-                blockId: data.blockId,
-                transactionId: data.transactionId,
-                timeout: data.timeout,
-            }
-        );
-    }
-
-    static transactionWaitTimeout(data: { msgId: string, sendTime: number, timeout: number }) {
+    static transactionWaitTimeout(data: {
+        messageId: string,
+        sendingTime: number,
+        timeout: number,
+        messageProcessingState?: TONMessageProcessingState,
+    }) {
         return new TONClientError(
             'Transaction did not produced during specified timeout',
-            TONClientError.code.TRANSACTION_WAIT_TIMEOUT,
-            TONClientError.source.CLIENT,
-            {
-                messageId: data.msgId,
-                sendTime: TONClientError.formatTime(data.sendTime),
-                timeout: data.timeout,
-            }
+            TONErrorCode.TRANSACTION_WAIT_TIMEOUT,
+            TONErrorSource.CLIENT,
+            data && {
+                ...data,
+                sendingTime: TONClientError.formatTime(data.sendingTime),
+            },
         );
     }
 
     static clockOutOfSync() {
         return new TONClientError(
-            'You local clock is out of sync with the server time. ' +
-            'It is a critical condition for sending messages to the blockchain. ' +
-            'Please sync you clock with the internet time.',
-            TONClientError.code.CLOCK_OUT_OF_SYNC,
-            TONClientError.source.CLIENT,
+            'You local clock is out of sync with the server time. '
+            + 'It is a critical condition for sending messages to the blockchain. '
+            + 'Please sync you clock with the internet time.',
+            TONErrorCode.CLOCK_OUT_OF_SYNC,
         );
     }
 
     static accountMissing(address: string) {
         return new TONClientError(
-            `Account with address [${address}] doesn't exists. ` +
-            'You have to prepaid this account to have a positive balance on them and then deploy a contract code for this account.' +
-            'See SDK documentation for detailed instructions.',
-            TONClientError.code.ACCOUNT_MISSING,
-            TONClientError.source.CLIENT,
+            `Account with address [${address}] doesn't exists. `
+            + 'You have to prepaid this account to have a positive balance on them and then deploy '
+            + 'a contract code for this account.'
+            + 'See SDK documentation for detailed instructions.',
+            TONErrorCode.ACCOUNT_MISSING,
         );
     }
 
     static accountCodeMissing(address: string, balance: string) {
         return new TONClientError(
-            `Account with address [${address}] exists but haven't a contract code yet. ` +
-            'You have to ensure that an account has an enough balance for deploying a contract code and then deploy a contract code for this account. ' +
-            `Current account balance is [${balance}]. ` +
-            'See SDK documentation for detailed instructions.',
-            TONClientError.code.ACCOUNT_CODE_MISSING,
-            TONClientError.source.CLIENT,
+            `Account with address [${address}] exists but haven't a contract code yet. `
+            + 'You have to ensure that an account has an enough balance for deploying '
+            + 'a contract code and then deploy a contract code for this account. '
+            + `Current account balance is [${balance}]. `
+            + 'See SDK documentation for detailed instructions.',
+            TONErrorCode.ACCOUNT_CODE_MISSING,
         );
     }
 
     static accountBalanceTooLow(address: string, balance: string) {
         return new TONClientError(
-            `Account with address [${address}] has too low balance [${balance}]. ` +
-            'You have to send some value to account balance from other contract (e.g. Wallet contract). ' +
-            'See SDK documentation for detailed instructions.',
-            TONClientError.code.ACCOUNT_BALANCE_TOO_LOW,
-            TONClientError.source.CLIENT,
+            `Account with address [${address}] has too low balance [${balance}]. `
+            + 'You have to send some value to account balance from other contract '
+            + '(e.g. Wallet contract). '
+            + 'See SDK documentation for detailed instructions.',
+            TONErrorCode.ACCOUNT_BALANCE_TOO_LOW,
         );
+    }
+
+    static noBlocks(workchain: number) {
+        const workchainName = workchain === -1 ? 'masterchain' : `workchain ${workchain}`;
+        return new TONClientError(
+            `"No blocks for ${workchainName} found".`,
+            TONErrorCode.NETWORK_SILENT,
+        );
+    }
+
+    static invalidBlockchain(message: string) {
+        return new TONClientError(message, TONErrorCode.NETWORK_SILENT);
     }
 
     static isMessageExpired(error: any): boolean {

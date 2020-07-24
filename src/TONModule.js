@@ -18,9 +18,21 @@
 /* eslint-disable class-methods-use-this, no-use-before-define, no-undef */
 
 // Deprecated: TONClientCore v0.17.0
-import { Span, SpanContext, SpanOptions, Tracer } from "opentracing";
+import {Span, SpanContext} from "opentracing";
 
-export interface TONClientLibrary {
+/**
+ * TONClientCoreBridge
+ * Minimalistic legacy interface to core library.
+ * Old style cores did provide only this API.
+ * For new style cores TONClient creates context bound wrapper with this interface.
+ */
+export interface TONClientCoreBridge {
+    /**
+     * Backward compatibility
+     * @param method
+     * @param paramsJson
+     * @param onResult
+     */
     request(
         method: string,
         paramsJson: string,
@@ -28,31 +40,31 @@ export interface TONClientLibrary {
     ): void;
 }
 
-
 /**
- * TON Client Core public interface
- * Client Core performs client tasks through single JSON-based tunneling method called `request`
+ * TON Client Core API
+ * Client Core performs client tasks through single JSON-based tunneling method called `coreRequest`
  * Every core request can be performed in two ways:
- * - sync call with `requestSync` method
- * - async request with `request` method
+ * - async request with `coreRequest` method
  * Client is a stateful object. Each client state called a `context`.
  * So you must use following rules when working with a core:
- * - create a context object and receive context handle with `createContext`
+ * - create a context object and receive context handle with `coreCreateContext`
  * - configure `context` with `config` invocation method
- * - pass context handle in `request` and `call`
- * - when you don't need context you must destroy it with `destroyContext`
+ * - pass context handle to `coreRequest`
+ * - when you don't need context you must destroy it with `coreDestroyContext`
  */
-export interface TONClientCore {
+export interface TONClientCoreLibrary extends TONClientCoreBridge {
     /**
      * Create new context and returns handle to it
+     * @param {function} onContext
      */
-    createContext(): number;
+    coreCreateContext(onContext: (context: number) => void): void;
 
     /**
      * Destroy context with specified handle
      * @param context
+     * @param onComplete
      */
-    destroyContext(context: number): void;
+    coreDestroyContext(context: number, onComplete: () => void): void;
 
     /**
      * Post async request to core
@@ -61,27 +73,12 @@ export interface TONClientCore {
      * @param {string} paramsJson
      * @param {function} onResult
      */
-    request(
+    coreRequest(
         context: number,
         method: string,
         paramsJson: string,
         onResult: (resultJson: string, errorJson: string) => void,
     ): void;
-
-    /**
-     * Perform sync request to core and return result
-     * @param {number} context
-     * @param {string} method
-     * @param {string} paramsJson
-     */
-    requestSync(
-        context: number,
-        method: string,
-        paramsJson: string
-    ): {
-        resultJson: string,
-        errorJson: string
-    };
 }
 
 /**
@@ -93,13 +90,15 @@ export interface TONClientCore {
  * - access to sibling modules (using a module class as an id)
  */
 export interface TONModuleContext {
-    getCore(): ?TONClientLibrary,
+    getCoreBridge(): ?TONClientCoreBridge,
 
     getModule<T>(ModuleClass: typeof TONModule): T,
 
     serverTimeDelta(): Promise<number>,
 
     serverNow(): Promise<number>,
+
+    startRootSpan(traceId: string, spanId: string, name: string): Span,
 
     trace<T>(
         name: string,
@@ -149,13 +148,12 @@ export class TONModule {
      * @return {Promise<Object>}
      */
     requestCore<Params, Result>(method: string, params?: Params): Promise<Result> {
-        const p = params !== undefined ? (JSON.stringify(params) || '') : '';
-        const core = this.context.getCore();
-        if (!core) {
-            throw new Error('TON SDK JS Library doesn\'t set up');
+        const coreBridge = this.context.getCoreBridge();
+        if (!coreBridge) {
+            throw new Error('TON Client Library isn\'t set up properly');
         }
         return new Promise((resolve: (Result) => void, reject: (Error) => void) => {
-            core.request(
+            coreBridge.request(
                 method,
                 params !== undefined ? (JSON.stringify(params) || '') : '',
                 (resultJson, errorJson) => {

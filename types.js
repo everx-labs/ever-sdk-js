@@ -1,7 +1,7 @@
 // @flow
 
-import { Span, SpanContext } from 'opentracing';
-import type { Request } from './src/modules/TONQueriesModule';
+import {Span, SpanContext} from 'opentracing';
+import type {Request} from './src/modules/TONQueriesModule';
 
 export type TONConfigData = {
     servers: string[],
@@ -11,8 +11,8 @@ export type TONConfigData = {
     messageExpirationTimeout?: number,
     messageExpirationTimeoutGrowFactor?: number,
     messageProcessingTimeout?: number,
-    messageProcessingTimeoutGrowFactor?: number,
     waitForTimeout?: number,
+    networkTimeout?: number,
     useWebSocketForQueries?: boolean,
     outOfSyncThreshold?: number,
     accessKey?: string,
@@ -302,42 +302,48 @@ export type TONContractDeployResult = {
     transaction?: QTransaction,
 }
 
-export type TONContractUnsignedMessage = {
-    abi: TONContractABI,
-    unsignedBytesBase64: string,
-    bytesToSignBase64: string,
+// Messages
+
+export type TONContractMessage = {
+    messageBodyBase64: string,
+    address: string,
+    messageId?: string,
     expire?: number,
 }
 
-export type TONContractMessage = {
-    messageId?: string,
-    messageBodyBase64: string,
+export type TONMessageProcessingState = {
+    lastBlockId: string,
+    sendingTime: number,
+};
+
+export type TONContractUnsignedMessage = {
+    unsignedBytesBase64: string,
+    bytesToSignBase64: string,
+    abi: TONContractABI,
     expire?: number,
 }
 
 export type TONContractUnsignedDeployMessage = {
-    address: string,
     signParams: TONContractUnsignedMessage,
+    address: string,
 }
 
 export type TONContractUnsignedRunMessage = {
+    signParams: TONContractUnsignedMessage,
     address: string,
     functionName: string,
-    signParams: TONContractUnsignedMessage,
 }
 
 export type TONContractDeployMessage = {
-    address: string,
     message: TONContractMessage,
-    creationTime?: number,
+    address: string,
 }
 
 export type TONContractRunMessage = {
+    message: TONContractMessage,
     address: string,
     abi: TONContractABI,
     functionName: string,
-    message: TONContractMessage,
-    creationTime?: number,
 }
 
 export type TONContractCreateSignedMessageParams = {
@@ -442,13 +448,22 @@ export type TONContractDecodeMessageBodyParams = {
     internal?: boolean,
 }
 
+export type TONWaitForTransactionParams = {
+    message: TONContractMessage,
+    messageProcessingState: TONMessageProcessingState,
+    infiniteWait?: boolean, // default = true
+    abi?: TONContractABI,
+    functionName?: string,
+    parentSpan?: (Span | SpanContext),
+};
+
 export type TONContractRunResult = {
     output: any,
-    transaction: QTransaction
+    transaction: QTransaction,
+    fees: TONContractTransactionFees,
 }
 
 export type TONContractRunLocalResult = TONContractRunResult & {
-    fees?: any,
     account?: QAccount,
 }
 
@@ -592,13 +607,44 @@ export type QMessage = {
 }
 
 export type InMsg = {
-    transaction_id?: string
+    msg_id?: string,
+    transaction_id?: string,
 }
+
+export type QShardHash = {
+    workchain_id: number,
+    shard: string,
+    descr?: {
+        seq_no: number,
+        reg_mc_seqno: number,
+        start_lt: string,
+        end_lt: string,
+        root_hash: string,
+        file_hash: string,
+        before_split: boolean,
+        before_merge: boolean,
+        want_split: boolean,
+        want_merge: boolean,
+        nx_cc_updated: boolean,
+        flags: number,
+        next_catchain_seqno: number,
+        next_validator_shard: string,
+        min_ref_mc_seqno: number,
+        gen_utime: number,
+        split_type: number,
+        split: number,
+        fees_collected: string,
+        funds_created: string,
+    },
+};
 
 export type QBlock = {
     id?: string,
     tr_count?: number,
-    in_msg_descr?: InMsg[]
+    in_msg_descr?: InMsg[],
+    workchain_id?: number,
+    shard?: string,
+    gen_utime?: number,
 }
 
 export interface TONContracts {
@@ -701,23 +747,27 @@ export interface TONContracts {
 
     // Message processing
 
-    getMessageId(message: TONContractMessage): Promise<string>;
+    ensureMessageId(message: TONContractMessage): Promise<string>;
 
     sendMessage(
         params: TONContractMessage,
         parentSpan?: (Span | SpanContext)
-    ): Promise<string>;
+    ): Promise<TONMessageProcessingState>;
+
+    waitForTransaction(params: TONWaitForTransactionParams): Promise<TONContractRunResult>;
 
     waitForDeployTransaction(
         deployMessage: TONContractDeployMessage,
+        messageProcessingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
-        retryIndex?: number,
+        infiniteWait?: boolean,
     ): Promise<TONContractDeployResult>;
 
     waitForRunTransaction(
         runMessage: TONContractRunMessage,
+        messageProcessingState: TONMessageProcessingState,
         parentSpan?: (Span | SpanContext),
-        retryIndex?: number,
+        infiniteWait?: boolean,
     ): Promise<TONContractRunResult>;
 
     processMessage(
@@ -790,7 +840,7 @@ export type DocEvent = (changeType: string, doc: any) => void;
 
 export type OrderBy = {
     path: string,
-    sort: 'ASC' | 'DESC'
+    direction: 'ASC' | 'DESC'
 }
 
 export type Subscription = {

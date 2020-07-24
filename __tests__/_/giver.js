@@ -16,17 +16,17 @@ import type {
     TONKeyPairData
 } from '../../types';
 import { nodeSe, tests } from './init-tests';
-
-const os = require('os');
-const fs = require('fs');
-const path = require('path');
+import {
+    findGiverKeys,
+    writeGiverKeys
+} from "./testing-platform";
 
 export async function readGiverKeys() {
-    try {
-        let keysPath = path.resolve(os.homedir(), 'giverKeys.json');
-        giverWalletKeys = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
-        console.log('Use giver keys from ', keysPath);
-    } catch (error) {
+    const keys = await findGiverKeys();
+    if (keys) {
+        giverWalletKeys = keys;
+        console.log('Use custom giver keys from');
+    } else {
         console.log('Custom giver keys not provided. Use default');
     }
 
@@ -46,8 +46,7 @@ export async function readGiverKeys() {
 }
 
 async function generateGiverKeys() {
-    const keys = await tests.client.crypto.ed25519Keypair();
-    fs.writeFileSync(path.resolve(os.homedir(), 'giverKeys.json'), JSON.stringify(keys));
+    await writeGiverKeys(await tests.client.crypto.ed25519Keypair());
 }
 
 async function getGiverAddress(): Promise<string> {

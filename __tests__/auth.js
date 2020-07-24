@@ -14,8 +14,6 @@ import type {
 } from '../types';
 import { tests } from './_/init-tests';
 
-const HelloContractPackage = tests.loadPackage('Hello');
-
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -114,6 +112,7 @@ test.skip('Run restricted contract', async () => {
     jest.setTimeout(100000);
     const managementClient = await tests.createClient({ accessKey: 'bypass' });
 
+    const HelloContractPackage = await tests.loadPackage('Hello');
     const fooKeys = await managementClient.crypto.ed25519Keypair();
     const barKeys = await managementClient.crypto.ed25519Keypair();
     const helloPackage = HelloContractPackage[2];

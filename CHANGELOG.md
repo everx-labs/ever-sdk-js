@@ -1,6 +1,17 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.25.0 - Jul 8, 2020
+
+### New
+- `TONContractMessage` includes the `address` field (equals to the `dst`)
+- Support for core contexts.
+- Test suite have been refactored and can be easily adopted to run on several Js targets.
+- `networkTimeout` configuration parameter for retrying GraphQL requests in case of network errors. Default value is `0` which means infinite retries until network connection will be succeeded.
+- New message processing tracing. Client starts root processing span with `traceId` and `spanId` calculated from messageId. Other components can report child span without passing parent context through pipeline. 
+- `messageProcessingTimeoutGrowFactor` field removed from config since it's not used 
+- graphql queries can be forcible aborted on a timeout in case of a half-open TCP connection,
+
 ## 0.24.0 - Jun 3, 2020
 ### New
 - Detailed errors produced by core library.
