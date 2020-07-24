@@ -44,6 +44,7 @@ export type ServerInfo = {
     timeDelta: ?number,
 };
 
+
 type GraphQLClientConfig = {
     httpUrl: string,
     wsUrl: string,
@@ -129,6 +130,29 @@ function resolveServerInfo(versionString: string | null | typeof undefined): Ser
         supportsAggregations: version >= 25000,
         supportsTime: version >= 26003,
         timeDelta: null,
+    };
+}
+
+function abortableFetch(fetch) {
+    return (input, options) => {
+        return new Promise((resolve, reject) => {
+            const queryTimeout: number | typeof undefined = options.queryTimeout;
+            let fetchOptions = options;
+            if (queryTimeout) {
+                const controller = global.AbortController ? new global.AbortController() : null;
+                if (controller) {
+                    fetchOptions = {
+                        ...options,
+                        signal: controller.signal,
+                    }
+                }
+                setTimeout(() => {
+                    reject(TONClientError.QUERY_FORCIBLY_ABORTED)
+                    controller && controller.abort();
+                }, queryTimeout);
+            }
+            fetch(input, fetchOptions).then(resolve, reject);
+        });
     };
 }
 
@@ -374,7 +398,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     }
 
     static isNetworkError(error: any): boolean {
-        if (error.code === TONErrorCode.REQUEST_FORCIBLY_TERMINATED) {
+        if (error.code === TONErrorCode.QUERY_FORCIBLY_ABORTED) {
             return true;
         }
         const networkError = error.networkError;
@@ -401,30 +425,20 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         while (true) {
             try {
                 const client = await this.graphqlClientRequired(span);
-                const abortController = AbortController ? new AbortController() : null;
-                const promises: Promise<any>[] = [client.query({
+                const context: any = {
+                    traceSpan: span,
+                };
+                if (timeout) {
+                    context.fetchOptions = {
+                        ...context.fetchOptions,
+                        queryTimeout: forceTerminateTimeout + forceTerminateExtraTimeout,
+                    }
+                }
+                return await client.query({
                     query,
                     variables,
-                    context: {
-                        traceSpan: span,
-                        fetchOptions: {
-                            signal: abortController.signal,
-                        },
-                    },
-                    fetchPolicy: 'standby',
-                })];
-                if (timeout) {
-                    promises.push(new Promise((resolve, reject) => {
-                        setTimeout(
-                            () => {
-                                abortController?.abort();
-                                reject(TONClientError.requestForciblyTerminated());
-                            },
-                            forceTerminateTimeout + forceTerminateExtraTimeout,
-                        );
-                    }));
-                }
-                return await Promise.race(promises);
+                    context,
+                });
             } catch (error) {
                 let resolvedError = this.resolveGraphQLError(error);
                 if (TONQueriesModule.isNetworkError(resolvedError)
@@ -576,11 +590,12 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 && definition.operation === 'subscription'
             );
         };
+
         wsLink = new WebSocketLink(subscriptionClient);
         httpLink = useHttp
             ? new HttpLink({
                 uri: clientConfig.httpUrl,
-                fetch: clientConfig.fetch,
+                fetch: abortableFetch(clientConfig.fetch),
             })
             : null;
         const link = httpLink

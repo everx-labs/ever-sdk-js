@@ -329,7 +329,7 @@ export const TONErrorCode = {
 
     // Queries
 
-    REQUEST_FORCIBLY_TERMINATED: 4005,
+    QUERY_FORCIBLY_ABORTED: 4005,
 };
 
 export const TONContractExitCode = {
@@ -342,6 +342,10 @@ export class TONClientError {
     static source = TONErrorSource;
     static code = TONErrorCode;
     static coreVersion = '';
+    static QUERY_FORCIBLY_ABORTED = new TONClientError(
+        'GraphQL query was forcibly aborted on timeout.',
+        TONErrorCode.QUERY_FORCIBLY_ABORTED,
+    );
 
 
     message: string;
@@ -559,12 +563,5 @@ export class TONClientError {
 
     static isWaitForTimeout(error: any): boolean {
         return TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT);
-    }
-
-    static requestForciblyTerminated() {
-        return new TONClientError(
-            `GraphQL query was forcibly terminated on timeout.`,
-            TONErrorCode.REQUEST_FORCIBLY_TERMINATED,
-        );
     }
 }
