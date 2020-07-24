@@ -12,7 +12,7 @@ afterAll(tests.done);
 
 declare function fail(message: string): void;
 
-test('Force Close Half-open Connections', async () => {
+test.skip('Force Close Half-open Connections', async () => {
     jest.setTimeout(1000000);
     const { queries } = tests.client;
     while (true) {
