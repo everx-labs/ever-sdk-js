@@ -428,7 +428,9 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 const context: any = {
                     traceSpan: span,
                     fetchOptions: {
-                        queryTimeout: forceTerminateTimeout + forceTerminateExtraTimeout,
+                        queryTimeout: Math.min(
+                            forceTerminateTimeout + forceTerminateExtraTimeout,
+                            MAX_TIMEOUT),
                     }
                 };
                 return await client.query({
