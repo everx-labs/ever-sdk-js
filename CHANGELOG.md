@@ -1,7 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.25.0 - Jul 8, 2020
+## 0.25.1 - July 26, 2020
+### Bug fix
+- TimeoutOverflowWarning: 2147488647 does not fit into a 32-bit signed integer was fixed
+
+## 0.25.0 - July 8, 2020
 
 ### New
 - `TONContractMessage` includes the `address` field (equals to the `dst`)
@@ -12,7 +16,7 @@ All notable changes to this project will be documented in this file.
 - `messageProcessingTimeoutGrowFactor` field removed from config since it's not used 
 - graphql queries can be forcible aborted on a timeout in case of a half-open TCP connection,
 
-## 0.24.0 - Jun 3, 2020
+## 0.24.0 - June 3, 2020
 ### New
 - Detailed errors produced by core library.
 - Optional parameter `fullRun` for `runLocal` method allows to emulate an execution on a real node with all required checks and fees calculations. 
