@@ -69,8 +69,7 @@ async function init() {
     const client: TONClient = await TONClient.create(tests.config);
     tests.client = client;
     console.log(
-        '[Init] Created client is connected to: ',
-        client.config.data && client.config.data.servers,
+        `[Init] Created client is connected to: ${JSON.stringify(client.config.data && client.config.data.servers)}`,
     );
     await readGiverKeys();
 }
