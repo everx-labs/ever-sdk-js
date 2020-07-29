@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.25.3 - July 29, 2020
+### Fixed
+- Fix test. 
+
 ## 0.25.2 - July 26, 2020
 ### Fixed
 - Error reporting in test suite on react-native testApp. 
