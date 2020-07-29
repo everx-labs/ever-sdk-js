@@ -1,7 +1,7 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.25.3 - July 26, 2020
+## 0.25.3 - July 29, 2020
 ### Fixed
 - Fix test. 
 
