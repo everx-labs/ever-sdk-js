@@ -206,8 +206,6 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
                 .toEqual('client');
             expect(error.code)
                 .toEqual(3012);
-            expect(error.data)
-                .toBeNull();
         }
     });
 });
