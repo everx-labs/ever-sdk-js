@@ -97,41 +97,7 @@ export class TONClient implements TONModuleContext, ITONClient {
      * @return {Promise<void>}
      */
     async setup(): Promise<void> {
-        const tryCreateLibrary = async () => {
-            const platform = TONClient.clientPlatform;
-            if (platform === null || platform === undefined) {
-                return null;
-            }
-            TONClient.coreLibrary = await platform.createLibrary();
-            return TONClient.coreLibrary;
-        };
-        const library = TONClient.coreLibrary || await tryCreateLibrary();
-        if (!library) {
-            return;
-        }
-        if (this._coreBridge === null || this._coreBridge === undefined) {
-            if (library.coreCreateContext) {
-                this._context = await new Promise((resolve) => library.coreCreateContext(resolve));
-                this._coreBridge = {
-                    request: (
-                        method: string,
-                        paramsJson: string,
-                        onResult: (resultJson: string, errorJson: string) => void,
-                    ): void => {
-                        if (TONClient.coreLibrary) {
-                            TONClient.coreLibrary.coreRequest(
-                                this._context,
-                                method,
-                                paramsJson,
-                                onResult,
-                            );
-                        }
-                    },
-                };
-            } else {
-                this._coreBridge = library;
-            }
-        }
+        await this.getCoreBridge();
         const modules: TONModule[] = [...this.modules.values()];
         for (const module of modules) {
             await module.setup();
@@ -157,7 +123,47 @@ export class TONClient implements TONModuleContext, ITONClient {
 
     // TONModuleContext
 
-    getCoreBridge(): ?TONClientCoreBridge {
+    async tryCreateLibrary() {
+        const platform = TONClient.clientPlatform;
+        if (platform === null || platform === undefined) {
+            return null;
+        }
+        TONClient.coreLibrary = await platform.createLibrary();
+        return TONClient.coreLibrary;
+    }
+
+    async tryCreateCoreBridge() {
+        const library = TONClient.coreLibrary || await this.tryCreateLibrary();
+        if (!library) {
+            return;
+        }
+        if (library.coreCreateContext) {
+            this._context = await new Promise((resolve) => library.coreCreateContext(resolve));
+            this._coreBridge = {
+                request: (
+                    method: string,
+                    paramsJson: string,
+                    onResult: (resultJson: string, errorJson: string) => void,
+                ): void => {
+                    if (TONClient.coreLibrary) {
+                        TONClient.coreLibrary.coreRequest(
+                            this._context,
+                            method,
+                            paramsJson,
+                            onResult,
+                        );
+                    }
+                },
+            };
+        } else {
+            this._coreBridge = library;
+        }
+    }
+
+    async getCoreBridge(): Promise<?TONClientCoreBridge> {
+        if (!this._coreBridge) {
+            await this.tryCreateCoreBridge();
+        }
         return this._coreBridge;
     }
 

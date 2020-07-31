@@ -90,7 +90,7 @@ export interface TONClientCoreLibrary extends TONClientCoreBridge {
  * - access to sibling modules (using a module class as an id)
  */
 export interface TONModuleContext {
-    getCoreBridge(): ?TONClientCoreBridge,
+    getCoreBridge(): Promise<?TONClientCoreBridge>,
 
     getModule<T>(ModuleClass: typeof TONModule): T,
 
@@ -147,8 +147,8 @@ export class TONModule {
      * @param {Object} params Method parameters will be stringified into JSON
      * @return {Promise<Object>}
      */
-    requestCore<Params, Result>(method: string, params?: Params): Promise<Result> {
-        const coreBridge = this.context.getCoreBridge();
+    async requestCore<Params, Result>(method: string, params?: Params): Promise<Result> {
+        const coreBridge = await this.context.getCoreBridge();
         if (!coreBridge) {
             throw new Error('TON Client Library isn\'t set up properly');
         }

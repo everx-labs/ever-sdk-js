@@ -367,7 +367,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             const account: any = await this.getAccount(address, false, {
                 timeout: this.config.waitForTimeout(),
             });
-            if (!account.code) {
+            const hasCode = account.code || account.code_hash;
+            if (!hasCode) {
                 throw TONClientError.accountCodeMissing(address, account.balance);
             }
             account.codeBase64 = account.code;
@@ -1356,7 +1357,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             try {
                 return await call(i);
             } catch (error) {
-                // retry if message expired or if resolving returned that message expired/replay 
+                // retry if message expired or if resolving returned that message expired/replay
                 // protection error or if transaction with message expired/replay protection error
                 // returned
                 const useRetry = error.code === TONErrorCode.MESSAGE_EXPIRED
@@ -1451,7 +1452,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             params.waitParams,
             parentSpan,
         ));
-        if (!account.code) {
+        const hasCode = account.code || account.code_hash;
+        if (!hasCode) {
             throw TONClientError.accountCodeMissing(address, (account: any).balance);
         }
         return this.requestCore('contracts.run.local', {
@@ -1479,7 +1481,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             params.waitParams,
             parentSpan,
         ));
-        if (!account.code) {
+        const hasCode = account.code || account.code_hash;
+        if (!hasCode) {
             throw TONClientError.accountCodeMissing(address, (account: any).balance);
         }
         return this.requestCore('contracts.run.local.msg', {
