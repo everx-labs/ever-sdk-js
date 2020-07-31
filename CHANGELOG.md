@@ -1,9 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.25.4 - July 30, 2020
-### New
-- Usage of the account's `boc` instead of `code` and `data`. 
+## 0.25.5 - August 1, 2020
+
+## 0.25.4 - July 31, 2020
+### Fixed
+- Ability to use `crypto` module before `setup`. 
 
 ## 0.25.3 - July 29, 2020
 ### Fixed
