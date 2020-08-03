@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.25.4 - July 31, 2020
+### Fixed
+- Ability to use `crypto` module before `setup`. 
+
 ## 0.25.3 - July 29, 2020
 ### Fixed
 - Fix test. 

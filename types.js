@@ -560,7 +560,9 @@ export type QAccount = {
     tick?: boolean,
     tock?: boolean,
     code?: string,
+    code_hash?: string,
     data?: string,
+    data_hash?: string,
     library?: string,
 }
 

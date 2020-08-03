@@ -21,6 +21,11 @@ beforeAll(tests.init);
 afterAll(tests.done);
 const TONMnemonicWordCounts = [12, 15, 18, 21, 24];
 test('crypto', async () => {
+    const clientWithoutSetup = tests.newClient();
+    const result0 = await clientWithoutSetup.crypto.factorize('17ED48941A08F981');
+    expect(result0.a).toEqual("494C553B");
+    expect(result0.b).toEqual("53911073");
+
     const crypto: TONCryptoModule = tests.client.crypto;
 
     // Math
