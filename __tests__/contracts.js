@@ -987,6 +987,7 @@ test('Test expire retries', async () => {
 
     const client = await TONClient.create({
             ...tests.config,
+            messageExpirationTimeout: 5000,
             messageExpirationTimeoutGrowFactor: 1.1
         });
     let completed = 0;

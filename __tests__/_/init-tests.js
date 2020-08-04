@@ -130,6 +130,7 @@ export const tests: {
     config: {
         defaultWorkchain: 0,
         servers: serversConfig,
+        messageExpirationTimeout: 10000,
         log_verbose: false,
         useWebSocketForQueries: true,
         tracer: createJaegerTracer(''),
