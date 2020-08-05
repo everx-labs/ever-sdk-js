@@ -257,7 +257,7 @@ test.skip('Subscribe for accounts', async () => {
 test.skip('Long time subscription', async () => {
     jest.setTimeout(1000000);
     const { queries } = tests.client;
-    const subscription = queries.accounts.subscribe({}, 'id code data', (e, doc) => {
+    const subscription = queries.accounts.subscribe({}, 'id code_hash data_hash', (e, doc) => {
         console.log(doc.id);
     });
     await new Promise(resolve => setTimeout(resolve, 1_000_000));
