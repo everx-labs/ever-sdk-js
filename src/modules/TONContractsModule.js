@@ -761,6 +761,11 @@ export default class TONContractsModule extends TONModule implements TONContract
                 prev_ref: {
                     root_hash: { eq: current },
                 },
+                OR: {
+                    prev_alt_ref: {
+                        root_hash: { eq: current },
+                    },
+                },
             },
             result: BLOCK_FIELDS,
             timeout,
@@ -850,8 +855,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                         timeReport.push(`Transaction [${transactionId}] has been received: ${Date.now() - trStart} ms`);
                     } else if ((block.gen_utime || 0) > stopTime) {
                         if (expire) {
-                            traceMessage(this.config.tracer, messageId, 'messageExpired', {
-                            });
+                            traceMessage(this.config.tracer, messageId, 'messageExpired', {});
                             throw TONClientError.messageExpired({
                                 messageId,
                                 sendingTime: processing.sendingTime,

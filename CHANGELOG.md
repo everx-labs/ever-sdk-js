@@ -1,7 +1,9 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.25.5 - August 1, 2020
+## 0.25.5 - August 5, 2020
+### Fixed
+- `waitForTransaction` didn't use prev_alt_ref for block walking 
 
 ## 0.25.4 - July 31, 2020
 ### Fixed
