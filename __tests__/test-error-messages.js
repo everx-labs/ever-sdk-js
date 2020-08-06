@@ -38,9 +38,9 @@ async function expectError(code: number, source: ?string, f: () => Promise<void>
 }
 
 test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
-    let config = {};
+    let config = { ...tests.config };
     if (abiVersion === 1) {
-        config.messageProcessingTimeout = 10000;
+        config.messageProcessingTimeout = 5000;
     } else {
         config.messageExpirationTimeout = 2000;
     }

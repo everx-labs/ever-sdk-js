@@ -401,8 +401,9 @@ export type TONContractRunMessageLocalParams = {
 }
 
 export type TONContractRunGetParams = {
-    codeBase64?: string,
-    dataBase64?: string,
+    bocBase64?: string,
+    codeBase64?: string, // Obsolete, use bocBase64
+    dataBase64?: string, // Obsolete, use bocBase64
     functionName: string,
     input?: any,
     address?: string,
@@ -559,9 +560,9 @@ export type QAccount = {
     split_depth?: number,
     tick?: boolean,
     tock?: boolean,
-    code?: string,
+
+    boc?: string,
     code_hash?: string,
-    data?: string,
     data_hash?: string,
     library?: string,
 }
