@@ -371,12 +371,18 @@ export default class TONContractsModule extends TONModule implements TONContract
             if (!account.code_hash) {
                 throw TONClientError.accountCodeMissing(address, account.balance);
             }
+            const paramsFromAccount: $Shape<TONContractRunGetParams> = {};
             if (account.boc) {
-                account.bocBase64 = account.boc;
+                paramsFromAccount.bocBase64 = account.boc;
             }
-            delete account.boc;
+            if (account.last_paid) {
+                paramsFromAccount.last_paid = account.last_paid;
+            }
+            if (account.balance) {
+                paramsFromAccount.balance = account.balance;
+            }
             coreParams = {
-                ...account,
+                ...paramsFromAccount,
                 ...params,
             };
         }
