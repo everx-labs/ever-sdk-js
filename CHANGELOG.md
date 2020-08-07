@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.26.0 - August 5, 2020
+### New
+- More diagnostic fields `configServer`, `queryUrl` in error object. 
+
 ## 0.25.5 - August 5, 2020
 ### Fixed
 - `waitForTransaction` didn't use prev_alt_ref for block walking 

@@ -81,6 +81,12 @@ export interface TONClientCoreLibrary extends TONClientCoreBridge {
     ): void;
 }
 
+export type TONClientInfo = {
+    coreVersion: string,
+    configServer: string,
+    queryUrl: string,
+}
+
 /**
  * Context in which modules are working
  * All module instances are bound to single context
@@ -91,6 +97,8 @@ export interface TONClientCoreLibrary extends TONClientCoreBridge {
  */
 export interface TONModuleContext {
     getCoreBridge(): Promise<?TONClientCoreBridge>,
+
+    getClientInfo(): Promise<TONClientInfo>,
 
     getModule<T>(ModuleClass: typeof TONModule): T,
 
@@ -139,6 +147,10 @@ export class TONModule {
      * @return {Promise<void>}
      */
     async setup() {
+    }
+
+    async getClientInfo(): Promise<TONClientInfo> {
+        return this.context.getClientInfo();
     }
 
     /**

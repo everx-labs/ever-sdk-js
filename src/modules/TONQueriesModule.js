@@ -147,7 +147,11 @@ function abortableFetch(fetch) {
                     }
                 }
                 setTimeout(() => {
-                    reject(TONClientError.QUERY_FORCIBLY_ABORTED)
+                    reject(TONClientError.queryForciblyAborted({
+                        coreVersion: '',
+                        configServer: '',
+                        queryUrl: '',
+                    }))
                     controller && controller.abort();
                 }, queryTimeout);
             }
@@ -197,6 +201,10 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         this.blocks = new TONQueriesModuleCollection(this, 'blocks', 'Block');
         this.accounts = new TONQueriesModuleCollection(this, 'accounts', 'Account');
         this.blocks_signatures = new TONQueriesModuleCollection(this, 'blocks_signatures', 'BlockSignatures');
+    }
+
+    getQueryUrl(): string {
+        return this.graphqlClientConfig?.httpUrl || '';
     }
 
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {
@@ -439,7 +447,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     context,
                 });
             } catch (error) {
-                let resolvedError = this.resolveGraphQLError(error);
+                let resolvedError = await this.resolveGraphQLError(error);
                 if (TONQueriesModule.isNetworkError(resolvedError)
                     && !this.config.isNetworkTimeoutExpiredSince(startTime)) {
                     this.config.log(resolvedError);
@@ -458,7 +466,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }
     }
 
-    resolveGraphQLError(error: any) {
+    async resolveGraphQLError(error: any) {
         const gqlErr = error.graphQLErrors && error.graphQLErrors[0];
         if (gqlErr) {
             const clientErr = new Error(gqlErr.message);
@@ -473,7 +481,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             && error.networkError.result
             && error.networkError.result.errors;
         if (errors) {
-            return TONClientError.queryFailed(errors);
+            return TONClientError.queryFailed(await this.getClientInfo(), errors);
         } else {
             return error;
         }
@@ -485,7 +493,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         try {
             return await request(client);
         } catch (error) {
-            throw this.resolveGraphQLError(error);
+            throw await this.resolveGraphQLError(error);
         }
     }
 
@@ -723,7 +731,7 @@ class TONQueriesModuleCollection implements TONQCollection {
                 fields: params.fields,
             });
             if (!(await this.module.getServerInfo(span)).supportsAggregations) {
-                throw TONClientError.serverDoesntSupportAggregations();
+                throw TONClientError.serverDoesntSupportAggregations(await this.module.getClientInfo());
             }
             const t = this.typeName;
             const q = this.typeName.endsWith('s') ? `aggregate${t}` : `aggregate${t}s`;
@@ -838,7 +846,7 @@ class TONQueriesModuleCollection implements TONQCollection {
         if (docs.length > 0) {
             return docs[0];
         }
-        throw TONClientError.waitForTimeout();
+        throw TONClientError.waitForTimeout(await this.module.getClientInfo());
     }
 }
 
