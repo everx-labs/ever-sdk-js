@@ -144,15 +144,17 @@ function abortableFetch(fetch) {
                     fetchOptions = {
                         ...options,
                         signal: controller.signal,
-                    }
+                    };
                 }
                 setTimeout(() => {
                     reject(TONClientError.queryForciblyAborted({
                         coreVersion: '',
                         configServer: '',
                         queryUrl: '',
-                    }))
-                    controller && controller.abort();
+                    }));
+                    if (controller) {
+                        controller.abort();
+                    }
                 }, queryTimeout);
             }
             fetch(input, fetchOptions).then(resolve, reject);
@@ -200,7 +202,8 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         this.messages = new TONQueriesModuleCollection(this, 'messages', 'Message');
         this.blocks = new TONQueriesModuleCollection(this, 'blocks', 'Block');
         this.accounts = new TONQueriesModuleCollection(this, 'accounts', 'Account');
-        this.blocks_signatures = new TONQueriesModuleCollection(this, 'blocks_signatures', 'BlockSignatures');
+        this.blocks_signatures =
+            new TONQueriesModuleCollection(this, 'blocks_signatures', 'BlockSignatures');
     }
 
     getQueryUrl(): string {
@@ -438,8 +441,9 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     fetchOptions: {
                         queryTimeout: Math.min(
                             forceTerminateTimeout + forceTerminateExtraTimeout,
-                            MAX_TIMEOUT),
-                    }
+                            MAX_TIMEOUT,
+                        ),
+                    },
                 };
                 return await client.query({
                     query,
@@ -482,10 +486,8 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             && error.networkError.result.errors;
         if (errors) {
             return TONClientError.queryFailed(await this.getClientInfo(), errors);
-        } else {
-            return error;
         }
-
+        return error;
     }
 
     async graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {

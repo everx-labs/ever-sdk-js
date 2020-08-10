@@ -127,7 +127,7 @@ export class TONClient implements TONModuleContext, ITONClient {
             coreVersion: await this.config.getVersion(),
             configServer: this.config.getConfigServer(),
             queryUrl: this._queries.getQueryUrl(),
-        }
+        };
     }
 
     async tryCreateLibrary() {
@@ -358,10 +358,11 @@ export class TONClientError {
     message: string;
     source: string;
     code: number;
-    data: any;
-    coreVersion: string;
-    configServer: string;
-    queryUrl: string;
+    data: {
+        core_version: string;
+        config_server: string;
+        query_url: string;
+    };
 
     constructor(
         clientInfo: TONClientInfo,
@@ -373,10 +374,12 @@ export class TONClientError {
         this.message = message;
         this.code = code;
         this.source = source || TONErrorSource.CLIENT;
-        this.coreVersion = clientInfo.coreVersion;
-        this.configServer = clientInfo.configServer;
-        this.queryUrl = clientInfo.queryUrl;
-        this.data = data;
+        this.data = {
+            ...data,
+            core_version: clientInfo.coreVersion,
+            config_server: clientInfo.configServer,
+            query_url: clientInfo.queryUrl,
+        };
     }
 
     static isClientError(error: any, code: number): boolean {
@@ -485,20 +488,22 @@ export class TONClientError {
     static messageExpired(
         clientInfo: TONClientInfo,
         data: {
-            messageId: string,
-            sendingTime: number,
-            expire: ?number,
-            blockTime: ?number,
-        }) {
+            message_id: string,
+            sending_time: number,
+            expire?: number,
+            block_time?: number,
+            block_id?: string,
+        },
+    ) {
         return new TONClientError(
             clientInfo,
             'Message expired',
             TONErrorCode.MESSAGE_EXPIRED,
             TONErrorSource.CLIENT,
             {
-                sendingTime: TONClientError.formatTime(data.sendingTime),
-                expirationTime: TONClientError.formatTime(data.expire),
-                blockTime: TONClientError.formatTime(data.blockTime),
+                sending_time: TONClientError.formatTime(data.sending_time),
+                expiration_time: TONClientError.formatTime(data.expire),
+                block_time: TONClientError.formatTime(data.block_time),
             },
         );
     }
@@ -524,13 +529,14 @@ export class TONClientError {
     static networkSilent(
         clientInfo: TONClientInfo,
         data: {
-            messageId: string,
-            sendingTime: number,
+            message_id: string,
+            sending_time: number,
             expire: number,
             timeout: number,
-            blockId?: string,
-            messageProcessingState?: TONMessageProcessingState,
-        }) {
+            block_id?: string,
+            message_processing_state?: TONMessageProcessingState,
+        },
+    ) {
         return new TONClientError(
             clientInfo,
             'Network silent: no blocks produced during timeout.',
@@ -538,8 +544,8 @@ export class TONClientError {
             TONErrorSource.CLIENT,
             data && {
                 ...data,
-                sendingTime: TONClientError.formatTime(data.sendingTime),
-                expirationTime: TONClientError.formatTime(data.expire),
+                sending_time: TONClientError.formatTime(data.sending_time),
+                expiration_time: TONClientError.formatTime(data.expire),
             },
         );
     }
@@ -547,11 +553,12 @@ export class TONClientError {
     static transactionWaitTimeout(
         clientInfo: TONClientInfo,
         data: {
-            messageId: string,
-            sendingTime: number,
+            message_id: string,
+            sending_time: number,
             timeout: number,
-            messageProcessingState?: TONMessageProcessingState,
-        }) {
+            message_processing_state?: TONMessageProcessingState,
+        },
+    ) {
         return new TONClientError(
             clientInfo,
             'Transaction did not produced during specified timeout',
@@ -559,7 +566,7 @@ export class TONClientError {
             TONErrorSource.CLIENT,
             data && {
                 ...data,
-                sendingTime: TONClientError.formatTime(data.sendingTime),
+                sending_time: TONClientError.formatTime(data.sending_time),
             },
         );
     }
