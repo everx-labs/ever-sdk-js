@@ -53,13 +53,12 @@ import type {
     TONContractRunGetResult,
     TONContractRunMessageLocalParams,
     TONContractRunLocalResult,
-    TONContractTransactionFees,
     TONWaitForTransactionParams,
     QShardHash,
     TONMessageProcessingState,
 } from '../../types';
 
-import { TONClientError, TONContractExitCode, TONErrorCode } from '../TONClient';
+import { emptyTONErrorData, TONClientError, TONContractExitCode, TONErrorCode } from '../TONClientError';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule, { MAX_TIMEOUT } from './TONQueriesModule';
@@ -400,11 +399,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         let item = cons;
         while (item) {
             if (!item.length === 2) {
-                throw TONClientError.invalidCons({
-                    core_version: '',
-                    config_server: '',
-                    query_url: '',
-                });
+                throw TONClientError.invalidCons(emptyTONErrorData);
             }
             result.push(item[0]);
             item = item[1];

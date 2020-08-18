@@ -25,7 +25,8 @@ import type {
     TONWaitForParams,
     TONQueryAggregateParams,
 } from '../../types';
-import { TONClient, TONClientError, TONErrorCode } from '../TONClient';
+import { TONClient } from '../TONClient';
+import { emptyTONErrorData, TONClientError, TONErrorCode } from '../TONClientError';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import TONConfigModule, { URLParts } from './TONConfigModule';
@@ -147,11 +148,7 @@ function abortableFetch(fetch) {
                     };
                 }
                 setTimeout(() => {
-                    reject(TONClientError.queryForciblyAborted({
-                        core_version: '',
-                        config_server: '',
-                        query_url: '',
-                    }));
+                    reject(TONClientError.queryForciblyAborted(emptyTONErrorData));
                     if (controller) {
                         controller.abort();
                     }
@@ -188,9 +185,8 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         this.overrideWsUrl = null;
         this.operationIdPrefix = (Date.now() % 60000).toString(16);
         for (let i = 0; i < 10; i += 1) {
-            this.operationIdPrefix =
-                `${this.operationIdPrefix}${Math.round(Math.random() * 256)
-                    .toString(16)}`;
+            const randomPart = Math.round(Math.random() * 256).toString(16);
+            this.operationIdPrefix = `${this.operationIdPrefix}${randomPart}`;
         }
         this.operationIdSuffix = 1;
         this.serverInfo = resolveServerInfo();
@@ -225,11 +221,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             return '';
         }
         const sourceLocation = URLParts.parse(sourceUrl)
-            .fixQuery(_ => '')
+            .fixQuery(() => '')
             .toString()
             .toLowerCase();
         const responseLocation = URLParts.parse(response.url)
-            .fixQuery(_ => '')
+            .fixQuery(() => '')
             .toString()
             .toLowerCase();
         return responseLocation !== sourceLocation ? response.url : '';
@@ -278,12 +274,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 return clientConfig;
             } catch (error) {
                 console.log(`[getClientConfig] for server "${server}" failed`, {
-                    clientConfig: {
-                        httpUrl: clientConfig.httpUrl,
-                        wsUrl: clientConfig.wsUrl,
+                    message: error.message || error.toString(),
+                    data: {
+                        http_url: clientConfig.httpUrl,
+                        ws_url: clientConfig.wsUrl,
                     },
-                    errorString: error.toString(),
-                    error,
                 });
             }
         }
@@ -451,7 +446,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     context,
                 });
             } catch (error) {
-                let resolvedError = await this.resolveGraphQLError(error);
+                const resolvedError = await this.resolveGraphQLError(error);
                 if (TONQueriesModule.isNetworkError(resolvedError)
                     && !this.config.isNetworkTimeoutExpiredSince(startTime)) {
                     this.config.log(resolvedError);

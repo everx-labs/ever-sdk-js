@@ -19,13 +19,8 @@
 
 // Deprecated: TONClientCore v0.17.0
 import { Span, SpanContext } from 'opentracing';
-
-export type TONErrorData = {
-    core_version: string;
-    config_server: string;
-    query_url: string;
-    [string]: any;
-}
+import { TONClientError } from './TONClientError';
+import type { TONErrorData } from './TONClientError';
 
 /**
  * TONClientCoreBridge
@@ -86,12 +81,6 @@ export interface TONClientCoreLibrary extends TONClientCoreBridge {
         paramsJson: string,
         onResult: (resultJson: string, errorJson: string) => void,
     ): void;
-}
-
-export type TONClientInfo = {
-    coreVersion: string,
-    configServer: string,
-    queryUrl: string,
 }
 
 /**
@@ -169,7 +158,7 @@ export class TONModule {
     async requestCore<Params, Result>(method: string, params?: Params): Promise<Result> {
         const coreBridge = await this.context.getCoreBridge();
         if (!coreBridge) {
-            throw new Error('TON Client Library isn\'t set up properly');
+            throw TONClientError.clientIsNotSetup();
         }
         return new Promise((resolve: (Result) => void, reject: (Error) => void) => {
             coreBridge.request(
