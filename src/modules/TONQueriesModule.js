@@ -148,9 +148,9 @@ function abortableFetch(fetch) {
                 }
                 setTimeout(() => {
                     reject(TONClientError.queryForciblyAborted({
-                        coreVersion: '',
-                        configServer: '',
-                        queryUrl: '',
+                        core_version: '',
+                        config_server: '',
+                        query_url: '',
                     }));
                     if (controller) {
                         controller.abort();
@@ -485,7 +485,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             && error.networkError.result
             && error.networkError.result.errors;
         if (errors) {
-            return TONClientError.queryFailed(await this.getClientInfo(), errors);
+            return TONClientError.queryFailed(errors, await this.completeErrorData());
         }
         return error;
     }
@@ -733,7 +733,9 @@ class TONQueriesModuleCollection implements TONQCollection {
                 fields: params.fields,
             });
             if (!(await this.module.getServerInfo(span)).supportsAggregations) {
-                throw TONClientError.serverDoesntSupportAggregations(await this.module.getClientInfo());
+                throw TONClientError.serverDoesntSupportAggregations(
+                    await this.module.completeErrorData(),
+                );
             }
             const t = this.typeName;
             const q = this.typeName.endsWith('s') ? `aggregate${t}` : `aggregate${t}s`;
@@ -848,7 +850,9 @@ class TONQueriesModuleCollection implements TONQCollection {
         if (docs.length > 0) {
             return docs[0];
         }
-        throw TONClientError.waitForTimeout(await this.module.getClientInfo());
+        throw TONClientError.waitForTimeout(await this.module.completeErrorData({
+            collection: this.collectionName,
+        }));
     }
 }
 

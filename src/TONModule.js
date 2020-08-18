@@ -18,7 +18,14 @@
 /* eslint-disable class-methods-use-this, no-use-before-define, no-undef */
 
 // Deprecated: TONClientCore v0.17.0
-import {Span, SpanContext} from "opentracing";
+import { Span, SpanContext } from 'opentracing';
+
+export type TONErrorData = {
+    core_version: string;
+    config_server: string;
+    query_url: string;
+    [string]: any;
+}
 
 /**
  * TONClientCoreBridge
@@ -98,7 +105,7 @@ export type TONClientInfo = {
 export interface TONModuleContext {
     getCoreBridge(): Promise<?TONClientCoreBridge>,
 
-    getClientInfo(): Promise<TONClientInfo>,
+    completeErrorData(data?: { [string]: any }): Promise<TONErrorData>,
 
     getModule<T>(ModuleClass: typeof TONModule): T,
 
@@ -111,7 +118,7 @@ export interface TONModuleContext {
     trace<T>(
         name: string,
         f: (span: Span) => Promise<T>,
-        parentSpan?: (Span | SpanContext)
+        parentSpan?: (Span | SpanContext),
     ): Promise<T>,
 }
 
@@ -149,8 +156,8 @@ export class TONModule {
     async setup() {
     }
 
-    async getClientInfo(): Promise<TONClientInfo> {
-        return this.context.getClientInfo();
+    async completeErrorData(data?: { [string]: any }): Promise<TONErrorData> {
+        return this.context.completeErrorData(data);
     }
 
     /**

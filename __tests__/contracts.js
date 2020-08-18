@@ -105,8 +105,8 @@ test('out of sync', async () => {
     cfg.outOfSyncThreshold = -1;
     try {
         await expectError(
-            TONClientError.code.CLOCK_OUT_OF_SYNC,
-            TONClientError.source.CLIENT,
+            TONErrorCode.CLOCK_OUT_OF_SYNC,
+            TONErrorSource.CLIENT,
             async () => {
                 await tests.get_grams_from_giver(walletAddress);
             },
@@ -181,9 +181,9 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
             }, span);
         } catch (error) {
             expect(error.source)
-                .toEqual(TONClientError.source.NODE);
+                .toEqual(TONErrorSource.NODE);
             expect(error.code)
-                .toEqual(TONClientError.code.CONTRACT_EXECUTION_FAILED);
+                .toEqual(TONErrorCode.CONTRACT_EXECUTION_FAILED);
             expect(error.data.phase)
                 .toEqual('computeVm');
             expect(error.data.transaction_id)

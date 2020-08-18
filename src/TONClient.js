@@ -26,7 +26,7 @@ import TONQueriesModule from './modules/TONQueriesModule';
 import type {
     TONClientCoreLibrary,
     TONClientCoreBridge,
-    TONModuleContext, TONClientInfo,
+    TONModuleContext, TONClientInfo, TONErrorData,
 } from './TONModule';
 import { TONModule } from './TONModule';
 
@@ -122,11 +122,12 @@ export class TONClient implements TONModuleContext, ITONClient {
 
     // TONModuleContext
 
-    async getClientInfo(): Promise<TONClientInfo> {
+    async completeErrorData(data?: { [string]: any }): Promise<TONErrorData> {
         return {
-            coreVersion: await this.config.getVersion(),
-            configServer: this.config.getConfigServer(),
-            queryUrl: this._queries.getQueryUrl(),
+            ...data,
+            core_version: await this.config.getVersion(),
+            config_server: this.config.getConfigServer(),
+            query_url: this._queries.getQueryUrl(),
         };
     }
 
@@ -358,43 +359,33 @@ export class TONClientError {
     message: string;
     source: string;
     code: number;
-    data: {
-        core_version: string;
-        config_server: string;
-        query_url: string;
-    };
+    data: TONErrorData;
 
     constructor(
-        clientInfo: TONClientInfo,
-        message: string,
         code: number,
+        message: string,
+        data: TONErrorData,
         source?: string,
-        data?: any,
     ) {
-        this.message = message;
         this.code = code;
+        this.message = message;
+        this.data = data;
         this.source = source || TONErrorSource.CLIENT;
-        this.data = {
-            ...data,
-            core_version: clientInfo.coreVersion,
-            config_server: clientInfo.configServer,
-            query_url: clientInfo.queryUrl,
-        };
     }
 
     static isClientError(error: any, code: number): boolean {
-        return (error.source === TONClientError.source.CLIENT)
+        return (error.source === TONErrorSource.CLIENT)
             && (error.code === code);
     }
 
     static isNodeError(error: any, code: number): boolean {
-        return (error.source === TONClientError.source.NODE)
+        return (error.source === TONErrorSource.NODE)
             && (error.code === code);
     }
 
     static isContractError(error: any, exitCode: number): boolean {
-        return (error.source === TONClientError.source.NODE)
-            && (error.code === TONClientError.code.CONTRACT_EXECUTION_FAILED)
+        return (error.source === TONErrorSource.NODE)
+            && (error.code === TONErrorCode.CONTRACT_EXECUTION_FAILED)
             && (error.data && error.data.exit_code === exitCode);
     }
 
@@ -410,71 +401,71 @@ export class TONClientError {
     }
 
     static internalError(
-        clientInfo: TONClientInfo,
         message: string,
+        data: TONErrorData,
     ): TONClientError {
         return new TONClientError(
-            clientInfo,
-            `Internal error: ${message}`,
             TONErrorCode.INTERNAL_ERROR,
+            `Internal error: ${message}`,
+            data,
         );
     }
 
-    static invalidCons(clientInfo: TONClientInfo): TONClientError {
+    static invalidCons(data: TONErrorData): TONClientError {
         return new TONClientError(
-            clientInfo,
-            'Invalid CONS structure. Each CONS item must contains of two elements.',
             TONErrorCode.INVALID_CONS,
+            'Invalid CONS structure. Each CONS item must contains of two elements.',
+            data,
         );
     }
 
-    static clientDoesNotConfigured(clientInfo: TONClientInfo): TONClientError {
+    static clientDoesNotConfigured(data: TONErrorData): TONClientError {
         return new TONClientError(
-            clientInfo,
-            'TON Client isn\'t configured',
             TONErrorCode.CLIENT_DOES_NOT_CONFIGURED,
+            'TON Client isn\'t configured',
+            data,
         );
     }
 
     static sendNodeRequestFailed(
-        clientInfo: TONClientInfo,
         responseText: string,
+        data: TONErrorData,
     ): TONClientError {
         return new TONClientError(
-            clientInfo,
-            `Send node request failed: ${responseText}`,
             TONErrorCode.SEND_NODE_REQUEST_FAILED,
+            `Send node request failed: ${responseText}`,
+            data,
         );
     }
 
     static runLocalAccountDoesNotExists(
-        clientInfo: TONClientInfo,
         functionName: string,
         address: string,
+        data: TONErrorData,
     ): TONClientError {
         return new TONClientError(
-            clientInfo,
-            `[${functionName}] run local failed: account [${address}] does not exists`,
             TONErrorCode.RUN_LOCAL_ACCOUNT_DOES_NOT_EXISTS,
+            `[${functionName}] run local failed: account [${address}] does not exists`,
+            data,
         );
     }
 
-    static waitForTimeout(clientInfo: TONClientInfo) {
+    static waitForTimeout(data: TONErrorData) {
         return new TONClientError(
-            clientInfo,
-            'Wait for operation rejected on timeout',
             TONErrorCode.WAIT_FOR_TIMEOUT,
+            'Wait for operation rejected on timeout',
+            data,
         );
     }
 
     static queryFailed(
-        clientInfo: TONClientInfo,
         errors: Error[],
+        data: TONErrorData,
     ) {
         return new TONClientError(
-            clientInfo,
-            `Query failed: ${errors.map(x => x.message || x.toString()).join('\n')}`,
             TONErrorCode.QUERY_FAILED,
+            `Query failed: ${errors.map(x => x.message || x.toString()).join('\n')}`,
+            data,
         );
     }
 
@@ -486,8 +477,7 @@ export class TONClientError {
     }
 
     static messageExpired(
-        clientInfo: TONClientInfo,
-        data: {
+        data: TONErrorData & {
             message_id: string,
             sending_time: number,
             expire?: number,
@@ -496,39 +486,37 @@ export class TONClientError {
         },
     ) {
         return new TONClientError(
-            clientInfo,
-            'Message expired',
             TONErrorCode.MESSAGE_EXPIRED,
-            TONErrorSource.CLIENT,
+            'Message expired',
             {
+                ...data,
                 sending_time: TONClientError.formatTime(data.sending_time),
                 expiration_time: TONClientError.formatTime(data.expire),
                 block_time: TONClientError.formatTime(data.block_time),
             },
+            TONErrorSource.CLIENT,
         );
     }
 
-    static serverDoesntSupportAggregations(clientInfo: TONClientInfo) {
+    static serverDoesntSupportAggregations(data: TONErrorData) {
         return new TONClientError(
-            clientInfo,
-            'Server doesn\'t support aggregations',
             TONErrorCode.SERVER_DOESNT_SUPPORT_AGGREGATIONS,
+            'Server doesn\'t support aggregations',
+            data,
         );
     }
 
-    static addressRequiredForRunLocal(clientInfo: TONClientInfo) {
+    static addressRequiredForRunLocal(data: TONErrorData) {
         return new TONClientError(
-            clientInfo,
+            TONErrorCode.ADDRESS_REQUIRED_FOR_RUN_LOCAL,
             'Address required for run local. You haven\'t specified contract code or data '
             + 'so address is required to load missing parts from network.',
-            TONClientError.code.ADDRESS_REQUIRED_FOR_RUN_LOCAL,
-            TONClientError.source.CLIENT,
+            data,
         );
     }
 
     static networkSilent(
-        clientInfo: TONClientInfo,
-        data: {
+        data: TONErrorData & {
             message_id: string,
             sending_time: number,
             expire: number,
@@ -538,11 +526,9 @@ export class TONClientError {
         },
     ) {
         return new TONClientError(
-            clientInfo,
-            'Network silent: no blocks produced during timeout.',
             TONErrorCode.NETWORK_SILENT,
-            TONErrorSource.CLIENT,
-            data && {
+            'Network silent: no blocks produced during timeout.',
+            {
                 ...data,
                 sending_time: TONClientError.formatTime(data.sending_time),
                 expiration_time: TONClientError.formatTime(data.expire),
@@ -551,8 +537,7 @@ export class TONClientError {
     }
 
     static transactionWaitTimeout(
-        clientInfo: TONClientInfo,
-        data: {
+        data: TONErrorData & {
             message_id: string,
             sending_time: number,
             timeout: number,
@@ -560,107 +545,102 @@ export class TONClientError {
         },
     ) {
         return new TONClientError(
-            clientInfo,
-            'Transaction did not produced during specified timeout',
             TONErrorCode.TRANSACTION_WAIT_TIMEOUT,
-            TONErrorSource.CLIENT,
-            data && {
+            'Transaction did not produced during specified timeout',
+            {
                 ...data,
                 sending_time: TONClientError.formatTime(data.sending_time),
             },
         );
     }
 
-    static clockOutOfSync(clientInfo: TONClientInfo) {
+    static clockOutOfSync(data: TONErrorData) {
         return new TONClientError(
-            clientInfo,
+            TONErrorCode.CLOCK_OUT_OF_SYNC,
             'You local clock is out of sync with the server time. '
             + 'It is a critical condition for sending messages to the blockchain. '
             + 'Please sync you clock with the internet time.',
-            TONErrorCode.CLOCK_OUT_OF_SYNC,
+            data,
         );
     }
 
     static accountMissing(
-        clientInfo: TONClientInfo,
         address: string,
-        data?: any,
+        data: TONErrorData,
     ) {
         return new TONClientError(
-            clientInfo,
+            TONErrorCode.ACCOUNT_MISSING,
             `Account with address [${address}] doesn't exists. `
             + 'You have to prepaid this account to have a positive balance on them and then deploy '
             + 'a contract code for this account.'
             + 'See SDK documentation for detailed instructions.',
-            TONErrorCode.ACCOUNT_MISSING,
-            undefined,
             data,
         );
     }
 
     static accountCodeMissing(
-        clientInfo: TONClientInfo,
         address: string,
         balance: string,
+        data: TONErrorData,
     ) {
         return new TONClientError(
-            clientInfo,
+            TONErrorCode.ACCOUNT_CODE_MISSING,
             `Account with address [${address}] exists but haven't a contract code yet. `
             + 'You have to ensure that an account has an enough balance for deploying '
             + 'a contract code and then deploy a contract code for this account. '
             + `Current account balance is [${balance}]. `
             + 'See SDK documentation for detailed instructions.',
-            TONErrorCode.ACCOUNT_CODE_MISSING,
+            data,
         );
     }
 
     static accountBalanceTooLow(
-        clientInfo: TONClientInfo,
         address: string,
         balance: string,
+        data: TONErrorData,
     ) {
         return new TONClientError(
-            clientInfo,
+            TONErrorCode.ACCOUNT_BALANCE_TOO_LOW,
             `Account with address [${address}] has too low balance [${balance}]. `
             + 'You have to send some value to account balance from other contract '
             + '(e.g. Wallet contract). '
             + 'See SDK documentation for detailed instructions.',
-            TONErrorCode.ACCOUNT_BALANCE_TOO_LOW,
+            data,
         );
     }
 
     static noBlocks(
-        clientInfo: TONClientInfo,
         workchain: number,
+        data: TONErrorData,
     ) {
         const workchainName = workchain === -1 ? 'masterchain' : `workchain ${workchain}`;
         return new TONClientError(
-            clientInfo,
-            `"No blocks for ${workchainName} found".`,
             TONErrorCode.NETWORK_SILENT,
+            `"No blocks for ${workchainName} found".`,
+            data,
         );
     }
 
     static invalidBlockchain(
-        clientInfo: TONClientInfo,
         message: string,
+        data: TONErrorData,
     ) {
-        return new TONClientError(clientInfo, message, TONErrorCode.NETWORK_SILENT);
+        return new TONClientError(TONErrorCode.NETWORK_SILENT, message, data);
     }
 
-    static queryForciblyAborted(clientInfo: TONClientInfo) {
+    static queryForciblyAborted(data: TONErrorData) {
         return new TONClientError(
-            clientInfo,
-            'GraphQL query was forcibly aborted on timeout.',
             TONErrorCode.QUERY_FORCIBLY_ABORTED,
+            'GraphQL query was forcibly aborted on timeout.',
+            data,
         );
     }
 
     static isMessageExpired(error: any): boolean {
-        return TONClientError.isClientError(error, TONClientError.code.MESSAGE_EXPIRED);
+        return TONClientError.isClientError(error, TONErrorCode.MESSAGE_EXPIRED);
     }
 
     static isWaitForTimeout(error: any): boolean {
-        return TONClientError.isClientError(error, TONClientError.code.WAIT_FOR_TIMEOUT);
+        return TONClientError.isClientError(error, TONErrorCode.WAIT_FOR_TIMEOUT);
     }
 }
