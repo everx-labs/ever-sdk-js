@@ -23,6 +23,7 @@ import type {
     TONCryptoBoxParams,
     TONCryptoBox,
 } from '../../types';
+import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import { CoreCryptoBox } from './crypto-box';
 
@@ -57,8 +58,24 @@ function fixInputMessage(message: TONInputMessage): TONInputMessage {
 }
 
 export default class TONCryptoModule extends TONModule implements TONCrypto {
+    cryptoBoxes: Map<string, CoreCryptoBox>;
+
+    constructor(context: TONModuleContext) {
+        super(context);
+        this.cryptoBoxes = new Map();
+    }
+
     getCryptoBox(params: TONCryptoBoxParams): Promise<TONCryptoBox> {
-        return Promise.resolve(new CoreCryptoBox(this, params));
+        const key = params.encryptedSeedPhrase.text
+            || params.encryptedSeedPhrase.base64
+            || params.encryptedSeedPhrase.hex
+            || '';
+        let cryptoBox = this.cryptoBoxes.get(key);
+        if (!cryptoBox) {
+            cryptoBox = new CoreCryptoBox(this, params);
+            this.cryptoBoxes.set(key, cryptoBox);
+        }
+        return Promise.resolve(cryptoBox);
     }
 
     async factorize(challengeHex: string): Promise<TONFactorizeResult> {

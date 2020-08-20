@@ -14,43 +14,66 @@
  * limitations under the License.
  */
 
-import { decodeMessage, encodeOutput } from '../src/modules/crypto-box';
+import { decodeMessage, DEFAULT_HD_PATH, DEFAULT_MNEMONIC_DICTIONARY, DEFAULT_MNEMONIC_WORD_COUNT, encodeOutput } from '../src/modules/crypto-box';
 import TONCryptoModule, { TONMnemonicDictionary, TONOutputEncoding } from '../src/modules/TONCryptoModule';
-import type { TONEncryptionBox } from '../types';
+import type { TONCryptoBoxParams, TONEncryptionBox } from '../types';
 import { tests } from './_/init-tests';
 
 beforeAll(tests.init);
 afterAll(tests.done);
 
-export class DummyEncryptionBox implements TONEncryptionBox {
-    getPublicKey() {
-        return Promise.resolve('');
-    }
-
-    encrypt(message, outputEncoding) {
-        return Promise.resolve(encodeOutput(decodeMessage(message), outputEncoding));
-    }
-
-    decrypt(message, outputEncoding) {
-        return Promise.resolve(encodeOutput(decodeMessage(message), outputEncoding));
-    }
+async function loadPackages() {
+    return {
+        EventsPackage: await tests.loadPackage('Events'),
+    };
 }
 
-// const naclSecret = '56b6a77093d6fdf14e593f36275d872d75de5b341942376b2a08759f3cbae78f1869b7ef29d58026217e9cf163cbfbd0de889bdf1bf4daebf5433a312f5b8d6e';
-// const naclSign = 'fb0cfe40eea5d6c960652e6ceb904da8a72ee2fcf6e05089cf835203179ff65bb48c57ecf31dcfcd26510bea67e64f3e6898b7c58300dc14338254268cade10354657374204d657373616765';
-test('Crypto Box', async () => {
+const dummyEncryptionBox: TONEncryptionBox = {
+    getPublicKey() {
+        return Promise.resolve('');
+    },
+    encrypt(message, outputEncoding) {
+        return Promise.resolve(encodeOutput(decodeMessage(message), outputEncoding));
+    },
+    decrypt(message, outputEncoding) {
+        return Promise.resolve(encodeOutput(decodeMessage(message), outputEncoding));
+    },
+};
+
+const seedPhrase = 'abandon math mimic master filter design carbon crystal rookie group knife young';
+// noinspection SpellCheckingInspection
+const expectedSign = 'f0494632062619389589fea0d5be9d8287c7ff8ebac77c297cef3be0c7aba4e856e46460467889757070a29fd1cb641d81069b5cf48aa936447a7fc466197904';
+const cryptoBoxParams: TONCryptoBoxParams = {
+    encryptedSeedPhrase: { text: seedPhrase },
+    seedPhraseEncryptionBox: dummyEncryptionBox,
+};
+
+test('Crypto Box Reuse', async () => {
+    const crypto: TONCryptoModule = tests.client.crypto;
+    const cryptoBox = await crypto.getCryptoBox(cryptoBoxParams);
+
+    expect(cryptoBox).toBe(await crypto.getCryptoBox(cryptoBoxParams));
+    expect(cryptoBox).not.toBe(await crypto.getCryptoBox({
+        encryptedSeedPhrase: 'abandon math mimic master filter design carbon crystal rookie group young knife',
+        seedPhraseEncryptionBox: dummyEncryptionBox,
+    }));
+
+    expect(await cryptoBox.getSigningBox({ hdPath: 'm' }))
+        .toBe(await cryptoBox.getSigningBox({ hdPath: 'm' }));
+    expect(await cryptoBox.getSigningBox({ hdPath: 'm' }))
+        .not.toBe(await cryptoBox.getSigningBox({ hdPath: 'm/1' }));
+});
+
+test('Crypto Box Sign', async () => {
     const crypto: TONCryptoModule = tests.client.crypto;
 
-    const seedPhrase = 'abandon math mimic master filter design carbon crystal rookie group knife young';
     const keys = await crypto.mnemonicDeriveSignKeys({
         phrase: seedPhrase,
         path: 'm',
         dictionary: TONMnemonicDictionary.ENGLISH,
         wordCount: 12,
-    })
-    console.log('>>> 1', keys);
+    });
     const naclSecret = `${keys.secret}${keys.public}`;
-    const expectedSign = 'f0494632062619389589fea0d5be9d8287c7ff8ebac77c297cef3be0c7aba4e856e46460467889757070a29fd1cb641d81069b5cf48aa936447a7fc466197904';
 
     // nacl sign
 
@@ -58,65 +81,58 @@ test('Crypto Box', async () => {
     const sign = await crypto.naclSignDetached(message, naclSecret);
     expect(sign).toEqual(expectedSign);
 
-    const cryptoBox = await crypto.getCryptoBox({
-        encryptedSeedPhrase: { text: seedPhrase },
-        seedPhraseEncryptionBox: new DummyEncryptionBox(),
+    // crypto box sign
 
-    });
-    const signingBox = await cryptoBox.getSigningBox({
-        hdPath: 'm',
-    });
+    const cryptoBox = await crypto.getCryptoBox(cryptoBoxParams);
+    const signingBox = await cryptoBox.getSigningBox({ hdPath: 'm' });
     expect(await signingBox.sign(message, TONOutputEncoding.Hex))
         .toEqual(expectedSign);
-
-    // // nacl box
-    //
-    // const encrypted1 = await crypto.naclBox({
-    //     message: { text: 'Test Message' },
-    //     nonce: 'cd7f99924bf422544046e83595dd5803f17536f5c9a11746',
-    //     theirPublicKey: 'c4e2d9fe6a6baf8d1812b799856ef2a306291be7a7024837ad33a8530db79c6b',
-    //     secretKey: 'd9b9dc5033fb416134e5d2107fdbacab5aadb297cb82dbdcd137d663bac59f7f',
-    // });
-    // expect(encrypted1).toEqual('962e17103e24c7fa63436a9d3f4791d9dfcadf4b8df78be83400f1c0');
-    //
-    // const decrypted1 = await crypto.naclBoxOpen({
-    //     message: { hex: '962e17103e24c7fa63436a9d3f4791d9dfcadf4b8df78be83400f1c0' },
-    //     nonce: 'cd7f99924bf422544046e83595dd5803f17536f5c9a11746',
-    //     theirPublicKey: 'c4e2d9fe6a6baf8d1812b799856ef2a306291be7a7024837ad33a8530db79c6b',
-    //     secretKey: 'd9b9dc5033fb416134e5d2107fdbacab5aadb297cb82dbdcd137d663bac59f7f',
-    //     outputEncoding: TONOutputEncoding.Text,
-    // });
-    // expect(decrypted1).toEqual('Test Message');
-    //
-    // // nacl secret box
-    //
-    // const encrypted2 = await crypto.naclSecretBox({
-    //     message: { text: 'Test Message' },
-    //     nonce: '2a33564717595ebe53d91a785b9e068aba625c8453a76e45',
-    //     key: '8f68445b4e78c000fe4d6b7fc826879c1e63e3118379219a754ae66327764bd8',
-    // });
-    // expect(encrypted2).toEqual('24bede8ca59ed8a5e6aec9ece35c9f5e8405d2dfc2d50f111b2cd0d8');
-    //
-    // const decrypted2 = await crypto.naclSecretBoxOpen({
-    //     message: { hex: '24bede8ca59ed8a5e6aec9ece35c9f5e8405d2dfc2d50f111b2cd0d8' },
-    //     nonce: '2a33564717595ebe53d91a785b9e068aba625c8453a76e45',
-    //     key: '8f68445b4e78c000fe4d6b7fc826879c1e63e3118379219a754ae66327764bd8',
-    //     outputEncoding: TONOutputEncoding.Text,
-    // });
-    // expect(decrypted2).toEqual('Test Message');
-    //
-    // const e = await crypto.naclSecretBox({
-    //     message: { text: 'Text with \' and \" and : {}' },
-    //     nonce: '2a33564717595ebe53d91a785b9e068aba625c8453a76e45',
-    //     key: '8f68445b4e78c000fe4d6b7fc826879c1e63e3118379219a754ae66327764bd8',
-    //     outputEncoding: TONOutputEncoding.Base64,
-    // });
-    // const d = await crypto.naclSecretBoxOpen({
-    //     message: { base64: e },
-    //     nonce: '2a33564717595ebe53d91a785b9e068aba625c8453a76e45',
-    //     key: '8f68445b4e78c000fe4d6b7fc826879c1e63e3118379219a754ae66327764bd8',
-    //     outputEncoding: TONOutputEncoding.Text,
-    // });
-
 });
 
+test('Crypto usage in TONCContractsModule', async () => {
+    const { contracts, crypto } = tests.client;
+
+    const { EventsPackage } = await loadPackages();
+    const eventsPackage = EventsPackage[1];
+    eventsPackage.abi.setTime = false;
+
+    const keyPair = await crypto.mnemonicDeriveSignKeys({
+        phrase: seedPhrase,
+        dictionary: DEFAULT_MNEMONIC_DICTIONARY,
+        wordCount: DEFAULT_MNEMONIC_WORD_COUNT,
+        path: DEFAULT_HD_PATH,
+    });
+    const cryptoBox = await crypto.getCryptoBox(cryptoBoxParams);
+    const signingBox = await cryptoBox.getSigningBox();
+
+    const deployMessageB = await contracts.createDeployMessage({
+        package: eventsPackage,
+        constructorParams: {},
+        signingBox,
+    });
+    const deployMessageA = await contracts.createDeployMessage({
+        package: eventsPackage,
+        constructorParams: {},
+        keyPair,
+    });
+
+    expect(deployMessageA).toEqual(deployMessageB);
+
+    const runMessageA = await contracts.createRunMessage({
+        address: deployMessageA.address,
+        abi: eventsPackage.abi,
+        functionName: 'returnValue',
+        input: { id: '0' },
+        signingBox,
+    });
+
+    const runMessageB = await contracts.createRunMessage({
+        address: deployMessageA.address,
+        abi: eventsPackage.abi,
+        functionName: 'returnValue',
+        input: { id: '0' },
+        keyPair,
+    });
+
+    expect(runMessageA).toEqual(runMessageB);
+});

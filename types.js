@@ -330,6 +330,7 @@ export type TONContractDeployParams = {
     initParams?: any,
     keyPair: TONKeyPairData,
     workchainId?: number,
+    signingBox?: TONSigningBox,
 }
 
 export type TONContractCalcDeployFeeParams = TONContractDeployParams & {
@@ -413,6 +414,7 @@ export type TONContractRunParams = {
     header?: any,
     input: any,
     keyPair?: TONKeyPairData,
+    signingBox?: TONSigningBox,
 }
 
 export type TONContractAccountWaitParams = {
@@ -544,6 +546,7 @@ export type TONContractCreateRunBodyParams = {
     params: any,
     internal?: boolean,
     keyPair?: TONKeyPairData,
+    signingBox?: TONSigningBox,
 }
 
 export type TONContractCreateRunBodyResult = {

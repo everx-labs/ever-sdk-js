@@ -1,14 +1,18 @@
-//@flow
+// @flow
+
 import type {
     TONCrypto,
-    TONCryptoBox, TONCryptoBoxParams,
+    TONCryptoBox,
+    TONCryptoBoxParams,
     TONEncryptionAlgorithm,
     TONEncryptionBox,
-    TONInputMessage, TONKeyPairData, TONMnemonicDictionaryType, TONMnemonicWordCountType,
+    TONInputMessage,
+    TONKeyPairData,
+    TONMnemonicDictionaryType,
+    TONMnemonicWordCountType,
     TONOutputEncodingType,
     TONSigningBox,
 } from '../../types';
-import { TONMnemonicDictionary } from './TONCryptoModule';
 
 export function decodeMessage(message: TONInputMessage): Buffer {
     if (message.base64) {
@@ -36,6 +40,7 @@ export function encodeOutput(buffer: Buffer, encoding: TONOutputEncodingType): s
 
 const notImplemented = new Error('Not implemented');
 
+
 class CoreSigningBox implements TONSigningBox {
     cryptoBox: CoreCryptoBox;
     hdPath: string;
@@ -49,36 +54,39 @@ class CoreSigningBox implements TONSigningBox {
 
     async getPublicKey(): Promise<string> {
         if (!this.publicKey) {
-            return this.publicKey = (await this.cryptoBox.getSignKeys(this.hdPath)).public;
+            this.publicKey = (await this.cryptoBox.getSignKeys(this.hdPath)).public;
         }
         return this.publicKey;
     }
 
     async sign(message: TONInputMessage, outputEncoding: TONOutputEncodingType): Promise<string> {
         const keys = await this.cryptoBox.getSignKeys(this.hdPath);
-        console.log('>>> 2', keys);
         return this.cryptoBox.crypto.naclSignDetached(message, `${keys.secret}${keys.public}`, outputEncoding);
     }
 }
 
+
 class CoreEncryptionBox implements TONEncryptionBox {
+    // eslint-disable-next-line class-methods-use-this
     getPublicKey(): Promise<string> {
         throw notImplemented;
     }
 
+    // eslint-disable-next-line class-methods-use-this,no-unused-vars
     encrypt(message: TONInputMessage, outputEncoding: TONOutputEncodingType): Promise<string> {
         throw notImplemented;
     }
 
+    // eslint-disable-next-line class-methods-use-this,no-unused-vars
     decrypt(message: TONInputMessage, outputEncoding: TONOutputEncodingType): Promise<string> {
         throw notImplemented;
     }
-
 }
 
-const DEFAULT_MNEMONIC_DICTIONARY = TONMnemonicDictionary.ENGLISH;
-const DEFAULT_MNEMONIC_WORD_COUNT = 12;
-const DEFAULT_HD_PATH = 'm/44\'/396\'/0\'/0/0';
+
+export const DEFAULT_MNEMONIC_DICTIONARY = 1;
+export const DEFAULT_MNEMONIC_WORD_COUNT = 12;
+export const DEFAULT_HD_PATH = 'm/44\'/396\'/0\'/0/0';
 
 function resolveHDPath(path?: string): string {
     if (path === null || typeof path === 'undefined') {
@@ -117,6 +125,7 @@ export class CoreCryptoBox implements TONCryptoBox {
         return signingBox;
     }
 
+    // eslint-disable-next-line class-methods-use-this,no-unused-vars
     getEncryptionBox(params: {
         hdPath?: string,
         algorithm: TONEncryptionAlgorithm,
@@ -126,18 +135,19 @@ export class CoreCryptoBox implements TONCryptoBox {
     }
 
     close(): Promise<void> {
+        this.signingBoxes.clear();
+        this.encryptionBoxes.clear();
         return Promise.resolve();
     }
 
     // Internals
 
     async getSignKeys(hdPath: string): Promise<TONKeyPairData> {
-        console.log('>>>', await this.seedPhraseEncryptionBox.decrypt(this.encryptedSeedPhrase, 'Text'));
-        return await this.crypto.mnemonicDeriveSignKeys({
+        return this.crypto.mnemonicDeriveSignKeys({
             phrase: await this.seedPhraseEncryptionBox.decrypt(this.encryptedSeedPhrase, 'Text'),
             path: hdPath,
             dictionary: this.seedPhraseDictionary,
             wordCount: this.seedPhraseWordCount,
-        })
+        });
     }
 }

@@ -18,7 +18,7 @@
 /* eslint-disable class-methods-use-this, no-use-before-define, no-undef */
 
 // Deprecated: TONClientCore v0.17.0
-import {Span, SpanContext} from "opentracing";
+import { Span, SpanContext } from 'opentracing';
 
 /**
  * TONClientCoreBridge
@@ -103,7 +103,7 @@ export interface TONModuleContext {
     trace<T>(
         name: string,
         f: (span: Span) => Promise<T>,
-        parentSpan?: (Span | SpanContext)
+        parentSpan?: (Span | SpanContext),
     ): Promise<T>,
 }
 
@@ -138,6 +138,7 @@ export class TONModule {
      * The method is a safe place to get a references to other modules from the `context`.
      * @return {Promise<void>}
      */
+    // eslint-disable-next-line no-empty-function
     async setup() {
     }
 

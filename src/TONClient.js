@@ -333,6 +333,10 @@ export const TONErrorCode = {
 
     CONTRACT_EXECUTION_FAILED: 3025,
 
+    // Crypto
+
+    SIGNING_SOURCE_IS_NOT_SPECIFIED: 2021,
+
     // Queries
 
     QUERY_FORCIBLY_ABORTED: 4005,
@@ -562,6 +566,12 @@ export class TONClientError {
         );
     }
 
+    static signingSourceIsNotSpecified() {
+        return new TONClientError(
+            'You must provide signing keys or signing box to sign you message.',
+            TONErrorCode.SIGNING_SOURCE_IS_NOT_SPECIFIED,
+        );
+    }
     static noBlocks(workchain: number) {
         const workchainName = workchain === -1 ? 'masterchain' : `workchain ${workchain}`;
         return new TONClientError(

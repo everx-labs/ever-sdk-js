@@ -3,7 +3,9 @@
  */
 // @flow
 
-import { Tracer, FORMAT_TEXT_MAP, Span, SpanContext } from 'opentracing';
+import {
+    Tracer, FORMAT_TEXT_MAP, Span, SpanContext,
+} from 'opentracing';
 import type {
     QAccount,
     QBlock,
@@ -51,15 +53,17 @@ import type {
     TONContractRunGetResult,
     TONContractRunMessageLocalParams,
     TONContractRunLocalResult,
-    TONContractTransactionFees,
     TONWaitForTransactionParams,
     QShardHash,
     TONMessageProcessingState,
+    TONSigningBox,
+    TONKeyPairData,
 } from '../../types';
 
 import { TONClientError, TONContractExitCode, TONErrorCode } from '../TONClient';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
+import TONCryptoModule, { TONOutputEncoding } from './TONCryptoModule';
 import TONQueriesModule, { MAX_TIMEOUT } from './TONQueriesModule';
 
 export const TONAddressStringVariant = {
@@ -263,7 +267,7 @@ function startMessageTraceSpan(
     return tracer.startSpan(operationName, {
         childOf: rootContext,
         tags,
-    })
+    });
 }
 
 function traceMessage(
@@ -278,14 +282,48 @@ function traceMessage(
     }
 }
 
+type SignResult = {
+    signBytesBase64: string,
+    publicKeyHex: string,
+};
+
+type SigningSource = {
+    box: ?TONSigningBox,
+    keys: TONKeyPairData,
+}
+
+async function getSigningSource(
+    box?: TONSigningBox,
+    keys?: TONKeyPairData,
+): Promise<?SigningSource> {
+    if (box) {
+        return {
+            box,
+            keys: {
+                secret: '',
+                public: await box.getPublicKey(),
+            },
+        };
+    }
+    if (keys && keys.secret) {
+        return {
+            box: null,
+            keys,
+        };
+    }
+    return null;
+}
+
+
 export default class TONContractsModule extends TONModule implements TONContracts {
     config: TONConfigModule;
-
+    crypto: TONCryptoModule;
     queries: TONQueriesModule;
 
     async setup(): Promise<*> {
         this.config = this.context.getModule(TONConfigModule);
         this.queries = this.context.getModule(TONQueriesModule);
+        this.crypto = this.context.getModule(TONCryptoModule);
     }
 
     async load(
@@ -410,6 +448,17 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractDeployMessage> {
         this.config.log('createDeployMessage', params);
+        const source = await getSigningSource(params.signingBox, params.keyPair);
+        if (source) {
+            const unsignedMessage = await this.createUnsignedDeployMessage({
+                ...params,
+                keyPair: source.keys,
+            });
+            return this.createSignedDeployMessage({
+                ...(await this.internalSign(unsignedMessage.signParams, source)),
+                unsignedMessage,
+            });
+        }
         const message: TONContractMessage = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
             constructorHeader: params.constructorHeader,
@@ -420,8 +469,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             workchainId: params.workchainId,
         });
         return {
-            message,
             address: message.address,
+            message,
         };
     }
 
@@ -431,6 +480,14 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractRunMessage> {
         this.config.log('createRunMessage', params);
+        const source = await getSigningSource(params.signingBox, params.keyPair);
+        if (source) {
+            const unsignedMessage = await this.createUnsignedRunMessage(params);
+            return this.createSignedRunMessage({
+                ...(await this.internalSign(unsignedMessage.signParams, source)),
+                unsignedMessage,
+            });
+        }
         const message = await this.requestCore('contracts.run.message', {
             address: params.address,
             abi: params.abi,
@@ -636,7 +693,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             messageSize: Math.ceil(params.messageBodyBase64.length * 3 / 4),
             address: params.address,
             expire: params.expire,
-        })
+        });
         await this.queries.postRequests([
             {
                 id: idBase64,
@@ -857,7 +914,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                         });
                         traceMessage(this.config.tracer, messageId, 'transactionReceived', {
                             transactionId,
-                        })
+                        });
                         timeReport.push(`Transaction [${transactionId}] has been received: ${Date.now() - trStart} ms`);
                     } else if ((block.gen_utime || 0) > stopTime) {
                         if (expire) {
@@ -953,7 +1010,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                         if (TONClientError.isWaitForTimeout(error)) {
                             throw TONClientError.networkSilent({
                                 messageId,
-                                sendingTime: sendingTime,
+                                sendingTime,
                                 expire,
                                 timeout: blockTimeout,
                             });
@@ -993,7 +1050,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                                 blockId: block.id,
                                 transactionId,
                                 timeout: BLOCK_TRANSACTION_WAITING_TIME,
-                                sendingTime: sendingTime,
+                                sendingTime,
                                 expire,
                             });
                         } else {
@@ -1046,7 +1103,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             if (!transaction) {
                 throw TONClientError.messageExpired({
                     messageId,
-                    sendingTime: sendingTime,
+                    sendingTime,
                     expire,
                     blockTime,
                 });
@@ -1074,7 +1131,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                     } else {
                         detailedError.data = {
                             messageProcessingState,
-                        }
+                        };
                     }
                 }
                 throw detailedError;
@@ -1147,7 +1204,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 address,
                 account,
                 messageBase64,
-                time: time,
+                time,
                 mainError: error,
             });
         } catch (resolved) {
@@ -1370,11 +1427,13 @@ export default class TONContractsModule extends TONModule implements TONContract
                 // retry if message expired or if resolving returned that message expired/replay
                 // protection error or if transaction with message expired/replay protection error
                 // returned
+                const isOriginalOrResolved = exitCode => (
+                    TONClientError.isOriginalContractError(error, exitCode)
+                    || TONClientError.isResolvedContractErrorAfterExpire(error, exitCode)
+                );
                 const useRetry = error.code === TONErrorCode.MESSAGE_EXPIRED
-                    || TONClientError.isOriginalContractError(error, TONContractExitCode.REPLAY_PROTECTION)
-                    || TONClientError.isOriginalContractError(error, TONContractExitCode.MESSAGE_EXPIRED)
-                    || TONClientError.isResolvedContractErrorAfterExpire(error, TONContractExitCode.REPLAY_PROTECTION)
-                    || TONClientError.isResolvedContractErrorAfterExpire(error, TONContractExitCode.MESSAGE_EXPIRED);
+                    || isOriginalOrResolved(TONContractExitCode.REPLAY_PROTECTION)
+                    || isOriginalOrResolved(TONContractExitCode.MESSAGE_EXPIRED);
                 if (!useRetry || i === retriesCount) {
                     throw error;
                 }
@@ -1501,6 +1560,35 @@ export default class TONContractsModule extends TONModule implements TONContract
             messageBase64: params.messageBodyBase64,
             fullRun: params.fullRun,
         });
+    }
+
+    async internalSign(
+        unsigned: TONContractUnsignedMessage,
+        source: SigningSource,
+    ): Promise<SignResult> {
+        const message = {
+            base64: unsigned.bytesToSignBase64,
+        };
+        const box = source.box;
+        if (box) {
+            return {
+                signBytesBase64: await box.sign(message, TONOutputEncoding.Base64),
+                publicKeyHex: await box.getPublicKey(),
+            };
+        }
+        const keys = source.keys;
+        if (keys) {
+            const signKeys = await this.crypto.naclSignKeypairFromSecretKey(keys.secret);
+            return {
+                signBytesBase64: await this.crypto.naclSignDetached(
+                    message,
+                    signKeys.secret,
+                    TONOutputEncoding.Base64,
+                ),
+                publicKeyHex: signKeys.public,
+            };
+        }
+        throw TONClientError.signingSourceIsNotSpecified();
     }
 }
 
