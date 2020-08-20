@@ -20,8 +20,11 @@ import type {
     TONMnemonicDeriveSignKeysParams,
     TONCrypto,
     TONHDKeyFromMnemonicParams,
-} from "../../types";
+    TONCryptoBoxParams,
+    TONCryptoBox,
+} from '../../types';
 import { TONModule } from '../TONModule';
+import { CoreCryptoBox } from './crypto-box';
 
 export const TONOutputEncoding = {
     Text: 'Text',
@@ -54,6 +57,10 @@ function fixInputMessage(message: TONInputMessage): TONInputMessage {
 }
 
 export default class TONCryptoModule extends TONModule implements TONCrypto {
+    getCryptoBox(params: TONCryptoBoxParams): Promise<TONCryptoBox> {
+        return Promise.resolve(new CoreCryptoBox(this, params));
+    }
+
     async factorize(challengeHex: string): Promise<TONFactorizeResult> {
         return this.requestCore('crypto.math.factorize', challengeHex);
     }
