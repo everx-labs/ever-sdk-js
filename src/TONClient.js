@@ -12,8 +12,6 @@ import type {
     TONConfigData,
     TONContracts,
     TONCrypto,
-    TONInputMessage,
-    TONMessageProcessingState,
     TONQueries,
     TONRegisterAccessKeysParams,
     TONRevokeAccessKeysParams,
