@@ -23,7 +23,7 @@ import type {
     TONCryptoBoxParams,
     TONCryptoBox,
 } from '../../types';
-import { TONClientError } from '../TONClient';
+import { TONClientError } from '../TONClientError';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import { CoreCryptoBox } from './crypto-box';

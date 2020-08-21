@@ -1,4 +1,4 @@
-import type { TONMessageProcessingState } from '../types';
+import type { TONInputMessage, TONMessageProcessingState } from '../types';
 
 export type TONErrorData = {
     core_version: string;
@@ -39,6 +39,11 @@ export const TONErrorCode = {
     ACCOUNT_BALANCE_TOO_LOW: 1016,
     ACCOUNT_FROZEN_OR_DELETED: 1017,
 
+    // Crypto
+
+    SIGNING_SOURCE_IS_NOT_SPECIFIED: 2021,
+    INVALID_CRYPTO_BOX_PARAMS: 2030,
+
     // Contracts
 
     CONTRACT_EXECUTION_FAILED: 3025,
@@ -75,6 +80,8 @@ export class TONClientError {
         this.source = source || TONErrorSource.CLIENT;
     }
 
+    // Testers
+
     static isClientError(error: any, code: number): boolean {
         return (error.source === TONErrorSource.CLIENT)
             && (error.code === code);
@@ -101,6 +108,16 @@ export class TONClientError {
             && (error.data && error.data.original_error
                 && TONClientError.isMessageExpired(error.data.original_error));
     }
+
+    static isMessageExpired(error: any): boolean {
+        return TONClientError.isClientError(error, TONErrorCode.MESSAGE_EXPIRED);
+    }
+
+    static isWaitForTimeout(error: any): boolean {
+        return TONClientError.isClientError(error, TONErrorCode.WAIT_FOR_TIMEOUT);
+    }
+
+    // Builders
 
     static internalError(
         message: string,
@@ -330,12 +347,19 @@ export class TONClientError {
         );
     }
 
-    static isMessageExpired(error: any): boolean {
-        return TONClientError.isClientError(error, TONErrorCode.MESSAGE_EXPIRED);
+    static signingSourceIsNotSpecified() {
+        return new TONClientError(
+            'You must provide signing keys or signing box to sign you message.',
+            TONErrorCode.SIGNING_SOURCE_IS_NOT_SPECIFIED,
+        );
     }
 
-    static isWaitForTimeout(error: any): boolean {
-        return TONClientError.isClientError(error, TONErrorCode.WAIT_FOR_TIMEOUT);
+    static invalidCryptoBoxParams(encryptedSeedPhrase: TONInputMessage) {
+        return new TONClientError(
+            'You must provide a valid encrypted seed phrase to create a core crypto box. '
+            + `Provided phrase is: ${JSON.stringify(encryptedSeedPhrase)}.`,
+            TONErrorCode.INVALID_CRYPTO_BOX_PARAMS,
+        );
     }
 
     static clientIsNotSetup() {

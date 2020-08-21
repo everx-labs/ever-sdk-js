@@ -54,7 +54,7 @@ test('Crypto Box Reuse', async () => {
 
     expect(cryptoBox).toBe(await crypto.getCryptoBox(cryptoBoxParams));
     expect(cryptoBox).not.toBe(await crypto.getCryptoBox({
-        encryptedSeedPhrase: 'abandon math mimic master filter design carbon crystal rookie group young knife',
+        encryptedSeedPhrase: { text: 'abandon math mimic master filter design carbon crystal rookie group young knife' },
         seedPhraseEncryptionBox: dummyEncryptionBox,
     }));
 
