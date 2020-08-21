@@ -1240,23 +1240,13 @@ export default class TONContractsModule extends TONModule implements TONContract
                 // retry if message expired or if resolving returned that message expired/replay
                 // protection error or if transaction with message expired/replay protection error
                 // returned
+                const isOriginalOrResolved = exitCode => (
+                    TONClientError.isOriginalContractError(error, exitCode)
+                    || TONClientError.isResolvedContractErrorAfterExpire(error, exitCode)
+                );
                 const useRetry = error.code === TONErrorCode.MESSAGE_EXPIRED
-                    || TONClientError.isOriginalContractError(
-                        error,
-                        TONContractExitCode.REPLAY_PROTECTION,
-                    )
-                    || TONClientError.isOriginalContractError(
-                        error,
-                        TONContractExitCode.MESSAGE_EXPIRED,
-                    )
-                    || TONClientError.isResolvedContractErrorAfterExpire(
-                        error,
-                        TONContractExitCode.REPLAY_PROTECTION,
-                    )
-                    || TONClientError.isResolvedContractErrorAfterExpire(
-                        error,
-                        TONContractExitCode.MESSAGE_EXPIRED,
-                    );
+                    || isOriginalOrResolved(TONContractExitCode.REPLAY_PROTECTION)
+                    || isOriginalOrResolved(TONContractExitCode.MESSAGE_EXPIRED);
                 if (!useRetry || i === retriesCount) {
                     throw error;
                 }
