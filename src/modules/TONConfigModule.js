@@ -133,6 +133,9 @@ export default class TONConfigModule extends TONModule {
         this.tracer = data.tracer || noopTracer;
     }
 
+    getConfigServer(): string {
+        return this.data?.servers?.[0] || '';
+    }
 
     outOfSyncThreshold(): number {
         return valueOrDefault(this.data.outOfSyncThreshold, DEFAULT_OUT_OF_SYNC_THRESHOLD);

@@ -3,7 +3,9 @@
  */
 // @flow
 
-import { Tracer, FORMAT_TEXT_MAP, Span, SpanContext } from 'opentracing';
+import {
+    Tracer, FORMAT_TEXT_MAP, Span, SpanContext,
+} from 'opentracing';
 import type {
     QAccount,
     QBlock,
@@ -51,13 +53,12 @@ import type {
     TONContractRunGetResult,
     TONContractRunMessageLocalParams,
     TONContractRunLocalResult,
-    TONContractTransactionFees,
     TONWaitForTransactionParams,
     QShardHash,
     TONMessageProcessingState,
 } from '../../types';
 
-import { TONClientError, TONContractExitCode, TONErrorCode } from '../TONClient';
+import { emptyTONErrorData, TONClientError, TONContractExitCode, TONErrorCode } from '../TONClientError';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
 import TONQueriesModule, { MAX_TIMEOUT } from './TONQueriesModule';
@@ -263,7 +264,7 @@ function startMessageTraceSpan(
     return tracer.startSpan(operationName, {
         childOf: rootContext,
         tags,
-    })
+    });
 }
 
 function traceMessage(
@@ -363,13 +364,17 @@ export default class TONContractsModule extends TONModule implements TONContract
         if (!hasCode) {
             const address = params.address;
             if (!address) {
-                throw TONClientError.addressRequiredForRunLocal();
+                throw TONClientError.addressRequiredForRunLocal(await this.completeErrorData());
             }
             const account: any = await this.getAccount(address, false, {
                 timeout: this.config.waitForTimeout(),
             });
             if (!account.code_hash) {
-                throw TONClientError.accountCodeMissing(address, account.balance);
+                throw TONClientError.accountCodeMissing(
+                    address,
+                    account.balance,
+                    await this.completeErrorData(),
+                );
             }
             const paramsFromAccount: $Shape<TONContractRunGetParams> = {};
             if (account.boc) {
@@ -394,7 +399,7 @@ export default class TONContractsModule extends TONModule implements TONContract
         let item = cons;
         while (item) {
             if (!item.length === 2) {
-                throw TONClientError.invalidCons();
+                throw TONClientError.invalidCons(emptyTONErrorData);
             }
             result.push(item[0]);
             item = item[1];
@@ -616,12 +621,18 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<TONMessageProcessingState> {
         const expire = params.expire;
         if (expire && (Date.now() > expire * 1000)) {
-            throw TONClientError.sendNodeRequestFailed('Message already expired');
+            throw TONClientError.sendNodeRequestFailed(
+                'Message already expired',
+                await this.completeErrorData({
+                    address: params.address,
+                    message_id: params.messageId,
+                }),
+            );
         }
         const serverTimeDelta = Math.abs(await this.queries.serverTimeDelta(parentSpan));
         if (serverTimeDelta > this.config.outOfSyncThreshold()) {
             this.queries.dropServerTimeDelta();
-            throw TONClientError.clockOutOfSync();
+            throw TONClientError.clockOutOfSync(await this.completeErrorData());
         }
         const lastBlockId = await this.findLastShardBlock(params.address);
         const id = await this.ensureMessageId(params);
@@ -636,7 +647,7 @@ export default class TONContractsModule extends TONModule implements TONContract
             messageSize: Math.ceil(params.messageBodyBase64.length * 3 / 4),
             address: params.address,
             expire: params.expire,
-        })
+        });
         await this.queries.postRequests([
             {
                 id: idBase64,
@@ -709,7 +720,9 @@ export default class TONContractsModule extends TONModule implements TONContract
         // if account resides in masterchain then starting point is last masterchain block
         if (workchain === MASTERCHAIN_ID) {
             if (!masterchainLastBlock) {
-                throw TONClientError.noBlocks(MASTERCHAIN_ID);
+                throw TONClientError.noBlocks(MASTERCHAIN_ID, await this.completeErrorData({
+                    address,
+                }));
             }
             return masterchainLastBlock.id;
         }
@@ -721,13 +734,17 @@ export default class TONContractsModule extends TONModule implements TONContract
             // Node SE case - no masterchain, no sharding. Check that only one shard
             let workchainLastBlock = await this.findLastBlock(workchain, 'after_merge shard');
             if (!workchainLastBlock) {
-                throw TONClientError.noBlocks(workchain);
+                throw TONClientError.noBlocks(workchain, await this.completeErrorData({
+                    address,
+                }));
             }
 
             // if workchain is sharded then it is not Node SE and masterchain blocks missing
             // is error
             if (workchainLastBlock.after_merge || workchainLastBlock.shard !== '8000000000000000') {
-                throw TONClientError.noBlocks(MASTERCHAIN_ID);
+                throw TONClientError.noBlocks(MASTERCHAIN_ID, await this.completeErrorData({
+                    address,
+                }));
             }
 
             // Take last block by seq_no
@@ -735,19 +752,34 @@ export default class TONContractsModule extends TONModule implements TONContract
                 shard: { eq: '8000000000000000' },
             });
             if (!workchainLastBlock) {
-                throw TONClientError.invalidBlockchain('No starting Node SE block found');
+                throw TONClientError.invalidBlockchain(
+                    'No starting Node SE block found',
+                    await this.completeErrorData({
+                        address,
+                    }),
+                );
             }
             return workchainLastBlock.id;
         }
 
         const shards: ?QShardHash[] = masterchainLastBlock?.master?.shard_hashes;
         if (!shards || shards.length === 0) {
-            throw TONClientError.invalidBlockchain('No `shard_hashes` field in masterchain block');
+            throw TONClientError.invalidBlockchain(
+                'No `shard_hashes` field in masterchain block',
+                await this.completeErrorData({
+                    address,
+                }),
+            );
         }
         const shardBlock = await this.findMatchingShard(shards, address);
         const root_hash = shardBlock?.descr?.root_hash;
         if (!root_hash) {
-            throw TONClientError.invalidBlockchain('No `root_hash` field in shard descr');
+            throw TONClientError.invalidBlockchain(
+                'No `root_hash` field in shard descr',
+                await this.completeErrorData({
+                    address,
+                }),
+            );
         }
         return root_hash;
     }
@@ -793,11 +825,6 @@ export default class TONContractsModule extends TONModule implements TONContract
     }
 
     async waitForTransaction(params: TONWaitForTransactionParams): Promise<TONContractRunResult> {
-        // const legacyStart = Date.now();
-        // const result = await this.legacyWaitForTransaction(params);
-        // console.log('>>>', `Legacy wait for a: ${Date.now() - legacyStart} ms`);
-        // return result;
-
         const totalStart = Date.now();
         const expire = params.message.expire || 0;
         const messageId = await this.ensureMessageId(params.message);
@@ -820,20 +847,28 @@ export default class TONContractsModule extends TONModule implements TONContract
                     const start = Date.now();
                     block = await this.waitNextBlock(processing.lastBlockId, address, timeout);
                     const end = Date.now();
-                    timeReport.push(`Block [${block.id || ''}] has been received: ${end - start} ms, client time: ${Math.round(end / 1000)}, gen_utime: ${block.gen_utime || 0}`);
+                    timeReport.push(
+                        `Block [${block.id || ''}] `
+                        + `has been received: ${end - start} ms, `
+                        + `client time: ${Math.round(end / 1000)}, `
+                        + `gen_utime: ${block.gen_utime || 0}`,
+                    );
                 } catch (error) {
                     this.config.log('Block waiting failed: ', error);
                     if (!infiniteWait) {
                         let resolvedError = error;
                         if (error.code === TONErrorCode.WAIT_FOR_TIMEOUT) {
-                            resolvedError = TONClientError.networkSilent({
-                                messageId,
-                                blockId: processing.lastBlockId,
-                                timeout,
-                                messageProcessingState: processing,
-                                expire,
-                                sendingTime: processing.sendingTime,
-                            });
+                            resolvedError = TONClientError.networkSilent(
+                                await this.completeErrorData({
+                                    address,
+                                    message_id: messageId,
+                                    block_id: processing.lastBlockId,
+                                    timeout,
+                                    message_processing_state: processing,
+                                    expire,
+                                    sending_time: processing.sendingTime,
+                                }),
+                            );
                         }
                         throw resolvedError;
                     }
@@ -847,7 +882,13 @@ export default class TONContractsModule extends TONModule implements TONContract
                     if (inMsg) {
                         const transactionId = inMsg.transaction_id;
                         if (!transactionId) {
-                            throw TONClientError.invalidBlockchain('No field `transaction_id` in block');
+                            throw TONClientError.invalidBlockchain(
+                                'No field `transaction_id` in block',
+                                await this.completeErrorData({
+                                    address,
+                                    message_id: messageId,
+                                }),
+                            );
                         }
                         const trStart = Date.now();
                         transaction = await this.queries.transactions.waitFor({
@@ -857,25 +898,31 @@ export default class TONContractsModule extends TONModule implements TONContract
                         });
                         traceMessage(this.config.tracer, messageId, 'transactionReceived', {
                             transactionId,
-                        })
+                        });
                         timeReport.push(`Transaction [${transactionId}] has been received: ${Date.now() - trStart} ms`);
                     } else if ((block.gen_utime || 0) > stopTime) {
                         if (expire) {
                             traceMessage(this.config.tracer, messageId, 'messageExpired', {});
-                            throw TONClientError.messageExpired({
-                                messageId,
-                                sendingTime: processing.sendingTime,
-                                expire: stopTime,
-                                blockTime: block.gen_utime,
-                                blockId: processing.lastBlockId,
-                            });
+                            throw TONClientError.messageExpired(
+                                await this.completeErrorData({
+                                    address,
+                                    message_id: messageId,
+                                    sending_time: processing.sendingTime,
+                                    expire: stopTime,
+                                    block_time: block.gen_utime,
+                                    block_id: processing.lastBlockId,
+                                }),
+                            );
                         }
-                        throw TONClientError.transactionWaitTimeout({
-                            messageId,
-                            sendingTime: processing.sendingTime,
-                            timeout,
-                            messageProcessingState: processing,
-                        });
+                        throw TONClientError.transactionWaitTimeout(
+                            await this.completeErrorData({
+                                address,
+                                message_id: messageId,
+                                sending_time: processing.sendingTime,
+                                timeout,
+                                message_processing_state: processing,
+                            }),
+                        );
                     }
                 }
             }
@@ -905,196 +952,6 @@ export default class TONContractsModule extends TONModule implements TONContract
         );
     }
 
-    async legacyWaitForTransaction(
-        params: TONWaitForTransactionParams,
-    ): Promise<TONContractRunResult> {
-        const {
-            message,
-            abi,
-            functionName,
-            parentSpan,
-        } = params;
-        const messageId = await this.ensureMessageId(message);
-        const config = this.config;
-        config.log('[waitForTransaction]', functionName, message);
-        let processingTimeout = config.messageProcessingTimeout();
-        const promises = [];
-        const serverInfo = await this.queries.getServerInfo(parentSpan);
-        const operationId = serverInfo.supportsOperationId
-            ? this.queries.generateOperationId()
-            : undefined;
-        let transaction: ?QTransaction = null;
-        const sendingTime = Math.round(Date.now() / 1000);
-        let blockTime = null;
-        try {
-            const expire = message.expire;
-            if (expire) {
-                // calculate timeout according to `expire` value (in seconds)
-                // add processing timeout as master block validation time
-                const blockTimeout = expire * 1000 - Date.now() + processingTimeout;
-                // transaction timeout must be greater then block timeout
-                processingTimeout = blockTimeout + EXTRA_TRANSACTION_WAITING_TIME;
-
-
-                const waitExpired = async () => {
-                    // wait for block, produced after `expire` to guarantee that message is rejected
-                    let block: ?QBlock = null;
-                    try {
-                        block = await this.queries.blocks.waitFor({
-                            filter: {
-                                master: { min_shard_gen_utime: { ge: expire } },
-                            },
-                            result: 'id gen_utime in_msg_descr { transaction_id }',
-                            timeout: blockTimeout,
-                            parentSpan,
-                            operationId,
-                        });
-                    } catch (error) {
-                        if (TONClientError.isWaitForTimeout(error)) {
-                            throw TONClientError.networkSilent({
-                                messageId,
-                                sendingTime: sendingTime,
-                                expire,
-                                timeout: blockTimeout,
-                            });
-                        } else {
-                            throw error;
-                        }
-                    }
-
-                    if (transaction) {
-                        return;
-                    }
-
-                    const transactionId = block.in_msg_descr
-                        && block.in_msg_descr.find(msg => !!msg.transaction_id)?.transaction_id;
-
-                    if (!transactionId) {
-                        throw TONClientError.internalError(
-                            'Invalid block received: no transaction ID',
-                        );
-                    }
-
-                    // check that transactions collection is updated
-                    try {
-                        await this.queries.transactions.waitFor({
-                            filter: {
-                                id: { eq: transactionId },
-                            },
-                            result: 'id',
-                            timeout: BLOCK_TRANSACTION_WAITING_TIME,
-                            parentSpan,
-                            operationId,
-                        });
-                    } catch (error) {
-                        if (TONClientError.isWaitForTimeout(error)) {
-                            throw TONClientError.networkSilent({
-                                messageId,
-                                blockId: block.id,
-                                transactionId,
-                                timeout: BLOCK_TRANSACTION_WAITING_TIME,
-                                sendingTime: sendingTime,
-                                expire,
-                            });
-                        } else {
-                            throw error;
-                        }
-                    }
-                    blockTime = block.gen_utime;
-                };
-
-                promises.push(waitExpired());
-            }
-
-            // wait for message processing transaction
-            promises.push(new Promise((resolve, reject) => {
-                (async () => {
-                    try {
-                        transaction = await this.queries.transactions.waitFor({
-                            filter: {
-                                in_msg: { eq: messageId },
-                                status: { eq: QTransactionProcessingStatus.finalized },
-                            },
-                            result: transactionDetails,
-                            timeout: processingTimeout,
-                            operationId,
-                            parentSpan,
-                        });
-                        resolve();
-                    } catch (error) {
-                        if (TONClientError.isWaitForTimeout(error)) {
-                            reject(TONClientError.transactionWaitTimeout({
-                                messageId,
-                                sendingTime,
-                                timeout: processingTimeout,
-                            }));
-                        } else {
-                            reject(error);
-                        }
-                    }
-                })();
-            }));
-
-            try {
-                await Promise.race(promises);
-            } finally {
-                if (promises.length > 1 && operationId) {
-                    await this.queries.finishOperations([operationId]);
-                }
-            }
-
-            if (!transaction) {
-                throw TONClientError.messageExpired({
-                    messageId,
-                    sendingTime: sendingTime,
-                    expire,
-                    blockTime,
-                });
-            }
-            const transactionNow = transaction.now || 0;
-            this.config.log('[waitForTransaction]', 'TRANSACTION_RECEIVED', {
-                id: transaction.id,
-                blockId: transaction.block_id,
-                now: `${new Date(transactionNow * 1000).toISOString()} (${transactionNow})`,
-            });
-        } catch (error) {
-            this.config.log('[waitForTransaction]', 'FAILED', error);
-            if (TONClientError.isMessageExpired(error)
-                || TONClientError.isClientError(error, TONErrorCode.TRANSACTION_WAIT_TIMEOUT)) {
-                const detailedError: any = await this.resolveDetailedError(
-                    error,
-                    message.messageBodyBase64,
-                    Date.now() / 1000,
-                    message.address,
-                );
-                const messageProcessingState = error.data?.messageProcessingState;
-                if (messageProcessingState) {
-                    if (detailedError.data) {
-                        detailedError.data.messageProcessingState = messageProcessingState;
-                    } else {
-                        detailedError.data = {
-                            messageProcessingState,
-                        }
-                    }
-                }
-                throw detailedError;
-            } else {
-                throw error;
-            }
-        }
-        removeTypeName(transaction);
-        const { output, fees } = await this.processTransaction(
-            message.address,
-            transaction,
-            abi,
-            functionName,
-        );
-        return {
-            transaction,
-            output,
-            fees,
-        };
-    }
 
     async processTransaction(
         address: string,
@@ -1120,7 +977,14 @@ export default class TONContractsModule extends TONModule implements TONContract
                 timeout: 1000,
             });
             if (accounts.length === 0) {
-                throw TONClientError.accountMissing(address);
+                throw TONClientError.accountMissing(
+                    address,
+                    await this.completeErrorData({
+                        original_error: error,
+                        address,
+                        function_name: functionName,
+                    }),
+                );
             }
             throw error;
         }
@@ -1138,7 +1002,13 @@ export default class TONContractsModule extends TONModule implements TONContract
             timeout: 1000,
         });
         if (accounts.length === 0) {
-            return TONClientError.accountMissing(address);
+            return TONClientError.accountMissing(
+                address,
+                await this.completeErrorData({
+                    address,
+                    original_error: error,
+                }),
+            );
         }
         const account = accounts[0];
         removeTypeName(account);
@@ -1147,7 +1017,7 @@ export default class TONContractsModule extends TONModule implements TONContract
                 address,
                 account,
                 messageBase64,
-                time: time,
+                time,
                 mainError: error,
             });
         } catch (resolved) {
@@ -1370,17 +1240,22 @@ export default class TONContractsModule extends TONModule implements TONContract
                 // retry if message expired or if resolving returned that message expired/replay
                 // protection error or if transaction with message expired/replay protection error
                 // returned
+                const isOriginalOrResolved = exitCode => (
+                    TONClientError.isOriginalContractError(error, exitCode)
+                    || TONClientError.isResolvedContractErrorAfterExpire(error, exitCode)
+                );
                 const useRetry = error.code === TONErrorCode.MESSAGE_EXPIRED
-                    || TONClientError.isOriginalContractError(error, TONContractExitCode.REPLAY_PROTECTION)
-                    || TONClientError.isOriginalContractError(error, TONContractExitCode.MESSAGE_EXPIRED)
-                    || TONClientError.isResolvedContractErrorAfterExpire(error, TONContractExitCode.REPLAY_PROTECTION)
-                    || TONClientError.isResolvedContractErrorAfterExpire(error, TONContractExitCode.MESSAGE_EXPIRED);
+                    || isOriginalOrResolved(TONContractExitCode.REPLAY_PROTECTION)
+                    || isOriginalOrResolved(TONContractExitCode.MESSAGE_EXPIRED);
                 if (!useRetry || i === retriesCount) {
                     throw error;
                 }
             }
         }
-        throw TONClientError.internalError('All retry attempts failed');
+        throw TONClientError.internalError(
+            'All retry attempts failed',
+            await this.completeErrorData(),
+        );
     }
 
 
@@ -1440,7 +1315,12 @@ export default class TONContractsModule extends TONModule implements TONContract
             parentSpan,
         });
         if (accounts.length === 0) {
-            throw TONClientError.accountMissing(address);
+            throw TONClientError.accountMissing(
+                address,
+                await this.completeErrorData({
+                    address,
+                }),
+            );
         }
         const account = accounts[0];
         removeTypeName(account);
@@ -1454,7 +1334,12 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<TONContractRunLocalResult> {
         const address = params.address;
         if (!address) {
-            throw TONClientError.addressRequiredForRunLocal();
+            TONClientError.addressRequiredForRunLocal(
+                await this.completeErrorData({
+                    address,
+                    function_name: params.functionName,
+                }),
+            );
         }
         const account = params.account || (await this.getAccount(
             address,
@@ -1463,7 +1348,14 @@ export default class TONContractsModule extends TONModule implements TONContract
             parentSpan,
         ));
         if (!account.code_hash) {
-            throw TONClientError.accountCodeMissing(address, (account: any).balance);
+            throw TONClientError.accountCodeMissing(
+                address,
+                (account: any).balance,
+                await this.completeErrorData({
+                    address,
+                    function_name: params.functionName,
+                }),
+            );
         }
         return this.requestCore('contracts.run.local', {
             address,
@@ -1482,7 +1374,10 @@ export default class TONContractsModule extends TONModule implements TONContract
     ): Promise<TONContractRunLocalResult> {
         const address = params.address;
         if (!address) {
-            throw TONClientError.addressRequiredForRunLocal();
+            throw TONClientError.addressRequiredForRunLocal(await this.completeErrorData({
+                address,
+                function_name: params.functionName,
+            }));
         }
         const account = params.account || (await this.getAccount(
             address,
@@ -1491,7 +1386,14 @@ export default class TONContractsModule extends TONModule implements TONContract
             parentSpan,
         ));
         if (!account.code_hash) {
-            throw TONClientError.accountCodeMissing(address, (account: any).balance);
+            throw TONClientError.accountCodeMissing(
+                address,
+                (account: any).balance,
+                await this.completeErrorData({
+                    address,
+                    function_name: params.functionName,
+                }),
+            );
         }
         return this.requestCore('contracts.run.local.msg', {
             address,
@@ -1505,46 +1407,6 @@ export default class TONContractsModule extends TONModule implements TONContract
 }
 
 TONContractsModule.moduleName = 'TONContractsModule';
-
-const transactionDetails = `
-    id
-    in_msg
-    tr_type
-    status
-    in_msg
-    out_msgs
-    block_id
-    now
-    aborted
-    lt
-    total_fees
-    storage {
-        status_change
-        storage_fees_collected
-    }
-    compute {
-        compute_type
-        skipped_reason
-        success
-        exit_code
-        gas_fees
-        gas_used
-    }
-    action {
-        success
-        valid
-        result_code
-        no_funds
-        total_fwd_fees
-        total_action_fees
-    }
-    out_messages {
-        id
-        msg_type
-        body
-        value
-    }
-   `;
 
 const BLOCK_FIELDS = `
     id
