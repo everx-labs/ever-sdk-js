@@ -19,6 +19,8 @@
 
 // Deprecated: TONClientCore v0.17.0
 import { Span, SpanContext } from 'opentracing';
+import { TONClientError } from './TONClientError';
+import type { TONErrorData } from './TONClientError';
 
 /**
  * TONClientCoreBridge
@@ -92,6 +94,8 @@ export interface TONClientCoreLibrary extends TONClientCoreBridge {
 export interface TONModuleContext {
     getCoreBridge(): Promise<?TONClientCoreBridge>,
 
+    completeErrorData(data?: { [string]: any }): Promise<TONErrorData>,
+
     getModule<T>(ModuleClass: typeof TONModule): T,
 
     serverTimeDelta(): Promise<number>,
@@ -142,6 +146,10 @@ export class TONModule {
     async setup() {
     }
 
+    async completeErrorData(data?: { [string]: any }): Promise<TONErrorData> {
+        return this.context.completeErrorData(data);
+    }
+
     /**
      * Requests a core for specified method and parameters.
      * @param {string} method Method name
@@ -151,7 +159,7 @@ export class TONModule {
     async requestCore<Params, Result>(method: string, params?: Params): Promise<Result> {
         const coreBridge = await this.context.getCoreBridge();
         if (!coreBridge) {
-            throw new Error('TON Client Library isn\'t set up properly');
+            throw TONClientError.clientIsNotSetup();
         }
         return new Promise((resolve: (Result) => void, reject: (Error) => void) => {
             coreBridge.request(

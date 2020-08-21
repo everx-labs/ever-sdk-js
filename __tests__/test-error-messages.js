@@ -4,15 +4,15 @@
 
 // @flow
 
-import {TONErrorCode} from '../src/TONClient';
-import {ABIVersions, nodeSe, tests} from './_/init-tests';
-import {TONMnemonicDictionary} from '../src/modules/TONCryptoModule';
+import { TONErrorCode } from '../src/TONClientError';
+import { ABIVersions, nodeSe, tests } from './_/init-tests';
+import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
 
 async function loadPackages() {
     return {
         WalletContractPackage: await tests.loadPackage('WalletContract'),
         HelloContractPackage: await tests.loadPackage('Hello'),
-    }
+    };
 }
 
 beforeAll(tests.init);
@@ -356,7 +356,7 @@ test('Test SDK Error 1013', async () => {
 
     await expectError(1013, 'client', async () => {
         await contracts.run({
-            address: "0:2222222222222222222222222222222222222222222222222222222222222222",
+            address: '0:2222222222222222222222222222222222222222222222222222222222222222',
             abi: helloPackage.abi,
             functionName: 'touch',
             input: {},
