@@ -11,7 +11,7 @@ import type {
     TONAccessKeysManagementParams,
     TONConfigData,
     TONContracts,
-    TONCrypto, TONMessageProcessingState,
+    TONCrypto, TONInputMessage, TONMessageProcessingState,
     TONQueries,
     TONRegisterAccessKeysParams,
     TONRevokeAccessKeysParams,
@@ -336,10 +336,12 @@ export const TONErrorCode = {
     // Crypto
 
     SIGNING_SOURCE_IS_NOT_SPECIFIED: 2021,
+    INVALID_CRYPTO_BOX_PARAMS: 2030,
 
     // Queries
 
     QUERY_FORCIBLY_ABORTED: 4005,
+
 };
 
 export const TONContractExitCode = {
@@ -572,6 +574,15 @@ export class TONClientError {
             TONErrorCode.SIGNING_SOURCE_IS_NOT_SPECIFIED,
         );
     }
+
+    static invalidCryptoBoxParams(encryptedSeedPhrase: TONInputMessage) {
+        return new TONClientError(
+            'You must provide a valid encrypted seed phrase to create a core crypto box. '
+            + `Provided phrase is: ${JSON.stringify(encryptedSeedPhrase)}.`,
+            TONErrorCode.INVALID_CRYPTO_BOX_PARAMS,
+        );
+    }
+
     static noBlocks(workchain: number) {
         const workchainName = workchain === -1 ? 'masterchain' : `workchain ${workchain}`;
         return new TONClientError(

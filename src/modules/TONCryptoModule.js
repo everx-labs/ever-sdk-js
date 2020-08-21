@@ -23,6 +23,7 @@ import type {
     TONCryptoBoxParams,
     TONCryptoBox,
 } from '../../types';
+import { TONClientError } from '../TONClient';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import { CoreCryptoBox } from './crypto-box';
@@ -70,6 +71,9 @@ export default class TONCryptoModule extends TONModule implements TONCrypto {
             || params.encryptedSeedPhrase.base64
             || params.encryptedSeedPhrase.hex
             || '';
+        if (!key) {
+            throw TONClientError.invalidCryptoBoxParams(params.encryptedSeedPhrase);
+        }
         let cryptoBox = this.cryptoBoxes.get(key);
         if (!cryptoBox) {
             cryptoBox = new CoreCryptoBox(this, params);
