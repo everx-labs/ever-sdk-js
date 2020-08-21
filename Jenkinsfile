@@ -1,3 +1,5 @@
+G_is_PR_to_master = false
+
 pipeline {
     agent any
     options { 
@@ -6,6 +8,16 @@ pipeline {
         parallelsAlwaysFailFast()
     }
     stages {
+        stage("Is PR to master") {
+            when {
+                changeRequest target: 'master'
+            }
+            steps {
+                script {
+                    G_is_PR_to_master = true
+                }
+            }
+        }
         stage("Build info") {
             steps {
                 script {
@@ -15,6 +27,7 @@ pipeline {
                     C_TEXT = """
                         Job: ${JOB_NAME}
                         Build cause: ${buildCause.shortDescription[0]}
+                        Is PR to master: ${G_is_PR_to_master}
                     """
 
                     C_PROJECT = GIT_URL.substring(19,GIT_URL.length()-4)
@@ -75,6 +88,16 @@ pipeline {
                             $class: 'BooleanParameterValue',
                             name: 'CHANGE_JS_DEPS',
                             value: true
+                        ],
+                        [
+                            $class: 'BooleanParameterValue',
+                            name: 'RUN_TESTS_TON_SURF',
+                            value: G_is_PR_to_master ? true : false
+                        ],
+                        [
+                            $class: 'BooleanParameterValue',
+                            name: 'USE_TESTNET',
+                            value: G_is_PR_to_master ? true : false
                         ],
                     ] 
 
