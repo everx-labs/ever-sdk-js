@@ -23,6 +23,7 @@
 			"error",
 			4
 		],
+		"max-classes-per-file": "off",
 		"no-await-in-loop": "off",
 		"no-underscore-dangle": "off",
 		"no-use-before-define": "off",

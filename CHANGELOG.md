@@ -1,8 +1,12 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.26.0 - August 5, 2020
+## 0.26.0 - August 20, 2020
 ### New
+- All message creation functions (`createDeployMessage`, `createRunMessage`, `run`, `deploy`) now are accept 
+  the optional `signingBox` as an alternative to the `keyPair`.
+- `getCryptoBox` method of the `contracts` module. It creates a default `TONCryptoBox` implementation 
+   that uses the core crypto module.
 - More diagnostic fields `configServer`, `queryUrl` in error object. 
 
 ## 0.25.5 - August 5, 2020

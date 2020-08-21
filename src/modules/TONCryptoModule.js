@@ -20,8 +20,13 @@ import type {
     TONMnemonicDeriveSignKeysParams,
     TONCrypto,
     TONHDKeyFromMnemonicParams,
-} from "../../types";
+    TONCryptoBoxParams,
+    TONCryptoBox,
+} from '../../types';
+import { TONClientError } from '../TONClientError';
+import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
+import { CoreCryptoBox } from './crypto-box';
 
 export const TONOutputEncoding = {
     Text: 'Text',
@@ -54,6 +59,29 @@ function fixInputMessage(message: TONInputMessage): TONInputMessage {
 }
 
 export default class TONCryptoModule extends TONModule implements TONCrypto {
+    cryptoBoxes: Map<string, CoreCryptoBox>;
+
+    constructor(context: TONModuleContext) {
+        super(context);
+        this.cryptoBoxes = new Map();
+    }
+
+    getCryptoBox(params: TONCryptoBoxParams): Promise<TONCryptoBox> {
+        const key = params.encryptedSeedPhrase.text
+            || params.encryptedSeedPhrase.base64
+            || params.encryptedSeedPhrase.hex
+            || '';
+        if (!key) {
+            throw TONClientError.invalidCryptoBoxParams(params.encryptedSeedPhrase);
+        }
+        let cryptoBox = this.cryptoBoxes.get(key);
+        if (!cryptoBox) {
+            cryptoBox = new CoreCryptoBox(this, params);
+            this.cryptoBoxes.set(key, cryptoBox);
+        }
+        return Promise.resolve(cryptoBox);
+    }
+
     async factorize(challengeHex: string): Promise<TONFactorizeResult> {
         return this.requestCore('crypto.math.factorize', challengeHex);
     }

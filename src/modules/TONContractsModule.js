@@ -56,11 +56,14 @@ import type {
     TONWaitForTransactionParams,
     QShardHash,
     TONMessageProcessingState,
+    TONSigningBox,
+    TONKeyPairData,
 } from '../../types';
 
 import { emptyTONErrorData, TONClientError, TONContractExitCode, TONErrorCode } from '../TONClientError';
 import { TONModule } from '../TONModule';
 import TONConfigModule from './TONConfigModule';
+import TONCryptoModule, { TONOutputEncoding } from './TONCryptoModule';
 import TONQueriesModule, { MAX_TIMEOUT } from './TONQueriesModule';
 
 export const TONAddressStringVariant = {
@@ -197,9 +200,6 @@ export const QBounceType = {
 
 const MASTERCHAIN_ID = -1;
 
-const EXTRA_TRANSACTION_WAITING_TIME = 10000;
-const BLOCK_TRANSACTION_WAITING_TIME = 5000;
-
 function removeTypeName(obj: any) {
     if (obj.__typename) {
         delete obj.__typename;
@@ -279,14 +279,48 @@ function traceMessage(
     }
 }
 
+type SignResult = {
+    signBytesBase64: string,
+    publicKeyHex: string,
+};
+
+type SigningSource = {
+    box: ?TONSigningBox,
+    keys: TONKeyPairData,
+}
+
+async function getSigningSource(
+    box?: TONSigningBox,
+    keys?: TONKeyPairData,
+): Promise<?SigningSource> {
+    if (box) {
+        return {
+            box,
+            keys: {
+                secret: '',
+                public: await box.getPublicKey(),
+            },
+        };
+    }
+    if (keys && keys.secret) {
+        return {
+            box: null,
+            keys,
+        };
+    }
+    return null;
+}
+
+
 export default class TONContractsModule extends TONModule implements TONContracts {
     config: TONConfigModule;
-
+    crypto: TONCryptoModule;
     queries: TONQueriesModule;
 
     async setup(): Promise<*> {
         this.config = this.context.getModule(TONConfigModule);
         this.queries = this.context.getModule(TONQueriesModule);
+        this.crypto = this.context.getModule(TONCryptoModule);
     }
 
     async load(
@@ -415,6 +449,17 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractDeployMessage> {
         this.config.log('createDeployMessage', params);
+        const source = await getSigningSource(params.signingBox, params.keyPair);
+        if (source) {
+            const unsignedMessage = await this.createUnsignedDeployMessage({
+                ...params,
+                keyPair: source.keys,
+            });
+            return this.createSignedDeployMessage({
+                ...(await this.internalSign(unsignedMessage.signParams, source)),
+                unsignedMessage,
+            });
+        }
         const message: TONContractMessage = await this.requestCore('contracts.deploy.message', {
             abi: params.package.abi,
             constructorHeader: params.constructorHeader,
@@ -425,8 +470,8 @@ export default class TONContractsModule extends TONModule implements TONContract
             workchainId: params.workchainId,
         });
         return {
-            message,
             address: message.address,
+            message,
         };
     }
 
@@ -436,6 +481,14 @@ export default class TONContractsModule extends TONModule implements TONContract
         retryIndex?: number,
     ): Promise<TONContractRunMessage> {
         this.config.log('createRunMessage', params);
+        const source = await getSigningSource(params.signingBox, params.keyPair);
+        if (source) {
+            const unsignedMessage = await this.createUnsignedRunMessage(params);
+            return this.createSignedRunMessage({
+                ...(await this.internalSign(unsignedMessage.signParams, source)),
+                unsignedMessage,
+            });
+        }
         const message = await this.requestCore('contracts.run.message', {
             address: params.address,
             abi: params.abi,
@@ -1403,6 +1456,35 @@ export default class TONContractsModule extends TONModule implements TONContract
             messageBase64: params.messageBodyBase64,
             fullRun: params.fullRun,
         });
+    }
+
+    async internalSign(
+        unsigned: TONContractUnsignedMessage,
+        source: SigningSource,
+    ): Promise<SignResult> {
+        const message = {
+            base64: unsigned.bytesToSignBase64,
+        };
+        const box = source.box;
+        if (box) {
+            return {
+                signBytesBase64: await box.sign(message, TONOutputEncoding.Base64),
+                publicKeyHex: await box.getPublicKey(),
+            };
+        }
+        const keys = source.keys;
+        if (keys) {
+            const signKeys = await this.crypto.naclSignKeypairFromSecretKey(keys.secret);
+            return {
+                signBytesBase64: await this.crypto.naclSignDetached(
+                    message,
+                    signKeys.secret,
+                    TONOutputEncoding.Base64,
+                ),
+                publicKeyHex: signKeys.public,
+            };
+        }
+        throw TONClientError.signingSourceIsNotSpecified();
     }
 }
 

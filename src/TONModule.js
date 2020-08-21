@@ -142,6 +142,7 @@ export class TONModule {
      * The method is a safe place to get a references to other modules from the `context`.
      * @return {Promise<void>}
      */
+    // eslint-disable-next-line no-empty-function
     async setup() {
     }
 

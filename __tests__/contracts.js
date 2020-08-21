@@ -360,8 +360,7 @@ test('External Signing on ABI v2', async () => {
     });
     const runMessage = await contracts.createRunMessage(messageParams);
 
-    expect(signedRunMessage.message.messageBodyBase64)
-        .toEqual(runMessage.message.messageBodyBase64);
+    expect(signedRunMessage).toEqual(runMessage);
 });
 
 test('Should change InitState of contract', async () => {
