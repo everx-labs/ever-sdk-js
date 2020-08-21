@@ -200,9 +200,6 @@ export const QBounceType = {
 
 const MASTERCHAIN_ID = -1;
 
-const EXTRA_TRANSACTION_WAITING_TIME = 10000;
-const BLOCK_TRANSACTION_WAITING_TIME = 5000;
-
 function removeTypeName(obj: any) {
     if (obj.__typename) {
         delete obj.__typename;

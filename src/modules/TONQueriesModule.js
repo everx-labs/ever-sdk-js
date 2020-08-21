@@ -259,6 +259,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             const clientConfig = getConfigForServer(server);
             try {
                 // eslint-disable-next-line no-await-in-loop
+                // noinspection SpellCheckingInspection
                 const redirected = await this.detectRedirect(
                     fetch,
                     `${clientConfig.httpUrl}?query=%7Binfo%7Bversion%7D%7D`,
@@ -296,6 +297,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         if (clientConfig && serverInfo.supportsTime && serverInfo.timeDelta === null) {
             try {
                 const start = Date.now();
+                // noinspection SpellCheckingInspection
                 const response = await clientConfig.fetch(`${clientConfig.httpUrl}?query=%7Binfo%7Btime%7D%7D`);
                 const end = Date.now();
                 const responseData = await response.json();
@@ -521,11 +523,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     async createGraphqlClient(span: Span | SpanContext) {
         const useHttp = !this.config.data.useWebSocketForQueries;
         let clientConfig = await this.getClientConfig();
-        let wsLink: ?WebSocketLink = null;
-        let httpLink: ?HttpLink = null;
+        let wsLink: ?(WebSocketLink & { url: string }) = null;
+        let httpLink: ?(HttpLink & { uri: string }) = null;
 
         const subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
-        const subscriptionClient = new SubscriptionClient(
+        const subscriptionClient: SubscriptionClient & { url: string } = new SubscriptionClient(
             clientConfig.wsUrl,
             {
                 timeout: KEEP_ALIVE_TIMEOUT,
@@ -540,14 +542,16 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         subscriptionClient.onReconnected(() => {
             console.log('[TONClient.queries]', 'WebSocket Reconnected');
         });
-        let detectingRedirection = false;
+        const guard = {
+            detectingRedirection: false,
+        };
         subscriptionClient.onError(() => {
             console.log('[TONClient.queries]', 'WebSocket Failed');
-            if (detectingRedirection) {
+            if (guard.detectingRedirection) {
                 return;
             }
             (async () => {
-                detectingRedirection = true;
+                guard.detectingRedirection = true;
                 try {
                     const newConfig = await this.getClientConfig();
                     const configIsChanged = newConfig.httpUrl !== clientConfig.httpUrl
@@ -567,7 +571,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 } catch (err) {
                     console.log('[TONClient.queries] redirection detector failed', err);
                 }
-                detectingRedirection = false;
+                guard.detectingRedirection = false;
             })();
         });
         subscriptionClient.maxConnectTimeGenerator.duration = () => {
