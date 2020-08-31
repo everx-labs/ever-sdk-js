@@ -19,7 +19,6 @@ import {
 
 
 import type { TONContractLoadResult } from '../types';
-import { version } from '../package.json';
 import { ABIVersions, nodeSe, tests } from './_/init-tests';
 
 async function loadPackages() {
@@ -65,15 +64,6 @@ test('removeProps', () => {
                 baz: 'baz',
             },
         });
-});
-
-test('Test versions compatibility', async () => {
-    const ver_builtin = await tests.client.config.getVersion();
-    expect(version.split('.')[0])
-        .toEqual(ver_builtin.split('.')[0]);
-    console.log(
-        `Client version ${version} uses compatible binaries version: ${ver_builtin}`,
-    );
 });
 
 test('load', async () => {
