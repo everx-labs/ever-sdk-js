@@ -9,11 +9,11 @@ beforeAll(tests.init);
 afterAll(tests.done);
 
 test('Test versions compatibility', async () => {
-    const ver_builtin = await tests.client.config.getVersion();
+    const core_version = await tests.client.config.getVersion();
     expect(version.split('.')[0])
-        .toEqual(ver_builtin.split('.')[0]);
+        .toEqual(core_version.split('.')[0]);
     console.log(
-        `Client version ${version} uses compatible binaries version: ${ver_builtin}`,
+        `Client version ${version} uses compatible core version: ${core_version}`,
     );
 });
 
