@@ -4,21 +4,22 @@
 
 // @flow
 
-import {Span} from 'opentracing';
-import {removeProps, TONAddressStringVariant} from '../src/modules/TONContractsModule';
-import {TONOutputEncoding} from '../src/modules/TONCryptoModule';
+import { Span } from 'opentracing';
+import { removeProps, TONAddressStringVariant } from '../src/modules/TONContractsModule';
+import { TONOutputEncoding } from '../src/modules/TONCryptoModule';
 import {
     TONClient,
-    TONClientError,
+} from '../src/TONClient';
+
+import {
     TONContractExitCode,
     TONErrorCode,
     TONErrorSource,
-} from '../src/TONClient';
+} from '../src/TONClientError';
 
 
-import type {TONContractLoadResult} from '../types';
-import {version} from '../package.json';
-import {ABIVersions, nodeSe, tests} from './_/init-tests';
+import type { TONContractLoadResult } from '../types';
+import { ABIVersions, nodeSe, tests } from './_/init-tests';
 
 async function loadPackages() {
     return {
@@ -29,7 +30,7 @@ async function loadPackages() {
         SetCodePackage: await tests.loadPackage('Setcode'),
         SetCode2Package: await tests.loadPackage('Setcode2'),
         EventsPackage: await tests.loadPackage('Events'),
-    }
+    };
 }
 
 beforeAll(tests.init);
@@ -65,15 +66,6 @@ test('removeProps', () => {
         });
 });
 
-test('Test versions compatibility', async () => {
-    const ver_builtin = await tests.client.config.getVersion();
-    expect(version.split('.')[0])
-        .toEqual(ver_builtin.split('.')[0]);
-    console.log(
-        `Client version ${version} uses compatible binaries version: ${ver_builtin}`,
-    );
-});
-
 test('load', async () => {
     const { contracts } = tests.client;
     await tests.client.trace('tests.contracts.load', async (span: Span) => {
@@ -105,8 +97,8 @@ test('out of sync', async () => {
     cfg.outOfSyncThreshold = -1;
     try {
         await expectError(
-            TONClientError.code.CLOCK_OUT_OF_SYNC,
-            TONClientError.source.CLIENT,
+            TONErrorCode.CLOCK_OUT_OF_SYNC,
+            TONErrorSource.CLIENT,
             async () => {
                 await tests.get_grams_from_giver(walletAddress);
             },
@@ -181,9 +173,9 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
             }, span);
         } catch (error) {
             expect(error.source)
-                .toEqual(TONClientError.source.NODE);
+                .toEqual(TONErrorSource.NODE);
             expect(error.code)
-                .toEqual(TONClientError.code.CONTRACT_EXECUTION_FAILED);
+                .toEqual(TONErrorCode.CONTRACT_EXECUTION_FAILED);
             expect(error.data.phase)
                 .toEqual('computeVm');
             expect(error.data.transaction_id)
@@ -358,8 +350,7 @@ test('External Signing on ABI v2', async () => {
     });
     const runMessage = await contracts.createRunMessage(messageParams);
 
-    expect(signedRunMessage.message.messageBodyBase64)
-        .toEqual(runMessage.message.messageBodyBase64);
+    expect(signedRunMessage).toEqual(runMessage);
 });
 
 test('Should change InitState of contract', async () => {
@@ -986,10 +977,10 @@ test('Test expire retries', async () => {
     });
 
     const client = await TONClient.create({
-            ...tests.config,
-            messageExpirationTimeout: 5000,
-            messageExpirationTimeoutGrowFactor: 1.1
-        });
+        ...tests.config,
+        messageExpirationTimeout: 5000,
+        messageExpirationTimeoutGrowFactor: 1.1,
+    });
     let completed = 0;
     const run = async () => {
         const result = await client.contracts.run({

@@ -25,7 +25,8 @@ import type {
     TONWaitForParams,
     TONQueryAggregateParams,
 } from '../../types';
-import { TONClient, TONClientError, TONErrorCode } from '../TONClient';
+import { TONClient } from '../TONClient';
+import { emptyTONErrorData, TONClientError, TONErrorCode } from '../TONClientError';
 import type { TONModuleContext } from '../TONModule';
 import { TONModule } from '../TONModule';
 import TONConfigModule, { URLParts } from './TONConfigModule';
@@ -144,11 +145,13 @@ function abortableFetch(fetch) {
                     fetchOptions = {
                         ...options,
                         signal: controller.signal,
-                    }
+                    };
                 }
                 setTimeout(() => {
-                    reject(TONClientError.QUERY_FORCIBLY_ABORTED)
-                    controller && controller.abort();
+                    reject(TONClientError.queryForciblyAborted(emptyTONErrorData));
+                    if (controller) {
+                        controller.abort();
+                    }
                 }, queryTimeout);
             }
             fetch(input, fetchOptions).then(resolve, reject);
@@ -182,9 +185,8 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         this.overrideWsUrl = null;
         this.operationIdPrefix = (Date.now() % 60000).toString(16);
         for (let i = 0; i < 10; i += 1) {
-            this.operationIdPrefix =
-                `${this.operationIdPrefix}${Math.round(Math.random() * 256)
-                    .toString(16)}`;
+            const randomPart = Math.round(Math.random() * 256).toString(16);
+            this.operationIdPrefix = `${this.operationIdPrefix}${randomPart}`;
         }
         this.operationIdSuffix = 1;
         this.serverInfo = resolveServerInfo();
@@ -196,7 +198,12 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         this.messages = new TONQueriesModuleCollection(this, 'messages', 'Message');
         this.blocks = new TONQueriesModuleCollection(this, 'blocks', 'Block');
         this.accounts = new TONQueriesModuleCollection(this, 'accounts', 'Account');
-        this.blocks_signatures = new TONQueriesModuleCollection(this, 'blocks_signatures', 'BlockSignatures');
+        this.blocks_signatures =
+            new TONQueriesModuleCollection(this, 'blocks_signatures', 'BlockSignatures');
+    }
+
+    getQueryUrl(): string {
+        return this.graphqlClientConfig?.httpUrl || '';
     }
 
     async detectRedirect(fetch: any, sourceUrl: string): Promise<string> {
@@ -214,11 +221,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             return '';
         }
         const sourceLocation = URLParts.parse(sourceUrl)
-            .fixQuery(_ => '')
+            .fixQuery(() => '')
             .toString()
             .toLowerCase();
         const responseLocation = URLParts.parse(response.url)
-            .fixQuery(_ => '')
+            .fixQuery(() => '')
             .toString()
             .toLowerCase();
         return responseLocation !== sourceLocation ? response.url : '';
@@ -252,6 +259,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             const clientConfig = getConfigForServer(server);
             try {
                 // eslint-disable-next-line no-await-in-loop
+                // noinspection SpellCheckingInspection
                 const redirected = await this.detectRedirect(
                     fetch,
                     `${clientConfig.httpUrl}?query=%7Binfo%7Bversion%7D%7D`,
@@ -267,12 +275,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 return clientConfig;
             } catch (error) {
                 console.log(`[getClientConfig] for server "${server}" failed`, {
-                    clientConfig: {
-                        httpUrl: clientConfig.httpUrl,
-                        wsUrl: clientConfig.wsUrl,
+                    message: error.message || error.toString(),
+                    data: {
+                        http_url: clientConfig.httpUrl,
+                        ws_url: clientConfig.wsUrl,
                     },
-                    errorString: error.toString(),
-                    error,
                 });
             }
         }
@@ -290,6 +297,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         if (clientConfig && serverInfo.supportsTime && serverInfo.timeDelta === null) {
             try {
                 const start = Date.now();
+                // noinspection SpellCheckingInspection
                 const response = await clientConfig.fetch(`${clientConfig.httpUrl}?query=%7Binfo%7Btime%7D%7D`);
                 const end = Date.now();
                 const responseData = await response.json();
@@ -430,8 +438,9 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     fetchOptions: {
                         queryTimeout: Math.min(
                             forceTerminateTimeout + forceTerminateExtraTimeout,
-                            MAX_TIMEOUT),
-                    }
+                            MAX_TIMEOUT,
+                        ),
+                    },
                 };
                 return await client.query({
                     query,
@@ -439,7 +448,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     context,
                 });
             } catch (error) {
-                let resolvedError = this.resolveGraphQLError(error);
+                const resolvedError = await this.resolveGraphQLError(error);
                 if (TONQueriesModule.isNetworkError(resolvedError)
                     && !this.config.isNetworkTimeoutExpiredSince(startTime)) {
                     this.config.log(resolvedError);
@@ -458,7 +467,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }
     }
 
-    resolveGraphQLError(error: any) {
+    async resolveGraphQLError(error: any) {
         const gqlErr = error.graphQLErrors && error.graphQLErrors[0];
         if (gqlErr) {
             const clientErr = new Error(gqlErr.message);
@@ -473,11 +482,9 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             && error.networkError.result
             && error.networkError.result.errors;
         if (errors) {
-            return TONClientError.queryFailed(errors);
-        } else {
-            return error;
+            return TONClientError.queryFailed(errors, await this.completeErrorData());
         }
-
+        return error;
     }
 
     async graphQl(request: (client: ApolloClient) => Promise<any>, span: Span): Promise<any> {
@@ -485,7 +492,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         try {
             return await request(client);
         } catch (error) {
-            throw this.resolveGraphQLError(error);
+            throw await this.resolveGraphQLError(error);
         }
     }
 
@@ -516,11 +523,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     async createGraphqlClient(span: Span | SpanContext) {
         const useHttp = !this.config.data.useWebSocketForQueries;
         let clientConfig = await this.getClientConfig();
-        let wsLink: ?WebSocketLink = null;
-        let httpLink: ?HttpLink = null;
+        let wsLink: ?(WebSocketLink & { url: string }) = null;
+        let httpLink: ?(HttpLink & { uri: string }) = null;
 
         const subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
-        const subscriptionClient = new SubscriptionClient(
+        const subscriptionClient: SubscriptionClient & { url: string } = new SubscriptionClient(
             clientConfig.wsUrl,
             {
                 timeout: KEEP_ALIVE_TIMEOUT,
@@ -535,14 +542,16 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         subscriptionClient.onReconnected(() => {
             console.log('[TONClient.queries]', 'WebSocket Reconnected');
         });
-        let detectingRedirection = false;
+        const guard = {
+            detectingRedirection: false,
+        };
         subscriptionClient.onError(() => {
             console.log('[TONClient.queries]', 'WebSocket Failed');
-            if (detectingRedirection) {
+            if (guard.detectingRedirection) {
                 return;
             }
             (async () => {
-                detectingRedirection = true;
+                guard.detectingRedirection = true;
                 try {
                     const newConfig = await this.getClientConfig();
                     const configIsChanged = newConfig.httpUrl !== clientConfig.httpUrl
@@ -562,7 +571,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 } catch (err) {
                     console.log('[TONClient.queries] redirection detector failed', err);
                 }
-                detectingRedirection = false;
+                guard.detectingRedirection = false;
             })();
         });
         subscriptionClient.maxConnectTimeGenerator.duration = () => {
@@ -723,7 +732,9 @@ class TONQueriesModuleCollection implements TONQCollection {
                 fields: params.fields,
             });
             if (!(await this.module.getServerInfo(span)).supportsAggregations) {
-                throw TONClientError.serverDoesntSupportAggregations();
+                throw TONClientError.serverDoesntSupportAggregations(
+                    await this.module.completeErrorData(),
+                );
             }
             const t = this.typeName;
             const q = this.typeName.endsWith('s') ? `aggregate${t}` : `aggregate${t}s`;
@@ -838,7 +849,9 @@ class TONQueriesModuleCollection implements TONQCollection {
         if (docs.length > 0) {
             return docs[0];
         }
-        throw TONClientError.waitForTimeout();
+        throw TONClientError.waitForTimeout(await this.module.completeErrorData({
+            collection: this.collectionName,
+        }));
     }
 }
 

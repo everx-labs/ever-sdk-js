@@ -9,7 +9,6 @@ import { TONModule } from '../TONModule';
 import { Tracer } from 'opentracing';
 import { tracer as noopTracer } from "opentracing/lib/noop";
 
-const MAX_MESSAGE_TIMEOUT = 5 * 60000;
 const DEFAULT_MESSAGE_RETRIES_COUNT = 10;
 const DEFAULT_MESSAGE_PROCESSING_TIMEOUT = 40000;
 const DEFAULT_WAIT_FOR_TIMEOUT = 40000;
@@ -93,22 +92,6 @@ export class URLParts {
         return `${this.protocol}${this.host}${path}${this.query !== '' ? '?' : ''}${this.query}`;
     }
 }
-
-function resolveTimeout(
-    timeout?: number,
-    defaultTimeout: number,
-    growFactor?: number,
-    defaultGrowFactor: number,
-    retryIndex?: number,
-): number {
-    const resolvedTimeout = timeout === 0 ? 0 : (timeout || defaultTimeout);
-    const resolvedGrowFactor = growFactor || defaultGrowFactor;
-    return Math.min(
-        MAX_MESSAGE_TIMEOUT,
-        resolvedTimeout * Math.pow(resolvedGrowFactor, retryIndex || 0)
-    );
-}
-
 const defaultServer = 'http://localhost';
 function valueOrDefault(value, defaultValue) {
     return (value === undefined || value === null) ? defaultValue : value;
@@ -133,6 +116,9 @@ export default class TONConfigModule extends TONModule {
         this.tracer = data.tracer || noopTracer;
     }
 
+    getConfigServer(): string {
+        return this.data?.servers?.[0] || '';
+    }
 
     outOfSyncThreshold(): number {
         return valueOrDefault(this.data.outOfSyncThreshold, DEFAULT_OUT_OF_SYNC_THRESHOLD);

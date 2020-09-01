@@ -73,6 +73,11 @@ pipeline {
                         ],
                         [
                             $class: 'BooleanParameterValue',
+                            name: 'RUN_TESTS_TON_SURF',
+                            value: true
+                        ],
+                        [
+                            $class: 'BooleanParameterValue',
                             name: 'CHANGE_JS_DEPS',
                             value: true
                         ],

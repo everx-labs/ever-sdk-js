@@ -4,15 +4,15 @@
 
 // @flow
 
-import {TONErrorCode} from '../src/TONClient';
-import {ABIVersions, nodeSe, tests} from './_/init-tests';
-import {TONMnemonicDictionary} from '../src/modules/TONCryptoModule';
+import { TONErrorCode } from '../src/TONClientError';
+import { ABIVersions, nodeSe, tests } from './_/init-tests';
+import { TONMnemonicDictionary } from '../src/modules/TONCryptoModule';
 
 async function loadPackages() {
     return {
         WalletContractPackage: await tests.loadPackage('WalletContract'),
         HelloContractPackage: await tests.loadPackage('Hello'),
-    }
+    };
 }
 
 beforeAll(tests.init);
@@ -356,7 +356,7 @@ test('Test SDK Error 1013', async () => {
 
     await expectError(1013, 'client', async () => {
         await contracts.run({
-            address: "0:2222222222222222222222222222222222222222222222222222222222222222",
+            address: '0:2222222222222222222222222222222222222222222222222222222222222222',
             abi: helloPackage.abi,
             functionName: 'touch',
             input: {},
@@ -381,12 +381,7 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
             keyPair: wrongKeys,
         });
     } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2001);
-        expect(error.data)
-            .toBeNull();
+        expect(error.code).toEqual(2001);
     }
 
 
@@ -401,12 +396,7 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
             keyPair: wrongKeys,
         });
     } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2002);
-        expect(error.data)
-            .toBeNull();
+        expect(error.code).toEqual(2002);
     }
 
     wrongKeys = {
@@ -420,32 +410,17 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
             keyPair: wrongKeys,
         });
     } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2003);
-        expect(error.data)
-            .toBeNull();
+        expect(error.code).toEqual(2003);
     }
     try {
         await crypto.factorize('');
     } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2007);
-        expect(error.data)
-            .toBeNull();
+        expect(error.code).toEqual(2007);
     }
     try {
         await crypto.factorize('       ');
     } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2007);
-        expect(error.data)
-            .toBeNull();
+        expect(error.code).toEqual(2007);
     }
     try {
         await crypto.mnemonicFromEntropy({
@@ -453,12 +428,7 @@ test.each(ABIVersions)('Test SDK Errors > 2000 (ABI v%i)', async (abiVersion) =>
             dictionary: TONMnemonicDictionary.ENGLISH,
         });
     } catch (error) {
-        expect(error.source)
-            .toEqual('client');
-        expect(error.code)
-            .toEqual(2016);
-        expect(error.data)
-            .toBeNull();
+        expect(error.code).toEqual(2016);
     }
 
     await expectError(2017, 'client', async () => {
