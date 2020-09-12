@@ -75,7 +75,7 @@
 		"husky": "^4.2.3",
 		"jaeger-client": "3.17.2",
 		"jest": "25.5.4",
-		"node-fetch": "2.6.0",
+		"node-fetch": "2.6.1",
 		"websocket": "1.0.31"
 	},
 	"dependencies": {
