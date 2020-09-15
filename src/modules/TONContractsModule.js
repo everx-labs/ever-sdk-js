@@ -537,11 +537,21 @@ export default class TONContractsModule extends TONModule implements TONContract
         params: TONContractRunParams,
         retryIndex?: number,
     ): Promise<TONContractUnsignedRunMessage> {
+        let header = params.header;
+        if ((params.abi.header || []).includes('pubkey') && !header?.pubkey) {
+            const keys = (await getSigningSource(params.signingBox, params.keyPair))?.keys;
+            if (keys) {
+                header = {
+                    ...header,
+                    pubkey: keys.public,
+                }
+            }
+        }
         const signParams = await this.requestCore('contracts.run.encode_unsigned_message', {
             address: params.address,
             abi: params.abi,
             functionName: params.functionName,
-            header: params.header,
+            header: header,
             tryIndex: retryIndex,
             input: params.input,
         });

@@ -1044,3 +1044,96 @@ test.each(ABIVersions)('Check deployed (ABI v%i)', async (abiVersion) => {
     expect(checked.alreadyDeployed)
         .toBeTruthy();
 });
+
+
+const SensorPackage = {
+    abi: {
+        'ABI version': 2,
+        header: ['pubkey', 'time'],
+        functions: [
+            {
+                name: 'constructor',
+                inputs: [
+                    {
+                        name: 'ownerKey',
+                        type: 'uint256',
+                    },
+                ],
+                outputs: [],
+            },
+            {
+                name: 'getData',
+                inputs: [],
+                outputs: [
+                    {
+                        name: 'value0',
+                        type: 'uint16',
+                    },
+                ],
+            },
+            {
+                name: 'setData',
+                inputs: [
+                    {
+                        name: 'input',
+                        type: 'uint16',
+                    },
+                ],
+                outputs: [],
+            },
+        ],
+        data: [],
+        events: [],
+    },
+    imageBase64: 'te6ccgECEgEAAm0AAgE0AwEBAcACAEPQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAib/APSkICLAAZL0oOGK7VNYMPShCAQBCvSkIPShBQIDzsAHBgA312omhp/+mf6YBph+uF//w1/DU//DD8M3wx/DFAA398IWRl//wh54Wf/CNnhYB8JXwlgWWH5f/k9qpAIBIAsJAeT/fyHtRNAg10nCAY4Y0//TP9MA0w/XC//4a/hqf/hh+Gb4Y/hijh70BXD4anD4a3ABgED0DvK91wv/+GJw+GNw+GZ/+GHi0wABjh2BAgDXGCD5AQHTAAGU0/8DAZMC+ELiIPhl+RDyqJXTAAHyeuLTPwEKAHqOHvhDIbkgnzAg+COBA+iogggbd0Cgud6S+GPggDTyNNjTHyHBAyKCEP////28sZLyPOAB8AH4R26S8jzeAgEgDwwCA314Dg0AgbFuIi/wgt0l4Am9o/CUQ4H/HEZHoaYD9IBgY5GfDkGdAMGegZ8DnwOfJ324iLxDnhYfkuP2Abxhgf8l4Ae8//DPAE2xEMqn8ILdJeAJvaYfo/CKQN0kYOG98Jd15cDL8ABB8NRh4Ab/8M8CASAREADhu8keHF+EFujkPtRNAg10nCAY4Y0//TP9MA0w/XC//4a/hqf/hh+Gb4Y/hijh70BXD4anD4a3ABgED0DvK91wv/+GJw+GNw+GZ/+GHi3vhG8nNx+GbXDf+V1NHQ0//f0SDCAPLgZPgAIPhrMPADf/hngAat1wItDWAjHSADDcIccAkOAh1w0fkvI84VMRkOHBAyKCEP////28sZLyPOAB8AH4R26S8jze',
+};
+
+test('Signing', async () => {
+    const client = tests.client;
+    const ownerKeys = await client.crypto.ed25519Keypair();
+    console.log('ownerKeys:', ownerKeys);
+
+    const deployKeys = await client.crypto.ed25519Keypair();
+    console.log('deployKeys:', deployKeys);
+
+    const time = Math.round((Date.now() + 10000) / 1000);
+
+    const deployMessage = await client.contracts.createDeployMessage({
+        package: SensorPackage,
+        constructorHeader: { time },
+        constructorParams: { ownerKey: `0x${ownerKeys.public}` },
+        keyPair: deployKeys,
+    });
+
+    const futureAddress = deployMessage.address;
+
+    // const futureAddress = '0:03285608adf64c1db67cb7f970271d1a6d83a75fa5f73e8778a08afd1be4fd8d'
+    console.log(`Future address of the contract will be: ${futureAddress}`);
+
+    // Requesting contract deployment funds form a local TON OS SE giver
+    // not suitable for other networks
+    await tests.get_grams_from_giver(futureAddress);
+    console.log(`Grams were transferred from giver to ${futureAddress}`);
+
+    // Contract deployment
+    const helloAddress = (await client.contracts.deploy({
+        package: SensorPackage,
+        constructorParams: { ownerKey: `0x${ownerKeys.public}` },
+        keyPair: deployKeys,
+    })).address;
+
+
+    await client.contracts.run({
+        address: helloAddress,
+        abi: SensorPackage.abi,
+        functionName: 'setData',
+        header: {
+            pubkey: ownerKeys.public,
+        },
+        input: {
+            input: 8,
+        },
+        keyPair: ownerKeys,
+    });
+});
+
