@@ -4,13 +4,11 @@
 
 /* eslint-disable no-bitwise */
 
-import {ABIVersions, tests} from './_/init-tests';
+import { ABIVersions, tests } from './_/init-tests';
 
-async function loadPackages() {
-    return {
-        SubscriptionContractPackage: await tests.loadPackage('Subscription'),
-    }
-}
+const loadPackage = {
+    subscription: tests.packageLoader('Subscription'),
+};
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -75,8 +73,7 @@ function replaceBigIntsWithNonZeroFlags(fees: { [string]: any }) {
 
 test.each(ABIVersions)('RunLocal (ABI v%i)', async (abiVersion) => {
     const ton = tests.client;
-    const { SubscriptionContractPackage } = await loadPackages();
-    const subscriptionPackage = SubscriptionContractPackage[abiVersion];
+    const subscriptionPackage = await loadPackage.subscription(abiVersion);
     const keys = await ton.crypto.ed25519Keypair();
     console.log(`Keys: ${JSON.stringify(keys)}`);
 

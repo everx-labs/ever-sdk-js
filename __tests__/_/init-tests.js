@@ -43,25 +43,23 @@ export type TONContractDeployedParams = {
     giverAddress: string
 }
 
-export type PackageByABIVersion = {
-    [number]: TONContractPackage,
-};
+export type PackageLoader = (version: number) => Promise<TONContractPackage>;
 
 export const ABIVersions = [1, 2];
 
 const _loadedPackages = new Map();
 
-export async function loadPackage(name: string): Promise<PackageByABIVersion> {
-    const existing = _loadedPackages.get(name);
-    if (existing) {
-        return existing;
-    }
-    const packages: PackageByABIVersion = {};
-    for (const version of ABIVersions) {
-        packages[version] = await loadContractPackage(name, version);
-    }
-    _loadedPackages.set(name, packages);
-    return packages;
+export function packageLoader(name: string): PackageLoader {
+    return async (version: number): Promise<TONContractPackage> => {
+        const key = `${name}_${version}`;
+        const existing = _loadedPackages.get(key);
+        if (existing) {
+            return existing;
+        }
+        const loaded = await loadContractPackage(name, version);
+        _loadedPackages.set(key, loaded);
+        return loaded;
+    };
 }
 
 async function init() {
@@ -125,7 +123,7 @@ export const tests: {
     deployedContracts: Array<TONContractDeployedParams>,
     get_giver_address(): string,
     nodeSe: boolean,
-    loadPackage(name: string): PackageByABIVersion,
+    packageLoader(name: string): PackageLoader,
 } = {
     config: {
         defaultWorkchain: 0,
@@ -147,5 +145,5 @@ export const tests: {
     deployedContracts: [],
     get_giver_address,
     nodeSe,
-    loadPackage,
+    packageLoader,
 };

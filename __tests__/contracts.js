@@ -21,17 +21,16 @@ import {
 import type { TONContractLoadResult } from '../types';
 import { ABIVersions, nodeSe, tests } from './_/init-tests';
 
-async function loadPackages() {
-    return {
-        CheckInitParamsPackage: await tests.loadPackage('CheckInitParams'),
-        WalletContractPackage: await tests.loadPackage('WalletContract'),
-        HelloContractPackage: await tests.loadPackage('Hello'),
-        SubscriptionContractPackage: await tests.loadPackage('Subscription'),
-        SetCodePackage: await tests.loadPackage('Setcode'),
-        SetCode2Package: await tests.loadPackage('Setcode2'),
-        EventsPackage: await tests.loadPackage('Events'),
-    };
-}
+const loadPackage = {
+    checkInitParams: tests.packageLoader('CheckInitParams'),
+    wallet: tests.packageLoader('WalletContract'),
+    hello: tests.packageLoader('Hello'),
+    subscription: tests.packageLoader('Subscription'),
+    setCode: tests.packageLoader('Setcode'),
+    setCode2: tests.packageLoader('Setcode2'),
+    events: tests.packageLoader('Events'),
+    sensor: tests.packageLoader('Sensor'),
+};
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -112,8 +111,7 @@ test('out of sync', async () => {
 test.each(ABIVersions)('Test hello contract from docs.ton.dev (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
-    const { HelloContractPackage } = await loadPackages();
-    const helloPackage = HelloContractPackage[abiVersion];
+    const helloPackage = await loadPackage.hello(abiVersion);
     const contractData = await tests.deploy_with_giver({
         package: helloPackage,
         constructorParams: {},
@@ -151,8 +149,7 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
     const { contracts, crypto } = tests.client;
     await tests.client.trace('tests.contracts.run-aborted-transaction', async (span: Span) => {
         const keys = await crypto.ed25519Keypair();
-        const { WalletContractPackage } = await loadPackages();
-        const walletPackage = WalletContractPackage[abiVersion];
+        const walletPackage = await loadPackage.wallet(abiVersion);
         const address = await tests.deploy_with_giver({
             package: walletPackage,
             constructorParams: {},
@@ -205,8 +202,7 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
 test.each(ABIVersions)('filterOutput (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
-    const { EventsPackage } = await loadPackages();
-    const eventsPackage = EventsPackage[abiVersion];
+    const eventsPackage = await loadPackage.events(abiVersion);
     const deployed = await tests.deploy_with_giver({
         package: eventsPackage,
         constructorParams: {},
@@ -245,8 +241,7 @@ test('External Signing on ABI v1', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const { EventsPackage } = await loadPackages();
-    const eventsPackage = EventsPackage[1];
+    const eventsPackage = await loadPackage.events(1);
     eventsPackage.abi.setTime = false;
 
     const deployParams = {
@@ -300,8 +295,7 @@ test('External Signing on ABI v1', async () => {
 test('External Signing on ABI v2', async () => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
-    const { EventsPackage } = await loadPackages();
-    const eventsPackage = EventsPackage[2];
+    const eventsPackage = await loadPackage.events(2);
     const deployParams = {
         package: eventsPackage,
         constructorHeader: {
@@ -357,8 +351,7 @@ test('Should change InitState of contract', async () => {
     jest.setTimeout(2000000);
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
-    const { CheckInitParamsPackage } = await loadPackages();
-    const walletPackage = CheckInitParamsPackage[2];
+    const walletPackage = await loadPackage.checkInitParams(2);
 
     const initParams1 = {
         addressVariable: '0:fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321',
@@ -481,9 +474,8 @@ test.each(ABIVersions)('testSetCode (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const { SetCodePackage, SetCode2Package } = await loadPackages();
-    const setCodePackage = SetCodePackage[abiVersion];
-    const setCode2Package = SetCode2Package[abiVersion];
+    const setCodePackage = await loadPackage.setCode(abiVersion);
+    const setCode2Package = await loadPackage.setCode2(abiVersion);
 
     const deployed = await tests.deploy_with_giver({
         package: setCodePackage,
@@ -525,8 +517,7 @@ test.each(ABIVersions)('testSetCode (ABI v%i)', async (abiVersion) => {
 test.each(ABIVersions)('testRunBody (ABI v%i)', async (abiVersion) => {
     const { contracts } = tests.client;
 
-    const { SubscriptionContractPackage } = await loadPackages();
-    const subscriptionPackage = SubscriptionContractPackage[abiVersion];
+    const subscriptionPackage = await loadPackage.subscription(abiVersion);
     const result = await contracts.createRunBody({
         abi: subscriptionPackage.abi,
         function: 'constructor',
@@ -785,8 +776,7 @@ test.each(ABIVersions)('test send boc (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const { WalletContractPackage } = await loadPackages();
-    const walletPackage = WalletContractPackage[abiVersion];
+    const walletPackage = await loadPackage.wallet(abiVersion);
     const address = (await contracts.createDeployMessage({
         package: walletPackage,
         constructorParams: {},
@@ -819,8 +809,7 @@ test.each(ABIVersions)('test deploy lags (ABI v%i)', async (abiVersion) => {
 
     config.log('Start');
     const keys = await crypto.ed25519Keypair();
-    const { WalletContractPackage } = await loadPackages();
-    const walletPackage = WalletContractPackage[abiVersion];
+    const walletPackage = await loadPackage.wallet(abiVersion);
     const message = await contracts.createDeployMessage({
         package: walletPackage,
         constructorParams: {},
@@ -864,9 +853,8 @@ async function expectError(code: number, source: string, f) {
 test('Test expire', async () => {
     const { contracts, crypto, queries } = tests.client;
 
-    const { HelloContractPackage } = await loadPackages();
     const helloKeys = await crypto.ed25519Keypair();
-    const helloPackage = HelloContractPackage[2];
+    const helloPackage = await loadPackage.hello(2);
 
     const contractData = await tests.deploy_with_giver({
         package: helloPackage,
@@ -965,8 +953,7 @@ test('Test expire', async () => {
 });
 
 test('Test expire retries', async () => {
-    const { HelloContractPackage } = await loadPackages();
-    const helloPackage = HelloContractPackage[2];
+    const helloPackage = await loadPackage.hello(2);
 
     const helloKeys = await tests.client.crypto.ed25519Keypair();
 
@@ -1004,8 +991,7 @@ test.each(ABIVersions)('test parse message (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
 
     const keys = await crypto.ed25519Keypair();
-    const { WalletContractPackage } = await loadPackages();
-    const walletPackage = WalletContractPackage[abiVersion];
+    const walletPackage = await loadPackage.wallet(abiVersion);
     const message = await contracts.createDeployMessage({
         package: walletPackage,
         constructorParams: {},
@@ -1024,8 +1010,7 @@ test.each(ABIVersions)('Check deployed (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto } = tests.client;
     const helloKeys = await crypto.ed25519Keypair();
 
-    const { HelloContractPackage } = await loadPackages();
-    const helloPackage = HelloContractPackage[abiVersion];
+    const helloPackage = await loadPackage.hello(abiVersion);
     const deployed = await tests.deploy_with_giver({
         package: helloPackage,
         constructorParams: {},
@@ -1046,78 +1031,24 @@ test.each(ABIVersions)('Check deployed (ABI v%i)', async (abiVersion) => {
 });
 
 
-const SensorPackage = {
-    abi: {
-        'ABI version': 2,
-        header: ['pubkey', 'time'],
-        functions: [
-            {
-                name: 'constructor',
-                inputs: [
-                    {
-                        name: 'ownerKey',
-                        type: 'uint256',
-                    },
-                ],
-                outputs: [],
-            },
-            {
-                name: 'getData',
-                inputs: [],
-                outputs: [
-                    {
-                        name: 'value0',
-                        type: 'uint16',
-                    },
-                ],
-            },
-            {
-                name: 'setData',
-                inputs: [
-                    {
-                        name: 'input',
-                        type: 'uint16',
-                    },
-                ],
-                outputs: [],
-            },
-        ],
-        data: [],
-        events: [],
-    },
-    imageBase64: 'te6ccgECEgEAAm0AAgE0AwEBAcACAEPQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAib/APSkICLAAZL0oOGK7VNYMPShCAQBCvSkIPShBQIDzsAHBgA312omhp/+mf6YBph+uF//w1/DU//DD8M3wx/DFAA398IWRl//wh54Wf/CNnhYB8JXwlgWWH5f/k9qpAIBIAsJAeT/fyHtRNAg10nCAY4Y0//TP9MA0w/XC//4a/hqf/hh+Gb4Y/hijh70BXD4anD4a3ABgED0DvK91wv/+GJw+GNw+GZ/+GHi0wABjh2BAgDXGCD5AQHTAAGU0/8DAZMC+ELiIPhl+RDyqJXTAAHyeuLTPwEKAHqOHvhDIbkgnzAg+COBA+iogggbd0Cgud6S+GPggDTyNNjTHyHBAyKCEP////28sZLyPOAB8AH4R26S8jzeAgEgDwwCA314Dg0AgbFuIi/wgt0l4Am9o/CUQ4H/HEZHoaYD9IBgY5GfDkGdAMGegZ8DnwOfJ324iLxDnhYfkuP2Abxhgf8l4Ae8//DPAE2xEMqn8ILdJeAJvaYfo/CKQN0kYOG98Jd15cDL8ABB8NRh4Ab/8M8CASAREADhu8keHF+EFujkPtRNAg10nCAY4Y0//TP9MA0w/XC//4a/hqf/hh+Gb4Y/hijh70BXD4anD4a3ABgED0DvK91wv/+GJw+GNw+GZ/+GHi3vhG8nNx+GbXDf+V1NHQ0//f0SDCAPLgZPgAIPhrMPADf/hngAat1wItDWAjHSADDcIccAkOAh1w0fkvI84VMRkOHBAyKCEP////28sZLyPOAB8AH4R26S8jze',
-};
-
 test('Signing', async () => {
+    const sensorPackage = await loadPackage.sensor(2);
     const client = tests.client;
     const ownerKeys = await client.crypto.ed25519Keypair();
-    console.log('ownerKeys:', ownerKeys);
-
     const deployKeys = await client.crypto.ed25519Keypair();
-    console.log('deployKeys:', deployKeys);
-
     const time = Math.round((Date.now() + 10000) / 1000);
 
     const deployMessage = await client.contracts.createDeployMessage({
-        package: SensorPackage,
+        package: sensorPackage,
         constructorHeader: { time },
         constructorParams: { ownerKey: `0x${ownerKeys.public}` },
         keyPair: deployKeys,
     });
 
     const futureAddress = deployMessage.address;
-
-    // const futureAddress = '0:03285608adf64c1db67cb7f970271d1a6d83a75fa5f73e8778a08afd1be4fd8d'
-    console.log(`Future address of the contract will be: ${futureAddress}`);
-
-    // Requesting contract deployment funds form a local TON OS SE giver
-    // not suitable for other networks
     await tests.get_grams_from_giver(futureAddress);
-    console.log(`Grams were transferred from giver to ${futureAddress}`);
-
-    // Contract deployment
     const helloAddress = (await client.contracts.deploy({
-        package: SensorPackage,
+        package: sensorPackage,
         constructorParams: { ownerKey: `0x${ownerKeys.public}` },
         keyPair: deployKeys,
     })).address;
@@ -1125,11 +1056,8 @@ test('Signing', async () => {
 
     await client.contracts.run({
         address: helloAddress,
-        abi: SensorPackage.abi,
+        abi: sensorPackage.abi,
         functionName: 'setData',
-        header: {
-            pubkey: ownerKeys.public,
-        },
         input: {
             input: 8,
         },

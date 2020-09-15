@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-import { decodeMessage, DEFAULT_HD_PATH, DEFAULT_MNEMONIC_DICTIONARY, DEFAULT_MNEMONIC_WORD_COUNT, encodeOutput } from '../src/modules/crypto-box';
+import {
+    decodeMessage,
+    DEFAULT_HD_PATH,
+    DEFAULT_MNEMONIC_DICTIONARY,
+    DEFAULT_MNEMONIC_WORD_COUNT,
+    encodeOutput,
+} from '../src/modules/crypto-box';
 import TONCryptoModule, { TONMnemonicDictionary, TONOutputEncoding } from '../src/modules/TONCryptoModule';
 import type { TONCryptoBoxParams, TONEncryptionBox } from '../types';
 import { tests } from './_/init-tests';
@@ -22,11 +28,9 @@ import { tests } from './_/init-tests';
 beforeAll(tests.init);
 afterAll(tests.done);
 
-async function loadPackages() {
-    return {
-        EventsPackage: await tests.loadPackage('Events'),
-    };
-}
+const loadPackage = {
+    events: tests.packageLoader('Events'),
+};
 
 const dummyEncryptionBox: TONEncryptionBox = {
     getPublicKey() {
@@ -92,8 +96,7 @@ test('Crypto Box Sign', async () => {
 test('Crypto usage in TONCContractsModule', async () => {
     const { contracts, crypto } = tests.client;
 
-    const { EventsPackage } = await loadPackages();
-    const eventsPackage = EventsPackage[1];
+    const eventsPackage = await loadPackage.events(1);
     eventsPackage.abi.setTime = false;
 
     const keyPair = await crypto.mnemonicDeriveSignKeys({
