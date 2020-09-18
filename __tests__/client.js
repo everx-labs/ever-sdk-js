@@ -7,11 +7,9 @@
 import type { TONClient } from '../types';
 import { tests } from './_/init-tests';
 
-async function loadPackages() {
-    return {
-        HelloContractPackage: await tests.loadPackage('Hello'),
-    };
-}
+const loadPackage = {
+    hello: tests.packageLoader('Hello'),
+};
 
 beforeAll(tests.init);
 afterAll(tests.done);
@@ -25,8 +23,7 @@ test('Context isolation', async () => {
     };
     const foo = await createClient(1000);
     const bar = await createClient(10000);
-    const { HelloContractPackage } = await loadPackages();
-    const helloPackage = HelloContractPackage[2];
+    const helloPackage = await loadPackage.hello(2);
     const helloKeys = (await foo.crypto.ed25519Keypair());
     const address = (await foo.contracts.createDeployMessage({
         package: helloPackage,

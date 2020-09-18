@@ -112,10 +112,9 @@ test.skip('Run restricted contract', async () => {
     jest.setTimeout(100000);
     const managementClient = await tests.createClient({ accessKey: 'bypass' });
 
-    const HelloContractPackage = await tests.loadPackage('Hello');
     const fooKeys = await managementClient.crypto.ed25519Keypair();
     const barKeys = await managementClient.crypto.ed25519Keypair();
-    const helloPackage = HelloContractPackage[2];
+    const helloPackage = await tests.packageLoader('Hello')(2);
 
     const fooDeploy = await managementClient.contracts.createDeployMessage({
         package: helloPackage,

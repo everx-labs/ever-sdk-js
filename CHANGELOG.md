@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.26.1 - Sep 15, 2020
+### Fixed
+- `contracts.createUnsignedRunMessage` must migrate public key to header.pubkey when possible.
+
 ## 0.26.0 - August 20, 2020
 ### New
 - All message creation functions (`createDeployMessage`, `createRunMessage`, `run`, `deploy`) now are accept 

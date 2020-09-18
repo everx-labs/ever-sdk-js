@@ -4,16 +4,14 @@
 // @flow
 
 
-import type {TONContractGetDeployDataResult} from '../types';
-import {ABIVersions, tests} from './_/init-tests';
+import type { TONContractGetDeployDataResult } from '../types';
+import { ABIVersions, tests } from './_/init-tests';
 
-async function loadPackages() {
-    return {
-        DeployerPackage: await tests.loadPackage('Deployer'),
-        DeployeePackage: await tests.loadPackage('Deployee'),
-        CheckInitParamsPackage: await tests.loadPackage('CheckInitParams'),
-    }
-}
+const loadPackage = {
+    deployer: tests.packageLoader('Deployer'),
+    deployee: tests.packageLoader('Deployee'),
+    checkInitParams: tests.packageLoader('CheckInitParams'),
+};
 
 
 beforeAll(tests.init);
@@ -21,8 +19,7 @@ afterAll(tests.done);
 
 test('Deploy data Abi2', async () => {
     const { contracts } = tests.client;
-    const { CheckInitParamsPackage } = await loadPackages();
-    const checkInitParamsPackage = CheckInitParamsPackage[2];
+    const checkInitParamsPackage = await loadPackage.checkInitParams(2);
     checkInitParamsPackage.imageBase64 = 'te6ccgECJQEABTsAAgE0BgEBAcACAgPPIAUDAQHeBAAD0CAAQdgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAIm/wD0pCAiwAGS9KDhiu1TWDD0oQkHAQr0pCD0oQgAAAIBIAwKAVj/fyHtRNAg10nCAY4f0//TP9MA1fhu0//SANT4avht+Gz4a3/4Yfhm+GP4YgsBpo6A4tMAAY4SgQIA1xgg+QFY+EIg+GX5EPKo3tM/AY4e+EMhuSCfMCD4I4ED6KiCCBt3QKC53pL4Y+CANPI02NMfAfgjvPK50x8B8AH4R26S8jzeGAIBIB0NAgEgGg4CASAUDwIBSBIQAQm15nxTwBEB/vhBbo4i7UTQ0//TP9MA1fhu0//SANT4avht+Gz4a3/4Yfhm+GP4Yt7R+EvIi9wAAAAAAAAAAAAAAAAgzxbPgc+Bz5PfM+KeIc8L/8lx+wAwwP+OKfhCyMv/+EPPCz/4Rs8LAMj4TgHO+Ev4TPhN+EpeQM8Ry//KAMzOye1U3n8jAQm16T4WwBMB/PhBbo4i7UTQ0//TP9MA1fhu0//SANT4avht+Gz4a3/4Yfhm+GP4Yt7R+ErIi9wAAAAAAAAAAAAAAAAgzxbPgc+Bz5PPSfC2Ic8WyXH7ADDA/44p+ELIy//4Q88LP/hGzwsAyPhOAc74S/hM+E34Sl5AzxHL/8oAzM7J7VTefyMBD7kWq+f/CC3QFQG2joDe+Ebyc3H4ZtH4AHBwdMjLAiLPCgchzwv/IMnQA18D+G74SvhOxwWU+E74at74QsjL//hDzws/+EbPCwDI+E4BzvhL+Ez4TfhKXkDPEcv/ygDMzsntVH/4ZxYBUu1E0CDXScIBjh/T/9M/0wDV+G7T/9IA1Phq+G34bPhrf/hh+Gb4Y/hiFwEGjoDiGAH+9AVxIYBA9A6OJI0IYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABN/4anIhgED0DpPXC/+RcOL4a3MhgED0DpPXCgCRcOL4bHQhgED0D5LIyd/4bY0IYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBkAMPhucAGAQPQO8r3XC//4YnD4Y3D4Zn/4YQEJu0ADWtgbAfz4QW6OIu1E0NP/0z/TANX4btP/0gDU+Gr4bfhs+Gt/+GH4Zvhj+GLe+kDR+EUgbpIwcN74Qrry4GT4AMjJ+wQgyM+FCM6NA8gPoAAAAAAAAAAAAAAAAAHPFs+Bz4HJgQCA+wAw+ELIy//4Q88LP/hGzwsAyPhOAc74S/hM+E0cACT4Sl5AzxHL/8oAzM7J7VR/+GcCAUggHgEJueJmAPAfAfz4QW6OIu1E0NP/0z/TANX4btP/0gDU+Gr4bfhs+Gt/+GH4Zvhj+GLe0fhNyIvcAAAAAAAAAAAAAAAAIM8Wz4HPgc+SfEzAHiHPFMlx+wAwwP+OKfhCyMv/+EPPCz/4Rs8LAMj4TgHO+Ev4TPhN+EpeQM8Ry//KAMzOye1U3n8jAgJwJCEBB7HGyBciAf74QW6OIu1E0NP/0z/TANX4btP/0gDU+Gr4bfhs+Gt/+GH4Zvhj+GLe0fhMyIvcAAAAAAAAAAAAAAAAIM8Wz4HPgc+SB42QLiHPCgDJcfsAMMD/jin4QsjL//hDzws/+EbPCwDI+E4BzvhL+Ez4TfhKXkDPEcv/ygDMzsntVN5/IwAE+GcActhwItDWAjHSADDcIccAkvI74CHXDR+S8jzhUxGS8jvhwQQighD////9vLGS8jzgAfAB+EdukvI83g==';
     const publicKey = '1111111111111111111111111111111111111111111111111111111111111111';
 
@@ -103,9 +100,8 @@ test('Deploy data Abi2', async () => {
 test.each(ABIVersions)('Deploy from contract 1 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto, queries } = tests.client;
     const keys = await crypto.ed25519Keypair();
-    const { DeployeePackage, DeployerPackage } = await loadPackages();
-    const deployerPackage = DeployerPackage[abiVersion];
-    const deployeePackage = DeployeePackage[abiVersion];
+    const deployerPackage = await loadPackage.deployer(abiVersion);
+    const deployeePackage = await loadPackage.deployee(abiVersion);
     const deployer = await tests.deploy_with_giver({
         package: deployerPackage,
         constructorParams: {},
@@ -169,9 +165,8 @@ test.each(ABIVersions)('Deploy from contract 2 (ABI v%i)', async (abiVersion) =>
     const { contracts, crypto, queries } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const { DeployeePackage, DeployerPackage } = await loadPackages();
-    const deployerPackage = DeployerPackage[abiVersion];
-    const deployeePackage = DeployeePackage[abiVersion];
+    const deployerPackage = await loadPackage.deployer(abiVersion);
+    const deployeePackage = await loadPackage.deployee(abiVersion);
 
     const deployer = await tests.deploy_with_giver({
         package: deployerPackage,
@@ -248,9 +243,8 @@ test.each(ABIVersions)('Deploy from contract 2 (ABI v%i)', async (abiVersion) =>
 test.each(ABIVersions)('Deploy from contract 3 (ABI v%i)', async (abiVersion) => {
     const { contracts, crypto, queries } = tests.client;
     const keys = await crypto.ed25519Keypair();
-    const { DeployeePackage, DeployerPackage } = await loadPackages();
-    const deployerPackage = DeployerPackage[abiVersion];
-    const deployeePackage = DeployeePackage[abiVersion];
+    const deployerPackage = await loadPackage.deployer(abiVersion);
+    const deployeePackage = await loadPackage.deployee(abiVersion);
 
     const deployer = await tests.deploy_with_giver({
         package: deployerPackage,
