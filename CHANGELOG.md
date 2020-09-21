@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.26.2 - Sep 21, 2020
+### Fixed
+- Added `Sensor.sol` contract for recompilation tests
+
 ## 0.26.1 - Sep 15, 2020
 ### Fixed
 - `contracts.createUnsignedRunMessage` must migrate public key to header.pubkey when possible.
