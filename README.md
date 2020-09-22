@@ -11,9 +11,9 @@ Javascript SDK is distributed via npm package:
 **Attention!** Because the JS library uses pre-compiled [core sdk rust library](https://github.com/tonlabs/TON-SDK), you need to 
 install it via platform-dependable packages that will also link pre-compiled rust core to your project:
 
-[node-js package](https://www.npmjs.com/package/ton-client-js)  
-[web package](https://www.npmjs.com/package/ton-client-js)  
-[react-native package](https://www.npmjs.com/package/ton-client-js)  
+[node-js package](https://www.npmjs.com/package/ton-client-node-js)  
+[web package](https://www.npmjs.com/package/ton-client-web-js)  
+[react-native package](https://www.npmjs.com/package/ton-client-react-native-js)  
 
 To get started using TON Javascript SDK, see [Add SDK to your Application](https://docs.ton.dev/86757ecb2/p/61b5eb-nodejs).
 
@@ -22,7 +22,6 @@ To get started using TON Javascript SDK, see [Add SDK to your Application](https
 
 [![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
 [![Gitter](https://badges.gitter.im/ton-sdk/community.svg)](https://gitter.im/ton-sdk/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-
 
 
 
