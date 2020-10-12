@@ -1,0 +1,28 @@
+{
+	"name": "ton-client-testsuite-browser",
+	"version": "1.0.0",
+	"description": "TON Client testsuite runner on browser",
+	"main": "index.js",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/tonlabs/ton-client-js.git"
+	},
+	"author": "TON DEV SOLUTIONS LTD.",
+	"license": "Apache-2.0",
+	"licenses": [
+		{
+			"type": "Apache-2.0",
+			"url": "http://www.apache.org/licenses/LICENSE-2.0"
+		}
+	],
+	"homepage": "https://ton.dev/node-se",
+	"engines": {
+		"node": ">=6"
+	},
+	"dependencies": {
+	},
+	"devDependencies": {
+		"ton-client": "file:../ton-client",
+		"ton-client-bridge-node-js": "file:../ton-client-bridge-node-js"
+	}
+}

@@ -9,7 +9,7 @@
  */
 
 import { Tracer } from 'opentracing';
-import { version } from '../../package.json';
+import { version } from '../../../package.json';
 import { initTracer as initJaegerTracer } from 'jaeger-client';
 
 const fs = require('fs');
