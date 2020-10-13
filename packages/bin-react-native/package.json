@@ -1,7 +1,7 @@
 {
-	"name": "ton-client-bridge-node-js",
+	"name": "@ton-client/bin-react-native",
 	"version": "1.0.0",
-	"description": "TON Client bridge for NodeJs",
+	"description": "TON Client binary library for React Native",
 	"main": "index.js",
 	"repository": {
 		"type": "git",
@@ -26,7 +26,5 @@
 		"node": ">=6"
 	},
 	"dependencies": {
-		"node-fetch": "^2.6.1",
-		"websocket": "^1.0.32"
 	}
 }

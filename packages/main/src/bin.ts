@@ -1,7 +1,8 @@
-import {TonClientCoreBridge, TonClientError, TonClientResponseHandler, TonClientResponseType} from "./index";
+import {TonClientBinaryLibrary, TonClientError, TonClientResponseHandler, TonClientResponseType} from "./index";
+import {TonClientConfig} from "./client";
 
-function coreResponseHandler(requestId: number, paramsJson: string, responseType: TonClientResponseType, finished: boolean) {
-    Bridge.loaded?.handleResponse(requestId, paramsJson, responseType, finished);
+function binLibResponseHandler(requestId: number, paramsJson: string, responseType: TonClientResponseType, finished: boolean) {
+    BinaryLibrary.loaded?.handleResponse(requestId, paramsJson, responseType, finished);
 }
 
 type Request = {
@@ -10,26 +11,27 @@ type Request = {
     responseHandler?: TonClientResponseHandler;
 }
 
-type BridgePromise = {
-    resolve: (bridge: Bridge) => void,
+type LoadingPromise = {
+    resolve: (binLib: BinaryLibrary) => void,
     reject: (error?: Error) => void,
 }
 
-export class Bridge {
-    static loading: BridgePromise[] | null = null;
+export class BinaryLibrary {
+    static loading: LoadingPromise[] | null = null;
     static loadError: Error | null = null;
-    static loaded: Bridge | null = null;
+    static loaded: BinaryLibrary | null = null;
 
-    core: TonClientCoreBridge;
+    binaryLibrary: TonClientBinaryLibrary;
     requests: Map<number, Request>;
     nextRequestId: number;
 
-    static load(loader: () => Promise<TonClientCoreBridge>) {
-        loader().then((coreBridge: TonClientCoreBridge, error?: Error) => {
+    static load(loader: () => Promise<TonClientBinaryLibrary>) {
+        this.loading = [];
+        loader().then((binLib: TonClientBinaryLibrary, error?: Error) => {
             const loading = this.loading;
             this.loading = null;
-            if (coreBridge) {
-                const loaded = new Bridge(coreBridge);
+            if (binLib) {
+                const loaded = new BinaryLibrary(binLib);
                 this.loaded = loaded;
                 loading?.forEach(x => x.resolve(loaded));
             } else {
@@ -40,7 +42,7 @@ export class Bridge {
 
     }
 
-    static required(): Promise<Bridge> {
+    static required(): Promise<BinaryLibrary> {
         if (this.loaded !== null) {
             return Promise.resolve(this.loaded);
         }
@@ -48,10 +50,10 @@ export class Bridge {
             return Promise.reject(this.loadError);
         }
         if (this.loading === null) {
-            throw new TonClientError(1, "TON Client core bridge isn't set.")
+            throw new TonClientError(1, "TON Client binary library isn't set.")
         }
         const loading = this.loading;
-        return new Promise<Bridge>((resolve, reject) => {
+        return new Promise<BinaryLibrary>((resolve, reject) => {
             loading.push({
                 resolve, reject
             });
@@ -60,9 +62,9 @@ export class Bridge {
     }
 
 
-    constructor(bridge: TonClientCoreBridge) {
-        this.core = bridge;
-        bridge.setResponseHandler(coreResponseHandler);
+    constructor(binLib: TonClientBinaryLibrary) {
+        this.binaryLibrary = binLib;
+        binLib.setResponseHandler(binLibResponseHandler);
         this.requests = new Map<number, Request>();
         this.nextRequestId = 1;
     }
@@ -74,25 +76,37 @@ export class Bridge {
             if (this.nextRequestId >= Number.MAX_SAFE_INTEGER) {
                 this.nextRequestId = 1;
             }
-        } while (!this.requests.has(this.nextRequestId));
+        } while (this.requests.has(this.nextRequestId));
         return id;
     }
 
-    async request<P, R>(
+    static async createContext(config: TonClientConfig): Promise<number> {
+        const binLib = await this.required();
+        return unwrapBinLibResult(await binLib.binaryLibrary.createContext(JSON.stringify(config)));
+    }
+
+    static destroyContext(context: number) {
+        if (this.loaded !== null) {
+            this.loaded.binaryLibrary.destroyContext(context);
+        }
+    }
+
+    static async request<P, R>(
         context: number,
         functionName: string,
         functionParams: P,
-        responseHandler: TonClientResponseHandler
+        responseHandler?: TonClientResponseHandler
     ): Promise<R> {
+        const binLib = await this.required();
         return new Promise((resolve, reject) => {
             const request: Request = {
                 resolve,
                 reject,
                 responseHandler,
             }
-            const requestId = this.generateRequestId();
-            this.requests.set(requestId, request)
-            this.core.sendRequest(context, requestId, functionName, JSON.stringify(functionParams));
+            const requestId = binLib.generateRequestId();
+            binLib.requests.set(requestId, request)
+            binLib.binaryLibrary.sendRequest(context, requestId, functionName, JSON.stringify(functionParams));
 
         });
     }
@@ -126,3 +140,16 @@ export class Bridge {
     }
 }
 
+function unwrapBinLibResult(resultJson: string): any {
+    const result: { result: any } | {
+        error: {
+            message: string,
+            code: number,
+            data?: any,
+        }
+    } = JSON.parse(resultJson);
+    if ('error' in result) {
+        throw new TonClientError(result.error.code, result.error.message, result.error.data);
+    }
+    return result.result;
+}

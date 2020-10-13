@@ -1,6 +1,6 @@
 import {TonCryptoModule} from "./crypto";
 import {TonNetModule} from "./net";
-import {Bridge} from "./bridge";
+import {BinaryLibrary} from "./bin";
 import {TonClientConfig} from "./client";
 
 export enum TonClientResponseType {
@@ -11,7 +11,7 @@ export enum TonClientResponseType {
 
 export type TonClientResponseHandler = (params: any, responseType: TonClientResponseType) => void;
 
-export interface TonClientCoreBridge {
+export interface TonClientBinaryLibrary {
     setResponseHandler(
         handler: (
             requestId: number,
@@ -35,8 +35,8 @@ export class TonClient {
     crypto: TonCryptoModule;
     net: TonNetModule;
 
-    static setCoreBridgeLoader(loader: () => Promise<TonClientCoreBridge>) {
-        Bridge.load(loader);
+    static useBinaryLibrary(loader: () => Promise<TonClientBinaryLibrary>) {
+        BinaryLibrary.load(loader);
     }
 
     constructor(config: TonClientConfig) {
@@ -46,29 +46,27 @@ export class TonClient {
     }
 
     close() {
-        if (this.context !== null && Bridge.loaded !== null) {
-            Bridge.loaded.core.destroyContext(this.context);
+        if (this.context !== null) {
+            BinaryLibrary.destroyContext(this.context);
             this.context = null;
         }
     }
 
-    async request<P, R>(
+    async request(
         functionName: string,
-        functionParams: P,
-        responseHandler: TonClientResponseHandler
-    ): Promise<R> {
-        const bridge = await Bridge.required();
+        functionParams: any,
+        responseHandler?: TonClientResponseHandler
+    ): Promise<any> {
         let context: number;
         if (this.context !== null) {
             context = this.context;
         } else {
-            context = unwrapCoreResult(await bridge.core.createContext(JSON.stringify(this.config)));
+            context = await BinaryLibrary.createContext(this.config);
             this.context = context;
         }
-        return bridge.request(context, functionName, functionParams, responseHandler);
+        return BinaryLibrary.request(context, functionName, functionParams, responseHandler);
     }
 }
-
 
 export class TonClientError extends Error {
     code: number;
@@ -80,21 +78,3 @@ export class TonClientError extends Error {
         this.data = data;
     }
 }
-
-// Internals
-
-function unwrapCoreResult(resultJson: string): any {
-    const result: { result: any } | {
-        error: {
-            message: string,
-            code: number,
-            data?: any,
-        }
-    } = JSON.parse(resultJson);
-    if ('error' in result) {
-        throw new TonClientError(result.error.code, result.error.message, result.error.data);
-    }
-    return result.result;
-}
-
-

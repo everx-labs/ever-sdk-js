@@ -14,29 +14,31 @@
  * limitations under the License.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from "fs";
+import path from "path";
+import os from "os";
 
 function getHomeAddonPath() {
-    const os = require('os');
-    const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require('./package.json').version).split('.')[0];
+    const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require('../package.json').version).split('.')[0];
     const binariesHomePath = path.resolve(os.homedir(), '.tonlabs', 'binaries', binariesVersion);
     return path.resolve(binariesHomePath, 'tonclient.node');
 }
 
-function coreBridgeLoader() {
+function loadAddon() {
     try {
-        try {
-            return Promise.resolve(require('./tonclient.node'));
-        } catch (error) {
-            if (fs.existsSync(path.resolve(__dirname, 'tonclient.node'))) {
-                return Promise.reject(error);
-            }
-            return Promise.resolve(require(getHomeAddonPath()));
+        return require('../tonclient.node');
+    } catch (error) {
+        if (fs.existsSync(path.resolve(__dirname, 'tonclient.node'))) {
+            throw error;
         }
+    }
+    return require(getHomeAddonPath());
+}
+
+export function nodeAddon() {
+    try {
+        return Promise.resolve(loadAddon());
     } catch (error) {
         return Promise.reject(error);
     }
 }
-
-module.exports = coreBridgeLoader;

@@ -7,6 +7,12 @@
 	"references": [
 		{
 			"path": "./packages/ton-client"
+		},
+		{
+			"path": "./packages/ton-client-bridge-node-js"
+		},
+		{
+			"path": "./packages/ton-client-testsuite-node-js"
 		}
 	]
 }

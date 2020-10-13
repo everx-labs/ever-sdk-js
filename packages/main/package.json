@@ -1,12 +1,19 @@
 {
-	"name": "ton-client-testsuite-node-js",
+	"name": "@ton-client/main",
 	"version": "1.0.0",
-	"description": "TON Client testsuite runner on NodeJs",
-	"main": "index.js",
+	"description": "TON Client for Java Script",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/tonlabs/ton-client-js.git"
 	},
+	"keywords": [
+		"TON",
+		"Javascript",
+		"API",
+		"Client"
+	],
 	"author": "TON DEV SOLUTIONS LTD.",
 	"license": "Apache-2.0",
 	"licenses": [
@@ -20,9 +27,5 @@
 		"node": ">=6"
 	},
 	"dependencies": {
-	},
-	"devDependencies": {
-		"ton-client": "file:../ton-client",
-		"ton-client-bridge-node-js": "file:../ton-client-bridge-node-js"
 	}
 }
