@@ -13,3 +13,7 @@ Jenkinsfile
 /reinstall.sh
 /uninstall.sh
 /.github/workflows/
+**/*.dylib
+**/*.node
+**/dist/
+**/*.tsbuildinfo

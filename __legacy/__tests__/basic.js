@@ -3,7 +3,7 @@
  */
 
 import { tests } from './_/init-tests';
-import { version } from '../package.json';
+import { version } from '../../package.json';
 
 beforeAll(tests.init);
 afterAll(tests.done);
