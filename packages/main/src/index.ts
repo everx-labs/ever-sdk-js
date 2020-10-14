@@ -1,6 +1,3 @@
-import {TonCryptoModule} from "./crypto";
-import {TonNetModule} from "./net";
-import {TonClientConfig} from "./client";
 import {
     BinaryLibrary,
     createContext,
@@ -9,16 +6,64 @@ import {
     ResponseHandler,
     useLibrary
 } from "./bin";
+import {
+    AbiModule,
+    BocModule,
+    ClientConfig,
+    ClientModule,
+    CryptoModule,
+    NetModule,
+    ProcessingModule, UtilsModule
+} from "./modules";
 
 export {BinaryLibrary, ResponseHandler};
 
 export class TonClient {
-    private readonly config: TonClientConfig;
+    private readonly config: ClientConfig;
     private context: number | null = null;
     
-    readonly crypto: TonCryptoModule;
-    readonly net: TonNetModule;
+    readonly client: ClientModule;
+    readonly crypto: CryptoModule;
+    readonly abi: AbiModule;
+    readonly boc: BocModule;
+    readonly processing: ProcessingModule;
+    readonly utils: UtilsModule;
+    readonly net: NetModule;
     
+    constructor(config: ClientConfig) {
+        this.config = config;
+        this.client = new ClientModule(this);
+        this.crypto = new CryptoModule(this);
+        this.abi = new AbiModule(this);
+        this.boc = new BocModule(this);
+        this.processing = new ProcessingModule(this);
+        this.utils = new UtilsModule(this);
+        this.net = new NetModule(this);
+    }
+    
+    close() {
+        const context = this.context;
+        if (context !== null) {
+            this.context = null;
+            destroyContext(context);
+        }
+    }
+    
+    async request(
+        functionName: string,
+        functionParams: any,
+        responseHandler?: ResponseHandler
+    ): Promise<any> {
+        let context: number;
+        if (this.context !== null) {
+            context = this.context;
+        } else {
+            context = await createContext(this.config);
+            this.context = context;
+        }
+        return request(context, functionName, functionParams, responseHandler);
+    }
+
     static useBinaryLibrary(loader: () => Promise<BinaryLibrary>) {
         useLibrary(loader);
     }
@@ -47,34 +92,6 @@ export class TonClient {
         return toHex(dec, bits);
     }
     
-    constructor(config: TonClientConfig) {
-        this.config = config;
-        this.crypto = new TonCryptoModule(this);
-        this.net = new TonNetModule(this);
-    }
-    
-    close() {
-        const context = this.context;
-        if (context !== null) {
-            this.context = null;
-            destroyContext(context);
-        }
-    }
-    
-    async request(
-        functionName: string,
-        functionParams: any,
-        responseHandler?: ResponseHandler
-    ): Promise<any> {
-        let context: number;
-        if (this.context !== null) {
-            context = this.context;
-        } else {
-            context = await createContext(this.config);
-            this.context = context;
-        }
-        return request(context, functionName, functionParams, responseHandler);
-    }
 }
 
 // Converts value to hex

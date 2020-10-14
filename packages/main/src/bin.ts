@@ -1,5 +1,5 @@
-import {TonClientConfig} from "./client";
 import {TonClientError} from "./errors";
+import {ClientConfig} from "./modules";
 
 export type ResponseHandler = (params: any, responseType: number) => void;
 
@@ -79,7 +79,7 @@ export function useLibrary(loader: () => Promise<BinaryLibrary>) {
     
 }
 
-export async function createContext(config: TonClientConfig): Promise<number> {
+export async function createContext(config: ClientConfig): Promise<number> {
     const lib = library || await loadRequired();
     contextCount += 1;
     return parseResult(await lib.createContext(JSON.stringify(config)));
