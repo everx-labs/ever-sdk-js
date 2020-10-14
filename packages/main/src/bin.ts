@@ -1,146 +1,176 @@
-import {TonClientBinaryLibrary, TonClientError, TonClientResponseHandler, TonClientResponseType} from "./index";
 import {TonClientConfig} from "./client";
+import {TonClientError} from "./errors";
 
-function binLibResponseHandler(requestId: number, paramsJson: string, responseType: TonClientResponseType, finished: boolean) {
-    BinaryLibrary.loaded?.handleResponse(requestId, paramsJson, responseType, finished);
+export type ResponseHandler = (params: any, responseType: number) => void;
+
+export interface BinaryLibrary {
+    setResponseHandler(
+        handler?: (
+            requestId: number,
+            paramsJson: string,
+            responseType: number,
+            finished: boolean
+        ) => void
+    ): void,
+    
+    createContext(configJson: string): Promise<string>,
+    
+    destroyContext(context: number): void,
+    
+    sendRequest(
+        context: number,
+        requestId: number,
+        functionName: string,
+        functionParamsJson: string
+    ): void,
+}
+
+export enum ResponseType {
+    Success = 0,
+    Error = 1,
+    Custom = 100,
 }
 
 type Request = {
     resolve: (params: any) => void,
     reject: (error: any) => void,
-    responseHandler?: TonClientResponseHandler;
+    responseHandler?: ResponseHandler;
 }
 
 type LoadingPromise = {
-    resolve: (binLib: BinaryLibrary) => void,
+    resolve: (library: BinaryLibrary) => void,
     reject: (error?: Error) => void,
 }
 
-export class BinaryLibrary {
-    static loading: LoadingPromise[] | null = null;
-    static loadError: Error | null = null;
-    static loaded: BinaryLibrary | null = null;
 
-    binaryLibrary: TonClientBinaryLibrary;
-    requests: Map<number, Request>;
-    nextRequestId: number;
+let loading: LoadingPromise[] | null = null;
+let loadError: Error | null = null;
+let library: BinaryLibrary | null = null;
+const requests = new Map<number, Request>();
+let nextRequestId: number = 1;
+let contextCount: number = 1;
+let responseHandlerAssigned = false;
 
-    static load(loader: () => Promise<TonClientBinaryLibrary>) {
-        this.loading = [];
-        loader().then((binLib: TonClientBinaryLibrary, error?: Error) => {
-            const loading = this.loading;
-            this.loading = null;
-            if (binLib) {
-                const loaded = new BinaryLibrary(binLib);
-                this.loaded = loaded;
-                loading?.forEach(x => x.resolve(loaded));
-            } else {
-                this.loadError = error || null;
-                loading?.forEach(x => x.reject(error));
-            }
-        })
-
+function checkResponseHandler() {
+    const mustBeAssigned = (contextCount > 0) || (requests.size > 0);
+    if (responseHandlerAssigned !== mustBeAssigned) {
+        if (mustBeAssigned) {
+            library?.setResponseHandler(handleLibraryResponse);
+        } else {
+            library?.setResponseHandler();
+        }
+        responseHandlerAssigned = mustBeAssigned;
     }
+}
 
-    static required(): Promise<BinaryLibrary> {
-        if (this.loaded !== null) {
-            return Promise.resolve(this.loaded);
+export function useLibrary(loader: () => Promise<BinaryLibrary>) {
+    loading = [];
+    loader().then((lib: BinaryLibrary, error?: Error) => {
+        const saveLoading = loading;
+        loading = null;
+        if (lib) {
+            library = lib;
+            saveLoading?.forEach(x => x.resolve(lib));
+        } else {
+            loadError = error || null;
+            saveLoading?.forEach(x => x.reject(error));
         }
-        if (this.loadError !== null) {
-            return Promise.reject(this.loadError);
-        }
-        if (this.loading === null) {
-            throw new TonClientError(1, "TON Client binary library isn't set.")
-        }
-        const loading = this.loading;
-        return new Promise<BinaryLibrary>((resolve, reject) => {
-            loading.push({
-                resolve, reject
-            });
+    })
+    
+}
 
+export async function createContext(config: TonClientConfig): Promise<number> {
+    const lib = library || await loadRequired();
+    contextCount += 1;
+    return parseResult(await lib.createContext(JSON.stringify(config)));
+}
+
+export function destroyContext(context: number) {
+    contextCount = Math.max(contextCount - 1, 0);
+    checkResponseHandler();
+    library?.destroyContext(context);
+}
+
+export async function request<P, R>(
+    context: number,
+    functionName: string,
+    functionParams: P,
+    responseHandler?: ResponseHandler,
+): Promise<R> {
+    const lib = library || await loadRequired();
+    return new Promise((resolve, reject) => {
+        const request: Request = {
+            resolve,
+            reject,
+            responseHandler,
+        }
+        const requestId = generateRequestId();
+        requests.set(requestId, request)
+        checkResponseHandler();
+        lib.sendRequest(context, requestId, functionName, JSON.stringify(functionParams));
+    });
+}
+
+function loadRequired(): Promise<BinaryLibrary> {
+    if (library !== null) {
+        return Promise.resolve(library);
+    }
+    if (loadError !== null) {
+        return Promise.reject(loadError);
+    }
+    if (loading === null) {
+        return Promise.reject(new TonClientError(1, "TON Client binary library isn't set."));
+    }
+    return new Promise<BinaryLibrary>((resolve, reject) => {
+        loading?.push({
+            resolve, reject
         });
-    }
+    });
+}
 
 
-    constructor(binLib: TonClientBinaryLibrary) {
-        this.binaryLibrary = binLib;
-        binLib.setResponseHandler(binLibResponseHandler);
-        this.requests = new Map<number, Request>();
-        this.nextRequestId = 1;
-    }
-
-    generateRequestId(): number {
-        const id = this.nextRequestId;
-        do {
-            this.nextRequestId += 1;
-            if (this.nextRequestId >= Number.MAX_SAFE_INTEGER) {
-                this.nextRequestId = 1;
-            }
-        } while (this.requests.has(this.nextRequestId));
-        return id;
-    }
-
-    static async createContext(config: TonClientConfig): Promise<number> {
-        const binLib = await this.required();
-        return unwrapBinLibResult(await binLib.binaryLibrary.createContext(JSON.stringify(config)));
-    }
-
-    static destroyContext(context: number) {
-        if (this.loaded !== null) {
-            this.loaded.binaryLibrary.destroyContext(context);
+function generateRequestId(): number {
+    const id = nextRequestId;
+    do {
+        nextRequestId += 1;
+        if (nextRequestId >= Number.MAX_SAFE_INTEGER) {
+            nextRequestId = 1;
         }
+    } while (requests.has(nextRequestId));
+    return id;
+}
+
+function handleLibraryResponse(
+    requestId: number,
+    paramsJson: string,
+    responseType: number,
+    finished: boolean
+) {
+    const request = requests.get(requestId);
+    if (!request) {
+        return;
     }
-
-    static async request<P, R>(
-        context: number,
-        functionName: string,
-        functionParams: P,
-        responseHandler?: TonClientResponseHandler
-    ): Promise<R> {
-        const binLib = await this.required();
-        return new Promise((resolve, reject) => {
-            const request: Request = {
-                resolve,
-                reject,
-                responseHandler,
-            }
-            const requestId = binLib.generateRequestId();
-            binLib.requests.set(requestId, request)
-            binLib.binaryLibrary.sendRequest(context, requestId, functionName, JSON.stringify(functionParams));
-
-        });
+    if (finished) {
+        requests.delete(requestId);
+        checkResponseHandler();
     }
-
-    handleResponse(
-        requestId: number,
-        paramsJson: string,
-        responseType: TonClientResponseType,
-        finished: boolean
-    ) {
-        const request = this.requests.get(requestId);
-        if (!request) {
-            return;
-        }
-        if (finished) {
-            this.requests.delete(requestId);
-        }
-        const params = paramsJson !== '' ? JSON.parse(paramsJson) : undefined;
-        switch (responseType) {
-            case TonClientResponseType.Success:
-                request.resolve(params);
-                break;
-            case TonClientResponseType.Error:
-                request.reject(params);
-                break;
-            default:
-                if (responseType >= TonClientResponseType.Custom && request.responseHandler) {
-                    request.responseHandler(params, responseType);
-                }
+    const params = paramsJson !== '' ? JSON.parse(paramsJson) : undefined;
+    switch (responseType) {
+    case ResponseType.Success:
+        request.resolve(params);
+        break;
+    case ResponseType.Error:
+        request.reject(params);
+        break;
+    default:
+        if (responseType >= ResponseType.Custom && request.responseHandler) {
+            request.responseHandler(params, responseType);
         }
     }
 }
 
-function unwrapBinLibResult(resultJson: string): any {
+
+function parseResult(resultJson: string): any {
     const result: { result: any } | {
         error: {
             message: string,

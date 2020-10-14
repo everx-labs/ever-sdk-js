@@ -1,9 +1,7 @@
+import {ResponseHandler} from "./bin";
+
 interface IClient {
-    request(
-        functionName: string,
-        functionParams: any,
-        responseHandler: (params: any, responseType: number) => void
-    ): Promise<any>;
+    request(functionName: string, functionParams: any, responseHandler?: ResponseHandler): Promise<any>;
 }
 
 export class TonCryptoModule {
