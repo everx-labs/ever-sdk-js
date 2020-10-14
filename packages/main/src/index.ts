@@ -61,9 +61,15 @@ export class TonClient {
             context = await createContext(this.config);
             this.context = context;
         }
-        return request(context, functionName, functionParams, responseHandler);
+        return request(
+            context,
+            functionName,
+            functionParams,
+            responseHandler ?? (() => {
+            })
+        );
     }
-
+    
     static useBinaryLibrary(loader: () => Promise<BinaryLibrary>) {
         useLibrary(loader);
     }

@@ -1,3 +1,4 @@
+
 import {ResponseHandler} from "./bin";
 
 interface IClient {
@@ -51,25 +52,25 @@ export type ResultOfVersion = {
 
 export class ClientModule {
     client: IClient;
-    
+
     constructor(client: IClient) {
         this.client = client;
     }
-    
     getApiReference(
         responseHandler?: ResponseHandler
     ): Promise<ResultOfGetApiReference> {
         return this.client.request(
             'client.get_api_reference',
+            undefined,
             responseHandler,
         );
     }
-    
     version(
         responseHandler?: ResponseHandler
     ): Promise<ResultOfVersion> {
         return this.client.request(
             'client.version',
+            undefined,
             responseHandler,
         );
     }
@@ -320,13 +321,12 @@ export type ResultOfHDKeyPublicFromXPrv = {
 
 export class CryptoModule {
     client: IClient;
-    
+
     constructor(client: IClient) {
         this.client = client;
     }
-    
     factorize(
-        params: ParamsOfFactorize,
+        params: ParamsOfFactorize, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfFactorize> {
         return this.client.request(
@@ -335,9 +335,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     modularPower(
-        params: ParamsOfModularPower,
+        params: ParamsOfModularPower, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfModularPower> {
         return this.client.request(
@@ -346,9 +345,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     tonCrc16(
-        params: ParamsOfTonCrc16,
+        params: ParamsOfTonCrc16, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfTonCrc16> {
         return this.client.request(
@@ -357,9 +355,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     generateRandomBytes(
-        params: ParamsOfGenerateRandomBytes,
+        params: ParamsOfGenerateRandomBytes, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfGenerateRandomBytes> {
         return this.client.request(
@@ -368,9 +365,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     convertPublicKeyToTonSafeFormat(
-        params: ParamsOfConvertPublicKeyToTonSafeFormat,
+        params: ParamsOfConvertPublicKeyToTonSafeFormat, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfConvertPublicKeyToTonSafeFormat> {
         return this.client.request(
@@ -379,18 +375,17 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     generateRandomSignKeys(
         responseHandler?: ResponseHandler
     ): Promise<KeyPair> {
         return this.client.request(
             'crypto.generate_random_sign_keys',
+            undefined,
             responseHandler,
         );
     }
-    
     sign(
-        params: ParamsOfSign,
+        params: ParamsOfSign, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfSign> {
         return this.client.request(
@@ -399,9 +394,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     verifySignature(
-        params: ParamsOfVerifySignature,
+        params: ParamsOfVerifySignature, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfVerifySignature> {
         return this.client.request(
@@ -410,9 +404,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     sha256(
-        params: ParamsOfHash,
+        params: ParamsOfHash, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfHash> {
         return this.client.request(
@@ -421,9 +414,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     sha512(
-        params: ParamsOfHash,
+        params: ParamsOfHash, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfHash> {
         return this.client.request(
@@ -432,9 +424,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     scrypt(
-        params: ParamsOfScrypt,
+        params: ParamsOfScrypt, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfScrypt> {
         return this.client.request(
@@ -443,9 +434,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     naclSignKeypairFromSecretKey(
-        params: ParamsOfNaclSignKeyPairFromSecret,
+        params: ParamsOfNaclSignKeyPairFromSecret, 
         responseHandler?: ResponseHandler
     ): Promise<KeyPair> {
         return this.client.request(
@@ -454,9 +444,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     naclSign(
-        params: ParamsOfNaclSign,
+        params: ParamsOfNaclSign, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfNaclSign> {
         return this.client.request(
@@ -465,9 +454,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     naclSignOpen(
-        params: ParamsOfNaclSignOpen,
+        params: ParamsOfNaclSignOpen, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfNaclSignOpen> {
         return this.client.request(
@@ -476,9 +464,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     naclSignDetached(
-        params: ParamsOfNaclSign,
+        params: ParamsOfNaclSign, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfNaclSignDetached> {
         return this.client.request(
@@ -487,18 +474,17 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     naclBoxKeypair(
         responseHandler?: ResponseHandler
     ): Promise<KeyPair> {
         return this.client.request(
             'crypto.nacl_box_keypair',
+            undefined,
             responseHandler,
         );
     }
-    
     naclBoxKeypairFromSecretKey(
-        params: ParamsOfNaclBoxKeyPairFromSecret,
+        params: ParamsOfNaclBoxKeyPairFromSecret, 
         responseHandler?: ResponseHandler
     ): Promise<KeyPair> {
         return this.client.request(
@@ -507,9 +493,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     naclBox(
-        params: ParamsOfNaclBox,
+        params: ParamsOfNaclBox, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfNaclBox> {
         return this.client.request(
@@ -518,9 +503,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     naclBoxOpen(
-        params: ParamsOfNaclBoxOpen,
+        params: ParamsOfNaclBoxOpen, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfNaclBoxOpen> {
         return this.client.request(
@@ -529,9 +513,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     naclSecretBox(
-        params: ParamsOfNaclSecretBox,
+        params: ParamsOfNaclSecretBox, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfNaclBox> {
         return this.client.request(
@@ -540,9 +523,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     naclSecretBoxOpen(
-        params: ParamsOfNaclSecretBoxOpen,
+        params: ParamsOfNaclSecretBoxOpen, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfNaclBoxOpen> {
         return this.client.request(
@@ -551,9 +533,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     mnemonicWords(
-        params: ParamsOfMnemonicWords,
+        params: ParamsOfMnemonicWords, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfMnemonicWords> {
         return this.client.request(
@@ -562,9 +543,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     mnemonicFromRandom(
-        params: ParamsOfMnemonicFromRandom,
+        params: ParamsOfMnemonicFromRandom, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfMnemonicFromRandom> {
         return this.client.request(
@@ -573,9 +553,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     mnemonicFromEntropy(
-        params: ParamsOfMnemonicFromEntropy,
+        params: ParamsOfMnemonicFromEntropy, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfMnemonicFromEntropy> {
         return this.client.request(
@@ -584,9 +563,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     mnemonicVerify(
-        params: ParamsOfMnemonicVerify,
+        params: ParamsOfMnemonicVerify, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfMnemonicVerify> {
         return this.client.request(
@@ -595,9 +573,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     mnemonicDeriveSignKeys(
-        params: ParamsOfMnemonicDeriveSignKeys,
+        params: ParamsOfMnemonicDeriveSignKeys, 
         responseHandler?: ResponseHandler
     ): Promise<KeyPair> {
         return this.client.request(
@@ -606,9 +583,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     hdkeyXprvFromMnemonic(
-        params: ParamsOfHDKeyXPrvFromMnemonic,
+        params: ParamsOfHDKeyXPrvFromMnemonic, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfHDKeyXPrvFromMnemonic> {
         return this.client.request(
@@ -617,9 +593,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     hdkeyDeriveFromXprv(
-        params: ParamsOfHDKeyDeriveFromXPrv,
+        params: ParamsOfHDKeyDeriveFromXPrv, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfHDKeyDeriveFromXPrv> {
         return this.client.request(
@@ -628,9 +603,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     hdkeyDeriveFromXprvPath(
-        params: ParamsOfHDKeyDeriveFromXPrvPath,
+        params: ParamsOfHDKeyDeriveFromXPrvPath, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfHDKeyDeriveFromXPrvPath> {
         return this.client.request(
@@ -639,9 +613,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     hdkeySecretFromXprv(
-        params: ParamsOfHDKeySecretFromXPrv,
+        params: ParamsOfHDKeySecretFromXPrv, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfHDKeySecretFromXPrv> {
         return this.client.request(
@@ -650,9 +623,8 @@ export class CryptoModule {
             responseHandler,
         );
     }
-    
     hdkeyPublicFromXprv(
-        params: ParamsOfHDKeyPublicFromXPrv,
+        params: ParamsOfHDKeyPublicFromXPrv, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfHDKeyPublicFromXPrv> {
         return this.client.request(
@@ -687,29 +659,20 @@ export type DeploySet = {
     initial_data: any | null,
 };
 
-export type Signer = {
-    None: {}
-} | { External: string } | { WithKeys: KeyPair } | { Box: SigningBoxHandle };
+export type Signer = { None: {
+} } | { External: string } | { WithKeys: KeyPair } | { Box: SigningBoxHandle };
 
-export type DecodedMessageType =
-    "FunctionInput"
-    | "FunctionOutput"
-    | "ForeignFunctionInput"
-    | "Event";
+export type DecodedMessageType = "FunctionInput" | "FunctionOutput" | "ForeignFunctionInput" | "Event";
 
-export type StateInitSource = { Message: MessageSource } | {
-    StateInit: {
-        code: string,
-        data: string,
-        library: string | null,
-    }
-} | {
-    Tvc: {
-        tvc: string,
-        public_key: string | null,
-        init_params: StateInitParams | null,
-    }
-};
+export type StateInitSource = { Message: MessageSource } | { StateInit: {
+    code: string,
+    data: string,
+    library: string | null,
+} } | { Tvc: {
+    tvc: string,
+    public_key: string | null,
+    init_params: StateInitParams | null,
+} };
 
 export type StateInitParams = {
     abi: Abi,
@@ -771,13 +734,12 @@ export type ResultOfEncodeAccount = {
 
 export class AbiModule {
     client: IClient;
-    
+
     constructor(client: IClient) {
         this.client = client;
     }
-    
     encodeMessage(
-        params: ParamsOfEncodeMessage,
+        params: ParamsOfEncodeMessage, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfEncodeMessage> {
         return this.client.request(
@@ -786,9 +748,8 @@ export class AbiModule {
             responseHandler,
         );
     }
-    
     attachSignature(
-        params: ParamsOfAttachSignature,
+        params: ParamsOfAttachSignature, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfAttachSignature> {
         return this.client.request(
@@ -797,9 +758,8 @@ export class AbiModule {
             responseHandler,
         );
     }
-    
     decodeMessage(
-        params: ParamsOfDecodeMessage,
+        params: ParamsOfDecodeMessage, 
         responseHandler?: ResponseHandler
     ): Promise<DecodedMessageBody> {
         return this.client.request(
@@ -808,9 +768,8 @@ export class AbiModule {
             responseHandler,
         );
     }
-    
     encodeAccount(
-        params: ParamsOfEncodeAccount,
+        params: ParamsOfEncodeAccount, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfEncodeAccount> {
         return this.client.request(
@@ -842,13 +801,12 @@ export type ResultOfGetBlockchainConfig = {
 
 export class BocModule {
     client: IClient;
-    
+
     constructor(client: IClient) {
         this.client = client;
     }
-    
     parseMessage(
-        params: ParamsOfParse,
+        params: ParamsOfParse, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfParse> {
         return this.client.request(
@@ -857,9 +815,8 @@ export class BocModule {
             responseHandler,
         );
     }
-    
     parseTransaction(
-        params: ParamsOfParse,
+        params: ParamsOfParse, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfParse> {
         return this.client.request(
@@ -868,9 +825,8 @@ export class BocModule {
             responseHandler,
         );
     }
-    
     parseAccount(
-        params: ParamsOfParse,
+        params: ParamsOfParse, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfParse> {
         return this.client.request(
@@ -879,9 +835,8 @@ export class BocModule {
             responseHandler,
         );
     }
-    
     parseBlock(
-        params: ParamsOfParse,
+        params: ParamsOfParse, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfParse> {
         return this.client.request(
@@ -890,9 +845,8 @@ export class BocModule {
             responseHandler,
         );
     }
-    
     getBlockchainConfig(
-        params: ParamsOfGetBlockchainConfig,
+        params: ParamsOfGetBlockchainConfig, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfGetBlockchainConfig> {
         return this.client.request(
@@ -905,64 +859,45 @@ export class BocModule {
 
 // processing module
 
-export type MessageSource = {
-    Encoded: {
-        message: string,
-        abi: Abi | null,
-    }
-} | { EncodingParams: ParamsOfEncodeMessage };
+export type MessageSource = { Encoded: {
+    message: string,
+    abi: Abi | null,
+} } | { EncodingParams: ParamsOfEncodeMessage };
 
-export type ProcessingEvent = {
-    WillFetchFirstBlock: {}
-} | {
-    FetchFirstBlockFailed: {
-        error: ClientError,
-    }
-} | {
-    WillSend: {
-        shard_block_id: string,
-        message_id: string,
-        message: string,
-    }
-} | {
-    DidSend: {
-        shard_block_id: string,
-        message_id: string,
-        message: string,
-    }
-} | {
-    SendFailed: {
-        shard_block_id: string,
-        message_id: string,
-        message: string,
-        error: ClientError,
-    }
-} | {
-    WillFetchNextBlock: {
-        shard_block_id: string,
-        message_id: string,
-        message: string,
-    }
-} | {
-    FetchNextBlockFailed: {
-        shard_block_id: string,
-        message_id: string,
-        message: string,
-        error: ClientError,
-    }
-} | {
-    MessageExpired: {
-        message_id: string,
-        message: string,
-        error: ClientError,
-    }
-} | {
-    TransactionReceived: {
-        message_id: string,
-        message: string,
-        result: ResultOfProcessMessage,
-    }
-};
+export type ProcessingEvent = { WillFetchFirstBlock: {
+} } | { FetchFirstBlockFailed: {
+    error: ClientError,
+} } | { WillSend: {
+    shard_block_id: string,
+    message_id: string,
+    message: string,
+} } | { DidSend: {
+    shard_block_id: string,
+    message_id: string,
+    message: string,
+} } | { SendFailed: {
+    shard_block_id: string,
+    message_id: string,
+    message: string,
+    error: ClientError,
+} } | { WillFetchNextBlock: {
+    shard_block_id: string,
+    message_id: string,
+    message: string,
+} } | { FetchNextBlockFailed: {
+    shard_block_id: string,
+    message_id: string,
+    message: string,
+    error: ClientError,
+} } | { MessageExpired: {
+    message_id: string,
+    message: string,
+    error: ClientError,
+} } | { TransactionReceived: {
+    message_id: string,
+    message: string,
+    result: ResultOfProcessMessage,
+} };
 
 export type ResultOfProcessMessage = {
     transaction: any,
@@ -1000,13 +935,12 @@ export type ParamsOfProcessMessage = {
 
 export class ProcessingModule {
     client: IClient;
-    
+
     constructor(client: IClient) {
         this.client = client;
     }
-    
     sendMessage(
-        params: ParamsOfSendMessage,
+        params: ParamsOfSendMessage, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfSendMessage> {
         return this.client.request(
@@ -1015,9 +949,8 @@ export class ProcessingModule {
             responseHandler,
         );
     }
-    
     waitForTransaction(
-        params: ParamsOfWaitForTransaction,
+        params: ParamsOfWaitForTransaction, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfProcessMessage> {
         return this.client.request(
@@ -1026,9 +959,8 @@ export class ProcessingModule {
             responseHandler,
         );
     }
-    
     processMessage(
-        params: ParamsOfProcessMessage,
+        params: ParamsOfProcessMessage, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfProcessMessage> {
         return this.client.request(
@@ -1041,17 +973,13 @@ export class ProcessingModule {
 
 // utils module
 
-export type AddressStringFormat = {
-    AccountId: {}
-} | {
-    Hex: {}
-} | {
-    Base64: {
-        url: boolean,
-        test: boolean,
-        bounce: boolean,
-    }
-};
+export type AddressStringFormat = { AccountId: {
+} } | { Hex: {
+} } | { Base64: {
+    url: boolean,
+    test: boolean,
+    bounce: boolean,
+} };
 
 export type ParamsOfConvertAddress = {
     address: string,
@@ -1065,13 +993,12 @@ export type ResultOfConvertAddress = {
 
 export class UtilsModule {
     client: IClient;
-    
+
     constructor(client: IClient) {
         this.client = client;
     }
-    
     convertAddress(
-        params: ParamsOfConvertAddress,
+        params: ParamsOfConvertAddress, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfConvertAddress> {
         return this.client.request(
@@ -1129,13 +1056,12 @@ export type ParamsOfSubscribeCollection = {
 
 export class NetModule {
     client: IClient;
-    
+
     constructor(client: IClient) {
         this.client = client;
     }
-    
     queryCollection(
-        params: ParamsOfQueryCollection,
+        params: ParamsOfQueryCollection, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfQueryCollection> {
         return this.client.request(
@@ -1144,9 +1070,8 @@ export class NetModule {
             responseHandler,
         );
     }
-    
     waitForCollection(
-        params: ParamsOfWaitForCollection,
+        params: ParamsOfWaitForCollection, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfWaitForCollection> {
         return this.client.request(
@@ -1155,9 +1080,8 @@ export class NetModule {
             responseHandler,
         );
     }
-    
     unsubscribe(
-        params: ResultOfSubscribeCollection,
+        params: ResultOfSubscribeCollection, 
         responseHandler?: ResponseHandler
     ): Promise<void> {
         return this.client.request(
@@ -1166,9 +1090,8 @@ export class NetModule {
             responseHandler,
         );
     }
-    
     subscribeCollection(
-        params: ParamsOfSubscribeCollection,
+        params: ParamsOfSubscribeCollection, 
         responseHandler?: ResponseHandler
     ): Promise<ResultOfSubscribeCollection> {
         return this.client.request(

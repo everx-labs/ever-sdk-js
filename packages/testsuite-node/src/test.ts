@@ -10,8 +10,12 @@ afterAll(() => {
 });
 
 test("Version", async () => {
-    const client = new TonClient({servers: []});
-    const version = await client.request('client.version', '');
+    const client = new TonClient({
+        network: null,
+        abi: null,
+        crypto: null,
+    });
+    const version = await client.client.version();
     expect(version.version.split('.')[0]).toEqual('1');
 });
 

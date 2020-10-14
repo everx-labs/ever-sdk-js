@@ -107,7 +107,10 @@ export async function request<P, R>(
         const requestId = generateRequestId();
         requests.set(requestId, request)
         checkResponseHandler();
-        lib.sendRequest(context, requestId, functionName, JSON.stringify(functionParams));
+        const paramsJson = (functionParams === undefined) || (functionParams === null)
+            ? ''
+            : JSON.stringify(functionParams);
+        lib.sendRequest(context, requestId, functionName, paramsJson);
     });
 }
 
