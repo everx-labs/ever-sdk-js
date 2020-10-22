@@ -1,7 +1,7 @@
 {
-	"name": "@ton-client/bin-web",
+	"name": "ton-client-testsuite",
 	"version": "1.0.0",
-	"description": "TON Client binary library for browsers",
+	"description": "TON Client testsuite",
 	"main": "index.js",
 	"repository": {
 		"type": "git",
@@ -26,5 +26,6 @@
 		"node": ">=6"
 	},
 	"dependencies": {
+		"@ton-client/main": "file:../main"
 	}
 }

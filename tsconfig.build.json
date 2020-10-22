@@ -6,13 +6,13 @@
 	"include": [],
 	"references": [
 		{
-			"path": "./packages/ton-client"
+			"path": "./packages/main"
 		},
 		{
-			"path": "./packages/ton-client-bridge-node-js"
+			"path": "./packages/node-addon"
 		},
 		{
-			"path": "./packages/ton-client-testsuite-node-js"
+			"path": "./packages/main-testsuite"
 		}
 	]
 }

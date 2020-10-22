@@ -17,3 +17,5 @@ Jenkinsfile
 **/*.node
 **/dist/
 **/*.tsbuildinfo
+/packages/wasm-module/index.js
+/packages/wasm-module/tonclient.wasm

@@ -4,8 +4,8 @@ import {
     destroyContext,
     request,
     ResponseHandler,
-    useLibrary
-} from "./bin";
+    useLibrary,
+} from './bin';
 import {
     AbiModule,
     BocModule,
@@ -13,10 +13,40 @@ import {
     ClientModule,
     CryptoModule,
     NetModule,
-    ProcessingModule, UtilsModule
-} from "./modules";
+    ProcessingModule, TvmModule, UtilsModule,
+} from './modules';
+
+import {TvmCallOptions, Account, ExecutionResult} from './account';
+
+export * from './modules';
+export {TvmCallOptions, ExecutionResult, Account};
 
 export {BinaryLibrary, ResponseHandler};
+
+export type AbiParam = {
+    name: string,
+    type: string
+};
+
+export type AbiField = {
+    key: number,
+    name: string,
+    type: string
+};
+
+export type AbiFunction = {
+    name: string,
+    inputs: AbiParam[],
+    outputs: AbiParam[],
+};
+
+export type AbiContract = {
+    'ABI Version': number,
+    header: string[],
+    functions: AbiFunction[],
+    events: AbiFunction[];
+    data: AbiField[];
+};
 
 export class TonClient {
     private readonly config: ClientConfig;
@@ -29,9 +59,10 @@ export class TonClient {
     readonly processing: ProcessingModule;
     readonly utils: UtilsModule;
     readonly net: NetModule;
+    readonly tvm: TvmModule;
     
-    constructor(config: ClientConfig) {
-        this.config = config;
+    constructor(config?: ClientConfig) {
+        this.config = config ?? {};
         this.client = new ClientModule(this);
         this.crypto = new CryptoModule(this);
         this.abi = new AbiModule(this);
@@ -39,6 +70,7 @@ export class TonClient {
         this.processing = new ProcessingModule(this);
         this.utils = new UtilsModule(this);
         this.net = new NetModule(this);
+        this.tvm = new TvmModule(this);
     }
     
     close() {
@@ -52,7 +84,7 @@ export class TonClient {
     async request(
         functionName: string,
         functionParams: any,
-        responseHandler?: ResponseHandler
+        responseHandler?: ResponseHandler,
     ): Promise<any> {
         let context: number;
         if (this.context !== null) {
@@ -66,7 +98,7 @@ export class TonClient {
             functionName,
             functionParams,
             responseHandler ?? (() => {
-            })
+            }),
         );
     }
     

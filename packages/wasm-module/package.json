@@ -1,7 +1,7 @@
 {
-	"name": "ton-client-testsuite",
+	"name": "@ton-client/wasm-module",
 	"version": "1.0.0",
-	"description": "TON Client testsuite",
+	"description": "TON Client WASM module for browsers",
 	"main": "index.js",
 	"repository": {
 		"type": "git",
@@ -26,7 +26,5 @@
 		"node": ">=6"
 	},
 	"dependencies": {
-		"ton-client": "file:../ton-client",
-		"ton-client-bridge-node-js": "file:../ton-client-bridge-node-js"
 	}
 }

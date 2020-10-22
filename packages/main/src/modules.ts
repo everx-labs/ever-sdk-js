@@ -1,54 +1,55 @@
 
+
 import {ResponseHandler} from "./bin";
 
 interface IClient {
     request(
         functionName: string,
-        functionParams: any,
+        functionParams?: any,
         responseHandler?: ResponseHandler
     ): Promise<any>;
 }
 
 // client module
 
+
 export type ClientError = {
     code: number,
     message: string,
-    data: any,
+    data: any
 };
 
 export type ClientConfig = {
-    network: NetworkConfig | null,
-    crypto: CryptoConfig | null,
-    abi: AbiConfig | null,
+    network?: NetworkConfig,
+    crypto?: CryptoConfig,
+    abi?: AbiConfig
 };
 
 export type NetworkConfig = {
     server_address: string,
-    message_retries_count: number | null,
-    message_processing_timeout: number | null,
-    wait_for_timeout: number | null,
-    out_of_sync_threshold: bigint | null,
-    access_key: string | null,
+    message_retries_count?: number,
+    message_processing_timeout?: number,
+    wait_for_timeout?: number,
+    out_of_sync_threshold?: bigint,
+    access_key?: string
 };
 
 export type CryptoConfig = {
-    fish_param: string | null,
+    fish_param?: string
 };
 
 export type AbiConfig = {
-    message_expiration_timeout: number | null,
-    message_expiration_timeout_grow_factor: number | null,
+    message_expiration_timeout?: number,
+    message_expiration_timeout_grow_factor?: number
 };
 
 export type ResultOfGetApiReference = {
-    api: any,
+    api: any
 };
 
 export type ResultOfVersion = {
-    version: string,
+    version: string
 };
-
 
 export class ClientModule {
     client: IClient;
@@ -56,102 +57,93 @@ export class ClientModule {
     constructor(client: IClient) {
         this.client = client;
     }
-    getApiReference(
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfGetApiReference> {
-        return this.client.request(
-            'client.get_api_reference',
-            undefined,
-            responseHandler,
-        );
+
+    get_api_reference(): Promise<ResultOfGetApiReference> {
+        return this.client.request('client.get_api_reference');
     }
-    version(
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfVersion> {
-        return this.client.request(
-            'client.version',
-            undefined,
-            responseHandler,
-        );
+
+    version(): Promise<ResultOfVersion> {
+        return this.client.request('client.version');
     }
 }
 
 // crypto module
 
+
 export type SigningBoxHandle = number;
 
 export type ParamsOfFactorize = {
-    composite: string,
+    composite: string
 };
 
 export type ResultOfFactorize = {
-    factors: string[],
+    factors: string[]
 };
 
 export type ParamsOfModularPower = {
     base: string,
     exponent: string,
-    modulus: string,
+    modulus: string
 };
 
 export type ResultOfModularPower = {
-    modular_power: string,
+    modular_power: string
 };
 
 export type ParamsOfTonCrc16 = {
-    data: string,
+    data: string
 };
 
 export type ResultOfTonCrc16 = {
-    crc: number,
+    crc: number
 };
 
 export type ParamsOfGenerateRandomBytes = {
-    length: number,
+    length: number
 };
 
 export type ResultOfGenerateRandomBytes = {
-    bytes: string,
+    bytes: string
 };
 
 export type ParamsOfConvertPublicKeyToTonSafeFormat = {
-    public_key: string,
+    public_key: string
 };
 
 export type ResultOfConvertPublicKeyToTonSafeFormat = {
-    ton_public_key: string,
+    ton_public_key: string
 };
 
 export type KeyPair = {
     public: string,
-    secret: string,
+    secret: string
 };
 
 export type ParamsOfSign = {
     unsigned: string,
-    keys: KeyPair,
+    keys: KeyPair
 };
 
 export type ResultOfSign = {
     signed: string,
-    signature: string,
+    signature: string
 };
 
 export type ParamsOfVerifySignature = {
     signed: string,
-    public: string,
+    public: string
 };
 
 export type ResultOfVerifySignature = {
-    unsigned: string,
+    unsigned: string
 };
 
 export type ParamsOfHash = {
-    data: string,
+    data: string
 };
 
 export type ResultOfHash = {
-    hash: string,
+    hash: string
 };
 
 export type ParamsOfScrypt = {
@@ -160,164 +152,163 @@ export type ParamsOfScrypt = {
     log_n: number,
     r: number,
     p: number,
-    dk_len: number,
+    dk_len: number
 };
 
 export type ResultOfScrypt = {
-    key: string,
+    key: string
 };
 
 export type ParamsOfNaclSignKeyPairFromSecret = {
-    secret: string,
+    secret: string
 };
 
 export type ParamsOfNaclSign = {
     unsigned: string,
-    secret: string,
+    secret: string
 };
 
 export type ResultOfNaclSign = {
-    signed: string,
+    signed: string
 };
 
 export type ParamsOfNaclSignOpen = {
     signed: string,
-    public: string,
+    public: string
 };
 
 export type ResultOfNaclSignOpen = {
-    unsigned: string,
+    unsigned: string
 };
 
 export type ResultOfNaclSignDetached = {
-    signature: string,
+    signature: string
 };
 
 export type ParamsOfNaclBoxKeyPairFromSecret = {
-    secret: string,
+    secret: string
 };
 
 export type ParamsOfNaclBox = {
     decrypted: string,
     nonce: string,
     their_public: string,
-    secret: string,
+    secret: string
 };
 
 export type ResultOfNaclBox = {
-    encrypted: string,
+    encrypted: string
 };
 
 export type ParamsOfNaclBoxOpen = {
     encrypted: string,
     nonce: string,
     their_public: string,
-    secret: string,
+    secret: string
 };
 
 export type ResultOfNaclBoxOpen = {
-    decrypted: string,
+    decrypted: string
 };
 
 export type ParamsOfNaclSecretBox = {
     decrypted: string,
     nonce: string,
-    key: string,
+    key: string
 };
 
 export type ParamsOfNaclSecretBoxOpen = {
     encrypted: string,
     nonce: string,
-    key: string,
+    key: string
 };
 
 export type ParamsOfMnemonicWords = {
-    dictionary: number | null,
+    dictionary?: number
 };
 
 export type ResultOfMnemonicWords = {
-    words: string,
+    words: string
 };
 
 export type ParamsOfMnemonicFromRandom = {
-    dictionary: number | null,
-    word_count: number | null,
+    dictionary?: number,
+    word_count?: number
 };
 
 export type ResultOfMnemonicFromRandom = {
-    phrase: string,
+    phrase: string
 };
 
 export type ParamsOfMnemonicFromEntropy = {
     entropy: string,
-    dictionary: number | null,
-    word_count: number | null,
+    dictionary?: number,
+    word_count?: number
 };
 
 export type ResultOfMnemonicFromEntropy = {
-    phrase: string,
+    phrase: string
 };
 
 export type ParamsOfMnemonicVerify = {
     phrase: string,
-    dictionary: number | null,
-    word_count: number | null,
+    dictionary?: number,
+    word_count?: number
 };
 
 export type ResultOfMnemonicVerify = {
-    valid: boolean,
+    valid: boolean
 };
 
 export type ParamsOfMnemonicDeriveSignKeys = {
     phrase: string,
-    path: string | null,
-    dictionary: number | null,
-    word_count: number | null,
+    path?: string,
+    dictionary?: number,
+    word_count?: number
 };
 
 export type ParamsOfHDKeyXPrvFromMnemonic = {
-    phrase: string,
+    phrase: string
 };
 
 export type ResultOfHDKeyXPrvFromMnemonic = {
-    xprv: string,
+    xprv: string
 };
 
 export type ParamsOfHDKeyDeriveFromXPrv = {
     xprv: string,
     child_index: number,
-    hardened: boolean,
+    hardened: boolean
 };
 
 export type ResultOfHDKeyDeriveFromXPrv = {
-    xprv: string,
+    xprv: string
 };
 
 export type ParamsOfHDKeyDeriveFromXPrvPath = {
     xprv: string,
-    path: string,
+    path: string
 };
 
 export type ResultOfHDKeyDeriveFromXPrvPath = {
-    xprv: string,
+    xprv: string
 };
 
 export type ParamsOfHDKeySecretFromXPrv = {
-    xprv: string,
+    xprv: string
 };
 
 export type ResultOfHDKeySecretFromXPrv = {
-    secret: string,
+    secret: string
 };
 
 export type ParamsOfHDKeyPublicFromXPrv = {
-    xprv: string,
+    xprv: string
 };
 
 export type ResultOfHDKeyPublicFromXPrv = {
-    public: string,
+    public: string
 };
-
 
 export class CryptoModule {
     client: IClient;
@@ -325,412 +316,374 @@ export class CryptoModule {
     constructor(client: IClient) {
         this.client = client;
     }
-    factorize(
-        params: ParamsOfFactorize, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfFactorize> {
-        return this.client.request(
-            'crypto.factorize',
-            params,
-            responseHandler,
-        );
+
+    factorize(params: ParamsOfFactorize): Promise<ResultOfFactorize> {
+        return this.client.request('crypto.factorize', params);
     }
-    modularPower(
-        params: ParamsOfModularPower, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfModularPower> {
-        return this.client.request(
-            'crypto.modular_power',
-            params,
-            responseHandler,
-        );
+
+    modular_power(params: ParamsOfModularPower): Promise<ResultOfModularPower> {
+        return this.client.request('crypto.modular_power', params);
     }
-    tonCrc16(
-        params: ParamsOfTonCrc16, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfTonCrc16> {
-        return this.client.request(
-            'crypto.ton_crc16',
-            params,
-            responseHandler,
-        );
+
+    ton_crc16(params: ParamsOfTonCrc16): Promise<ResultOfTonCrc16> {
+        return this.client.request('crypto.ton_crc16', params);
     }
-    generateRandomBytes(
-        params: ParamsOfGenerateRandomBytes, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfGenerateRandomBytes> {
-        return this.client.request(
-            'crypto.generate_random_bytes',
-            params,
-            responseHandler,
-        );
+
+    generate_random_bytes(params: ParamsOfGenerateRandomBytes): Promise<ResultOfGenerateRandomBytes> {
+        return this.client.request('crypto.generate_random_bytes', params);
     }
-    convertPublicKeyToTonSafeFormat(
-        params: ParamsOfConvertPublicKeyToTonSafeFormat, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfConvertPublicKeyToTonSafeFormat> {
-        return this.client.request(
-            'crypto.convert_public_key_to_ton_safe_format',
-            params,
-            responseHandler,
-        );
+
+    convert_public_key_to_ton_safe_format(params: ParamsOfConvertPublicKeyToTonSafeFormat): Promise<ResultOfConvertPublicKeyToTonSafeFormat> {
+        return this.client.request('crypto.convert_public_key_to_ton_safe_format', params);
     }
-    generateRandomSignKeys(
-        responseHandler?: ResponseHandler
-    ): Promise<KeyPair> {
-        return this.client.request(
-            'crypto.generate_random_sign_keys',
-            undefined,
-            responseHandler,
-        );
+
+    generate_random_sign_keys(): Promise<KeyPair> {
+        return this.client.request('crypto.generate_random_sign_keys');
     }
-    sign(
-        params: ParamsOfSign, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfSign> {
-        return this.client.request(
-            'crypto.sign',
-            params,
-            responseHandler,
-        );
+
+    sign(params: ParamsOfSign): Promise<ResultOfSign> {
+        return this.client.request('crypto.sign', params);
     }
-    verifySignature(
-        params: ParamsOfVerifySignature, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfVerifySignature> {
-        return this.client.request(
-            'crypto.verify_signature',
-            params,
-            responseHandler,
-        );
+
+    verify_signature(params: ParamsOfVerifySignature): Promise<ResultOfVerifySignature> {
+        return this.client.request('crypto.verify_signature', params);
     }
-    sha256(
-        params: ParamsOfHash, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfHash> {
-        return this.client.request(
-            'crypto.sha256',
-            params,
-            responseHandler,
-        );
+
+    sha256(params: ParamsOfHash): Promise<ResultOfHash> {
+        return this.client.request('crypto.sha256', params);
     }
-    sha512(
-        params: ParamsOfHash, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfHash> {
-        return this.client.request(
-            'crypto.sha512',
-            params,
-            responseHandler,
-        );
+
+    sha512(params: ParamsOfHash): Promise<ResultOfHash> {
+        return this.client.request('crypto.sha512', params);
     }
-    scrypt(
-        params: ParamsOfScrypt, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfScrypt> {
-        return this.client.request(
-            'crypto.scrypt',
-            params,
-            responseHandler,
-        );
+
+    scrypt(params: ParamsOfScrypt): Promise<ResultOfScrypt> {
+        return this.client.request('crypto.scrypt', params);
     }
-    naclSignKeypairFromSecretKey(
-        params: ParamsOfNaclSignKeyPairFromSecret, 
-        responseHandler?: ResponseHandler
-    ): Promise<KeyPair> {
-        return this.client.request(
-            'crypto.nacl_sign_keypair_from_secret_key',
-            params,
-            responseHandler,
-        );
+
+    nacl_sign_keypair_from_secret_key(params: ParamsOfNaclSignKeyPairFromSecret): Promise<KeyPair> {
+        return this.client.request('crypto.nacl_sign_keypair_from_secret_key', params);
     }
-    naclSign(
-        params: ParamsOfNaclSign, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfNaclSign> {
-        return this.client.request(
-            'crypto.nacl_sign',
-            params,
-            responseHandler,
-        );
+
+    nacl_sign(params: ParamsOfNaclSign): Promise<ResultOfNaclSign> {
+        return this.client.request('crypto.nacl_sign', params);
     }
-    naclSignOpen(
-        params: ParamsOfNaclSignOpen, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfNaclSignOpen> {
-        return this.client.request(
-            'crypto.nacl_sign_open',
-            params,
-            responseHandler,
-        );
+
+    nacl_sign_open(params: ParamsOfNaclSignOpen): Promise<ResultOfNaclSignOpen> {
+        return this.client.request('crypto.nacl_sign_open', params);
     }
-    naclSignDetached(
-        params: ParamsOfNaclSign, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfNaclSignDetached> {
-        return this.client.request(
-            'crypto.nacl_sign_detached',
-            params,
-            responseHandler,
-        );
+
+    nacl_sign_detached(params: ParamsOfNaclSign): Promise<ResultOfNaclSignDetached> {
+        return this.client.request('crypto.nacl_sign_detached', params);
     }
-    naclBoxKeypair(
-        responseHandler?: ResponseHandler
-    ): Promise<KeyPair> {
-        return this.client.request(
-            'crypto.nacl_box_keypair',
-            undefined,
-            responseHandler,
-        );
+
+    nacl_box_keypair(): Promise<KeyPair> {
+        return this.client.request('crypto.nacl_box_keypair');
     }
-    naclBoxKeypairFromSecretKey(
-        params: ParamsOfNaclBoxKeyPairFromSecret, 
-        responseHandler?: ResponseHandler
-    ): Promise<KeyPair> {
-        return this.client.request(
-            'crypto.nacl_box_keypair_from_secret_key',
-            params,
-            responseHandler,
-        );
+
+    nacl_box_keypair_from_secret_key(params: ParamsOfNaclBoxKeyPairFromSecret): Promise<KeyPair> {
+        return this.client.request('crypto.nacl_box_keypair_from_secret_key', params);
     }
-    naclBox(
-        params: ParamsOfNaclBox, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfNaclBox> {
-        return this.client.request(
-            'crypto.nacl_box',
-            params,
-            responseHandler,
-        );
+
+    nacl_box(params: ParamsOfNaclBox): Promise<ResultOfNaclBox> {
+        return this.client.request('crypto.nacl_box', params);
     }
-    naclBoxOpen(
-        params: ParamsOfNaclBoxOpen, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfNaclBoxOpen> {
-        return this.client.request(
-            'crypto.nacl_box_open',
-            params,
-            responseHandler,
-        );
+
+    nacl_box_open(params: ParamsOfNaclBoxOpen): Promise<ResultOfNaclBoxOpen> {
+        return this.client.request('crypto.nacl_box_open', params);
     }
-    naclSecretBox(
-        params: ParamsOfNaclSecretBox, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfNaclBox> {
-        return this.client.request(
-            'crypto.nacl_secret_box',
-            params,
-            responseHandler,
-        );
+
+    nacl_secret_box(params: ParamsOfNaclSecretBox): Promise<ResultOfNaclBox> {
+        return this.client.request('crypto.nacl_secret_box', params);
     }
-    naclSecretBoxOpen(
-        params: ParamsOfNaclSecretBoxOpen, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfNaclBoxOpen> {
-        return this.client.request(
-            'crypto.nacl_secret_box_open',
-            params,
-            responseHandler,
-        );
+
+    nacl_secret_box_open(params: ParamsOfNaclSecretBoxOpen): Promise<ResultOfNaclBoxOpen> {
+        return this.client.request('crypto.nacl_secret_box_open', params);
     }
-    mnemonicWords(
-        params: ParamsOfMnemonicWords, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfMnemonicWords> {
-        return this.client.request(
-            'crypto.mnemonic_words',
-            params,
-            responseHandler,
-        );
+
+    mnemonic_words(params: ParamsOfMnemonicWords): Promise<ResultOfMnemonicWords> {
+        return this.client.request('crypto.mnemonic_words', params);
     }
-    mnemonicFromRandom(
-        params: ParamsOfMnemonicFromRandom, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfMnemonicFromRandom> {
-        return this.client.request(
-            'crypto.mnemonic_from_random',
-            params,
-            responseHandler,
-        );
+
+    mnemonic_from_random(params: ParamsOfMnemonicFromRandom): Promise<ResultOfMnemonicFromRandom> {
+        return this.client.request('crypto.mnemonic_from_random', params);
     }
-    mnemonicFromEntropy(
-        params: ParamsOfMnemonicFromEntropy, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfMnemonicFromEntropy> {
-        return this.client.request(
-            'crypto.mnemonic_from_entropy',
-            params,
-            responseHandler,
-        );
+
+    mnemonic_from_entropy(params: ParamsOfMnemonicFromEntropy): Promise<ResultOfMnemonicFromEntropy> {
+        return this.client.request('crypto.mnemonic_from_entropy', params);
     }
-    mnemonicVerify(
-        params: ParamsOfMnemonicVerify, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfMnemonicVerify> {
-        return this.client.request(
-            'crypto.mnemonic_verify',
-            params,
-            responseHandler,
-        );
+
+    mnemonic_verify(params: ParamsOfMnemonicVerify): Promise<ResultOfMnemonicVerify> {
+        return this.client.request('crypto.mnemonic_verify', params);
     }
-    mnemonicDeriveSignKeys(
-        params: ParamsOfMnemonicDeriveSignKeys, 
-        responseHandler?: ResponseHandler
-    ): Promise<KeyPair> {
-        return this.client.request(
-            'crypto.mnemonic_derive_sign_keys',
-            params,
-            responseHandler,
-        );
+
+    mnemonic_derive_sign_keys(params: ParamsOfMnemonicDeriveSignKeys): Promise<KeyPair> {
+        return this.client.request('crypto.mnemonic_derive_sign_keys', params);
     }
-    hdkeyXprvFromMnemonic(
-        params: ParamsOfHDKeyXPrvFromMnemonic, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfHDKeyXPrvFromMnemonic> {
-        return this.client.request(
-            'crypto.hdkey_xprv_from_mnemonic',
-            params,
-            responseHandler,
-        );
+
+    hdkey_xprv_from_mnemonic(params: ParamsOfHDKeyXPrvFromMnemonic): Promise<ResultOfHDKeyXPrvFromMnemonic> {
+        return this.client.request('crypto.hdkey_xprv_from_mnemonic', params);
     }
-    hdkeyDeriveFromXprv(
-        params: ParamsOfHDKeyDeriveFromXPrv, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfHDKeyDeriveFromXPrv> {
-        return this.client.request(
-            'crypto.hdkey_derive_from_xprv',
-            params,
-            responseHandler,
-        );
+
+    hdkey_derive_from_xprv(params: ParamsOfHDKeyDeriveFromXPrv): Promise<ResultOfHDKeyDeriveFromXPrv> {
+        return this.client.request('crypto.hdkey_derive_from_xprv', params);
     }
-    hdkeyDeriveFromXprvPath(
-        params: ParamsOfHDKeyDeriveFromXPrvPath, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfHDKeyDeriveFromXPrvPath> {
-        return this.client.request(
-            'crypto.hdkey_derive_from_xprv_path',
-            params,
-            responseHandler,
-        );
+
+    hdkey_derive_from_xprv_path(params: ParamsOfHDKeyDeriveFromXPrvPath): Promise<ResultOfHDKeyDeriveFromXPrvPath> {
+        return this.client.request('crypto.hdkey_derive_from_xprv_path', params);
     }
-    hdkeySecretFromXprv(
-        params: ParamsOfHDKeySecretFromXPrv, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfHDKeySecretFromXPrv> {
-        return this.client.request(
-            'crypto.hdkey_secret_from_xprv',
-            params,
-            responseHandler,
-        );
+
+    hdkey_secret_from_xprv(params: ParamsOfHDKeySecretFromXPrv): Promise<ResultOfHDKeySecretFromXPrv> {
+        return this.client.request('crypto.hdkey_secret_from_xprv', params);
     }
-    hdkeyPublicFromXprv(
-        params: ParamsOfHDKeyPublicFromXPrv, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfHDKeyPublicFromXPrv> {
-        return this.client.request(
-            'crypto.hdkey_public_from_xprv',
-            params,
-            responseHandler,
-        );
+
+    hdkey_public_from_xprv(params: ParamsOfHDKeyPublicFromXPrv): Promise<ResultOfHDKeyPublicFromXPrv> {
+        return this.client.request('crypto.hdkey_public_from_xprv', params);
     }
 }
 
 // abi module
 
-export type Abi = { Serialized: any } | { Handle: AbiHandle };
+
+export type Abi = {
+    type: 'Serialized'
+    value: any
+} | {
+    type: 'Handle'
+    value: number
+};
+
+export function abiSerialized(value: any): Abi {
+    return {
+        type: 'Serialized',
+        value,
+    };
+}
+
+export function abiHandle(value: AbiHandle): Abi {
+    return {
+        type: 'Handle',
+        value,
+    };
+}
 
 export type AbiHandle = number;
 
 export type FunctionHeader = {
-    expire: number | null,
-    time: bigint | null,
-    pubkey: string | null,
+    expire?: number,
+    time?: bigint,
+    pubkey?: string
 };
 
 export type CallSet = {
     function_name: string,
-    header: FunctionHeader | null,
-    input: any | null,
+    header?: FunctionHeader,
+    input?: any
 };
 
 export type DeploySet = {
     tvc: string,
-    workchain_id: number | null,
-    initial_data: any | null,
+    workchain_id?: number,
+    initial_data?: any
 };
 
-export type Signer = { None: {
-} } | { External: string } | { WithKeys: KeyPair } | { Box: SigningBoxHandle };
+export type Signer = {
+    type: 'None'
+} | {
+    type: 'External'
+    public_key: string
+} | {
+    type: 'Keys'
+    keys: KeyPair
+} | {
+    type: 'SigningBox'
+    handle: SigningBoxHandle
+};
 
-export type DecodedMessageType = "FunctionInput" | "FunctionOutput" | "ForeignFunctionInput" | "Event";
+export function signerNone(): Signer {
+    return {
+        type: 'None',
+    };
+}
 
-export type StateInitSource = { Message: MessageSource } | { StateInit: {
+export function signerExternal(public_key: string): Signer {
+    return {
+        type: 'External',
+        public_key,
+    };
+}
+
+export function signerKeys(keys: KeyPair): Signer {
+    return {
+        type: 'Keys',
+        keys,
+    };
+}
+
+export function signerSigningBox(handle: SigningBoxHandle): Signer {
+    return {
+        type: 'SigningBox',
+        handle,
+    };
+}
+
+export type MessageBodyType = 'Input' | 'Output' | 'InternalOutput' | 'Event';
+
+export type StateInitSource = {
+    type: 'Message'
+    source: MessageSource
+} | {
+    type: 'StateInit'
     code: string,
     data: string,
-    library: string | null,
-} } | { Tvc: {
+    library?: string
+} | {
+    type: 'Tvc'
     tvc: string,
-    public_key: string | null,
-    init_params: StateInitParams | null,
-} };
+    public_key?: string,
+    init_params?: StateInitParams
+};
+
+export function stateInitSourceMessage(source: MessageSource): StateInitSource {
+    return {
+        type: 'Message',
+        source,
+    };
+}
+
+export function stateInitSourceStateInit(code: string, data: string, library?: string): StateInitSource {
+    return {
+        type: 'StateInit',
+        code,
+        data,
+        library,
+    };
+}
+
+export function stateInitSourceTvc(tvc: string, public_key?: string, init_params?: StateInitParams): StateInitSource {
+    return {
+        type: 'Tvc',
+        tvc,
+        public_key,
+        init_params,
+    };
+}
 
 export type StateInitParams = {
     abi: Abi,
-    value: any,
+    value: any
+};
+
+export type MessageSource = {
+    type: 'Encoded'
+    message: string,
+    abi?: Abi
+} | {
+    type: 'EncodingParams'
+    abi: Abi,
+    address?: string,
+    deploy_set?: DeploySet,
+    call_set?: CallSet,
+    signer: Signer,
+    processing_try_index?: number
+};
+
+export function messageSourceEncoded(message: string, abi?: Abi): MessageSource {
+    return {
+        type: 'Encoded',
+        message,
+        abi,
+    };
+}
+
+export function messageSourceEncodingParams(value: ParamsOfEncodeMessage): MessageSource {
+    return {
+        type: 'EncodingParams',
+        ...value,
+    };
+}
+
+export type ParamsOfEncodeMessageBody = {
+    abi: Abi,
+    call_set: CallSet,
+    is_internal: boolean,
+    signer: Signer,
+    processing_try_index?: number
+};
+
+export type ResultOfEncodeMessageBody = {
+    body: string,
+    data_to_sign?: string
+};
+
+export type ParamsOfAttachSignatureToMessageBody = {
+    abi: Abi,
+    public_key: string,
+    message: string,
+    signature: string
+};
+
+export type ResultOfAttachSignatureToMessageBody = {
+    body: string
 };
 
 export type ParamsOfEncodeMessage = {
     abi: Abi,
-    address: string | null,
-    deploy_set: DeploySet | null,
-    call_set: CallSet | null,
+    address?: string,
+    deploy_set?: DeploySet,
+    call_set?: CallSet,
     signer: Signer,
-    processing_try_index: number | null,
+    processing_try_index?: number
 };
 
 export type ResultOfEncodeMessage = {
     message: string,
-    data_to_sign: string | null,
+    data_to_sign?: string,
     address: string,
-    message_id: string,
+    message_id: string
 };
 
 export type ParamsOfAttachSignature = {
     abi: Abi,
     public_key: string,
     message: string,
-    signature: string,
+    signature: string
 };
 
 export type ResultOfAttachSignature = {
     message: string,
-    message_id: string,
+    message_id: string
 };
 
 export type ParamsOfDecodeMessage = {
     abi: Abi,
-    message: string,
+    message: string
 };
 
 export type DecodedMessageBody = {
-    message_type: DecodedMessageType,
+    body_type: MessageBodyType,
     name: string,
-    value: any,
-    header: FunctionHeader | null,
+    value?: any,
+    header?: FunctionHeader
+};
+
+export type ParamsOfDecodeMessageBody = {
+    abi: Abi,
+    body: string,
+    is_internal: boolean
 };
 
 export type ParamsOfEncodeAccount = {
     state_init: StateInitSource,
-    balance: bigint | null,
-    last_trans_lt: bigint | null,
-    last_paid: number | null,
+    balance?: bigint,
+    last_trans_lt?: bigint,
+    last_paid?: number
 };
 
 export type ResultOfEncodeAccount = {
     account: string,
-    id: string,
+    id: string
 };
-
 
 export class AbiModule {
     client: IClient;
@@ -738,66 +691,54 @@ export class AbiModule {
     constructor(client: IClient) {
         this.client = client;
     }
-    encodeMessage(
-        params: ParamsOfEncodeMessage, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfEncodeMessage> {
-        return this.client.request(
-            'abi.encode_message',
-            params,
-            responseHandler,
-        );
+
+    encode_message_body(params: ParamsOfEncodeMessageBody): Promise<ResultOfEncodeMessageBody> {
+        return this.client.request('abi.encode_message_body', params);
     }
-    attachSignature(
-        params: ParamsOfAttachSignature, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfAttachSignature> {
-        return this.client.request(
-            'abi.attach_signature',
-            params,
-            responseHandler,
-        );
+
+    attach_signature_to_message_body(params: ParamsOfAttachSignatureToMessageBody): Promise<ResultOfAttachSignatureToMessageBody> {
+        return this.client.request('abi.attach_signature_to_message_body', params);
     }
-    decodeMessage(
-        params: ParamsOfDecodeMessage, 
-        responseHandler?: ResponseHandler
-    ): Promise<DecodedMessageBody> {
-        return this.client.request(
-            'abi.decode_message',
-            params,
-            responseHandler,
-        );
+
+    encode_message(params: ParamsOfEncodeMessage): Promise<ResultOfEncodeMessage> {
+        return this.client.request('abi.encode_message', params);
     }
-    encodeAccount(
-        params: ParamsOfEncodeAccount, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfEncodeAccount> {
-        return this.client.request(
-            'abi.encode_account',
-            params,
-            responseHandler,
-        );
+
+    attach_signature(params: ParamsOfAttachSignature): Promise<ResultOfAttachSignature> {
+        return this.client.request('abi.attach_signature', params);
+    }
+
+    decode_message(params: ParamsOfDecodeMessage): Promise<DecodedMessageBody> {
+        return this.client.request('abi.decode_message', params);
+    }
+
+    decode_message_body(params: ParamsOfDecodeMessageBody): Promise<DecodedMessageBody> {
+        return this.client.request('abi.decode_message_body', params);
+    }
+
+    encode_account(params: ParamsOfEncodeAccount): Promise<ResultOfEncodeAccount> {
+        return this.client.request('abi.encode_account', params);
     }
 }
 
 // boc module
 
+
 export type ParamsOfParse = {
-    boc: string,
+    boc: string
 };
 
 export type ResultOfParse = {
-    parsed: any,
+    parsed: any
 };
 
 export type ParamsOfGetBlockchainConfig = {
-    block_boc: string,
+    block_boc: string
 };
 
 export type ResultOfGetBlockchainConfig = {
-    config_boc: string,
+    config_boc: string
 };
-
 
 export class BocModule {
     client: IClient;
@@ -805,133 +746,185 @@ export class BocModule {
     constructor(client: IClient) {
         this.client = client;
     }
-    parseMessage(
-        params: ParamsOfParse, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfParse> {
-        return this.client.request(
-            'boc.parse_message',
-            params,
-            responseHandler,
-        );
+
+    parse_message(params: ParamsOfParse): Promise<ResultOfParse> {
+        return this.client.request('boc.parse_message', params);
     }
-    parseTransaction(
-        params: ParamsOfParse, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfParse> {
-        return this.client.request(
-            'boc.parse_transaction',
-            params,
-            responseHandler,
-        );
+
+    parse_transaction(params: ParamsOfParse): Promise<ResultOfParse> {
+        return this.client.request('boc.parse_transaction', params);
     }
-    parseAccount(
-        params: ParamsOfParse, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfParse> {
-        return this.client.request(
-            'boc.parse_account',
-            params,
-            responseHandler,
-        );
+
+    parse_account(params: ParamsOfParse): Promise<ResultOfParse> {
+        return this.client.request('boc.parse_account', params);
     }
-    parseBlock(
-        params: ParamsOfParse, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfParse> {
-        return this.client.request(
-            'boc.parse_block',
-            params,
-            responseHandler,
-        );
+
+    parse_block(params: ParamsOfParse): Promise<ResultOfParse> {
+        return this.client.request('boc.parse_block', params);
     }
-    getBlockchainConfig(
-        params: ParamsOfGetBlockchainConfig, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfGetBlockchainConfig> {
-        return this.client.request(
-            'boc.get_blockchain_config',
-            params,
-            responseHandler,
-        );
+
+    get_blockchain_config(params: ParamsOfGetBlockchainConfig): Promise<ResultOfGetBlockchainConfig> {
+        return this.client.request('boc.get_blockchain_config', params);
     }
 }
 
 // processing module
 
-export type MessageSource = { Encoded: {
-    message: string,
-    abi: Abi | null,
-} } | { EncodingParams: ParamsOfEncodeMessage };
 
-export type ProcessingEvent = { WillFetchFirstBlock: {
-} } | { FetchFirstBlockFailed: {
-    error: ClientError,
-} } | { WillSend: {
+export type ProcessingEvent = {
+    type: 'WillFetchFirstBlock'
+} | {
+    type: 'FetchFirstBlockFailed'
+    error: ClientError
+} | {
+    type: 'WillSend'
+    shard_block_id: string,
+    message_id: string,
+    message: string
+} | {
+    type: 'DidSend'
+    shard_block_id: string,
+    message_id: string,
+    message: string
+} | {
+    type: 'SendFailed'
     shard_block_id: string,
     message_id: string,
     message: string,
-} } | { DidSend: {
+    error: ClientError
+} | {
+    type: 'WillFetchNextBlock'
+    shard_block_id: string,
+    message_id: string,
+    message: string
+} | {
+    type: 'FetchNextBlockFailed'
     shard_block_id: string,
     message_id: string,
     message: string,
-} } | { SendFailed: {
-    shard_block_id: string,
+    error: ClientError
+} | {
+    type: 'MessageExpired'
     message_id: string,
     message: string,
-    error: ClientError,
-} } | { WillFetchNextBlock: {
-    shard_block_id: string,
+    error: ClientError
+} | {
+    type: 'TransactionReceived'
     message_id: string,
     message: string,
-} } | { FetchNextBlockFailed: {
-    shard_block_id: string,
-    message_id: string,
-    message: string,
-    error: ClientError,
-} } | { MessageExpired: {
-    message_id: string,
-    message: string,
-    error: ClientError,
-} } | { TransactionReceived: {
-    message_id: string,
-    message: string,
-    result: ResultOfProcessMessage,
-} };
+    result: ResultOfProcessMessage
+};
+
+export function processingEventWillFetchFirstBlock(): ProcessingEvent {
+    return {
+        type: 'WillFetchFirstBlock',
+    };
+}
+
+export function processingEventFetchFirstBlockFailed(error: ClientError): ProcessingEvent {
+    return {
+        type: 'FetchFirstBlockFailed',
+        error,
+    };
+}
+
+export function processingEventWillSend(shard_block_id: string, message_id: string, message: string): ProcessingEvent {
+    return {
+        type: 'WillSend',
+        shard_block_id,
+        message_id,
+        message,
+    };
+}
+
+export function processingEventDidSend(shard_block_id: string, message_id: string, message: string): ProcessingEvent {
+    return {
+        type: 'DidSend',
+        shard_block_id,
+        message_id,
+        message,
+    };
+}
+
+export function processingEventSendFailed(shard_block_id: string, message_id: string, message: string, error: ClientError): ProcessingEvent {
+    return {
+        type: 'SendFailed',
+        shard_block_id,
+        message_id,
+        message,
+        error,
+    };
+}
+
+export function processingEventWillFetchNextBlock(shard_block_id: string, message_id: string, message: string): ProcessingEvent {
+    return {
+        type: 'WillFetchNextBlock',
+        shard_block_id,
+        message_id,
+        message,
+    };
+}
+
+export function processingEventFetchNextBlockFailed(shard_block_id: string, message_id: string, message: string, error: ClientError): ProcessingEvent {
+    return {
+        type: 'FetchNextBlockFailed',
+        shard_block_id,
+        message_id,
+        message,
+        error,
+    };
+}
+
+export function processingEventMessageExpired(message_id: string, message: string, error: ClientError): ProcessingEvent {
+    return {
+        type: 'MessageExpired',
+        message_id,
+        message,
+        error,
+    };
+}
+
+export function processingEventTransactionReceived(message_id: string, message: string, result: ResultOfProcessMessage): ProcessingEvent {
+    return {
+        type: 'TransactionReceived',
+        message_id,
+        message,
+        result,
+    };
+}
 
 export type ResultOfProcessMessage = {
     transaction: any,
     out_messages: any[],
-    decoded: DecodedOutput | null,
+    decoded?: DecodedOutput
 };
 
 export type DecodedOutput = {
     out_messages: DecodedMessageBody | null[],
-    output: any | null,
+    output?: any
 };
 
 export type ParamsOfSendMessage = {
     message: string,
-    abi: Abi | null,
-    send_events: boolean,
+    abi?: Abi,
+    send_events: boolean
 };
 
 export type ResultOfSendMessage = {
-    shard_block_id: string,
+    shard_block_id: string
 };
 
 export type ParamsOfWaitForTransaction = {
-    abi: Abi | null,
+    abi?: Abi,
     message: string,
     shard_block_id: string,
-    send_events: boolean,
+    send_events: boolean
 };
 
 export type ParamsOfProcessMessage = {
     message: MessageSource,
-    send_events: boolean,
+    send_events: boolean
 };
-
 
 export class ProcessingModule {
     client: IClient;
@@ -939,57 +932,63 @@ export class ProcessingModule {
     constructor(client: IClient) {
         this.client = client;
     }
-    sendMessage(
-        params: ParamsOfSendMessage, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfSendMessage> {
-        return this.client.request(
-            'processing.send_message',
-            params,
-            responseHandler,
-        );
+
+    send_message(params: ParamsOfSendMessage, responseHandler?: ResponseHandler): Promise<ResultOfSendMessage> {
+        return this.client.request('processing.send_message', params, responseHandler);
     }
-    waitForTransaction(
-        params: ParamsOfWaitForTransaction, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfProcessMessage> {
-        return this.client.request(
-            'processing.wait_for_transaction',
-            params,
-            responseHandler,
-        );
+
+    wait_for_transaction(params: ParamsOfWaitForTransaction, responseHandler?: ResponseHandler): Promise<ResultOfProcessMessage> {
+        return this.client.request('processing.wait_for_transaction', params, responseHandler);
     }
-    processMessage(
-        params: ParamsOfProcessMessage, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfProcessMessage> {
-        return this.client.request(
-            'processing.process_message',
-            params,
-            responseHandler,
-        );
+
+    process_message(params: ParamsOfProcessMessage, responseHandler?: ResponseHandler): Promise<ResultOfProcessMessage> {
+        return this.client.request('processing.process_message', params, responseHandler);
     }
 }
 
 // utils module
 
-export type AddressStringFormat = { AccountId: {
-} } | { Hex: {
-} } | { Base64: {
+
+export type AddressStringFormat = {
+    type: 'AccountId'
+} | {
+    type: 'Hex'
+} | {
+    type: 'Base64'
     url: boolean,
     test: boolean,
-    bounce: boolean,
-} };
+    bounce: boolean
+};
+
+export function addressStringFormatAccountId(): AddressStringFormat {
+    return {
+        type: 'AccountId',
+    };
+}
+
+export function addressStringFormatHex(): AddressStringFormat {
+    return {
+        type: 'Hex',
+    };
+}
+
+export function addressStringFormatBase64(url: boolean, test: boolean, bounce: boolean): AddressStringFormat {
+    return {
+        type: 'Base64',
+        url,
+        test,
+        bounce,
+    };
+}
 
 export type ParamsOfConvertAddress = {
     address: string,
-    output_format: AddressStringFormat,
+    output_format: AddressStringFormat
 };
 
 export type ResultOfConvertAddress = {
-    address: string,
+    address: string
 };
-
 
 export class UtilsModule {
     client: IClient;
@@ -997,62 +996,109 @@ export class UtilsModule {
     constructor(client: IClient) {
         this.client = client;
     }
-    convertAddress(
-        params: ParamsOfConvertAddress, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfConvertAddress> {
-        return this.client.request(
-            'utils.convert_address',
-            params,
-            responseHandler,
-        );
+
+    convert_address(params: ParamsOfConvertAddress): Promise<ResultOfConvertAddress> {
+        return this.client.request('utils.convert_address', params);
+    }
+}
+
+// tvm module
+
+
+export type ExecutionMode = 'Full' | 'TvmOnly';
+
+export type ExecutionOptions = {
+    blockchain_config?: string,
+    block_time?: number,
+    block_lt?: bigint,
+    transaction_lt?: bigint
+};
+
+export type ParamsOfExecuteMessage = {
+    message: MessageSource,
+    account: string,
+    mode: ExecutionMode,
+    execution_options?: ExecutionOptions
+};
+
+export type ResultOfExecuteMessage = {
+    transaction?: any,
+    out_messages: any[],
+    decoded?: DecodedOutput,
+    account?: any
+};
+
+export type ParamsOfExecuteGet = {
+    account: string,
+    function_name: string,
+    input?: any,
+    execution_options?: ExecutionOptions
+};
+
+export type ResultOfExecuteGet = {
+    output: any
+};
+
+export class TvmModule {
+    client: IClient;
+
+    constructor(client: IClient) {
+        this.client = client;
+    }
+
+    execute_message(params: ParamsOfExecuteMessage): Promise<ResultOfExecuteMessage> {
+        return this.client.request('tvm.execute_message', params);
+    }
+
+    execute_get(params: ParamsOfExecuteGet): Promise<ResultOfExecuteGet> {
+        return this.client.request('tvm.execute_get', params);
     }
 }
 
 // net module
 
+
 export type OrderBy = {
     path: string,
-    direction: SortDirection,
+    direction: SortDirection
 };
 
-export type SortDirection = "Ascending" | "Descending";
+export type SortDirection = 'ASC' | 'DESC';
 
 export type ParamsOfQueryCollection = {
     collection: string,
-    filter: any | null,
+    filter?: any,
     result: string,
-    order: OrderBy[] | null,
-    limit: number | null,
+    order?: OrderBy[],
+    limit?: number
 };
 
 export type ResultOfQueryCollection = {
-    result: any[],
+    result: any[]
 };
 
 export type ParamsOfWaitForCollection = {
     collection: string,
-    filter: any | null,
+    filter?: any,
     result: string,
-    timeout: number | null,
+    timeout?: number
 };
 
 export type ResultOfWaitForCollection = {
-    result: any,
+    result: any
 };
 
 export type ResultOfSubscribeCollection = {
-    handle: number,
+    handle: number
 };
 
 export type unit = void;
 
 export type ParamsOfSubscribeCollection = {
     collection: string,
-    filter: any | null,
-    result: string,
+    filter?: any,
+    result: string
 };
-
 
 export class NetModule {
     client: IClient;
@@ -1060,45 +1106,22 @@ export class NetModule {
     constructor(client: IClient) {
         this.client = client;
     }
-    queryCollection(
-        params: ParamsOfQueryCollection, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfQueryCollection> {
-        return this.client.request(
-            'net.query_collection',
-            params,
-            responseHandler,
-        );
+
+    query_collection(params: ParamsOfQueryCollection): Promise<ResultOfQueryCollection> {
+        return this.client.request('net.query_collection', params);
     }
-    waitForCollection(
-        params: ParamsOfWaitForCollection, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfWaitForCollection> {
-        return this.client.request(
-            'net.wait_for_collection',
-            params,
-            responseHandler,
-        );
+
+    wait_for_collection(params: ParamsOfWaitForCollection): Promise<ResultOfWaitForCollection> {
+        return this.client.request('net.wait_for_collection', params);
     }
-    unsubscribe(
-        params: ResultOfSubscribeCollection, 
-        responseHandler?: ResponseHandler
-    ): Promise<void> {
-        return this.client.request(
-            'net.unsubscribe',
-            params,
-            responseHandler,
-        );
+
+    unsubscribe(params: ResultOfSubscribeCollection): Promise<void> {
+        return this.client.request('net.unsubscribe', params);
     }
-    subscribeCollection(
-        params: ParamsOfSubscribeCollection, 
-        responseHandler?: ResponseHandler
-    ): Promise<ResultOfSubscribeCollection> {
-        return this.client.request(
-            'net.subscribe_collection',
-            params,
-            responseHandler,
-        );
+
+    subscribe_collection(params: ParamsOfSubscribeCollection, responseHandler?: ResponseHandler): Promise<ResultOfSubscribeCollection> {
+        return this.client.request('net.subscribe_collection', params, responseHandler);
     }
 }
+
 
