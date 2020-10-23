@@ -18,7 +18,5 @@ window.addEventListener('load', () => {
             console.log('>>>', error);
         }
     })();
-
-    console.log(TonClient);
     // startTests(() => {});
 });

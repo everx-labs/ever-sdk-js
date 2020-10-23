@@ -92,7 +92,7 @@ export class Account {
         })).parsed;
     }
     
-    async callOnNetwork(functionName: string, input: any): Promise<ExecutionResult> {
+    async execOnNet(functionName: string, input: any): Promise<ExecutionResult> {
         const result = await this.client.processing.process_message({
             message: messageSourceEncodingParams({
                 abi: this.abi,
@@ -110,7 +110,7 @@ export class Account {
         };
     }
     
-    async callOnTvm(
+    async execLocal(
         functionName: string,
         input: any,
         options?: TvmCallOptions,
