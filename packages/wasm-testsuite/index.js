@@ -4,13 +4,13 @@ import wasmModule from '@ton-client/wasm-module';
 TonClient.useBinaryLibrary(wasmModule());
 
 window.addEventListener('load', () => {
-    const client = new TonClient({ network: { server_address: 'http://localhost:8080' } });
+    const client = new TonClient({ network: { server_address: 'net.ton.dev' } });
     (async () => {
         try {
             const accounts = await client.net.query_collection({
                 collection: 'accounts',
                 filter: {},
-                result: 'id',
+                result: 'id balance(format:DEC)',
             });
             console.log('>>>', await client.client.version());
             console.log('>>>', accounts);

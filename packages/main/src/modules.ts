@@ -26,7 +26,8 @@ export type ClientConfig = {
 };
 
 export type NetworkConfig = {
-    server_address: string,
+    server_address?: string,
+    network_retries_count?: number,
     message_retries_count?: number,
     message_processing_timeout?: number,
     wait_for_timeout?: number,
@@ -35,10 +36,14 @@ export type NetworkConfig = {
 };
 
 export type CryptoConfig = {
-    fish_param?: string
+    mnemonic_dictionary?: number,
+    mnemonic_word_count?: number,
+    hdkey_derivation_path?: string,
+    hdkey_compliant?: boolean
 };
 
 export type AbiConfig = {
+    workchain?: number,
     message_expiration_timeout?: number,
     message_expiration_timeout_grow_factor?: number
 };
@@ -49,6 +54,10 @@ export type ResultOfGetApiReference = {
 
 export type ResultOfVersion = {
     version: string
+};
+
+export type ResultOfBuildInfo = {
+    build_info: any
 };
 
 export class ClientModule {
@@ -64,6 +73,10 @@ export class ClientModule {
 
     version(): Promise<ResultOfVersion> {
         return this.client.request('client.version');
+    }
+
+    build_info(): Promise<ResultOfBuildInfo> {
+        return this.client.request('client.build_info');
     }
 }
 
@@ -808,11 +821,6 @@ export type ProcessingEvent = {
     message_id: string,
     message: string,
     error: ClientError
-} | {
-    type: 'TransactionReceived'
-    message_id: string,
-    message: string,
-    result: ResultOfProcessMessage
 };
 
 export function processingEventWillFetchFirstBlock(): ProcessingEvent {
@@ -884,19 +892,11 @@ export function processingEventMessageExpired(message_id: string, message: strin
     };
 }
 
-export function processingEventTransactionReceived(message_id: string, message: string, result: ResultOfProcessMessage): ProcessingEvent {
-    return {
-        type: 'TransactionReceived',
-        message_id,
-        message,
-        result,
-    };
-}
-
 export type ResultOfProcessMessage = {
     transaction: any,
-    out_messages: any[],
-    decoded?: DecodedOutput
+    out_messages: string[],
+    decoded?: DecodedOutput,
+    fees: TransactionFees
 };
 
 export type DecodedOutput = {
@@ -922,7 +922,7 @@ export type ParamsOfWaitForTransaction = {
 };
 
 export type ParamsOfProcessMessage = {
-    message: MessageSource,
+    message_encode_params: ParamsOfEncodeMessage,
     send_events: boolean
 };
 
@@ -1005,8 +1005,6 @@ export class UtilsModule {
 // tvm module
 
 
-export type ExecutionMode = 'Full' | 'TvmOnly';
-
 export type ExecutionOptions = {
     blockchain_config?: string,
     block_time?: number,
@@ -1014,28 +1012,42 @@ export type ExecutionOptions = {
     transaction_lt?: bigint
 };
 
-export type ParamsOfExecuteMessage = {
-    message: MessageSource,
-    account: string,
-    mode: ExecutionMode,
-    execution_options?: ExecutionOptions
+export type ParamsOfRunExecutor = {
+    message: string,
+    account?: string,
+    execution_options?: ExecutionOptions,
+    abi?: Abi
 };
 
-export type ResultOfExecuteMessage = {
-    transaction?: any,
-    out_messages: any[],
+export type ResultOfRunExecutor = {
+    transaction: any,
+    out_messages: string[],
     decoded?: DecodedOutput,
-    account?: any
+    account: string,
+    fees: TransactionFees
 };
 
-export type ParamsOfExecuteGet = {
+export type ParamsOfRunTvm = {
+    message: string,
+    account: string,
+    execution_options?: ExecutionOptions,
+    abi?: Abi
+};
+
+export type ResultOfRunTvm = {
+    out_messages: string[],
+    decoded?: DecodedOutput,
+    account: string
+};
+
+export type ParamsOfRunGet = {
     account: string,
     function_name: string,
     input?: any,
     execution_options?: ExecutionOptions
 };
 
-export type ResultOfExecuteGet = {
+export type ResultOfRunGet = {
     output: any
 };
 
@@ -1046,12 +1058,16 @@ export class TvmModule {
         this.client = client;
     }
 
-    execute_message(params: ParamsOfExecuteMessage): Promise<ResultOfExecuteMessage> {
-        return this.client.request('tvm.execute_message', params);
+    run_executor(params: ParamsOfRunExecutor): Promise<ResultOfRunExecutor> {
+        return this.client.request('tvm.run_executor', params);
     }
 
-    execute_get(params: ParamsOfExecuteGet): Promise<ResultOfExecuteGet> {
-        return this.client.request('tvm.execute_get', params);
+    run_tvm(params: ParamsOfRunTvm): Promise<ResultOfRunTvm> {
+        return this.client.request('tvm.run_tvm', params);
+    }
+
+    run_get(params: ParamsOfRunGet): Promise<ResultOfRunGet> {
+        return this.client.request('tvm.run_get', params);
     }
 }
 
