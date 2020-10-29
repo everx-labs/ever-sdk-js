@@ -1,6 +1,13 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.27.0 - Oct 27, 2020
+### New
+- `crypto.chacha20`
+
+### Fixed
+- Retry active queries on websocket reconnect
+
 ## 0.26.2 - Sep 21, 2020
 ### Fixed
 - Added `Sensor.sol` contract for recompilation tests

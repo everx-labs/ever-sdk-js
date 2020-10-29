@@ -142,6 +142,16 @@ export type TONCryptoBoxParams = {
     seedPhraseWordCount?: TONMnemonicWordCountType,
 }
 
+export type TONCryptoChaCha20Params = {
+    data: string,
+    key: string,
+    nonce: string,
+}
+
+export type TONCryptoChaCha20Result = {
+    data: string,
+}
+
 export interface TONCrypto {
     getCryptoBox(params: TONCryptoBoxParams): Promise<TONCryptoBox>,
 
@@ -273,6 +283,10 @@ export interface TONCrypto {
     hdkeyXPrvPublic(
         serialized: string,
     ): Promise<string>;
+
+    chacha20(
+        params: TONCryptoChaCha20Params,
+    ): Promise<TONCryptoChaCha20Result>;
 }
 
 // Contracts

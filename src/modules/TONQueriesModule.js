@@ -159,6 +159,7 @@ function abortableFetch(fetch) {
     };
 }
 
+
 export default class TONQueriesModule extends TONModule implements TONQueries {
     transactions: TONQCollection;
     messages: TONQCollection;
@@ -171,17 +172,22 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     graphqlClientCreation: ?MulticastPromise<ApolloClient>;
     graphqlClient: ?ApolloClient;
     graphqlClientConfig: ?GraphQLClientConfig;
+    wsLink: ?WebSocketLink;
+    httpLink: ?HttpLink;
 
     overrideWsUrl: ?string;
     operationIdPrefix: string;
     operationIdSuffix: number;
     serverInfo: ServerInfo;
+    activeQueriesRejects: ((any) => void)[];
 
     constructor(context: TONModuleContext) {
         super(context);
         this.graphqlClient = null;
         this.graphqlClientCreation = null;
         this.graphqlClientConfig = null;
+        this.wsLink = null;
+        this.httpLink = null;
         this.overrideWsUrl = null;
         this.operationIdPrefix = (Date.now() % 60000).toString(16);
         for (let i = 0; i < 10; i += 1) {
@@ -190,6 +196,30 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         }
         this.operationIdSuffix = 1;
         this.serverInfo = resolveServerInfo();
+        this.activeQueriesRejects = [];
+    }
+
+    registerQueryReject(reject: (any) => void) {
+        this.activeQueriesRejects.push(reject);
+    }
+
+    unregisterQueryReject(reject: (any) => void) {
+        const index = this.activeQueriesRejects.indexOf(reject);
+        if (index >= 0) {
+            this.activeQueriesRejects.splice(index, 1);
+        }
+    }
+
+    rejectActiveQueries() {
+        const rejects = this.activeQueriesRejects;
+        this.activeQueriesRejects = [];
+        const err = TONClientError.queryForciblyAborted({});
+        rejects.forEach((reject) => {
+            try {
+                reject(err);
+            } catch {
+            }
+        })
     }
 
     async setup() {
@@ -442,10 +472,34 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                         ),
                     },
                 };
-                return await client.query({
-                    query,
-                    variables,
-                    context,
+                return await new Promise((resolve, reject) => {
+                    (async () => {
+                        let isActual = true;
+                        const doResolve = (result) => {
+                            if (isActual) {
+                                isActual = false;
+                                resolve(result);
+                            }
+                        }
+                        const doReject = (error) => {
+                            if (isActual) {
+                                isActual = false;
+                                reject(error);
+                            }
+                        }
+                        this.registerQueryReject(doReject);
+                        try {
+                            doResolve(await client.query({
+                                query,
+                                variables,
+                                context,
+                            }));
+                        } catch (error) {
+                            doReject(error);
+                        } finally {
+                            this.unregisterQueryReject(doReject);
+                        }
+                    })();
                 });
             } catch (error) {
                 const resolvedError = await this.resolveGraphQLError(error);
@@ -523,8 +577,6 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
     async createGraphqlClient(span: Span | SpanContext) {
         const useHttp = !this.config.data.useWebSocketForQueries;
         let clientConfig = await this.getClientConfig();
-        let wsLink: ?(WebSocketLink & { url: string }) = null;
-        let httpLink: ?(HttpLink & { uri: string }) = null;
 
         const subsOptions = this.config.tracer.inject(span, FORMAT_TEXT_MAP, {});
         const subscriptionClient: SubscriptionClient & { url: string } = new SubscriptionClient(
@@ -541,6 +593,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
         );
         subscriptionClient.onReconnected(() => {
             console.log('[TONClient.queries]', 'WebSocket Reconnected');
+            this.rejectActiveQueries();
         });
         const guard = {
             detectingRedirection: false,
@@ -561,11 +614,11 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                         clientConfig = newConfig;
                         this.graphqlClientConfig = clientConfig;
                         subscriptionClient.url = newConfig.wsUrl;
-                        if (wsLink) {
-                            wsLink.url = newConfig.wsUrl;
+                        if (this.wsLink) {
+                            this.wsLink.url = newConfig.wsUrl;
                         }
-                        if (httpLink) {
-                            httpLink.uri = newConfig.httpUrl;
+                        if (this.httpLink) {
+                            this.httpLink.uri = newConfig.httpUrl;
                         }
                     }
                 } catch (err) {
@@ -599,16 +652,16 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             );
         };
 
-        wsLink = new WebSocketLink(subscriptionClient);
-        httpLink = useHttp
+        this.wsLink = new WebSocketLink(subscriptionClient);
+        this.httpLink = useHttp
             ? new HttpLink({
                 uri: clientConfig.httpUrl,
                 fetch: abortableFetch(clientConfig.fetch),
             })
             : null;
-        const link = httpLink
-            ? split(isSubscription, wrapLink(wsLink), wrapLink(httpLink))
-            : wrapLink(wsLink);
+        const link = this.httpLink
+            ? split(isSubscription, wrapLink(this.wsLink), wrapLink(this.httpLink))
+            : wrapLink(this.wsLink);
         this.graphqlClientConfig = clientConfig;
         this.graphqlClient = new ApolloClient({
             cache: new InMemoryCache({}),
