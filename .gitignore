@@ -19,3 +19,6 @@ Jenkinsfile
 **/*.tsbuildinfo
 /packages/wasm-module/index.js
 /packages/wasm-module/tonclient.wasm
+/packages/react-native-module/module/ios/target
+/packages/react-native-module/module/android/NDK
+**/Cargo.lock
