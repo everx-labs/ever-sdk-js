@@ -1,18 +1,12 @@
 {
-	"name": "@ton-client/node-addon",
+	"name": "@ton-client/react-native-tests-runner",
 	"version": "1.0.0",
-	"description": "TON Client NodeJs AddOn",
-	"main": "dist/index.js",
+	"description": "TON Client React Native tests runner",
+	"main": "index.js",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/tonlabs/ton-client-js.git"
 	},
-	"keywords": [
-		"TON",
-		"Javascript",
-		"API",
-		"Client"
-	],
 	"author": "TON DEV SOLUTIONS LTD.",
 	"license": "Apache-2.0",
 	"licenses": [
@@ -25,8 +19,10 @@
 	"engines": {
 		"node": ">=6"
 	},
-	"dependencies": {},
+	"dependencies": {
+		"@ton-client/main": "file:../main",
+		"@ton-client/react-native-module": "file:../react-native-module"
+	},
 	"devDependencies": {
-		"@types/node": "14.11.8"
 	}
 }

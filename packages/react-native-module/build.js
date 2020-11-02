@@ -3,14 +3,14 @@ const path = require('path');
 const zlib = require('zlib');
 const { spawn } = require('child_process');
 const exec = require('util').promisify(require('child_process').exec);
-const module_path = path.resolve(__dirname, 'module');
-const android_path = path.resolve(module_path, 'android');
-const ios_path = path.resolve(module_path, 'ios');
+const rustDir = path.resolve(__dirname, 'rust');
+const rustAndroidDir = path.resolve(rustDir, 'android');
+const rustIosDir = path.resolve(rustDir, 'ios');
 const publishDir = path.resolve(__dirname, 'publish');
 const ndkUrlStr = 'http://dl.google.com/android/repository/android-ndk-r17c-darwin-x86_64.zip';
 const ndkUrlParts = ndkUrlStr.split('/');
-const ndkZipFile = path.resolve(android_path, ndkUrlParts.length < 1 ? null : ndkUrlParts[ndkUrlParts.length - 1]);
-const ndkDirName = path.resolve(android_path, 'android-ndk-r17c');
+const ndkZipFile = path.resolve(rustAndroidDir, ndkUrlParts.length < 1 ? null : ndkUrlParts[ndkUrlParts.length - 1]);
+const ndkDirName = path.resolve(rustAndroidDir, 'android-ndk-r17c');
 
 const spawnEnv = {
     ...process.env,
@@ -79,26 +79,9 @@ function mkdir(path) {
     }
 }
 
-function appendFileNameIfMissing(fileOrDirPath, defaultFileName) {
-    return path.extname(fileOrDirPath) !== ''
-        ? fileOrDirPath
-        : path.resolve(fileOrDirPath, defaultFileName);
-
-}
-
-function gz(src, dst, devPath) {
+function gz(srcPath, dst) {
     return new Promise((resolve, reject) => {
-        const srcPath = path.resolve(module_path, src);
         const dstPath = path.resolve(publishDir, dst);
-
-        if (devOut || devPath) {
-            let dstDevPath = appendFileNameIfMissing(
-                devPath ? path.resolve(devOut, ...devPath) : devOut,
-                src[src.length - 1],
-            );
-            mkdir(path.dirname(dstDevPath))
-            fs.copyFileSync(srcPath, dstDevPath);
-        }
 
         fs.createReadStream(srcPath)
             .pipe(zlib.createGzip({ level: 9 }))
@@ -158,7 +141,7 @@ const ios = {
         { target: 'x86_64-apple-ios' },
         { target: 'aarch64-apple-ios' },
     ],
-    lib: 'libtonosclient.a',
+    lib: 'libtonclient.a',
 };
 const android = {
     archs: [
@@ -166,7 +149,7 @@ const android = {
         { target: 'aarch64-linux-android', jni: 'arm64-v8a', ndk: 'arm64' },
         { target: 'armv7-linux-androideabi', jni: 'armeabi-v7a', ndk: 'arm' },
     ],
-    lib: 'libtonosclient.so',
+    lib: 'libtonclient.so',
 };
 
 if (devMode) {
@@ -176,7 +159,7 @@ if (devMode) {
 
 spawnEnv.PATH = [
     (spawnEnv.PATH || ''),
-    ...(android.archs.map(x => path.resolve(android_path, 'NDK', x.ndk, 'bin'))),
+    ...(android.archs.map(x => path.resolve(rustAndroidDir, 'NDK', x.ndk, 'bin'))),
 ].join(':');
 
 async function getNDK() {
@@ -188,7 +171,7 @@ async function getNDK() {
                 await spawnProcess('curl', [ndkUrlStr, '-o', ndkZipFile]);
             }
             console.log('Unzipping android NDK...');
-            await spawnProcess('unzip', ['-q', '-d', android_path, ndkZipFile]);
+            await spawnProcess('unzip', ['-q', '-d', rustAndroidDir, ndkZipFile]);
             ndkHomeDir = ndkDirName;
             process.env.NDK_HOME = ndkHomeDir;
         } catch (err) {
@@ -199,9 +182,9 @@ async function getNDK() {
 }
 
 async function checkNDK() {
-    const ndkDir = path.resolve(android_path, 'NDK');
+    const ndkDir = path.resolve(rustAndroidDir, 'NDK');
     const missingArchs = android.archs.map(x =>
-        !fs.existsSync(path.resolve(ndkDir, x.ndk)) ? x : null
+        !fs.existsSync(path.resolve(ndkDir, x.ndk)) ? x : null,
     ).filter(x => x);
     if (missingArchs.length === 0) {
         console.log('Standalone NDK already exists...');
@@ -230,22 +213,25 @@ async function cargoBuild(targets) {
 
 
 async function buildReactNativeIosLibrary() {
-    const buildRel = ['build', 'ios'];
-    process.chdir(ios_path);
+    process.chdir(rustIosDir);
+    if (!devMode && !openMode) {
+        await spawnProcess('cargo', ['update']);
+    }
 
     await cargoBuild(ios.archs.map(x => x.target));
-    mkdir(path.resolve(module_path, buildRel));
-    const dest = path.resolve(module_path, buildRel, ios.lib);
-    const getIosOutput = x => path.join('target', x.target, 'release', ios.lib);
+    const outDir = path.resolve(__dirname, 'ios');
+    mkdir(outDir);
+    const outLib = path.resolve(outDir, ios.lib);
+    const getIosOutput = x => path.resolve(rustDir, 'target', x.target, 'release', ios.lib);
     await spawnProcess('lipo', [
         '-create',
-        '-output', dest,
+        '-output', outLib,
         ...ios.archs.map(getIosOutput),
     ]);
 
-    if (fs.existsSync(dest)) {
+    if (fs.existsSync(outLib)) {
         await gz(
-            [...buildRel, ios.lib],
+            outLib,
             `tonclient_${version}_react_native_ios`,
         );
     }
@@ -253,27 +239,28 @@ async function buildReactNativeIosLibrary() {
 
 
 async function buildReactNativeAndroidLibrary() {
-    process.chdir(android_path);
+    process.chdir(rustAndroidDir);
+    if (!devMode && !openMode) {
+        await spawnProcess('cargo', ['update']);
+    }
 
-    const buildRel = ['build', 'android'];
-
+    const outDir = path.resolve(__dirname, 'android', 'src', 'jniLibs');
     await cargoBuild(android.archs.map(x => x.target));
-    mkdir(path.resolve(module_path, buildRel));
 
     for (const arch of android.archs) {
-        const archBuildRel = [...buildRel, arch.jni];
-        mkdir(path.resolve(module_path, archBuildRel));
-        const src = path.resolve(module_path, 'target', arch.target, 'release', android.lib);
+        const archOutDir = path.resolve(outDir, arch.jni);
+        mkdir(archOutDir);
+        const src = path.resolve(rustDir, 'target', arch.target, 'release', android.lib);
         if (fs.existsSync(src)) {
-            const dst = path.resolve(module_path, archBuildRel, android.lib);
-            fs.copyFileSync(src, dst);
-            process.stdout.write(`Android library for [${arch.target}] copied to "${dst}".\n`);
+            const outLib = path.resolve(archOutDir, android.lib);
+            fs.copyFileSync(src, outLib);
+            process.stdout.write(`Android library for [${arch.target}] copied to "${outLib}".\n`);
             await gz(
-                [...archBuildRel, android.lib],
+                outLib,
                 `tonclient_${version}_react_native_${arch.target}`,
             );
         } else {
-            process.stderr.write(`Android library for [${arch}] does not exists. Skipped.\n`);
+            process.stderr.write(`Android library for [${arch.target}] does not exists. Skipped.\n`);
         }
     }
 }
@@ -286,8 +273,8 @@ async function buildReactNativeAndroidLibrary() {
     fs.mkdirSync(publishDir);
     try {
         await checkNDK();
-        let cargoTargets = ["x86_64-apple-darwin"];
-        let installed = (await exec("rustup target list --installed")).stdout;
+        let cargoTargets = ['x86_64-apple-darwin'];
+        let installed = (await exec('rustup target list --installed')).stdout;
         console.log(`Installed targets:\n${installed}`);
         if (buildIOS) {
             ios.archs.map(x => x.target).forEach(val => {
@@ -305,9 +292,6 @@ async function buildReactNativeAndroidLibrary() {
         }
 
         await spawnProcess('rustup', ['target', 'add'].concat(cargoTargets));
-        if (!devMode && !openMode) {
-            await spawnProcess('cargo', ['update']);
-        }
         if (buildIOS) {
             await buildReactNativeIosLibrary();
         }

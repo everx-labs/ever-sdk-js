@@ -1,8 +1,8 @@
 {
-	"name": "@ton-client/node-addon",
+	"name": "@ton-client/main-tests",
 	"version": "1.0.0",
-	"description": "TON Client NodeJs AddOn",
-	"main": "dist/index.js",
+	"description": "TON Client Tests",
+	"main": "index.js",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/tonlabs/ton-client-js.git"
@@ -25,8 +25,7 @@
 	"engines": {
 		"node": ">=6"
 	},
-	"dependencies": {},
-	"devDependencies": {
-		"@types/node": "14.11.8"
+	"dependencies": {
+		"@ton-client/main": "file:../main"
 	}
 }

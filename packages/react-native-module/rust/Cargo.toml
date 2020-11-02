@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "android",
+    "ios",
+]
+
