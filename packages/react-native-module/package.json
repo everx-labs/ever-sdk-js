@@ -2,7 +2,7 @@
 	"name": "@ton-client/react-native-module",
 	"version": "1.0.0",
 	"description": "TON Client React Native Module",
-	"main": "index.js",
+	"main": "dist/index.js",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/tonlabs/ton-client-js.git"

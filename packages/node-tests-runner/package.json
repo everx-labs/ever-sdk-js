@@ -23,10 +23,8 @@
 	"devDependencies": {
 		"typescript": "4.0.3",
 		"@ton-client/main": "file:../main",
-		"@ton-client/bin-node": "file:../bin-node",
-		"@types/node": "14.11.8",
-		"@types/jest": "26.0.14",
-		"ts-jest": "26.4.1",
-		"jest": "26.5.3"
+		"@ton-client/main-tests": "file:../main-tests",
+		"@ton-client/node-addon": "file:../node-addon",
+		"@types/node": "14.11.8"
 	}
 }

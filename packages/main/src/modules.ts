@@ -26,7 +26,7 @@ export type ClientConfig = {
 };
 
 export type NetworkConfig = {
-    server_address?: string,
+    server_address: string,
     network_retries_count?: number,
     message_retries_count?: number,
     message_processing_timeout?: number,
@@ -48,6 +48,11 @@ export type AbiConfig = {
     message_expiration_timeout_grow_factor?: number
 };
 
+export type BuildInfoDependency = {
+    name: string,
+    git_commit: string
+};
+
 export type ResultOfGetApiReference = {
     api: any
 };
@@ -57,7 +62,8 @@ export type ResultOfVersion = {
 };
 
 export type ResultOfBuildInfo = {
-    build_info: any
+    build_number: number,
+    dependencies: BuildInfoDependency[]
 };
 
 export class ClientModule {
@@ -281,7 +287,9 @@ export type ParamsOfMnemonicDeriveSignKeys = {
 };
 
 export type ParamsOfHDKeyXPrvFromMnemonic = {
-    phrase: string
+    phrase: string,
+    dictionary?: number,
+    word_count?: number
 };
 
 export type ResultOfHDKeyXPrvFromMnemonic = {
@@ -321,6 +329,16 @@ export type ParamsOfHDKeyPublicFromXPrv = {
 
 export type ResultOfHDKeyPublicFromXPrv = {
     public: string
+};
+
+export type ParamsOfChaCha20 = {
+    data: string,
+    key: string,
+    nonce: string
+};
+
+export type ResultOfChaCha20 = {
+    data: string
 };
 
 export class CryptoModule {
@@ -453,22 +471,39 @@ export class CryptoModule {
     hdkey_public_from_xprv(params: ParamsOfHDKeyPublicFromXPrv): Promise<ResultOfHDKeyPublicFromXPrv> {
         return this.client.request('crypto.hdkey_public_from_xprv', params);
     }
+
+    chacha20(params: ParamsOfChaCha20): Promise<ResultOfChaCha20> {
+        return this.client.request('crypto.chacha20', params);
+    }
 }
 
 // abi module
 
 
 export type Abi = {
-    type: 'Serialized'
-    value: any
+    type: 'Contract'
+    value: AbiContract
+} | {
+    type: 'Json'
+    value: string
 } | {
     type: 'Handle'
-    value: number
+    value: AbiHandle
+} | {
+    type: 'Serialized'
+    value: AbiContract
 };
 
-export function abiSerialized(value: any): Abi {
+export function abiContract(value: AbiContract): Abi {
     return {
-        type: 'Serialized',
+        type: 'Contract',
+        value,
+    };
+}
+
+export function abiJson(value: string): Abi {
+    return {
+        type: 'Json',
         value,
     };
 }
@@ -476,6 +511,13 @@ export function abiSerialized(value: any): Abi {
 export function abiHandle(value: AbiHandle): Abi {
     return {
         type: 'Handle',
+        value,
+    };
+}
+
+export function abiSerialized(value: AbiContract): Abi {
+    return {
+        type: 'Serialized',
         value,
     };
 }
@@ -591,15 +633,9 @@ export type MessageSource = {
     type: 'Encoded'
     message: string,
     abi?: Abi
-} | {
+} | ({
     type: 'EncodingParams'
-    abi: Abi,
-    address?: string,
-    deploy_set?: DeploySet,
-    call_set?: CallSet,
-    signer: Signer,
-    processing_try_index?: number
-};
+} & ParamsOfEncodeMessage);
 
 export function messageSourceEncoded(message: string, abi?: Abi): MessageSource {
     return {
@@ -609,12 +645,47 @@ export function messageSourceEncoded(message: string, abi?: Abi): MessageSource 
     };
 }
 
-export function messageSourceEncodingParams(value: ParamsOfEncodeMessage): MessageSource {
+export function messageSourceEncodingParams(params: ParamsOfEncodeMessage): MessageSource {
     return {
         type: 'EncodingParams',
-        ...value,
+        ...params,
     };
 }
+
+export type AbiParam = {
+    name: string,
+    type: string,
+    components?: AbiParam[]
+};
+
+export type AbiEvent = {
+    name: string,
+    inputs: AbiParam[],
+    id?: number | null
+};
+
+export type AbiData = {
+    key: bigint,
+    name: string,
+    type: string,
+    components?: AbiParam[]
+};
+
+export type AbiFunction = {
+    name: string,
+    inputs: AbiParam[],
+    outputs: AbiParam[],
+    id?: number | null
+};
+
+export type AbiContract = {
+    'ABI version': number,
+    abi_version?: number,
+    header?: string[],
+    functions?: AbiFunction[],
+    events?: AbiEvent[],
+    data?: AbiData[]
+};
 
 export type ParamsOfEncodeMessageBody = {
     abi: Abi,
@@ -745,6 +816,12 @@ export type ResultOfParse = {
     parsed: any
 };
 
+export type ParamsOfParseShardstate = {
+    boc: string,
+    id: string,
+    workchain_id: number
+};
+
 export type ParamsOfGetBlockchainConfig = {
     block_boc: string
 };
@@ -774,6 +851,10 @@ export class BocModule {
 
     parse_block(params: ParamsOfParse): Promise<ResultOfParse> {
         return this.client.request('boc.parse_block', params);
+    }
+
+    parse_shardstate(params: ParamsOfParseShardstate): Promise<ResultOfParse> {
+        return this.client.request('boc.parse_shardstate', params);
     }
 
     get_blockchain_config(params: ParamsOfGetBlockchainConfig): Promise<ResultOfGetBlockchainConfig> {
@@ -1012,11 +1093,51 @@ export type ExecutionOptions = {
     transaction_lt?: bigint
 };
 
+export type AccountForExecutor = {
+    type: 'None'
+} | {
+    type: 'Uninit'
+} | {
+    type: 'Account'
+    boc: string,
+    unlimited_balance?: boolean
+};
+
+export function accountForExecutorNone(): AccountForExecutor {
+    return {
+        type: 'None',
+    };
+}
+
+export function accountForExecutorUninit(): AccountForExecutor {
+    return {
+        type: 'Uninit',
+    };
+}
+
+export function accountForExecutorAccount(boc: string, unlimited_balance?: boolean): AccountForExecutor {
+    return {
+        type: 'Account',
+        boc,
+        unlimited_balance,
+    };
+}
+
+export type TransactionFees = {
+    in_msg_fwd_fee: bigint,
+    storage_fee: bigint,
+    gas_fee: bigint,
+    out_msgs_fwd_fee: bigint,
+    total_account_fees: bigint,
+    total_output: bigint
+};
+
 export type ParamsOfRunExecutor = {
     message: string,
-    account?: string,
+    account: AccountForExecutor,
     execution_options?: ExecutionOptions,
-    abi?: Abi
+    abi?: Abi,
+    skip_transaction_check?: boolean
 };
 
 export type ResultOfRunExecutor = {

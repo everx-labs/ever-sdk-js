@@ -12,11 +12,11 @@ export interface BinaryLibrary {
             finished: boolean
         ) => void
     ): void,
-    
+
     createContext(configJson: string): Promise<string>,
-    
+
     destroyContext(context: number): void,
-    
+
     sendRequest(
         context: number,
         requestId: number,
@@ -48,7 +48,7 @@ let loadError: Error | null = null;
 let library: BinaryLibrary | null = null;
 const requests = new Map<number, Request>();
 let nextRequestId: number = 1;
-let contextCount: number = 1;
+let contextCount: number = 0;
 let responseHandlerAssigned = false;
 
 function checkResponseHandler() {
@@ -76,7 +76,7 @@ export function useLibrary(loader: () => Promise<BinaryLibrary>) {
             saveLoading?.forEach(x => x.reject(error));
         }
     })
-    
+
 }
 
 export async function createContext(config: ClientConfig): Promise<number> {

@@ -13,45 +13,20 @@ import {
     ClientModule,
     CryptoModule,
     NetModule,
-    ProcessingModule, TvmModule, UtilsModule,
+    ProcessingModule,
+    TvmModule,
+    UtilsModule,
 } from './modules';
 
-import {TvmCallOptions, Account, ExecutionResult} from './account';
-
+export * from './account';
 export * from './modules';
-export {TvmCallOptions, ExecutionResult, Account};
 
-export {BinaryLibrary, ResponseHandler};
-
-export type AbiParam = {
-    name: string,
-    type: string
-};
-
-export type AbiField = {
-    key: number,
-    name: string,
-    type: string
-};
-
-export type AbiFunction = {
-    name: string,
-    inputs: AbiParam[],
-    outputs: AbiParam[],
-};
-
-export type AbiContract = {
-    'ABI Version': number,
-    header: string[],
-    functions: AbiFunction[],
-    events: AbiFunction[];
-    data: AbiField[];
+export {
+    BinaryLibrary,
+    ResponseHandler,
 };
 
 export class TonClient {
-    private readonly config: ClientConfig;
-    private context: number | null = null;
-    
     readonly client: ClientModule;
     readonly crypto: CryptoModule;
     readonly abi: AbiModule;
@@ -60,7 +35,9 @@ export class TonClient {
     readonly utils: UtilsModule;
     readonly net: NetModule;
     readonly tvm: TvmModule;
-    
+    private readonly config: ClientConfig;
+    private context: number | null = null;
+
     constructor(config?: ClientConfig) {
         this.config = config ?? {};
         this.client = new ClientModule(this);
@@ -72,7 +49,35 @@ export class TonClient {
         this.net = new NetModule(this);
         this.tvm = new TvmModule(this);
     }
-    
+
+    static useBinaryLibrary(loader: () => Promise<BinaryLibrary>) {
+        useLibrary(loader);
+    }
+
+    static toKey(d: string): string {
+        return toHex(d, 256);
+    }
+
+    static toHash64(d: string): string {
+        return toHex(d, 64);
+    }
+
+    static toHash128(d: string): string {
+        return toHex(d, 128);
+    }
+
+    static toHash256(d: string): string {
+        return toHex(d, 256);
+    }
+
+    static toHash512(d: string): string {
+        return toHex(d, 512);
+    }
+
+    static toHex(dec: string, bits: number = 0): string {
+        return toHex(dec, bits);
+    }
+
     close() {
         const context = this.context;
         if (context !== null) {
@@ -80,7 +85,7 @@ export class TonClient {
             destroyContext(context);
         }
     }
-    
+
     async request(
         functionName: string,
         functionParams: any,
@@ -93,43 +98,10 @@ export class TonClient {
             context = await createContext(this.config);
             this.context = context;
         }
-        return request(
-            context,
-            functionName,
-            functionParams,
-            responseHandler ?? (() => {
-            }),
-        );
+        return request(context, functionName, functionParams, responseHandler ?? (() => {
+        }));
     }
-    
-    static useBinaryLibrary(loader: () => Promise<BinaryLibrary>) {
-        useLibrary(loader);
-    }
-    
-    static toKey(d: string): string {
-        return toHex(d, 256);
-    }
-    
-    static toHash64(d: string): string {
-        return toHex(d, 64);
-    }
-    
-    static toHash128(d: string): string {
-        return toHex(d, 128);
-    }
-    
-    static toHash256(d: string): string {
-        return toHex(d, 256);
-    }
-    
-    static toHash512(d: string): string {
-        return toHex(d, 512);
-    }
-    
-    static toHex(dec: string, bits: number = 0): string {
-        return toHex(dec, bits);
-    }
-    
+
 }
 
 // Converts value to hex

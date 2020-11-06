@@ -1,20 +1,8 @@
 import {
-    Abi,
-    ExecutionMode,
-    messageSourceEncodingParams,
-    ParamsOfEncodeMessage,
-    Signer,
-    TonClient,
+    Abi, accountForExecutorAccount, ParamsOfEncodeMessage, ResultOfProcessMessage,
+    ResultOfRunExecutor, Signer, TonClient,
 } from './index';
 
-export type TvmCallOptions = {
-    mode?: ExecutionMode,
-}
-
-export type ExecutionResult = {
-    output: any,
-    messages: any[],
-};
 
 export class Account {
     client: TonClient;
@@ -31,20 +19,16 @@ export class Account {
         this.cachedBoc = null;
     }
     
-    private deployParams(
-        tvc: string,
+    private deployParams(tvc: string,
         constructorName?: string,
         constructorInput?: any,
     ): ParamsOfEncodeMessage {
         return {
-            abi: this.abi,
-            signer: this.signer,
-            deploy_set: {
+            abi: this.abi, signer: this.signer, deploy_set: {
                 tvc,
-            },
-            call_set: constructorName
-                ? {function_name: constructorName, input: constructorInput}
-                : undefined,
+            }, call_set: constructorName ? {
+                function_name: constructorName, input: constructorInput,
+            } : undefined,
         };
     }
     
@@ -57,16 +41,39 @@ export class Account {
         this.address = await this.getDeployAddress(tvc, constructorName, constructorInput);
     }
     
-    async deployOnNetwork(tvc: string, constructorName?: string, constructorInput?: any) {
+    async deploy(tvc: string, constructorName?: string, constructorInput?: any) {
         const deployParams = this.deployParams(tvc, constructorName, constructorInput);
         this.address = (await this.client.abi.encode_message(deployParams)).address;
         await this.client.processing.process_message({
-            message: {
-                type: 'EncodingParams',
-                ...deployParams,
-            },
-            send_events: false,
+            message_encode_params: deployParams, send_events: false,
         });
+    }
+    
+    async run(functionName: string, input: any): Promise<ResultOfProcessMessage> {
+        return await this.client.processing.process_message({
+            message_encode_params: {
+                abi: this.abi, signer: this.signer, call_set: {
+                    function_name: functionName, input,
+                },
+            }, send_events: false,
+        });
+    }
+    
+    async runLocal(functionName: string, input: any): Promise<ResultOfRunExecutor> {
+        const message = await this.client.abi.encode_message({
+            abi: this.abi, signer: this.signer, call_set: {
+                function_name: functionName, input,
+            },
+        });
+        const result = await this.client.tvm.run_executor({
+            account: accountForExecutorAccount(await this.boc()),
+            abi: this.abi,
+            message: message.message,
+        });
+        if (result.account) {
+            this.cachedBoc = result.account;
+        }
+        return result;
     }
     
     dropCachedData() {
@@ -78,9 +85,7 @@ export class Account {
             return this.cachedBoc;
         }
         const boc = (await this.client.net.wait_for_collection({
-            collection: 'accounts',
-            filter: {id: {eq: this.address}},
-            result: 'boc',
+            collection: 'accounts', filter: {id: {eq: this.address}}, result: 'boc',
         })).result.boc;
         this.cachedBoc = boc;
         return boc;
@@ -92,49 +97,5 @@ export class Account {
         })).parsed;
     }
     
-    async execOnNet(functionName: string, input: any): Promise<ExecutionResult> {
-        const result = await this.client.processing.process_message({
-            message: messageSourceEncodingParams({
-                abi: this.abi,
-                signer: this.signer,
-                call_set: {
-                    function_name: functionName,
-                    input,
-                },
-            }),
-            send_events: false,
-        });
-        return {
-            output: result.decoded?.output,
-            messages: [],
-        };
-    }
-    
-    async execLocal(
-        functionName: string,
-        input: any,
-        options?: TvmCallOptions,
-    ): Promise<ExecutionResult> {
-        const result = await this.client.tvm.execute_message({
-            account: await this.boc(),
-            mode: options?.mode ?? 'TvmOnly',
-            message: {
-                type: 'EncodingParams',
-                abi: this.abi,
-                signer: this.signer,
-                call_set: {
-                    function_name: functionName,
-                    input,
-                },
-            },
-        });
-        if (result.account) {
-            this.cachedBoc = result.account;
-        }
-        return {
-            output: result.decoded?.output,
-            messages: [],
-        };
-    }
 }
 

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import fs from "fs";
-import path from "path";
-import os from "os";
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 function getHomeAddonPath() {
-    const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require('../package.json').version).split('.')[0];
+    const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require('../package.json').version).split(
+        '.')[0];
     const binariesHomePath = path.resolve(os.homedir(), '.tonlabs', 'binaries', binariesVersion);
     return path.resolve(binariesHomePath, 'tonclient.node');
 }

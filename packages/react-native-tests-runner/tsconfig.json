@@ -1,0 +1,17 @@
+{
+	"extends": "../../tsconfig.base.json",
+	"compilerOptions": {
+		"resolveJsonModule": true,
+		"jsx": "react-native",
+		"rootDir": "./",
+		"outDir": "./dist"
+	},
+	"include": [
+		"app.json",
+		"src/**/*"
+	],
+	"exclude": [
+		"**/__tests__",
+		"**/__mocks__"
+	]
+}

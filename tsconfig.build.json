@@ -12,7 +12,13 @@
 			"path": "./packages/node-addon"
 		},
 		{
-			"path": "./packages/main-testsuite"
+			"path": "./packages/main-tests"
+		},
+		{
+			"path": "./packages/react-native-module"
+		},
+		{
+			"path": "./packages/react-native-tests-runner"
 		}
 	]
 }
