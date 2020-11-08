@@ -27,7 +27,7 @@
 	},
 	"dependencies": {
 		"@ton-client/main": "file:../main",
-		"javascript-biginteger": "^0.9.2",
+		"big-integer": "^1.6.48",
 		"jest-circus": "^26.6.3",
 		"expect": "^26.6.2",
 		"jest-mock": "^26.6.2"

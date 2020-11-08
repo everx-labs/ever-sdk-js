@@ -1,59 +1,253 @@
+/*
+ * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
+ *
+ * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
+ * this file except in compliance with the License.
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific TON DEV software governing permissions and
+ * limitations under the License.
+ *
+ */
+
+import {
+    Account,
+    ClientConfig,
+    KeyPair,
+    ResultOfProcessMessage,
+    signerKeys,
+    signerNone,
+    TonClient,
+} from '@ton-client/main';
+
+import {
+    giverRequestAmount,
+    givers,
+} from './givers';
+import {
+    jest,
+    setTimeout,
+} from './jest';
+
 export class TestsRunner {
+    useNodeSE: boolean = false;
+    config: ClientConfig = {
+        network: {server_address: 'http://localhost:8080'},
+    };
+    private client: TonClient | null = null;
+    private giver: Account | null = null;
+    private giverKeys?: KeyPair = undefined;
+    private deployedAccounts: Account[] = [];
 
-    success = 0;
-    failure = 0;
-    logText = '';
-
-    static extractReport(expect: string, line: any) {
-        const pos = line.toString().indexOf(expect);
-        if (pos < 0) {
-            return null;
+    static async run(
+        onStateChange: (state: TestsRunningState) => void,
+        optionLog?: (...args: any[]) => void,
+    ) {
+        function errorToJson(error: any) {
+            const json: { [key: string]: any } = {};
+            Object.entries(error).forEach(([key, value]) => {
+                json[key] = value;
+            });
+            if (error.message && !json.message) {
+                json.message = error.message;
+            }
+            if (Object.keys(json).length === 0) {
+                json.message = error.toString();
+            }
+            return json;
         }
-        return JSON.parse(line.substr(pos + expect.length));
+
+        const log = optionLog ?? console.log;
+        try {
+            jest.setTimeout(300000);
+            const client = runner.getClient();
+
+            const state: TestsRunningState = {
+                version: (await client.client.version()).version,
+                passed: 0,
+                failed: 0,
+                finished: false,
+            };
+            onStateChange(state);
+
+            jest.addEventHandler((event: any) => {
+                if (event.name === 'test_start') {
+                    log(`[TEST_START] ${JSON.stringify({
+                        name: event.test.name,
+                    })}`);
+                } else if (event.name === 'test_done') {
+                    if (event.test.errors.length === 0) {
+                        state.passed = (state.passed ?? 0) + 1;
+                        log(`[TEST_SUCCESS] ${JSON.stringify({
+                            name: event.test.name,
+                        })}`);
+                    } else {
+                        state.failed = (state.failed ?? 0) + 1;
+                        log(`[TEST_FAILURE] ${JSON.stringify({
+                            name: event.test.name,
+                            errors: event.test.errors && event.test.errors.map(errorToJson),
+                        })}`);
+
+                    }
+                } else {
+                    return;
+                }
+                onStateChange(state);
+            });
+            onStateChange(state);
+            const runResult = await jest.run();
+            const results = {
+                errors: runResult.unhandledErrors.map((error) => {
+                    return error.toString().replace(/\n\s+at\s+.*/gi, '');
+                }),
+                results: runResult.testResults,
+            };
+            log(`[TEST_COMPLETE] ${JSON.stringify(results)}`);
+            state.finished = true;
+            onStateChange(state);
+        } catch (error) {
+            log('>>>', error);
+        }
     }
 
-    extractTestsReportFromLogLine(line: any) {
-        const startLog = TestsRunner.extractReport('[TEST_START]', line);
-        if (startLog) {
-            return;
+    configure(useNodeSE: boolean, config?: ClientConfig, giverKeys?: KeyPair) {
+        this.useNodeSE = useNodeSE;
+        if (giverKeys) {
+            this.giverKeys = giverKeys;
         }
-        const successLog = TestsRunner.extractReport('[TEST_SUCCESS]', line);
-        if (successLog) {
-            this.success += 1;
-            console.log(`✓ ${successLog.name} (${this.success} / ${this.failure})`);
-            return;
+        if (config) {
+            this.config = config;
         }
-        const failureLog = TestsRunner.extractReport('[TEST_FAILURE]', line);
-        if (failureLog) {
-            this.failure += 1;
-            console.log(`\x1b[0;31m𐄂 ${failureLog.name} (${this.success} / ${this.failure}) - ${JSON.stringify(
-                failureLog.errors,
-                undefined,
-                '    ',
-            )}\x1b[m`);
-            return;
+        this.client = null;
+        this.giver = null;
+        this.deployedAccounts = [];
+    }
+
+    getClient(): TonClient {
+        if (!this.client) {
+            this.client = new TonClient(this.config);
         }
-        const completeLog = TestsRunner.extractReport('[TEST_COMPLETE]', line);
-        if (completeLog) {
-            console.log(`---`);
-            console.log(`success: ${this.success}`);
-            console.log(`failure: ${this.failure}`);
-            process.exit(this.failure > 0 ? 1 : 0);
+        return this.client;
+    }
+
+    async getGiver(): Promise<Account> {
+        if (this.giver) {
+            return this.giver;
+        }
+        const client = this.getClient();
+        let giver: Account;
+        if (this.useNodeSE) {
+            giver = new Account(client, givers.v1.abi, givers.v1.address, signerNone());
+        } else {
+            giver = new Account(client, givers.v2.abi, '', signerKeys(this.giverKeys ?? {
+                secret: '2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe',
+                public: 'd542f44146f169c6726c8cf70e4cbb3d33d8d842a4afd799ac122c5808d81ba3',
+            }));
+            await giver.setDeployAddress(givers.v2.tvc);
+        }
+        this.giver = giver;
+        const accounts = (await client.net.query_collection({
+            collection: 'accounts',
+            filter: {
+                id: {eq: giver.address},
+            },
+            result: 'acc_type balance',
+        })).result;
+
+        if (accounts.length === 0) {
+            throw `Giver wallet does not exist. Send some grams to ${giver.address}`;
+        }
+        const account = accounts[0];
+        if (!account.balance || Number(account.balance) < giverRequestAmount) {
+            throw `Giver has no money. Send some grams to ${giver.address}`;
+        }
+
+        if (account.acc_type !== 1) {
+            await giver.deploy(givers.v2.tvc);
+        }
+        return giver;
+    }
+
+    async sendGramsTo(account: string, amount: number = giverRequestAmount): Promise<void> {
+        let result: ResultOfProcessMessage;
+        const giver = await this.getGiver();
+        if (this.useNodeSE) {
+            result = await giver.run('sendGrams', {
+                dest: account,
+                amount,
+            });
+        } else {
+            result = await giver.run('sendTransaction', {
+                dest: account,
+                value: amount,
+                bounce: false,
+            });
+        }
+        for (const boc of result.out_messages) {
+            const msg = (await giver.client.boc.parse_message({boc})).parsed;
+            if (msg.body_type === 0) {
+                await giver.client.net.wait_for_collection({
+                    collection: 'transactions',
+                    filter: {
+                        in_msg: {eq: msg.id},
+                    },
+                    result: 'lt',
+                });
+            }
         }
     }
 
-
-    log(...args: any[]) {
-        this.logOutput(`${args.map(x => `${x}`).join(' ')}\n`);
+    async deploy(
+        account: Account,
+        tvc: string,
+        constructorName?: string,
+        constructorInput?: any,
+    ): Promise<void> {
+        await account.setDeployAddress(tvc, constructorName, constructorInput);
+        await this.sendGramsTo(account.address, giverRequestAmount);
+        this.deployedAccounts.push(account);
+        await account.deploy(tvc, constructorName, constructorInput);
     }
 
-    logOutput(text: string) {
-        if (text.indexOf('\n') < 0) {
-            this.logText += text;
-            return;
+    async done() {
+        const giver = this.giver;
+        if (giver) {
+            for (const account of runner.deployedAccounts) {
+                try {
+                    await account.run('sendAllMoney', {dest_addr: giver.address});
+                } catch (e) {
+                    // ignore exception
+                }
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
-        const lines = (this.logText + text).split('\n');
-        this.logText = lines[lines.length - 1];
-        lines.slice(0, -1).forEach((line) => this.extractTestsReportFromLogLine(line));
+        if (this.client) {
+            await this.client.close();
+        }
     }
+
 }
+
+export const runner = new TestsRunner();
+export const ABIVersions = [1, 2];
+
+export type TestsRunningState = {
+    version: string,
+    passed: number,
+    failed: number,
+    finished: boolean,
+}
+
+export const zeroRunningState: TestsRunningState = {
+    version: '',
+    passed: 0,
+    failed: 0,
+    finished: false,
+};
+
+jest.afterAll(async () => {
+    await runner.done();
+});
+

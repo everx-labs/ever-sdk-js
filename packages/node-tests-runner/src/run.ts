@@ -1,18 +1,18 @@
 import {TonClient} from '@ton-client/main';
 import {nodeAddon} from '@ton-client/node-addon';
 import {
-    startTests,
+    TestsLogger,
+    TestsRunner,
     zeroRunningState,
 } from '@ton-client/main-tests';
-import {TestsRunner} from '@ton-client/main-tests/dist/runner';
 
 TonClient.useBinaryLibrary(nodeAddon);
 
 (async () => {
     let state = zeroRunningState;
-    const runner = new TestsRunner();
-    await startTests(x => state = {...x}, (...args) => {
-        runner.log(...args);
+    const logger = new TestsLogger();
+    await TestsRunner.run(x => state = {...x}, (...args) => {
+        logger.log(...args);
     });
     console.log(state);
 })();
