@@ -12,20 +12,140 @@
  *
  */
 
-use ton_client_build::{exec, Build};
+use std::path::PathBuf;
+use ton_client_build::{check_targets, exec, path_str, Build};
+
+struct Arch {
+    target: &'static str,
+    jni: &'static str,
+    ndk: &'static str,
+}
+
+const ARCHS: [Arch; 3] = [
+    Arch {
+        target: "i686-linux-android",
+        jni: "x86",
+        ndk: "x86",
+    },
+    Arch {
+        target: "aarch64-linux-android",
+        jni: "arm64-v8a",
+        ndk: "arm64",
+    },
+    Arch {
+        target: "armv7-linux-androideabi",
+        jni: "armeabi-v7a",
+        ndk: "arm",
+    },
+];
+
+const LIB: &str = "libtonclient.so";
+const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r17c-darwin-x86_64.zip";
 
 fn main() {
     let builder = Build::new();
-    exec("cargo", &["build", "--release"]);
+    check_targets(&ARCHS.iter().map(|x| x.target).collect::<Vec<&str>>());
+    check_ndk(&builder);
+    for arch in &ARCHS {
+        let mut path = std::env::var("PATH").unwrap_or("".into());
+        if !path.is_empty() {
+            path.push_str(":");
+        }
+        path.push_str(path_str(
+            &builder.lib_dir.join("NDK").join(arch.ndk).join("bin"),
+        ));
+        std::env::set_var("PATH", path);
+        exec("cargo", &["build", "--target", arch.target, "--release"]);
+    }
 
-    #[cfg(target_os = "windows")]
-    exec("cmd", &["/c", "node-gyp", "rebuild"]);
-    #[cfg(not(target_os = "windows"))]
-    exec("npm", &["run", "build"]);
+    let out_dir = builder.package_dir.join("android/src/jniLibs");
+    for arch in &ARCHS {
+        let arch_out_dir = out_dir.join(arch.jni);
+        std::fs::create_dir_all(&arch_out_dir).unwrap();
+        let src = builder
+            .target_dir
+            .join(arch.target)
+            .join("release")
+            .join(LIB);
+        if src.exists() {
+            let out_lib = arch_out_dir.join(LIB);
+            std::fs::copy(&src, &out_lib).unwrap();
+            println!(
+                "Android library for [{}] copied to \"{}\"",
+                arch.target,
+                path_str(&out_lib)
+            );
+            builder.publish_package_file(
+                &format!("android/src/jniLibs/{}/{}", arch.jni, LIB),
+                &format!("tonclient_{{v}}_react_native_{}", arch.target),
+            );
+        } else {
+            println!(
+                "Android library for [{}] does not exists. Skipped.",
+                arch.target
+            );
+        }
+    }
+}
 
-    builder.add_package_file(
-        "tonclient.node",
-        builder.package_dir.join("lib/build/Release/tonclient.node"),
+fn get_ndk(builder: &Build) -> PathBuf {
+    if let Ok(dir) = std::env::var("NDK_HOME") {
+        let dir = PathBuf::from(dir);
+        if dir.exists() {
+            return dir;
+        }
+    }
+    let ndk_zip_file = builder.lib_dir.join(NDK_URL.split("/").last().unwrap());
+    let ndk_dir = builder.lib_dir.join("android-ndk-r17c");
+    if !ndk_zip_file.exists() {
+        println!("Downloading android NDK...");
+        exec("curl", &[NDK_URL, "-o", path_str(&ndk_zip_file)]);
+    }
+    print!("Unzipping android NDK...");
+    exec(
+        "unzip",
+        &[
+            "-q",
+            "-d",
+            path_str(&builder.lib_dir),
+            path_str(&ndk_zip_file),
+        ],
     );
-    builder.publish_package_file("tonclient.node", "tonclient_{v}_nodejs_addon_{p}");
+    std::env::set_var("NDK_HOME", path_str(&ndk_dir));
+    ndk_dir
+}
+
+fn check_ndk(builder: &Build) {
+    let ndk_dir = builder.lib_dir.join("NDK");
+    let missing_archs = ARCHS
+        .iter()
+        .filter(|x| !ndk_dir.join(x.ndk).exists())
+        .collect::<Vec<&Arch>>();
+    if missing_archs.is_empty() {
+        println!("Standalone NDK already exists...");
+        return;
+    }
+    let mut ndk_home_dir = get_ndk(builder);
+    if !ndk_home_dir.exists() {
+        ndk_home_dir = PathBuf::from(std::env::var("ANDROID_HOME").unwrap()).join("ndk-bundle");
+    }
+    let maker = ndk_home_dir.join("build/tools/make_standalone_toolchain.py");
+    if !maker.exists() {
+        panic!("Please install android-ndk: $ brew install android-ndk");
+    }
+    std::fs::create_dir_all(&ndk_dir).unwrap();
+    std::env::set_current_dir(&ndk_dir).unwrap();
+    for arch in &ARCHS {
+        exec(
+            "python",
+            &[
+                path_str(&maker),
+                "--arch",
+                arch.ndk,
+                "--install-dir",
+                arch.ndk,
+            ],
+        )
+    }
+    std::env::set_current_dir(&builder.lib_dir).unwrap();
 }

@@ -21,11 +21,11 @@ Jenkinsfile
 **/dist/
 **/*.tsbuildinfo
 /packages/wasm-module/index.js
-/packages/react-native-module/rust/target
-/libs/android/NDK
-/packages/react-native-module/publish
 /packages/node-addon/publish
 /packages/node-addon/lib/build
+/packages/react-native-module/ios/publish
+/packages/react-native-module/android/lib/NDK
+/packages/react-native-module/android/publish
 **/Cargo.lock
 **/publish/**
 **/target/**

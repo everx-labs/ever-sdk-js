@@ -46,16 +46,4 @@ fn main() {
         &args.iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
     );
     builder.publish_package_file(LIB, "tonclient_{v}_react_native_ios");
-    // exec("cargo", &["build", "--release"]);
-    //
-    // #[cfg(target_os = "windows")]
-    // exec("cmd", &["/c", "node-gyp", "rebuild"]);
-    // #[cfg(not(target_os = "windows"))]
-    // exec("npm", &["run", "build"]);
-    //
-    // builder.add_package_file(
-    //     "tonclient.node",
-    //     builder.package_dir.join("lib/build/Release/tonclient.node"),
-    // );
-    // builder.publish_package_file("tonclient.node", "tonclient_{v}_nodejs_addon_{p}");
 }

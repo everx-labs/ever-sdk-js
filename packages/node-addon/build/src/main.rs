@@ -19,9 +19,16 @@ fn main() {
     exec("cargo", &["build", "--release"]);
 
     #[cfg(target_os = "windows")]
-    exec("cmd", &["/c", "node-gyp", "rebuild"]);
+    let (lib, gyp, gyp_args) = ("tonclient.lib", "cmd", ["/c", "node-gyp", "rebuild"]);
     #[cfg(not(target_os = "windows"))]
-    exec("npm", &["run", "build"]);
+    let (lib, gyp, gyp_args) = ("libtonclient.a", "npm", ["run", "build"]);
+
+    builder.add_package_file(
+        &format!("lib/{}", lib),
+        builder.target_dir.join("release").join(lib),
+    );
+
+    exec(gyp, &gyp_args);
 
     builder.add_package_file(
         "tonclient.node",

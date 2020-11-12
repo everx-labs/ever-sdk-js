@@ -26,6 +26,7 @@ pub struct Build {
     pub platform: String,
 
     pub package_dir: PathBuf,
+    pub lib_dir: PathBuf,
     pub target_dir: PathBuf,
 }
 
@@ -76,6 +77,7 @@ impl Build {
             #[cfg(target_os = "windows")]
             platform: "win".into(),
             package_dir,
+            lib_dir,
             target_dir,
         }
     }
@@ -128,7 +130,7 @@ pub fn exec(cmd: &str, args: &[&str]) {
         .unwrap();
 }
 
-fn exec_out(cmd: &str, args: &[&str]) -> String {
+pub fn exec_out(cmd: &str, args: &[&str]) -> String {
     let out = Command::new(cmd).args(args).output().unwrap();
     if !out.status.success() {
         panic!("{}", String::from_utf8(out.stderr).unwrap());
@@ -150,4 +152,8 @@ pub fn check_targets(targets: &[&str]) {
     if args.len() > 2 {
         exec("rustup", &args);
     }
+}
+
+pub fn path_str(path: &PathBuf) -> &str {
+    path.as_path().to_str().unwrap()
 }
