@@ -3,12 +3,11 @@ import {
     View,
     Text,
 } from 'react-native';
-import {startTests} from '@ton-client/main-tests';
-import {TestsRunningState} from '@ton-client/main-tests';
+// import {TestsRunningState} from '@ton-client/main-tests';
 
-class App extends Component<{}, TestsRunningState> {
+class App extends Component {
     async componentDidMount() {
-        await startTests((state) => this.setState(state));
+        // await startTests((state) => this.setState(state));
     }
 
     render() {
@@ -21,16 +20,16 @@ class App extends Component<{}, TestsRunningState> {
                 }}
                 >
                     <Text style={{fontSize: 24}}>Core
-                        Version: {this.state.version || 'loading...'}</Text>
+                        Version: {this.state && this.state.version || 'loading...'}</Text>
                     <Text style={{
                         fontSize: 24,
                         color: 'green',
-                    }}>Tests Passed: {this.state.passed || 0}</Text>
+                    }}>Tests Passed: {this.state && this.state.passed || 0}</Text>
                     <Text style={{
                         fontSize: 24,
                         color: 'red',
-                    }}>Tests Failed: {this.state.failed || 0}</Text>
-                    <Text style={{fontSize: 24}}>{this.state.finished
+                    }}>Tests Failed: {this.state && this.state.failed || 0}</Text>
+                    <Text style={{fontSize: 24}}>{this.state && this.state.finished
                         ? 'Complete'
                         : 'Testing...'}</Text>
                 </View>

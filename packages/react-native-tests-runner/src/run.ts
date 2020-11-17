@@ -1,8 +1,8 @@
-import {TestsRunner} from '@ton-client/main-tests/dist/runner';
 import {spawn} from 'child_process';
+import {TestsLogger} from "@ton-client/main-tests";
 
 
-function run(name: string, args: string[], runner: TestsRunner | null): Promise<string> {
+function run(name: string, args: string[], logger: TestsLogger | null): Promise<string> {
     return new Promise((resolve, reject) => {
         try {
             const spawned = spawn(name, args, {
@@ -14,7 +14,7 @@ function run(name: string, args: string[], runner: TestsRunner | null): Promise<
             spawned.stdout.on('data', function (data: any) {
                 const text = data.toString();
                 output.push(text);
-                runner?.log(text);
+                logger?.logOutput(text);
             });
 
             spawned.stderr.on('data', (data: any) => {
@@ -63,7 +63,7 @@ start(async () => {
         console.log('Run target missing. Use: node run-suite ios | android.');
         process.exit(1);
     }
-    const runner = new TestsRunner();
-    start(() => run('npx', ['react-native', 'start', '--reset-cache'], runner));
+    const logger = new TestsLogger();
+    start(() => run('npx', ['react-native', 'start', '--reset-cache'], logger));
     await run('npx', ['react-native', runTarget], null);
 });

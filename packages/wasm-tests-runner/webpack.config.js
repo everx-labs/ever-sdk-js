@@ -36,7 +36,6 @@ module.exports = {
                     path.resolve(__dirname, './node_modules/webpack-dev-server'),
                     path.resolve(__dirname, './node_modules/@ton-client/main'),
                     path.resolve(__dirname, './node_modules/@ton-client/wasm-module'),
-                    path.resolve(__dirname, './node_modules/jest-lite'),
                 ],
             },
             {

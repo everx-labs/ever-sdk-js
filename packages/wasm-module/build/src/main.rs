@@ -18,9 +18,9 @@ use ton_client_build::{exec, Build};
 fn fix_wrapper_script(wrapper: String) -> String {
     let mut wrapper = wrapper;
     for (exp, rep) in &[
-        ("^export function ", "function "),
-        ("^export default init;$", ""),
-        ("^\\s*input = import\\.meta.*$", ""),
+        ("\nexport function ", "\nfunction "),
+        ("\nexport default init;\n", ""),
+        ("\n\\s*input = import\\.meta.*\n", ""),
         ("getObject\\(arg0\\) instanceof Window", "true"),
     ] {
         wrapper = Regex::new(exp).unwrap().replace_all(&wrapper, *rep).into();

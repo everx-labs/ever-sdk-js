@@ -4,6 +4,21 @@
  *
  * @format
  */
+const path = require('path');
+
+const extraNodeModules = {};
+const watchFolders = [];
+
+function addModule(name, modulePath) {
+    const resolvedPath = path.resolve(__dirname, 'node_modules', modulePath);
+    extraNodeModules[name] = resolvedPath;
+    watchFolders.push(resolvedPath);
+}
+
+// addModule('@ton-client/main', '@ton-client/main');
+// addModule('@ton-client/react-native-module', '@ton-client/react-native-module');
+// addModule('@ton-client/main-tests', '@ton-client/main-tests');
+
 
 module.exports = {
     transformer: {
@@ -14,4 +29,9 @@ module.exports = {
             },
         }),
     },
+    resolver: {
+        sourceExts: ['js', 'json', 'ts', 'tsx', 'jsx'],
+        extraNodeModules
+    },
+    watchFolders,
 };

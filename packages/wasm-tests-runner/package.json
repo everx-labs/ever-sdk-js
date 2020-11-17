@@ -21,9 +21,6 @@
 	},
 	"homepage": "https://ton.dev/node-se",
 	"dependencies": {
-		"error-polyfill": "^0.1.2",
-		"javascript-biginteger": "^0.9.2",
-		"jest-lite": "^1.0.0-alpha.4",
 		"opentracing": "^0.14.4",
 		"@ton-client/main": "file:../main",
 		"@ton-client/wasm-module": "file:../wasm-module"

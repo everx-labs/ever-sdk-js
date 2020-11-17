@@ -31,7 +31,7 @@ export type NetworkConfig = {
     message_retries_count?: number,
     message_processing_timeout?: number,
     wait_for_timeout?: number,
-    out_of_sync_threshold?: bigint,
+    out_of_sync_threshold?: number,
     access_key?: string
 };
 
@@ -679,7 +679,7 @@ export type AbiFunction = {
 };
 
 export type AbiContract = {
-    'ABI version': number,
+    'ABI version'?: number,
     abi_version?: number,
     header?: string[],
     functions?: AbiFunction[],
@@ -830,6 +830,14 @@ export type ResultOfGetBlockchainConfig = {
     config_boc: string
 };
 
+export type ParamsOfGetBocHash = {
+    boc: string
+};
+
+export type ResultOfGetBocHash = {
+    hash: string
+};
+
 export class BocModule {
     client: IClient;
 
@@ -859,6 +867,10 @@ export class BocModule {
 
     get_blockchain_config(params: ParamsOfGetBlockchainConfig): Promise<ResultOfGetBlockchainConfig> {
         return this.client.request('boc.get_blockchain_config', params);
+    }
+
+    get_boc_hash(params: ParamsOfGetBocHash): Promise<ResultOfGetBocHash> {
+        return this.client.request('boc.get_boc_hash', params);
     }
 }
 

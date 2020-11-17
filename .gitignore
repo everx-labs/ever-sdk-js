@@ -19,6 +19,7 @@ Jenkinsfile
 **/*.node
 **/*.wasm
 **/dist/
+**/*.map
 **/*.tsbuildinfo
 /packages/wasm-module/index.js
 /packages/node-addon/publish

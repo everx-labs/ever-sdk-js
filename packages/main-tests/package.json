@@ -30,7 +30,9 @@
 		"big-integer": "^1.6.48",
 		"jest-circus": "^26.6.3",
 		"expect": "^26.6.2",
-		"jest-mock": "^26.6.2"
+		"jest-mock": "^26.6.2",
+		"@babel/core": "^7.8.4",
+		"@babel/runtime": "^7.8.4"
 	},
 	"devDependencies": {
 		"@types/jest": "^26.0.15"
