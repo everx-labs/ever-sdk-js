@@ -12,11 +12,10 @@
  *
  */
 
-import {TonClient} from '@ton-client/main';
-// import {reactNativeModule} from '@ton-client/react-native-module';
-
-import {AppRegistry} from 'react-native';
+import { TonClient } from '@ton-client/main';
+import {reactNativeModule} from '@ton-client/react-native-module';
+import { AppRegistry } from 'react-native';
 import App from './App';
 
-// TonClient.useBinaryLibrary(reactNativeModule);
+TonClient.useBinaryLibrary(reactNativeModule);
 AppRegistry.registerComponent('testApp', () => App);

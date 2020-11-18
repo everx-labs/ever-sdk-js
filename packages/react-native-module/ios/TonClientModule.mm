@@ -3,6 +3,17 @@
 #import "tonclient.h"
 
 @implementation TonClientModule
+{
+  bool hasListeners;
+}
+-(void)startObserving {
+    hasListeners = YES;
+}
+
+-(void)stopObserving {
+    hasListeners = NO;
+}
+
 
 - (dispatch_queue_t)methodQueue
 {
@@ -10,7 +21,14 @@
 }
 RCT_EXPORT_MODULE()
 
-static TonClientModule* module = NULL;
++(id)allocWithZone:(NSZone *)zone {
+    static TonClientModule *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [super allocWithZone:zone];
+    });
+    return sharedInstance;
+}
 
 static NSString* stringFromData(tc_string_data_t stringData) {
     if (stringData.len == 0 || stringData.content == NULL || *stringData.content == 0) {
@@ -32,22 +50,36 @@ static tc_string_data_t dataFromString(NSString* string) {
   return @[@"Response"];
 }
 
+-(void) handleResponseForRequestId:
+    (uint32_t) requestId
+    paramsJson: (tc_string_data_t) paramsJson
+    responseType: (uint32_t) responseType
+    finished: (bool) finished
+{
+    if (self->hasListeners) {
+        [self sendEventWithName:@"Response" body:@{
+            @"requestId": @(requestId),
+            @"paramsJson": stringFromData(paramsJson),
+            @"responseType": @(responseType),
+            @"finished": @(finished),
+        }];
+    }
+}
+
 static void handleResponse(
     uint32_t requestId,
     tc_string_data_t paramsJson,
     uint32_t responseType,
     bool finished
 ) {
-    auto mod = module;
-    if (mod == NULL) {
-        return;
-    }
-    [mod sendEventWithName:@"Response" body:@{
-        @"requestId": @(requestId),
-        @"paramsJson": stringFromData(paramsJson),
-        @"responseType": @(responseType),
-        @"finished": @(finished),
-    }];}
+    TonClientModule* module = [[TonClientModule alloc] init];
+    [module
+        handleResponseForRequestId: requestId
+        paramsJson: paramsJson
+        responseType: responseType
+        finished: finished
+    ];
+}
 
 
 RCT_EXPORT_METHOD(createContext: (NSString*)configJson callback: (RCTResponseSenderBlock)callback) {
@@ -61,19 +93,16 @@ RCT_EXPORT_METHOD(destroyContext: (uint32_t)context) {
     tc_destroy_context(context);
 }
 
-RCT_EXPORT_METHOD(sendRequest: (uint32_t) context
+RCT_EXPORT_METHOD(sendRequest: (nonnull NSNumber*) context
+    requestId: (nonnull NSNumber*) requestId
     functionName:(nonnull NSString *)functionName
     functionParamsJson:(nonnull NSString *)functionParamsJson
-    requestId: (uint32_t) requestId
 ) {
-    if (module == NULL) {
-        module = self;
-    }
     tc_request(
-        context,
+        context.intValue,
         dataFromString(functionName),
         dataFromString(functionParamsJson),
-        requestId,
+        requestId.intValue,
         handleResponse
     );
 }

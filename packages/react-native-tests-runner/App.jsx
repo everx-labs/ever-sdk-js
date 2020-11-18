@@ -1,3 +1,4 @@
+import { TonClient } from "@ton-client/main";
 import React, {Component} from 'react';
 import {
     View,
@@ -7,6 +8,20 @@ import {
 
 class App extends Component {
     async componentDidMount() {
+        const client = new TonClient({
+            network: {
+                server_address: 'net.ton.dev'
+            }
+        });
+        const version = (await client.client.version()).version;
+        const accounts = await client.net.query_collection({
+            collection: 'accounts',
+            result: 'id balance'
+        });
+        this.setState({
+            version
+        });
+
         // await startTests((state) => this.setState(state));
     }
 

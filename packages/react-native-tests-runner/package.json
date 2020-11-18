@@ -1,30 +1,29 @@
 {
-  "name": "test_app",
-  "version": "0.0.1",
-  "private": true,
-  "main": "index.js",
-  "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "start": "react-native start",
-    "test": "jest",
-    "lint": "eslint .",
-    "npm install": "npm install",
-    "prepare tests": "node prepare-suite.js",
-    "haul": "haul start"
-  },
-  "dependencies": {
-    "react": "17.0.1",
-    "react-native": "0.63.3"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.12.3",
-    "@babel/runtime": "^7.12.5",
-    "@haul-bundler/babel-preset-react-native": "^0.16.0",
-    "@haul-bundler/cli": "^0.22.1",
-    "@haul-bundler/preset-0.60": "^0.18.0",
-    "@react-native-community/eslint-config": "^2.0.0",
-    "eslint": "^7.13.0",
-    "metro-react-native-babel-preset": "^0.64.0"
-  }
+	"name": "test_app",
+	"version": "0.0.1",
+	"private": true,
+	"main": "index.js",
+	"scripts": {
+		"android": "react-native run-android",
+		"ios": "react-native run-ios",
+		"start": "react-native start",
+		"test": "jest",
+		"lint": "eslint .",
+		"npm install": "npm install",
+		"prepare tests": "node prepare-suite.js"
+	},
+	"dependencies": {
+		"@ton-client/main": "file:ton-client-main-1.0.0.tgz",
+		"@ton-client/main-tests": "file:ton-client-main-tests-1.0.0.tgz",
+		"@ton-client/react-native-module": "file:ton-client-react-native-module-1.0.0.tgz",
+		"react": "17.0.1",
+		"react-native": "0.63.3"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.12.3",
+		"@babel/runtime": "^7.12.5",
+		"@react-native-community/eslint-config": "^2.0.0",
+		"eslint": "^7.13.0",
+		"metro-react-native-babel-preset": "^0.64.0"
+	}
 }

@@ -53,6 +53,33 @@ export type BuildInfoDependency = {
     git_commit: string
 };
 
+export type ParamsOfAppRequest = {
+    app_request_id: number,
+    request_data: any
+};
+
+export type AppRequestResult = {
+    type: 'Error'
+    text: string
+} | {
+    type: 'Ok'
+    result: any
+};
+
+export function appRequestResultError(text: string): AppRequestResult {
+    return {
+        type: 'Error',
+        text,
+    };
+}
+
+export function appRequestResultOk(result: any): AppRequestResult {
+    return {
+        type: 'Ok',
+        result,
+    };
+}
+
 export type ResultOfGetApiReference = {
     api: any
 };
@@ -64,6 +91,11 @@ export type ResultOfVersion = {
 export type ResultOfBuildInfo = {
     build_number: number,
     dependencies: BuildInfoDependency[]
+};
+
+export type ParamsOfResolveAppRequest = {
+    app_request_id: number,
+    result: AppRequestResult
 };
 
 export class ClientModule {
@@ -83,6 +115,10 @@ export class ClientModule {
 
     build_info(): Promise<ResultOfBuildInfo> {
         return this.client.request('client.build_info');
+    }
+
+    resolve_app_request(params: ParamsOfResolveAppRequest): Promise<void> {
+        return this.client.request('client.resolve_app_request', params);
     }
 }
 
@@ -341,6 +377,73 @@ export type ResultOfChaCha20 = {
     data: string
 };
 
+export type ResultOfRegisterSigningBox = {
+    handle: SigningBoxHandle
+};
+
+export type ParamsOfAppSigningBox = {
+    type: 'GetPublicKey'
+} | {
+    type: 'Sign'
+    unsigned: string
+};
+
+export function paramsOfAppSigningBoxGetPublicKey(): ParamsOfAppSigningBox {
+    return {
+        type: 'GetPublicKey',
+    };
+}
+
+export function paramsOfAppSigningBoxSign(unsigned: string): ParamsOfAppSigningBox {
+    return {
+        type: 'Sign',
+        unsigned,
+    };
+}
+
+export type ResultOfAppSigningBox = {
+    type: 'GetPublicKey'
+    public_key: string
+} | {
+    type: 'Sign'
+    signature: string
+};
+
+export function resultOfAppSigningBoxGetPublicKey(public_key: string): ResultOfAppSigningBox {
+    return {
+        type: 'GetPublicKey',
+        public_key,
+    };
+}
+
+export function resultOfAppSigningBoxSign(signature: string): ResultOfAppSigningBox {
+    return {
+        type: 'Sign',
+        signature,
+    };
+}
+
+export type ResultOfGetSigningBox = {
+    handle: SigningBoxHandle
+};
+
+export type ParamsOfSigningBoxGetPublicKey = {
+    signing_box: SigningBoxHandle
+};
+
+export type ResultOfSigningBoxGetPublicKey = {
+    pubkey: string
+};
+
+export type ParamsOfSigningBoxSign = {
+    signing_box: SigningBoxHandle,
+    unsigned: string
+};
+
+export type ResultOfSigningBoxSign = {
+    signature: string
+};
+
 export class CryptoModule {
     client: IClient;
 
@@ -474,6 +577,22 @@ export class CryptoModule {
 
     chacha20(params: ParamsOfChaCha20): Promise<ResultOfChaCha20> {
         return this.client.request('crypto.chacha20', params);
+    }
+
+    register_signing_box(): Promise<ResultOfRegisterSigningBox> {
+        return this.client.request('crypto.register_signing_box');
+    }
+
+    get_signing_box(params: KeyPair): Promise<ResultOfGetSigningBox> {
+        return this.client.request('crypto.get_signing_box', params);
+    }
+
+    signing_box_get_public_key(params: ParamsOfSigningBoxGetPublicKey): Promise<ResultOfSigningBoxGetPublicKey> {
+        return this.client.request('crypto.signing_box_get_public_key', params);
+    }
+
+    signing_box_sign(params: ParamsOfSigningBoxSign): Promise<ResultOfSigningBoxSign> {
+        return this.client.request('crypto.signing_box_sign', params);
     }
 }
 
@@ -1240,8 +1359,6 @@ export type ResultOfWaitForCollection = {
 export type ResultOfSubscribeCollection = {
     handle: number
 };
-
-export type unit = void;
 
 export type ParamsOfSubscribeCollection = {
     collection: string,

@@ -30,3 +30,4 @@ Jenkinsfile
 **/Cargo.lock
 **/publish/**
 **/target/**
+**/*.tgz
