@@ -2,11 +2,11 @@ package ton;
 
 public class TonClientJsonInterface {
     static {
-        System.loadLibrary("tonlient");
+        System.loadLibrary("tonclient");
     }
 
     public interface IResponseHandler {
-        void invoke(long requestId, String paramsJson, int responseType, boolean finished);
+        void invoke(long requestId, String paramsJson, long responseType, boolean finished);
     }
 
     public static native String createContext(String configJson);

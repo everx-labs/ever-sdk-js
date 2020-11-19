@@ -99,7 +99,7 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn Java_ton_ClientJsonInterface_sendRequest(
+pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_sendRequest(
     env: JNIEnv,
     _class: JClass,
     context: jlong,

@@ -31,3 +31,4 @@ Jenkinsfile
 **/publish/**
 **/target/**
 **/*.tgz
+**/BUCK
