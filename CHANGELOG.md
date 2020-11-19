@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 0.28.1 Nov 19, 2020
+### New
+- Ability to disable error logs by using `_errLogVerbose` config param
+
 ## 0.28.0 Nov 6, 2020
 ### Fixed
 - local error resolving processes `NoGas` and `NoState` errors properly

@@ -334,7 +334,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 const serverTime = responseData.data.info.time;
                 serverInfo.timeDelta = Math.round(serverTime - (start + (end - start) / 2));
             } catch (error) {
-                console.log('>>>', error);
+                if(config._errLogVerbose) console.log('>>>', error);
             }
         }
         return serverInfo.timeDelta || 0;
@@ -856,7 +856,7 @@ class TONQueriesModuleCollection implements TONQCollection {
                 if (onError) {
                     onError(error);
                 } else {
-                    console.log('TON Client subscription error', error);
+                    if(config._errLogVerbose) console.log('TON Client subscription error', error);
                 }
             }
         })();
