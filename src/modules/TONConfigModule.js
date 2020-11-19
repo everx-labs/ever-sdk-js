@@ -194,7 +194,7 @@ export default class TONConfigModule extends TONModule {
     }
 
     _logVerbose: boolean;
-
+    _errLogVerbose: boolean;
     _profileStart: number;
 
     _profilePrev: number;

@@ -304,7 +304,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                 }
                 return clientConfig;
             } catch (error) {
-                console.log(`[getClientConfig] for server "${server}" failed`, {
+                if(config._errLogVerbose) console.log(`[getClientConfig] for server "${server}" failed`, {
                     message: error.message || error.toString(),
                     data: {
                         http_url: clientConfig.httpUrl,
@@ -592,14 +592,14 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
             clientConfig.WebSocket,
         );
         subscriptionClient.onReconnected(() => {
-            console.log('[TONClient.queries]', 'WebSocket Reconnected');
+            if(this.config._errLogVerbose) console.log('[TONClient.queries]', 'WebSocket Reconnected');
             this.rejectActiveQueries();
         });
         const guard = {
             detectingRedirection: false,
         };
         subscriptionClient.onError(() => {
-            console.log('[TONClient.queries]', 'WebSocket Failed');
+            if(this.config._errLogVerbose) console.log('[TONClient.queries]', 'WebSocket Failed');
             if (guard.detectingRedirection) {
                 return;
             }
@@ -610,7 +610,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                     const configIsChanged = newConfig.httpUrl !== clientConfig.httpUrl
                         || newConfig.wsUrl !== clientConfig.wsUrl;
                     if (configIsChanged) {
-                        console.log('[TONClient.queries]', 'Client config changed');
+                        if(this.config._logVerbose) console.log('[TONClient.queries]', 'Client config changed');
                         clientConfig = newConfig;
                         this.graphqlClientConfig = clientConfig;
                         subscriptionClient.url = newConfig.wsUrl;
@@ -622,7 +622,7 @@ export default class TONQueriesModule extends TONModule implements TONQueries {
                         }
                     }
                 } catch (err) {
-                    console.log('[TONClient.queries] redirection detector failed', err);
+                    if(this.config._errLogVerbose) console.log('[TONClient.queries] redirection detector failed', err);
                 }
                 guard.detectingRedirection = false;
             })();
