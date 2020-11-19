@@ -1,4 +1,4 @@
-pragma solidity >=0.5.0;
+pragma solidity >=0.6.0;
 pragma AbiHeader time;
 pragma AbiHeader expire;
 
@@ -6,20 +6,14 @@ contract CheckPublicVariables {
     /*
      *  Storage
      */
-    address public addressVariable;
-    /*   uint8 public uint8Variable;
-        uint16 public int16Variable;
-        uint32 public uint32Variable;
-        uint64 public uint64Variable;
-        uint128 public uint128Variable;
-        uint256 public uint256Variable;*/
-    uint public uintVariable;
-    bool public booleanVariable;
-    bytes public bytesVariable;
+    address static addressVariable;
+    uint static uintVariable;
+    bool static booleanVariable;
+    bytes static bytesVariable;
 
     address zeroAddress;
 
-    function tvm_make_address(int8 wid, uint256 addr) private pure returns (address payable) {}
+    function tvm_make_address(int8 wid, uint256 addr) private pure returns (address) {}
 
     constructor() public {
         tvm.accept();
@@ -51,7 +45,7 @@ contract CheckPublicVariables {
         _;
     }
 
-    function sendAllMoney(address payable dest_addr) public checkOwnerAndAccept {
+    function sendAllMoney(address dest_addr) public checkOwnerAndAccept {
         selfdestruct(dest_addr);
     }
 
