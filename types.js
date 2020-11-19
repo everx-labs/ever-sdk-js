@@ -6,6 +6,7 @@ import type { Request } from './src/modules/TONQueriesModule';
 export type TONConfigData = {
     servers: string[],
     log_verbose?: boolean,
+    err_log_verbose?: boolean,
     tracer?: ?Object, // opentracing.Tracer
     messageRetriesCount?: number,
     messageExpirationTimeout?: number,

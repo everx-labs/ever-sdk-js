@@ -191,6 +191,7 @@ export default class TONConfigModule extends TONModule {
         if (this._logVerbose) {
             this.startProfile();
         }
+        this._errLogVerbose = this.data.err_log_verbose || true;
     }
 
     _logVerbose: boolean;
