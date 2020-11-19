@@ -21,7 +21,12 @@ struct Arch {
     ndk: &'static str,
 }
 
-const ARCHS: [Arch; 3] = [
+const ARCHS: [Arch; 4] = [
+    Arch {
+        target: "x86_64-linux-android",
+        jni: "x86_64",
+        ndk: "x86_64",
+    },
     Arch {
         target: "i686-linux-android",
         jni: "x86",
@@ -58,7 +63,7 @@ fn main() {
         exec("cargo", &["build", "--target", arch.target, "--release"]);
     }
 
-    let out_dir = builder.package_dir.join("android/src/jniLibs");
+    let out_dir = builder.package_dir.join("src/main/jniLibs");
     for arch in &ARCHS {
         let arch_out_dir = out_dir.join(arch.jni);
         std::fs::create_dir_all(&arch_out_dir).unwrap();
@@ -75,10 +80,10 @@ fn main() {
                 arch.target,
                 path_str(&out_lib)
             );
-            builder.publish_package_file(
-                &format!("android/src/jniLibs/{}/{}", arch.jni, LIB),
-                &format!("tonclient_{{v}}_react_native_{}", arch.target),
-            );
+            // builder.publish_package_file(
+            //     &format!("src/main/jniLibs/{}/{}", arch.jni, LIB),
+            //     &format!("tonclient_{{v}}_react_native_{}", arch.target),
+            // );
         } else {
             println!(
                 "Android library for [{}] does not exists. Skipped.",

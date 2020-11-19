@@ -19,7 +19,7 @@ extern crate lazy_static;
 use self::ton_client::{create_context, destroy_context, request, ContextHandle};
 
 use jni::objects::{GlobalRef, JClass, JObject, JString, JValue};
-use jni::sys::{jint, jlong, jstring};
+use jni::sys::{jlong, jstring};
 use jni::JNIEnv;
 use std::sync::Mutex;
 
@@ -34,7 +34,7 @@ lazy_static! {
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn Java_tonos_ClientJsonInterface_createContext(
+pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_createContext(
     env: JNIEnv,
     _class: JClass,
     config_json: JString,
@@ -51,17 +51,17 @@ pub unsafe extern "C" fn Java_tonos_ClientJsonInterface_createContext(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn Java_tonos_ClientJsonInterface_destroyContext(
+pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_destroyContext(
     _env: JNIEnv,
     _class: JClass,
-    context: jint,
+    context: jlong,
 ) {
     destroy_context(context as ContextHandle)
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn Java_tonos_ClientJsonInterface_setResponseHandler(
+pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_setResponseHandler(
     env: JNIEnv,
     _class: JClass,
     handler: JObject,
@@ -99,13 +99,13 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn Java_tonos_ClientJsonInterface_request(
+pub unsafe extern "C" fn Java_ton_ClientJsonInterface_sendRequest(
     env: JNIEnv,
     _class: JClass,
     context: jlong,
+    request_id: jlong,
     function_name: JString,
     function_params_json: JString,
-    request_id: jlong,
 ) {
     if let Ok(function_name) = env.get_string(function_name) {
         if let Ok(function_params_json) = env.get_string(function_params_json) {

@@ -7,3 +7,6 @@ linker = "./NDK/arm/bin/arm-linux-androideabi-gcc"
 [target.i686-linux-android]
 ar = "./NDK/x86/bin/i686-linux-android-ar"
 linker = "./NDK/x86/bin/i686-linux-android-gcc"
+[target.x86_64-linux-android]
+ar = "./NDK/x86_64/bin/x86_64-linux-android-ar"
+linker = "./NDK/x86_64/bin/x86_64-linux-android-gcc"
