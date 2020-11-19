@@ -31,4 +31,3 @@ Jenkinsfile
 **/publish/**
 **/target/**
 **/*.tgz
-**/*.java
