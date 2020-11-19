@@ -1,4 +1,4 @@
-pragma solidity >=0.5.0;
+pragma solidity >=0.6.0;
 pragma AbiHeader time;
 pragma AbiHeader expire;
 
@@ -30,7 +30,7 @@ contract Simple {
         _;
     }
 
-	function sendAllMoney(address payable dest_addr) public OnlyOwner {
+	function sendAllMoney(address dest_addr) public OnlyOwner {
 		selfdestruct(dest_addr);
 	}
 }

@@ -1,4 +1,4 @@
-pragma solidity >=0.5.0;
+pragma solidity >=0.6.0;
 pragma AbiHeader time;
 pragma AbiHeader expire;
 pragma AbiHeader pubkey;
@@ -24,7 +24,7 @@ contract Events {
         return id;
     }
 
-    function sendAllMoney(address payable dest_addr) public OnlyOwner {
+    function sendAllMoney(address dest_addr) public OnlyOwner {
 		selfdestruct(dest_addr);
 	}
 }
