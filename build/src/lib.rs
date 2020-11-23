@@ -118,7 +118,7 @@ impl Build {
         let compressed = encoder.finish().unwrap();
         let publish_file_path = publish_dir.join(&name);
         fs::write(publish_file_path, compressed).unwrap();
-        println!("Publish: {}", publish_file_path);
+        println!("Publish: {}", publish_file_path.as_path().display().to_string());
     }
 }
 
