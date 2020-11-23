@@ -116,8 +116,9 @@ impl Build {
         let read = fs::read(self.package_dir.join(package_file)).unwrap();
         encoder.write_all(&read).unwrap();
         let compressed = encoder.finish().unwrap();
-        fs::write(publish_dir.join(&name), compressed).unwrap();
-        println!("Publish: {}", name);
+        let publish_file_path = publish_dir.join(&name);
+        fs::write(publish_file_path, compressed).unwrap();
+        println!("Publish: {}", publish_file_path);
     }
 }
 
