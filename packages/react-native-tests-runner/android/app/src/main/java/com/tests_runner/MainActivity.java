@@ -1,4 +1,4 @@
-package com.testApp;
+package com.tests_runner;
 
 import com.facebook.react.ReactActivity;
 
@@ -10,6 +10,6 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "testApp";
+    return "tests_runner";
   }
 }

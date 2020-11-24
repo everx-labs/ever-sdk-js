@@ -12,14 +12,3 @@
  *
  */
 
-import {
-    runner,
-} from '../runner';
-import { test, expect } from '../jest';
-
-test('Test versions compatibility', async () => {
-    const client = runner.getClient();
-    const version = (await client.client.version()).version;
-    expect(version.split('.')[0]).toEqual('1');
-});
-

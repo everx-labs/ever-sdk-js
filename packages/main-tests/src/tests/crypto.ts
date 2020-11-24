@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-import {
-    expect,
-    test,
-} from '../jest';
 import {runner} from '../runner';
+import {expect, test} from '../jest';
 
 const mnemonicWordCount = [12, 15, 18, 21, 24];
 const mnemonicDictionary = [1, 2, 3, 4, 5, 6, 7, 8];

@@ -11,15 +11,27 @@
  * limitations under the License.
  *
  */
+import buffer from 'buffer';
 
-import {
-    runner,
-} from '../runner';
-import { test, expect } from '../jest';
 
-test('Test versions compatibility', async () => {
-    const client = runner.getClient();
-    const version = (await client.client.version()).version;
-    expect(version.split('.')[0]).toEqual('1');
-});
+if (!global.window) {
+    global.window = {  };
+}
 
+if (!global.Buffer) {
+    global.Buffer = buffer.Buffer;
+}
+
+if (!global.process) {
+    global.process = {};
+}
+
+if (global.process.version === undefined) {
+    global.process.version = '';
+}
+
+if (global.process.stdout === undefined) {
+    global.process.stdout = {
+        isTTY: false,
+    }
+}

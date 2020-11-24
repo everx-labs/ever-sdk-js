@@ -3,6 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"main": "index.js",
+	"browser": true,
 	"scripts": {
 		"android": "react-native run-android",
 		"ios": "react-native run-ios",
@@ -13,16 +14,21 @@
 		"prepare tests": "node prepare-suite.js"
 	},
 	"dependencies": {
-		"@ton-client/main": "file:ton-client-main-1.0.0.tgz",
-		"@ton-client/main-tests": "file:ton-client-main-tests-1.0.0.tgz",
-		"@ton-client/react-native-module": "file:ton-client-react-native-module-1.0.0.tgz",
-		"react": "17.0.1",
-		"react-native": "0.63.3"
+		"@ton-client/main": "file:../main",
+		"@ton-client/main-tests": "file:../main-tests",
+		"@ton-client/react-native-module": "file:../react-native-module",
+		"react": "16.13.1",
+		"react-native": "0.63.3",
+		"buffer": "^6.0.2",
+		"assert": "^2.0.0",
+		"find-process": "^1.4.4"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.12.3",
 		"@babel/runtime": "^7.12.5",
 		"@react-native-community/eslint-config": "^2.0.0",
+		"@types/react": "^16.9.56",
+		"@types/react-native": "^0.63.35",
 		"eslint": "^7.13.0",
 		"metro-react-native-babel-preset": "^0.64.0"
 	}

@@ -1,3 +1,5 @@
+import {TestsRunner} from "./runner";
+
 export class TestsLogger {
 
     success = 0;
@@ -35,13 +37,13 @@ export class TestsLogger {
         const successLog = TestsLogger.extractReport('[TEST_SUCCESS]', line);
         if (successLog) {
             this.success += 1;
-            console.log(`✓ ${successLog.name} (${this.success} / ${this.failure})`);
+            TestsRunner.log(`✓ ${successLog.name} (${this.success} / ${this.failure})`);
             return;
         }
         const failureLog = TestsLogger.extractReport('[TEST_FAILURE]', line);
         if (failureLog) {
             this.failure += 1;
-            console.log(`\x1b[0;31m𐄂 ${failureLog.name} (${this.success} / ${this.failure}) - ${JSON.stringify(
+            TestsRunner.log(`\x1b[0;31m𐄂 ${failureLog.name} (${this.success} / ${this.failure}) - ${JSON.stringify(
                 failureLog.errors,
                 undefined,
                 '    ',
@@ -50,10 +52,10 @@ export class TestsLogger {
         }
         const completeLog = TestsLogger.extractReport('[TEST_COMPLETE]', line);
         if (completeLog) {
-            console.log(`---`);
-            console.log(`success: ${this.success}`);
-            console.log(`failure: ${this.failure}`);
-            process.exit(this.failure > 0 ? 1 : 0);
+            TestsRunner.log(`---`);
+            TestsRunner.log(`success: ${this.success}`);
+            TestsRunner.log(`failure: ${this.failure}`);
+            TestsRunner.exit(this.failure > 0 ? 1 : 0);
         }
     }
 }

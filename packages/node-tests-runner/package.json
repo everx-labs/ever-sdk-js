@@ -19,12 +19,13 @@
 	"engines": {
 		"node": ">=6"
 	},
-	"dependencies": {},
-	"devDependencies": {
-		"typescript": "4.0.3",
+	"dependencies": {
 		"@ton-client/main": "file:../main",
 		"@ton-client/main-tests": "file:../main-tests",
-		"@ton-client/node-addon": "file:../node-addon",
+		"@ton-client/node-addon": "file:../node-addon"
+	},
+	"devDependencies": {
+		"typescript": "4.0.3",
 		"@types/node": "14.11.8"
 	}
 }

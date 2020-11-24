@@ -5,19 +5,34 @@
  * @format
  */
 const path = require('path');
-
 const extraNodeModules = {};
 const watchFolders = [];
 
-function addModule(name, modulePath) {
-    const resolvedPath = path.resolve(__dirname, 'node_modules', modulePath);
+for (const name of [
+    'path',
+    'fs',
+    'util',
+    'module',
+    'stream',
+    'constants',
+]) {
+    extraNodeModules[name] = path.resolve(__dirname, 'node-mock', name);
+}
+
+
+for (const name of [
+    '@ton-client/main',
+    '@ton-client/react-native-module',
+    '@ton-client/main-tests',
+    'react-native',
+    '@babel/runtime',
+    'buffer',
+    'assert'
+]) {
+    const resolvedPath = path.resolve(__dirname, 'node_modules', name);
     extraNodeModules[name] = resolvedPath;
     watchFolders.push(resolvedPath);
 }
-
-// addModule('@ton-client/main', '@ton-client/main');
-// addModule('@ton-client/react-native-module', '@ton-client/react-native-module');
-// addModule('@ton-client/main-tests', '@ton-client/main-tests');
 
 
 module.exports = {
@@ -34,4 +49,9 @@ module.exports = {
         extraNodeModules
     },
     watchFolders,
+    // serializer: {
+    //     getModulesRunBeforeMainModule: () => {
+    //         return [path.resolve(__dirname, 'entry.js')];
+    //     }
+    // }
 };

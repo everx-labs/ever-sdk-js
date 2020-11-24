@@ -1,10 +1,10 @@
-import { TonClient } from "@ton-client/main";
+import {TonClient} from "@ton-client/main";
 import React, {Component} from 'react';
 import {
     View,
     Text,
 } from 'react-native';
-// import {TestsRunningState} from '@ton-client/main-tests';
+import {TestsRunner} from "@ton-client/main-tests";
 
 class App extends Component {
     async componentDidMount() {
@@ -14,15 +14,14 @@ class App extends Component {
             }
         });
         const version = (await client.client.version()).version;
-        const accounts = await client.net.query_collection({
-            collection: 'accounts',
-            result: 'id balance'
-        });
         this.setState({
             version
         });
-
-        // await startTests((state) => this.setState(state));
+        TestsRunner.run(
+            state => this.setState(state),
+            (...args) => console.log(...args),
+        ).then(_ => {
+        });
     }
 
     render() {

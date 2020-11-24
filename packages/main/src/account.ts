@@ -1,8 +1,11 @@
+import {TonClient} from "./client";
 import {
-    Abi, accountForExecutorAccount, ParamsOfEncodeMessage, ResultOfProcessMessage,
-    ResultOfRunExecutor, Signer, TonClient,
-} from './index';
-
+    Abi, accountForExecutorAccount,
+    ParamsOfEncodeMessage,
+    ResultOfProcessMessage,
+    ResultOfRunExecutor,
+    Signer
+} from "./modules";
 
 export class Account {
     client: TonClient;
@@ -10,7 +13,7 @@ export class Account {
     address: string;
     signer: Signer;
     private cachedBoc: string | null;
-    
+
     constructor(client: TonClient, abi: Abi, address: string, signer: Signer) {
         this.client = client;
         this.abi = abi;
@@ -18,10 +21,10 @@ export class Account {
         this.signer = signer;
         this.cachedBoc = null;
     }
-    
+
     private deployParams(tvc: string,
-        constructorName?: string,
-        constructorInput?: any,
+                         constructorName?: string,
+                         constructorInput?: any,
     ): ParamsOfEncodeMessage {
         return {
             abi: this.abi, signer: this.signer, deploy_set: {
@@ -31,16 +34,16 @@ export class Account {
             } : undefined,
         };
     }
-    
+
     async getDeployAddress(tvc: string, constructorName?: string, constructorInput?: any) {
         const deployParams = this.deployParams(tvc, constructorName, constructorInput);
         return (await this.client.abi.encode_message(deployParams)).address;
     }
-    
+
     async setDeployAddress(tvc: string, constructorName?: string, constructorInput?: any) {
         this.address = await this.getDeployAddress(tvc, constructorName, constructorInput);
     }
-    
+
     async deploy(tvc: string, constructorName?: string, constructorInput?: any) {
         const deployParams = this.deployParams(tvc, constructorName, constructorInput);
         this.address = (await this.client.abi.encode_message(deployParams)).address;
@@ -48,7 +51,7 @@ export class Account {
             message_encode_params: deployParams, send_events: false,
         });
     }
-    
+
     async run(functionName: string, input: any): Promise<ResultOfProcessMessage> {
         return await this.client.processing.process_message({
             message_encode_params: {
@@ -58,7 +61,7 @@ export class Account {
             }, send_events: false,
         });
     }
-    
+
     async runLocal(functionName: string, input: any): Promise<ResultOfRunExecutor> {
         const message = await this.client.abi.encode_message({
             abi: this.abi, signer: this.signer, call_set: {
@@ -75,11 +78,11 @@ export class Account {
         }
         return result;
     }
-    
+
     dropCachedData() {
         this.cachedBoc = null;
     }
-    
+
     async boc(): Promise<string> {
         if (this.cachedBoc) {
             return this.cachedBoc;
@@ -90,12 +93,12 @@ export class Account {
         this.cachedBoc = boc;
         return boc;
     }
-    
+
     async parsed(): Promise<any> {
         return (await this.client.boc.parse_account({
             boc: await this.boc(),
         })).parsed;
     }
-    
+
 }
 

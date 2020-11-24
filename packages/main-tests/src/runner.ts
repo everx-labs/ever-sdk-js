@@ -28,10 +28,15 @@ import {
 } from './givers';
 import {
     jest,
-    setTimeout,
 } from './jest';
 
 export class TestsRunner {
+    static setTimeout: (f: () => void, ms: number) => void = () => {
+    };
+    static log: (...args: any[]) => void = (..._args: any[]) => {
+    }
+    static exit: (code: number) => void = (_code) => {
+    }
     useNodeSE: boolean = false;
     config: ClientConfig = {
         network: {server_address: 'http://localhost:8080'},
@@ -59,7 +64,7 @@ export class TestsRunner {
             return json;
         }
 
-        const log = optionLog ?? console.log;
+        const log = optionLog ?? TestsRunner.log;
         try {
             jest.setTimeout(300000);
             const client = runner.getClient();
@@ -74,36 +79,32 @@ export class TestsRunner {
 
             jest.addEventHandler((event: any) => {
                 if (event.name === 'test_start') {
-                    log(`[TEST_START] ${JSON.stringify({
+                    console.log(`[TEST_START] ${JSON.stringify({
                         name: event.test.name,
                     })}`);
-                } else if (event.name === 'test_done') {
-                    if (event.test.errors.length === 0) {
-                        state.passed = (state.passed ?? 0) + 1;
-                        log(`[TEST_SUCCESS] ${JSON.stringify({
-                            name: event.test.name,
-                        })}`);
-                    } else {
-                        state.failed = (state.failed ?? 0) + 1;
-                        log(`[TEST_FAILURE] ${JSON.stringify({
-                            name: event.test.name,
-                            errors: event.test.errors && event.test.errors.map(errorToJson),
-                        })}`);
-
-                    }
+                } else if (event.name === 'test_success') {
+                    state.passed += 1;
+                    console.log(`[TEST_SUCCESS] ${JSON.stringify({
+                        name: event.test.name,
+                    })}`);
+                } else if (event.name === 'test_failure') {
+                    state.failed += 1;
+                    console.log(`[TEST_FAILURE] ${JSON.stringify({
+                        name: event.test.name,
+                        errors: event.test.errors && event.test.errors.map(errorToJson),
+                    })}`);
                 } else {
                     return;
                 }
                 onStateChange(state);
             });
             onStateChange(state);
-            const runResult = await jest.run();
-            const results = {
-                errors: runResult.unhandledErrors.map((error) => {
-                    return error.toString().replace(/\n\s+at\s+.*/gi, '');
-                }),
-                results: runResult.testResults,
-            };
+            const results = await jest.run();
+            results.forEach((result) => {
+                result.errors = result.errors.map((e) => {
+                    return e.toString().replace(/\n\s+at\s+.*/gi, '')
+                });
+            });
             log(`[TEST_COMPLETE] ${JSON.stringify(results)}`);
             state.finished = true;
             onStateChange(state);
@@ -221,7 +222,7 @@ export class TestsRunner {
                     // ignore exception
                 }
             }
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => TestsRunner.setTimeout(resolve, 1000));
         }
         if (this.client) {
             await this.client.close();
@@ -247,7 +248,4 @@ export const zeroRunningState: TestsRunningState = {
     finished: false,
 };
 
-jest.afterAll(async () => {
-    await runner.done();
-});
 

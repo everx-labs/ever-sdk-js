@@ -1,4 +1,4 @@
-# ton-client-react-native-js
+# react-native-tests-runner
 
 TON Labs Client Library for React Native Test App
 
@@ -20,8 +20,8 @@ Android:
 ```shell script
 npm install
 node prepare-suite.js
-node run.ts ios
-node run.ts android
+node run.js ios
+node run.js android
 ```
 
 # Options

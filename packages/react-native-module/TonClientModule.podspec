@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.author       = { "author" => "sdk@tonlabs.io" }
   s.platform     = :ios, "7.0"
   s.source       = { :git => "https://github.com/tonlabs/ton-client-js.git", :tag => "master" }
-  s.source_files = "ios/**/*.{h,m}"
+  s.source_files = "ios/**/*.{h,m,mm}"
   s.ios.vendored_library = "ios/libtonclient.a"
 
   s.requires_arc = true

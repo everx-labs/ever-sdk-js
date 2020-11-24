@@ -16,32 +16,50 @@ import jCircus from 'jest-circus';
 import jExpect from 'expect';
 import {addEventHandler as jAddEventHandler} from 'jest-circus/build/state';
 import jRun from 'jest-circus/build/run';
-import {Buffer as buffer} from 'buffer';
-import bigInt from 'big-integer';
 
-declare function BigInt(v: any): any;
+declare const global: any;
 
-export const jest = {
-    test: jCircus.test,
-    expect: jExpect,
-    afterAll: jCircus.afterAll,
-    afterEach: jCircus.afterEach,
-    beforeAll: jCircus.beforeAll,
-    beforeEach: jCircus.beforeEach,
-    addEventHandler: jAddEventHandler,
-    run: jRun,
-    setTimeout(timeout: number) {
-        (global as any)[Symbol.for('TEST_TIMEOUT_SYMBOL')] = timeout;
-    },
+const test = jCircus.test;
+const expect = jExpect;
+const afterAll = jCircus.afterAll;
+const afterEach = jCircus.afterEach;
+const beforeAll = jCircus.beforeAll;
+const beforeEach = jCircus.beforeEach;
+const addEventHandler = jAddEventHandler;
+const run = jRun;
+const setTimeout = (timeout: number) => {
+    global[Symbol.for('TEST_TIMEOUT_SYMBOL')] = timeout;
 };
 
-if (!global.BigInt) {
-    (global as any).BigInt = bigInt;
-}
-if (!global.Buffer) {
-    global.Buffer = buffer;
-}
+test.each = variants => (title, fn) => variants.forEach((v) => {
+    jest.test(title.replace(/%i/g, v), () => fn(v));
+});
 
+
+const jest = {
+    test,
+    expect,
+    afterAll,
+    afterEach,
+    beforeAll,
+    beforeEach,
+    addEventHandler,
+    run,
+    setTimeout,
+};
+
+export {
+    test,
+    expect,
+    afterAll,
+    afterEach,
+    beforeAll,
+    beforeEach,
+    addEventHandler,
+    run,
+    setTimeout,
+    jest,
+};
 
 //TODO:
 // jest.test.each = (variants: any[]) => (title: string, fn: Global.It) => variants.forEach((v) => {
@@ -49,74 +67,5 @@ if (!global.Buffer) {
 // });
 //
 
-jest.setTimeout(200000);
+setTimeout(200000);
 
-
-(jest as any).expect = (received: any) => {
-    const wrapped = defaultExpect(received);
-    if (isBigInt(received)) {
-        Object.entries(bigIntMatchers).forEach(([name, fn]) => {
-            (wrapped as any)[name] = (...args: any[]) => (fn as MatcherFn)(received, ...args);
-        });
-    }
-    return wrapped;
-};
-
-export function isBigInt(a: any) {
-    return typeof a === 'bigint' || a instanceof BigInt;
-}
-
-function compareBigInt(a: any, b: any) {
-    const bigA = BigInt(a);
-    const bigB = BigInt(b);
-    if (typeof bigA !== 'bigint') {
-        return bigA.compare(bigB);
-    }
-    if (bigA < bigB) {
-        return -1;
-    }
-    if (bigA > bigB) {
-        return 1;
-    }
-    return 0;
-}
-
-export const bigIntMatchers = {
-    toBeGreaterThan(received: any, other: any) {
-        return {
-            pass: compareBigInt(received, other) > 0,
-            message: () => `${received} must be greater than ${other}`,
-        };
-    },
-    toBeGreaterThanOrEqual(received: any, other: any) {
-        return {
-            pass: compareBigInt(received, other) >= 0,
-            message: () => `${received} must be greater than or equal to ${other}`,
-        };
-    },
-    toBeLessThan(received: any, other: any) {
-        return {
-            pass: compareBigInt(received, other) < 0,
-            message: () => `${received} must be less than ${other}`,
-        };
-    },
-    toBeLessThanOrEqual(received: any, other: any) {
-        return {
-            pass: compareBigInt(received, other) <= 0,
-            message: () => `${received} must be less than or equal to ${other}`,
-        };
-    },
-    toEqual(received: any, other: any) {
-        return {
-            pass: compareBigInt(received, other) === 0,
-            message: () => `${received} must be equal to ${other}`,
-        };
-    },
-};
-export const defaultExpect = jExpect;
-export type MatcherFn = (...args: any[]) => any;
-
-export declare function setTimeout(fn: () => void, ms: number): void;
-
-export const test = jest.test;
-export const expect = jest.expect;

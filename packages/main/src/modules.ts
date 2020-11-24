@@ -8,6 +8,8 @@ interface IClient {
         functionParams?: any,
         responseHandler?: ResponseHandler
     ): Promise<any>;
+    resolve_app_request(app_request_id: number | null, result: any): Promise<void>;
+    reject_app_request(app_request_id: number | null, error: any): Promise<void>;
 }
 
 // client module
@@ -38,8 +40,7 @@ export type NetworkConfig = {
 export type CryptoConfig = {
     mnemonic_dictionary?: number,
     mnemonic_word_count?: number,
-    hdkey_derivation_path?: string,
-    hdkey_compliant?: boolean
+    hdkey_derivation_path?: string
 };
 
 export type AbiConfig = {
@@ -97,6 +98,7 @@ export type ParamsOfResolveAppRequest = {
     app_request_id: number,
     result: AppRequestResult
 };
+
 
 export class ClientModule {
     client: IClient;
@@ -377,7 +379,7 @@ export type ResultOfChaCha20 = {
     data: string
 };
 
-export type ResultOfRegisterSigningBox = {
+export type RegisteredSigningBox = {
     handle: SigningBoxHandle
 };
 
@@ -423,14 +425,6 @@ export function resultOfAppSigningBoxSign(signature: string): ResultOfAppSigning
     };
 }
 
-export type ResultOfGetSigningBox = {
-    handle: SigningBoxHandle
-};
-
-export type ParamsOfSigningBoxGetPublicKey = {
-    signing_box: SigningBoxHandle
-};
-
 export type ResultOfSigningBoxGetPublicKey = {
     pubkey: string
 };
@@ -443,6 +437,41 @@ export type ParamsOfSigningBoxSign = {
 export type ResultOfSigningBoxSign = {
     signature: string
 };
+
+type ResultOfAppSigningBoxGetPublicKey = {
+    public_key: string
+};
+
+type ParamsOfAppSigningBoxSign = {
+    unsigned: string
+};
+
+type ResultOfAppSigningBoxSign = {
+    signature: string
+};
+
+export interface AppSigningBox {
+    get_public_key(): Promise<ResultOfAppSigningBoxGetPublicKey>,
+    sign(params: ParamsOfAppSigningBoxSign): Promise<ResultOfAppSigningBoxSign>,
+}
+
+async function dispatchAppSigningBox(obj: AppSigningBox, params: ParamsOfAppSigningBox, app_request_id: number | null, client: IClient) {
+    try {
+        let result = {};
+        switch (params.type) {
+            case 'GetPublicKey':
+                result = await obj.get_public_key();
+                break;
+            case 'Sign':
+                result = await obj.sign(params);
+                break;
+        }
+        client.resolve_app_request(app_request_id, { type: params.type, ...result });
+    }
+    catch (error) {
+        client.reject_app_request(app_request_id, error);
+    }
+}
 
 export class CryptoModule {
     client: IClient;
@@ -579,20 +608,30 @@ export class CryptoModule {
         return this.client.request('crypto.chacha20', params);
     }
 
-    register_signing_box(): Promise<ResultOfRegisterSigningBox> {
-        return this.client.request('crypto.register_signing_box');
+    register_signing_box(obj: AppSigningBox): Promise<RegisteredSigningBox> {
+        return this.client.request('crypto.register_signing_box', undefined, (params: any, responseType: number) => {
+            if (responseType === 3) {
+                dispatchAppSigningBox(obj, params.request_data, params.app_request_id, this.client);
+            } else if (responseType === 4) {
+                dispatchAppSigningBox(obj, params, null, this.client);
+            }
+        });
     }
 
-    get_signing_box(params: KeyPair): Promise<ResultOfGetSigningBox> {
+    get_signing_box(params: KeyPair): Promise<RegisteredSigningBox> {
         return this.client.request('crypto.get_signing_box', params);
     }
 
-    signing_box_get_public_key(params: ParamsOfSigningBoxGetPublicKey): Promise<ResultOfSigningBoxGetPublicKey> {
+    signing_box_get_public_key(params: RegisteredSigningBox): Promise<ResultOfSigningBoxGetPublicKey> {
         return this.client.request('crypto.signing_box_get_public_key', params);
     }
 
     signing_box_sign(params: ParamsOfSigningBoxSign): Promise<ResultOfSigningBoxSign> {
         return this.client.request('crypto.signing_box_sign', params);
+    }
+
+    remove_signing_box(params: RegisteredSigningBox): Promise<void> {
+        return this.client.request('crypto.remove_signing_box', params);
     }
 }
 
@@ -780,7 +819,7 @@ export type AbiParam = {
 export type AbiEvent = {
     name: string,
     inputs: AbiParam[],
-    id?: number | null
+    id?: string | null
 };
 
 export type AbiData = {
@@ -794,7 +833,7 @@ export type AbiFunction = {
     name: string,
     inputs: AbiParam[],
     outputs: AbiParam[],
-    id?: number | null
+    id?: string | null
 };
 
 export type AbiContract = {
@@ -888,6 +927,7 @@ export type ResultOfEncodeAccount = {
     id: string
 };
 
+
 export class AbiModule {
     client: IClient;
 
@@ -956,6 +996,7 @@ export type ParamsOfGetBocHash = {
 export type ResultOfGetBocHash = {
     hash: string
 };
+
 
 export class BocModule {
     client: IClient;
@@ -1138,6 +1179,7 @@ export type ParamsOfProcessMessage = {
     send_events: boolean
 };
 
+
 export class ProcessingModule {
     client: IClient;
 
@@ -1201,6 +1243,7 @@ export type ParamsOfConvertAddress = {
 export type ResultOfConvertAddress = {
     address: string
 };
+
 
 export class UtilsModule {
     client: IClient;
@@ -1303,6 +1346,7 @@ export type ResultOfRunGet = {
     output: any
 };
 
+
 export class TvmModule {
     client: IClient;
 
@@ -1365,6 +1409,7 @@ export type ParamsOfSubscribeCollection = {
     filter?: any,
     result: string
 };
+
 
 export class NetModule {
     client: IClient;
