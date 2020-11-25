@@ -1,6 +1,6 @@
 {
-	"name": "test_app",
-	"version": "0.0.1",
+	"name": "@ton-client/react-native-tests-runner",
+	"version": "1.2.0",
 	"private": true,
 	"main": "index.js",
 	"browser": true,
@@ -14,8 +14,8 @@
 		"prepare tests": "node prepare-suite.js"
 	},
 	"dependencies": {
-		"@ton-client/main": "file:../main",
-		"@ton-client/main-tests": "file:../main-tests",
+		"@ton-client/core": "file:../core",
+		"@ton-client/tests": "file:../tests",
 		"@ton-client/react-native-module": "file:../react-native-module",
 		"react": "16.13.1",
 		"react-native": "0.63.3",

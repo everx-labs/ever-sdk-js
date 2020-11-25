@@ -1,6 +1,6 @@
 {
 	"name": "@ton-client/node-tests-runner",
-	"version": "1.0.0",
+	"version": "1.2.0",
 	"description": "TON Client Tests runner on NodeJs",
 	"main": "index.js",
 	"repository": {
@@ -20,8 +20,8 @@
 		"node": ">=6"
 	},
 	"dependencies": {
-		"@ton-client/main": "file:../main",
-		"@ton-client/main-tests": "file:../main-tests",
+		"@ton-client/core": "file:../core",
+		"@ton-client/tests": "file:../tests",
 		"@ton-client/node-addon": "file:../node-addon"
 	},
 	"devDependencies": {
