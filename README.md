@@ -1,13 +1,70 @@
-# TON Javascript Client SDK
-Shared JavaScript TON Labs Client Library  
-![npm publish](https://github.com/tonlabs/ton-client-js/workflows/npm%20publish/badge.svg)  
+# JavaScript TON Client Bindings
 
-The JavaScript SDK implements the client-side libraries used by applications working with TON OS GraphQL API.  
-This package supports web (browser), mobile-web, and server (Node.js) clients. 
+This repository contains JavaScript TON Client binding packages:
+- `@ton-client/core` – common binding independent from JavaScript platform you use.
+- `@ton-client/node-addon` – bridge to NodeJs including NodeJs binary addon.
+- `@ton-client/wasm-module` – bridge to browser including WASM module. 
+- `@ton-client/react-native-module` – bridge to mobile react-native platform including 
+static libraries for iOS and Android.
+ 
+# Installation
 
-Javascript SDK is distributed via npm package:   
-[common js package](https://www.npmjs.com/package/ton-client-js)
+##Install core package
 
+```shell script
+npm i --save @ton-client/core
+```
+
+##Install bridge package (depends on target JS platform)
+
+The bridge package will download precompiled binaries from TON Labs cloud storage.
+If you want to rebuild binary from sources see [build binaries](#build_binaries) section. 
+
+NodeJs:
+```shell script
+npm i --save @ton-client/node-addon
+```
+
+Web:
+```shell script
+npm i --save @ton-client/wasm-module
+```
+
+React Native:
+```shell script
+npm i --save @ton-client/react-native-module
+```
+
+#Build bridge binaries
+
+You can build binaries from sources.
+
+If you install bridge package from `npmjs` you can build with the following commands (e.g. for nodejs):
+```shell script
+cd node_modules/@ton-client/node-addon/build
+cargo run
+```
+
+#Build binaries
+
+If you checkout this repository you can build binaries for all bridges.
+
+```shell script
+cd packages/node-addon/build
+cargo run
+cd ../../../wasm-module/build
+cargo run
+cd ../../../react-native-module/android/build
+cargo run
+cd ../../ios/build
+cargo run
+```
+
+Also the archives will be created to be published on the TON Labs cloud storage. Archives will be placed into the following folders:
+- `packages/node-addon/publish`
+- `packages/wasm-module/publish` 
+
+Depending on platform you are use you must install two 
 **Attention!** Because the JS library uses pre-compiled [core sdk rust library](https://github.com/tonlabs/TON-SDK), you need to 
 install it via platform-dependable packages that will also link pre-compiled rust core to your project:
 
@@ -26,7 +83,7 @@ To get started using TON Javascript SDK, see [Add SDK to your Application](https
 
 
 **Documentation**  
-[GraphQL API and SDK documentation](https://docs.ton.dev/86757ecb2/p/92b041-overview)
+[TON-SDK API Documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md)
 
 ---
 Copyright 2018-2020 TON DEV SOLUTIONS LTD.
