@@ -15,7 +15,7 @@ static libraries for iOS and Android.
 npm i --save @ton-client/core
 ```
 
-##Install bridge package (depends on target JS platform)
+## Install bridge package (depends on target JS platform)
 
 The bridge package will download precompiled binaries from TON Labs cloud storage.
 If you want to rebuild binary from sources see [build binaries](#build_binaries) section. 
@@ -35,7 +35,7 @@ React Native:
 npm i --save @ton-client/react-native-module
 ```
 
-#Build bridge binaries
+# Build bridge binaries
 
 You can build binaries from sources.
 
@@ -45,7 +45,7 @@ cd node_modules/@ton-client/node-addon/build
 cargo run
 ```
 
-#Build binaries
+# Build binaries
 
 If you checkout this repository you can build binaries for all bridges.
 
