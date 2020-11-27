@@ -1,10 +1,10 @@
-import {TonClient} from "@ton-client/main";
+import {TonClient} from "@ton-client/core";
 import React, {Component} from 'react';
 import {
     View,
     Text,
 } from 'react-native';
-import {TestsRunner} from "@ton-client/main-tests";
+import {TestsRunner} from "@ton-client/tests";
 
 class App extends Component {
     async componentDidMount() {

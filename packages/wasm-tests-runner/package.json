@@ -21,17 +21,20 @@
 	},
 	"homepage": "https://ton.dev/node-se",
 	"dependencies": {
-		"opentracing": "^0.14.4",
 		"@ton-client/core": "file:../core",
 		"@ton-client/tests": "file:../tests",
-		"@ton-client/wasm-module": "file:../wasm-module"
+		"@ton-client/wasm-module": "file:../wasm-module",
+		"assert": "^2.0.0",
+		"buffer": "^6.0.2",
+		"opentracing": "^0.14.4"
 	},
 	"devDependencies": {
 		"puppeteer": "^5.3.1",
 		"webpack": "5.1.3",
 		"webpack-cli": "3.3.12",
 		"webpack-dev-server": "3.11.0",
-		"copy-webpack-plugin": "^6.2.1"
+		"copy-webpack-plugin": "^6.2.1",
+		"find-process": "^1.4.4"
 	},
 	"main": "index.js"
 }

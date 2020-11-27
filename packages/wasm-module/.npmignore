@@ -1,0 +1,6 @@
+publish/
+lib/pkg/
+**/*.lock
+*.wasm
+*.tgz
+index.js

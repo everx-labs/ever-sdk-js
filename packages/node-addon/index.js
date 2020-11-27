@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 function getHomeAddonPath() {
-    const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require('../package.json').version).split(
+    const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require('./package.json').version).split(
         '.')[0];
     const binariesHomePath = path.resolve(os.homedir(), '.tonlabs', 'binaries', binariesVersion);
     return path.resolve(binariesHomePath, 'tonclient.node');
@@ -27,7 +27,7 @@ function getHomeAddonPath() {
 
 function loadAddon() {
     try {
-        return require('../tonclient.node');
+        return require('./tonclient.node');
     } catch (error) {
         if (fs.existsSync(path.resolve(__dirname, 'tonclient.node'))) {
             throw error;
@@ -36,10 +36,14 @@ function loadAddon() {
     return require(getHomeAddonPath());
 }
 
-export function nodeAddon() {
+function nodeAddon() {
     try {
         return Promise.resolve(loadAddon());
     } catch (error) {
         return Promise.reject(error);
     }
+}
+
+module.exports = {
+    nodeAddon,
 }

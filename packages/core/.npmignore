@@ -4,3 +4,5 @@
 dist/**/*.test.*
 !package.json
 !README.md
+**/*.map
+src/

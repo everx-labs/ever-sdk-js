@@ -1435,4 +1435,233 @@ export class NetModule {
     }
 }
 
+// debot module
+
+
+export type DebotHandle = number;
+
+export type DebotAction = {
+    description: string,
+    name: string,
+    action_type: number,
+    to: number,
+    attributes: string,
+    misc: string
+};
+
+export type ParamsOfStart = {
+    address: string
+};
+
+export type RegisteredDebot = {
+    debot_handle: DebotHandle
+};
+
+export type ParamsOfAppDebotBrowser = {
+    type: 'Log'
+    msg: string
+} | {
+    type: 'Switch'
+    context_id: number
+} | {
+    type: 'ShowAction'
+    action: DebotAction
+} | {
+    type: 'Input'
+    prompt: string
+} | {
+    type: 'LoadKey'
+} | {
+    type: 'InvokeDebot'
+    debot_addr: string,
+    action: DebotAction
+};
+
+export function paramsOfAppDebotBrowserLog(msg: string): ParamsOfAppDebotBrowser {
+    return {
+        type: 'Log',
+        msg,
+    };
+}
+
+export function paramsOfAppDebotBrowserSwitch(context_id: number): ParamsOfAppDebotBrowser {
+    return {
+        type: 'Switch',
+        context_id,
+    };
+}
+
+export function paramsOfAppDebotBrowserShowAction(action: DebotAction): ParamsOfAppDebotBrowser {
+    return {
+        type: 'ShowAction',
+        action,
+    };
+}
+
+export function paramsOfAppDebotBrowserInput(prompt: string): ParamsOfAppDebotBrowser {
+    return {
+        type: 'Input',
+        prompt,
+    };
+}
+
+export function paramsOfAppDebotBrowserLoadKey(): ParamsOfAppDebotBrowser {
+    return {
+        type: 'LoadKey',
+    };
+}
+
+export function paramsOfAppDebotBrowserInvokeDebot(debot_addr: string, action: DebotAction): ParamsOfAppDebotBrowser {
+    return {
+        type: 'InvokeDebot',
+        debot_addr,
+        action,
+    };
+}
+
+export type ResultOfAppDebotBrowser = {
+    type: 'Input'
+    value: string
+} | {
+    type: 'LoadKey'
+    keys: KeyPair
+} | {
+    type: 'InvokeDebot'
+};
+
+export function resultOfAppDebotBrowserInput(value: string): ResultOfAppDebotBrowser {
+    return {
+        type: 'Input',
+        value,
+    };
+}
+
+export function resultOfAppDebotBrowserLoadKey(keys: KeyPair): ResultOfAppDebotBrowser {
+    return {
+        type: 'LoadKey',
+        keys,
+    };
+}
+
+export function resultOfAppDebotBrowserInvokeDebot(): ResultOfAppDebotBrowser {
+    return {
+        type: 'InvokeDebot',
+    };
+}
+
+export type ParamsOfFetch = {
+    address: string
+};
+
+export type ParamsOfExecute = {
+    debot_handle: DebotHandle,
+    action: DebotAction
+};
+
+type ParamsOfAppDebotBrowserLog = {
+    msg: string
+};
+
+type ParamsOfAppDebotBrowserSwitch = {
+    context_id: number
+};
+
+type ParamsOfAppDebotBrowserShowAction = {
+    action: DebotAction
+};
+
+type ParamsOfAppDebotBrowserInput = {
+    prompt: string
+};
+
+type ResultOfAppDebotBrowserInput = {
+    value: string
+};
+
+type ResultOfAppDebotBrowserLoadKey = {
+    keys: KeyPair
+};
+
+type ParamsOfAppDebotBrowserInvokeDebot = {
+    debot_addr: string,
+    action: DebotAction
+};
+
+export interface AppDebotBrowser {
+    log(params: ParamsOfAppDebotBrowserLog): void,
+    switch(params: ParamsOfAppDebotBrowserSwitch): void,
+    show_action(params: ParamsOfAppDebotBrowserShowAction): void,
+    input(params: ParamsOfAppDebotBrowserInput): Promise<ResultOfAppDebotBrowserInput>,
+    load_key(): Promise<ResultOfAppDebotBrowserLoadKey>,
+    invoke_debot(params: ParamsOfAppDebotBrowserInvokeDebot): Promise<void>,
+}
+
+async function dispatchAppDebotBrowser(obj: AppDebotBrowser, params: ParamsOfAppDebotBrowser, app_request_id: number | null, client: IClient) {
+    try {
+        let result = {};
+        switch (params.type) {
+            case 'Log':
+                obj.log(params);
+                break;
+            case 'Switch':
+                obj.switch(params);
+                break;
+            case 'ShowAction':
+                obj.show_action(params);
+                break;
+            case 'Input':
+                result = await obj.input(params);
+                break;
+            case 'LoadKey':
+                result = await obj.load_key();
+                break;
+            case 'InvokeDebot':
+                await obj.invoke_debot(params);
+                break;
+        }
+        // noinspection ES6MissingAwait
+        client.resolve_app_request(app_request_id, { type: params.type, ...result });
+    }
+    catch (error) {
+        // noinspection ES6MissingAwait
+        client.reject_app_request(app_request_id, error);
+    }
+}
+
+export class DebotModule {
+    client: IClient;
+
+    constructor(client: IClient) {
+        this.client = client;
+    }
+
+    start(params: ParamsOfStart, obj: AppDebotBrowser): Promise<RegisteredDebot> {
+        return this.client.request('debot.start', params, (params: any, responseType: number) => {
+            if (responseType === 3) {
+                dispatchAppDebotBrowser(obj, params.request_data, params.app_request_id, this.client);
+            } else if (responseType === 4) {
+                dispatchAppDebotBrowser(obj, params, null, this.client);
+            }
+        });
+    }
+
+    fetch(params: ParamsOfFetch, obj: AppDebotBrowser): Promise<RegisteredDebot> {
+        return this.client.request('debot.fetch', params, (params: any, responseType: number) => {
+            if (responseType === 3) {
+                dispatchAppDebotBrowser(obj, params.request_data, params.app_request_id, this.client);
+            } else if (responseType === 4) {
+                dispatchAppDebotBrowser(obj, params, null, this.client);
+            }
+        });
+    }
+
+    execute(params: ParamsOfExecute): Promise<void> {
+        return this.client.request('debot.execute', params);
+    }
+
+    remove(params: RegisteredDebot): Promise<void> {
+        return this.client.request('debot.remove', params);
+    }
+}
+
 

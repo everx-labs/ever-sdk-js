@@ -1,10 +1,10 @@
-import {TonClient} from '@ton-client/main';
-import {nodeAddon} from '@ton-client/node-addon';
-import {
+const {TonClient} = require('@ton-client/core');
+const {nodeAddon} = require('@ton-client/node-addon');
+const {
     TestsLogger,
-    TestsRunner, TestsRunningState,
+    TestsRunner,
     zeroRunningState,
-} from '@ton-client/main-tests';
+} = require('@ton-client/tests');
 
 TestsRunner.setTimeout = setTimeout;
 TestsRunner.log = console.log;
@@ -15,7 +15,7 @@ TonClient.useBinaryLibrary(nodeAddon);
 (async () => {
     let state = zeroRunningState;
     const logger = new TestsLogger();
-    await TestsRunner.run((x: TestsRunningState) => state = {...x}, (...args: any[]) => {
+    await TestsRunner.run((x) => state = {...x}, (...args) => {
         logger.log(...args);
     });
     console.log(state);

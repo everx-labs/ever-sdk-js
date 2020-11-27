@@ -6,19 +6,10 @@
 	"include": [],
 	"references": [
 		{
-			"path": "./packages/main"
+			"path": "./packages/core"
 		},
 		{
-			"path": "./packages/node-addon"
-		},
-		{
-			"path": "./packages/main-tests"
-		},
-		{
-			"path": "./packages/react-native-module"
-		},
-		{
-			"path": "./packages/react-native-tests-runner"
+			"path": "./packages/tests"
 		}
 	]
 }

@@ -34,7 +34,10 @@ module.exports = {
                 include: [
                     path.resolve('index.js'),
                     path.resolve(__dirname, './node_modules/webpack-dev-server'),
-                    path.resolve(__dirname, './node_modules/@ton-client/main'),
+                    path.resolve(__dirname, './node_modules/@ton-client/core'),
+                    path.resolve(__dirname, './node_modules/assert'),
+                    path.resolve(__dirname, './node_modules/buffer'),
+                    path.resolve(__dirname, './node_modules/@ton-client/tests'),
                     path.resolve(__dirname, './node_modules/@ton-client/wasm-module'),
                 ],
             },
@@ -49,6 +52,17 @@ module.exports = {
         ],
     },
     resolve: {
+        alias: {
+            util: false,
+            fs: false,
+            stream: false,
+            module: false,
+            path: false,
+            constants: false,
+        },
+        fallback: {
+            assert: require.resolve("assert/")
+        },
         extensions: ['.web.tsx', '.web.ts', '.web.jsx', '.web.js', '.ts', '.tsx', '.js', '.jsx', '.json', '.json5', '.node', '.wasm'],
     },
 };

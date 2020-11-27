@@ -20,7 +20,7 @@ import {
     signerKeys,
     signerNone,
     TonClient,
-} from '@ton-client/main';
+} from '@ton-client/core';
 
 import {
     giverRequestAmount,

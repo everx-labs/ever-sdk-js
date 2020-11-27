@@ -1,19 +1,18 @@
-// import {startTests} from "./suite/_/run";
-import { TonClient } from '@ton-client/main';
+import entry from './entry';
+import { TonClient } from '@ton-client/core';
 import wasmModule from '@ton-client/wasm-module';
+import { TestsRunner } from "@ton-client/tests";
+
 TonClient.useBinaryLibrary(wasmModule());
 
 window.addEventListener('load', () => {
-    const client = new TonClient({ network: { server_address: 'net.ton.dev' } });
     (async () => {
         try {
-            const accounts = await client.net.query_collection({
-                collection: 'accounts',
-                filter: {},
-                result: 'id balance(format:DEC)',
-            });
-            console.log('>>>', await client.client.version());
-            console.log('>>>', accounts);
+            await TestsRunner.run(
+                () => {
+                },
+                (...args) => console.log(...args),
+            );
         } catch (error) {
             console.log('>>>', error);
         }
