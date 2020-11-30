@@ -1,5 +1,5 @@
 const {spawn} = require('child_process');
-const {TestsLogger, TestsRunner} = require('@ton-client/main-tests');
+const {TestsLogger, TestsRunner} = require('@ton-client/tests');
 const findProcess = require('find-process');
 
 function run(name, args, logger) {

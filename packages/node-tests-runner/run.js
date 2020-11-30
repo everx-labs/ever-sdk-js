@@ -16,7 +16,7 @@ TonClient.useBinaryLibrary(nodeAddon);
     let state = zeroRunningState;
     const logger = new TestsLogger();
     await TestsRunner.run((x) => state = {...x}, (...args) => {
-        logger.log(...args);
+        logger.logOutput(args.join(' ') + '\n');
     });
     console.log(state);
 })();

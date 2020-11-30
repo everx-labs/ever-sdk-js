@@ -79,17 +79,17 @@ export class TestsRunner {
 
             jest.addEventHandler((event: any) => {
                 if (event.name === 'test_start') {
-                    console.log(`[TEST_START] ${JSON.stringify({
+                    log(`[TEST_START] ${JSON.stringify({
                         name: event.test.name,
                     })}`);
                 } else if (event.name === 'test_success') {
                     state.passed += 1;
-                    console.log(`[TEST_SUCCESS] ${JSON.stringify({
+                    log(`[TEST_SUCCESS] ${JSON.stringify({
                         name: event.test.name,
                     })}`);
                 } else if (event.name === 'test_failure') {
                     state.failed += 1;
-                    console.log(`[TEST_FAILURE] ${JSON.stringify({
+                    log(`[TEST_FAILURE] ${JSON.stringify({
                         name: event.test.name,
                         errors: event.test.errors && event.test.errors.map(errorToJson),
                     })}`);
