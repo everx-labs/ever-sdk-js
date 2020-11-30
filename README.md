@@ -18,7 +18,7 @@ npm i --save @ton-client/core
 ## Install bridge package (depends on target JS platform)
 
 The bridge package will download precompiled binaries from TON Labs cloud storage.
-If you want to rebuild binary from sources see [build binaries](#build_binaries) section. 
+If you want to rebuild binary from sources see [build binaries](#build binaries) section. 
 
 NodeJs:
 ```shell script
@@ -34,6 +34,8 @@ React Native:
 ```shell script
 npm i --save @ton-client/react-native-module
 ```
+
+To get started using TON JavaScript SDK, see [Add SDK to your Application](https://docs.ton.dev/86757ecb2/p/61b5eb-nodejs).
 
 # Build bridge binaries
 
@@ -63,26 +65,18 @@ cargo run
 Also the archives will be created to be published on the TON Labs cloud storage. Archives will be placed into the following folders:
 - `packages/node-addon/publish`
 - `packages/wasm-module/publish` 
+- `packages/react-native-module/ios/publish` 
+- `packages/react-native-module/android/publish` 
 
-Depending on platform you are use you must install two 
-**Attention!** Because the JS library uses pre-compiled [core sdk rust library](https://github.com/tonlabs/TON-SDK), you need to 
-install it via platform-dependable packages that will also link pre-compiled rust core to your project:
+# Useful stuff 
 
-[node-js package](https://www.npmjs.com/package/ton-client-node-js)  
-[web package](https://www.npmjs.com/package/ton-client-web-js)  
-[react-native package](https://www.npmjs.com/package/ton-client-react-native-js)  
-
-To get started using TON Javascript SDK, see [Add SDK to your Application](https://docs.ton.dev/86757ecb2/p/61b5eb-nodejs).
-
-**Community links:**
-
+## Community links
 
 [![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
 [![Gitter](https://badges.gitter.im/ton-sdk/community.svg)](https://gitter.im/ton-sdk/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-
-
-**Documentation**  
+## Documentation
+  
 [TON-SDK API Documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md)
 
 ---
