@@ -80,10 +80,10 @@ fn main() {
                 arch.target,
                 path_str(&out_lib)
             );
-            // builder.publish_package_file(
-            //     &format!("src/main/jniLibs/{}/{}", arch.jni, LIB),
-            //     &format!("tonclient_{{v}}_react_native_{}", arch.target),
-            // );
+            builder.publish_package_file(
+                 &format!("src/main/jniLibs/{}/{}", arch.jni, LIB),
+                 &format!("tonclient_{{v}}_react_native_{}", arch.target),
+            );
         } else {
             println!(
                 "Android library for [{}] does not exists. Skipped.",
