@@ -13,7 +13,31 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - run: npm publish
+
+      - name: Build
+        run: npm install
+
+      - name: Core
+        run: npm publish
+        working-directory: ./packages/core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: NodeJs
+        run: npm publish
+        working-directory: ./packages/node-addon
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: ReactNative
+        run: npm publish
+        working-directory: ./packages/react-native-module
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: WASM
+        run: npm publish
+        working-directory: ./packages/wasm-module
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           

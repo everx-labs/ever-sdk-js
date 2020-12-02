@@ -21,7 +21,7 @@ const path = require('path');
 const os = require('os');
 const platform = os.platform();
 
-const binariesHost = 'binaries.sdk.tonlabs.io';
+const binariesHost = 'sdkbinaries.tonlabs.io';
 const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || require('./package.json')
     .version
     .split('.')[0];
