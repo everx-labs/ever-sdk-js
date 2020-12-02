@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import {ABIVersion, ABIVersions, runner} from "../runner";
+import {ABIVersions, runner} from "../runner";
 import {expect, jest, test} from "../jest";
 import {contracts} from "../contracts";
-import {abiContract, signerKeys} from "@ton-client/core";
-import {Account} from "../account";
 
 test("net", async () => {
     const net = runner.getClient().net;
@@ -96,17 +94,8 @@ const transactionWithAddresses = `
 `;
 
 test.each(ABIVersions)("Subscribe for transactions with addresses (ABIv%i)", async (abiVersion) => {
-    const {net, crypto} = runner.getClient();
-    const walletPackage = contracts.WalletContract[Number(abiVersion) as ABIVersion];
-    if (!walletPackage) {
-        return;
-    }
-    const signer = signerKeys(await crypto.generate_random_sign_keys());
-    const wallet = new Account(runner.getClient(), abiContract(walletPackage.abi), signer, {
-        tvc: walletPackage.tvc,
-        initFunctionName: "constructor",
-    });
-
+    const {net} = runner.getClient();
+    const wallet = await runner.getAccount(contracts.WalletContract, abiVersion);
     await runner.sendGramsTo(await wallet.getAddress());
 
     const transactions = [];
@@ -128,11 +117,7 @@ test.each(ABIVersions)("Subscribe for transactions with addresses (ABIv%i)", asy
 });
 
 test.each(ABIVersions)("Subscribe for messages (ABI v%i)", async (abiVersion) => {
-    const {net, crypto} = runner.getClient();
-    const walletPackage = contracts.WalletContract[Number(abiVersion) as ABIVersion];
-    if (!walletPackage) {
-        return;
-    }
+    const {net} = runner.getClient();
     const docs = [];
     const subscription = (await net.subscribe_collection({
             collection: Collection.messages,
@@ -146,18 +131,12 @@ test.each(ABIVersions)("Subscribe for messages (ABI v%i)", async (abiVersion) =>
         },
     )).handle;
 
-    const signer = signerKeys(await crypto.generate_random_sign_keys());
-    const wallet = new Account(runner.getClient(), abiContract(walletPackage.abi), signer, {
-        tvc: walletPackage.tvc,
-        initFunctionName: "constructor",
-    });
-
+    const wallet = await runner.getAccount(contracts.WalletContract, abiVersion);
     await runner.sendGramsTo(await wallet.getAddress());
     await wallet.deploy();
     await net.unsubscribe({handle: subscription});
     expect(docs.length).toEqual(0);
 });
-
 
 
 test("Transactions with addresses", async () => {

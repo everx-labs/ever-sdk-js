@@ -13,9 +13,10 @@
  */
 
 import {
+    abiContract,
     ClientConfig,
     KeyPair,
-    ResultOfProcessMessage,
+    ResultOfProcessMessage, Signer,
     signerKeys,
     signerNone,
     TonClient,
@@ -27,6 +28,7 @@ import {
 } from "./givers";
 import {jest} from "./jest";
 import {Account} from "./account";
+import {ContractPackage} from "./contracts";
 
 export class TestsRunner {
     static setTimeout: (f: () => void, ms: number) => void = () => {
@@ -168,6 +170,21 @@ export class TestsRunner {
             await giver.deploy();
         }
         return giver;
+    }
+
+    async getAccount(packages: { [abiVersion: number]: ContractPackage }, abiVersion: any, signer?: Signer): Promise<Account> {
+        const pkg: ContractPackage | undefined = packages[Number(abiVersion) as ABIVersion];
+        if (!pkg) {
+            throw new Error(`Missing required contract with ABI v${abiVersion}`);
+        }
+        return new Account(
+            this.getClient(),
+            abiContract(pkg.abi),
+            signer ?? signerKeys(await this.getClient().crypto.generate_random_sign_keys())
+            , {
+                tvc: pkg.tvc,
+                initFunctionName: "constructor",
+            });
     }
 
     async sendGramsTo(account: string, amount: number = giverRequestAmount): Promise<void> {
