@@ -13,33 +13,31 @@
  */
 
 import {
-    Account,
     ClientConfig,
     KeyPair,
     ResultOfProcessMessage,
     signerKeys,
     signerNone,
     TonClient,
-} from '@ton-client/core';
+} from "@ton-client/core";
 
 import {
     giverRequestAmount,
     givers,
-} from './givers';
-import {
-    jest,
-} from './jest';
+} from "./givers";
+import {jest} from "./jest";
+import {Account} from "./account";
 
 export class TestsRunner {
     static setTimeout: (f: () => void, ms: number) => void = () => {
     };
     static log: (...args: any[]) => void = (..._args: any[]) => {
-    }
+    };
     static exit: (code: number) => void = (_code) => {
-    }
-    useNodeSE: boolean = false;
+    };
+    useNodeSE: boolean = true;
     config: ClientConfig = {
-        network: {server_address: 'http://localhost:8080'},
+        network: {server_address: "http://localhost:8080"},
     };
     private client: TonClient | null = null;
     private giver: Account | null = null;
@@ -78,16 +76,16 @@ export class TestsRunner {
             onStateChange(state);
 
             jest.addEventHandler((event: any) => {
-                if (event.name === 'test_start') {
+                if (event.name === "test_start") {
                     log(`[TEST_START] ${JSON.stringify({
                         name: event.test.name,
                     })}`);
-                } else if (event.name === 'test_success') {
+                } else if (event.name === "test_success") {
                     state.passed += 1;
                     log(`[TEST_SUCCESS] ${JSON.stringify({
                         name: event.test.name,
                     })}`);
-                } else if (event.name === 'test_failure') {
+                } else if (event.name === "test_failure") {
                     state.failed += 1;
                     log(`[TEST_FAILURE] ${JSON.stringify({
                         name: event.test.name,
@@ -102,14 +100,14 @@ export class TestsRunner {
             const results = await jest.run();
             results.forEach((result) => {
                 result.errors = result.errors.map((e) => {
-                    return e.toString().replace(/\n\s+at\s+.*/gi, '')
+                    return e.toString().replace(/\n\s+at\s+.*/gi, "");
                 });
             });
             log(`[TEST_COMPLETE] ${JSON.stringify(results)}`);
             state.finished = true;
             onStateChange(state);
         } catch (error) {
-            log('>>>', error);
+            log(">>>", error);
         }
     }
 
@@ -140,33 +138,34 @@ export class TestsRunner {
         const client = this.getClient();
         let giver: Account;
         if (this.useNodeSE) {
-            giver = new Account(client, givers.v1.abi, givers.v1.address, signerNone());
+            giver = new Account(client, givers.v1.abi, signerNone(), givers.v1.address);
         } else {
-            giver = new Account(client, givers.v2.abi, '', signerKeys(this.giverKeys ?? {
-                secret: '2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe',
-                public: 'd542f44146f169c6726c8cf70e4cbb3d33d8d842a4afd799ac122c5808d81ba3',
-            }));
-            await giver.setDeployAddress(givers.v2.tvc);
+            giver = new Account(client, givers.v2.abi, signerKeys(this.giverKeys ?? {
+                secret: "2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe",
+                public: "d542f44146f169c6726c8cf70e4cbb3d33d8d842a4afd799ac122c5808d81ba3",
+            }), {
+                tvc: givers.v2.tvc,
+            });
         }
         this.giver = giver;
         const accounts = (await client.net.query_collection({
-            collection: 'accounts',
+            collection: "accounts",
             filter: {
-                id: {eq: giver.address},
+                id: {eq: await giver.getAddress()},
             },
-            result: 'acc_type balance',
+            result: "acc_type balance",
         })).result;
 
         if (accounts.length === 0) {
-            throw `Giver wallet does not exist. Send some grams to ${giver.address}`;
+            throw new Error(`Giver wallet does not exist. Send some grams to ${await giver.getAddress()}`);
         }
         const account = accounts[0];
         if (!account.balance || Number(account.balance) < giverRequestAmount) {
-            throw `Giver has no money. Send some grams to ${giver.address}`;
+            throw new Error(`Giver has no money. Send some grams to ${await giver.getAddress()}`);
         }
 
         if (account.acc_type !== 1) {
-            await giver.deploy(givers.v2.tvc);
+            await giver.deploy();
         }
         return giver;
     }
@@ -175,12 +174,12 @@ export class TestsRunner {
         let result: ResultOfProcessMessage;
         const giver = await this.getGiver();
         if (this.useNodeSE) {
-            result = await giver.run('sendGrams', {
+            result = await giver.run("sendGrams", {
                 dest: account,
                 amount,
             });
         } else {
-            result = await giver.run('sendTransaction', {
+            result = await giver.run("sendTransaction", {
                 dest: account,
                 value: amount,
                 bounce: false,
@@ -190,26 +189,20 @@ export class TestsRunner {
             const msg = (await giver.client.boc.parse_message({boc})).parsed;
             if (msg.body_type === 0) {
                 await giver.client.net.wait_for_collection({
-                    collection: 'transactions',
+                    collection: "transactions",
                     filter: {
                         in_msg: {eq: msg.id},
                     },
-                    result: 'lt',
+                    result: "lt",
                 });
             }
         }
     }
 
-    async deploy(
-        account: Account,
-        tvc: string,
-        constructorName?: string,
-        constructorInput?: any,
-    ): Promise<void> {
-        await account.setDeployAddress(tvc, constructorName, constructorInput);
-        await this.sendGramsTo(account.address, giverRequestAmount);
+    async deploy(account: Account): Promise<void> {
+        await this.sendGramsTo(await account.getAddress(), giverRequestAmount);
         this.deployedAccounts.push(account);
-        await account.deploy(tvc, constructorName, constructorInput);
+        await account.deploy();
     }
 
     async done() {
@@ -217,7 +210,7 @@ export class TestsRunner {
         if (giver) {
             for (const account of runner.deployedAccounts) {
                 try {
-                    await account.run('sendAllMoney', {dest_addr: giver.address});
+                    await account.run("sendAllMoney", {dest_addr: await giver.getAddress()});
                 } catch (e) {
                     // ignore exception
                 }
@@ -233,6 +226,7 @@ export class TestsRunner {
 
 export const runner = new TestsRunner();
 export const ABIVersions = [1, 2];
+export type ABIVersion = 1 | 2;
 
 export type TestsRunningState = {
     version: string,
@@ -242,7 +236,7 @@ export type TestsRunningState = {
 }
 
 export const zeroRunningState: TestsRunningState = {
-    version: '',
+    version: "",
     passed: 0,
     failed: 0,
     finished: false,
