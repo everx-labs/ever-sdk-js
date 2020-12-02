@@ -1,8 +1,6 @@
 name: npm publish
 
-on:
-  release:
-    types: [published]
+on: push
 
 jobs:
   publish-npm:
@@ -15,9 +13,10 @@ jobs:
           registry-url: https://registry.npmjs.org/
 
       - name: Core
-        run: npm install
-        run: tsc
-        run: npm publish
+        run: |
+            npm install
+            tsc
+            npm publish
         working-directory: ./packages/core
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -39,12 +38,3 @@ jobs:
         working-directory: ./packages/wasm-module
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          
-  send-discord-msg:
-    needs: publish-npm
-    runs-on: ubuntu-latest
-    steps:
-      - name: Discord notification
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
