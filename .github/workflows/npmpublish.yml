@@ -14,10 +14,9 @@ jobs:
           node-version: 12
           registry-url: https://registry.npmjs.org/
 
-      - name: Build
-        run: npm install
-
       - name: Core
+        run: npm install
+        run: tsc
         run: npm publish
         working-directory: ./packages/core
         env:
