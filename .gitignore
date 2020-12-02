@@ -12,7 +12,6 @@ package-lock.json
 Jenkinsfile
 /reinstall.sh
 /uninstall.sh
-/.github/workflows/
 **/*.a
 **/*.so
 **/*.dylib
@@ -28,7 +27,6 @@ Jenkinsfile
 /packages/react-native-module/ios/publish
 /packages/react-native-module/android/lib/NDK
 /packages/react-native-module/android/publish
-/packages/react-native-module/android/build
 **/Cargo.lock
 **/publish/**
 **/target/**
