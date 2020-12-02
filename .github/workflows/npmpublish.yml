@@ -14,28 +14,27 @@ jobs:
 
       - name: Core
         run: |
-            npm whoami
             npm install
             tsc
-            npm publish
+            npm publish --access public
         working-directory: ./packages/core
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: NodeJs
-        run: npm publish
+        run: npm publish --access public
         working-directory: ./packages/node-addon
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: ReactNative
-        run: npm publish
+        run: npm publish --access public
         working-directory: ./packages/react-native-module
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: WASM
-        run: npm publish
+        run: npm publish --access public
         working-directory: ./packages/wasm-module
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
