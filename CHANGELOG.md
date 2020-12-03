@@ -1,6 +1,15 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.0.0 - Dec 3, 2020
+
+### New
+- Thin binding: JS binding has become very thin - all the implementation, including network layer, was moved to the core [TON-SDK library](https://github.com/tonlabs/TON-SDK). Find out all the key changes in the [core library CHANGELOG](https://github.com/tonlabs/TON-SDK/blob/master/CHANGELOG.md), starting from 1.0.0 release.
+- Mono repository: now all the platform packages are developed in the same repository, platform bridges were also moved here from core repository
+- Typescript: v1 JS binding is written in Typescript
+- Low level API: at the moment the library provides only low level API, **we plan to extend it with high level handy wrappers in the future releases.**
+- new API reference: [core api reference documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md) provides typescript samples of function signatures. 
+
 ## 0.26.2 - Sep 21, 2020
 ### Fixed
 - Added `Sensor.sol` contract for recompilation tests
