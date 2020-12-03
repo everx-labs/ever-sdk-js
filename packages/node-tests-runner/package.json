@@ -1,5 +1,5 @@
 {
-	"name": "@ton-client/node-tests-runner",
+	"name": "@tonclient/node-tests-runner",
 	"version": "1.2.0",
 	"description": "TON Client Tests runner on NodeJs",
 	"main": "index.js",
@@ -20,9 +20,9 @@
 		"node": ">=6"
 	},
 	"dependencies": {
-		"@ton-client/core": "file:../core",
-		"@ton-client/tests": "file:../tests",
-		"@ton-client/node-addon": "file:../node-addon"
+		"@tonclient/core": "file:../core",
+		"@tonclient/tests": "file:../tests",
+		"@tonclient/node-addon": "file:../node-addon"
 	},
 	"devDependencies": {
 		"typescript": "4.0.3",

@@ -19,7 +19,7 @@ module.exports = {
     plugins: [
         new CopyWebpackPlugin({
             patterns: [
-                { from: './node_modules/@ton-client/wasm-module/tonclient.wasm' },
+                { from: './node_modules/@tonclient/wasm-module/tonclient.wasm' },
             ],
         }),
         new webpack.LoaderOptionsPlugin({
@@ -34,11 +34,11 @@ module.exports = {
                 include: [
                     path.resolve('index.js'),
                     path.resolve(__dirname, './node_modules/webpack-dev-server'),
-                    path.resolve(__dirname, './node_modules/@ton-client/core'),
+                    path.resolve(__dirname, './node_modules/@tonclient/core'),
                     path.resolve(__dirname, './node_modules/assert'),
                     path.resolve(__dirname, './node_modules/buffer'),
-                    path.resolve(__dirname, './node_modules/@ton-client/tests'),
-                    path.resolve(__dirname, './node_modules/@ton-client/wasm-module'),
+                    path.resolve(__dirname, './node_modules/@tonclient/tests'),
+                    path.resolve(__dirname, './node_modules/@tonclient/wasm-module'),
                 ],
             },
             {

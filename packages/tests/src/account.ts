@@ -1,11 +1,11 @@
-import {TonClient} from "@ton-client/core";
+import {TonClient} from "@tonclient/core";
 import {
     Abi, accountForExecutorAccount,
     ParamsOfEncodeMessage,
     ResultOfProcessMessage,
     ResultOfRunExecutor,
     Signer,
-} from "@ton-client/core";
+} from "@tonclient/core";
 
 export type AccountDeployParams = {
     tvc: string, initFunctionName?: string,
@@ -147,4 +147,3 @@ export class Account {
         return new AccountError(`Deploy params required. `);
     }
 }
-

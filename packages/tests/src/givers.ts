@@ -13,7 +13,7 @@
  */
 
 // noinspection SpellCheckingInspection
-import {abiContract} from '@ton-client/core';
+import {abiContract} from '@tonclient/core';
 
 export const givers = {
     v1: {

@@ -1,7 +1,7 @@
 import entry from './entry';
-import { TonClient } from '@ton-client/core';
-import wasmModule from '@ton-client/wasm-module';
-import { TestsRunner } from "@ton-client/tests";
+import { TonClient } from '@tonclient/core';
+import wasmModule from '@tonclient/wasm-module';
+import { TestsRunner } from "@tonclient/tests";
 
 TonClient.useBinaryLibrary(wasmModule());
 

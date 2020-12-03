@@ -1,5 +1,5 @@
 {
-	"name": "@ton-client/tests",
+	"name": "@tonclient/tests",
 	"version": "1.2.0",
 	"description": "TON Client Tests",
 	"main": "dist/index.js",
@@ -32,7 +32,7 @@
 		"jest-mock": "^24.8.0",
 		"@babel/core": "^7.8.4",
 		"@babel/runtime": "^7.8.4",
-		"@ton-client/core": "file:../core"
+		"@tonclient/core": "file:../core"
 	},
 	"peerDependencies": {},
 	"devDependencies": {

@@ -1,10 +1,10 @@
-const {TonClient} = require('@ton-client/core');
-const {nodeAddon} = require('@ton-client/node-addon');
+const {TonClient} = require('@tonclient/core');
+const {nodeAddon} = require('@tonclient/node-addon');
 const {
     TestsLogger,
     TestsRunner,
     zeroRunningState,
-} = require('@ton-client/tests');
+} = require('@tonclient/tests');
 
 TestsRunner.setTimeout = setTimeout;
 TestsRunner.log = console.log;
@@ -20,5 +20,3 @@ TonClient.useBinaryLibrary(nodeAddon);
     });
     console.log(state);
 })();
-
-

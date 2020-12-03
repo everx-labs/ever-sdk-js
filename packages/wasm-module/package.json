@@ -1,5 +1,5 @@
 {
-	"name": "@ton-client/wasm-module",
+	"name": "@tonclient/wasm-module",
 	"version": "1.2.0",
 	"description": "TON Client WASM module for browsers",
 	"main": "index.js",

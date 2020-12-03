@@ -1,5 +1,5 @@
 {
-	"name": "@ton-client/node-addon",
+	"name": "@tonclient/node-addon",
 	"version": "1.2.0",
 	"description": "TON Client NodeJs AddOn",
 	"repository": {

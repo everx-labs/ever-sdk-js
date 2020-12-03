@@ -20,7 +20,7 @@ import {
     signerKeys,
     signerNone,
     TonClient,
-} from "@ton-client/core";
+} from "@tonclient/core";
 
 import {
     giverRequestAmount,
@@ -258,5 +258,3 @@ export const zeroRunningState: TestsRunningState = {
     failed: 0,
     finished: false,
 };
-
-

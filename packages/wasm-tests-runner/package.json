@@ -1,5 +1,5 @@
 {
-	"name": "@ton-client/wasm-tests-runner",
+	"name": "@tonclient/wasm-tests-runner",
 	"version": "1.2.0",
 	"description": "TON Client WASM module tests runner",
 	"scripts": {
@@ -21,9 +21,9 @@
 	},
 	"homepage": "https://ton.dev/node-se",
 	"dependencies": {
-		"@ton-client/core": "file:../core",
-		"@ton-client/tests": "file:../tests",
-		"@ton-client/wasm-module": "file:../wasm-module",
+		"@tonclient/core": "file:../core",
+		"@tonclient/tests": "file:../tests",
+		"@tonclient/wasm-module": "file:../wasm-module",
 		"assert": "^2.0.0",
 		"buffer": "^6.0.2",
 		"opentracing": "^0.14.4"

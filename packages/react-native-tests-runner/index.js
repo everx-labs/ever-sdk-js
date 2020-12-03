@@ -12,8 +12,8 @@
  *
  */
 import entry from './entry';
-import { TonClient } from '@ton-client/core';
-import {reactNativeModule} from '@ton-client/react-native-module';
+import { TonClient } from '@tonclient/core';
+import {reactNativeModule} from '@tonclient/react-native-module';
 import { AppRegistry } from 'react-native';
 import App from './App';
 

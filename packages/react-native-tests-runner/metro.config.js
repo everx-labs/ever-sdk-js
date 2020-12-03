@@ -21,9 +21,9 @@ for (const name of [
 
 
 for (const name of [
-    '@ton-client/core',
-    '@ton-client/react-native-module',
-    '@ton-client/tests',
+    '@tonclient/core',
+    '@tonclient/react-native-module',
+    '@tonclient/tests',
     'react-native',
     '@babel/runtime',
     'buffer',

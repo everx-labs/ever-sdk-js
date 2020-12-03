@@ -1,4 +1,4 @@
-const { TestsLogger, TestsRunner } = require('@ton-client/tests');
+const { TestsLogger, TestsRunner } = require('@tonclient/tests');
 const findProcess = require('find-process');
 
 const os = require('os');
