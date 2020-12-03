@@ -1,7 +1,7 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 1.0.0 - Dec 3, 2020
+## 1.2.0 - Dec 3, 2020
 
 ### New
 - Thin binding: JS binding has become very thin - all the implementation, including network layer, was moved to the core [TON-SDK library](https://github.com/tonlabs/TON-SDK). Find out all the key changes in the [core library CHANGELOG](https://github.com/tonlabs/TON-SDK/blob/master/CHANGELOG.md), starting from 1.0.0 release.
