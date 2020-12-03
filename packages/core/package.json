@@ -8,11 +8,15 @@
 		"type": "git",
 		"url": "https://github.com/tonlabs/ton-client-js.git"
 	},
+    "scripts": {
+        "prepublishOnly": "npm i && tsc"
+    },
 	"keywords": [
 		"TON",
-		"Javascript",
-		"API",
-		"Client"
+		"Client",
+		"FreeTON",
+		"TONOS",
+		"SDK"
 	],
 	"author": "TON DEV SOLUTIONS LTD.",
 	"license": "Apache-2.0",

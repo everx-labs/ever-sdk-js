@@ -1,7 +1,8 @@
 # OSX
 #
 .DS_Store
-.swp
+**/*.swp
+**/*.swo
 .idea/
 .vscode/
 node_modules/
@@ -20,13 +21,13 @@ Jenkinsfile
 **/dist/
 **/*.map
 **/*.tsbuildinfo
-/packages/wasm-module/publish
-/packages/wasm-module/index.js
-/packages/node-addon/publish
-/packages/node-addon/lib/build
-/packages/react-native-module/ios/publish
-/packages/react-native-module/android/lib/NDK
-/packages/react-native-module/android/publish
+/packages/lib-web/publish
+/packages/lib-web/index.js
+/packages/lib-node/publish
+/packages/lib-node/lib/build
+/packages/lib-react-native/ios/publish
+/packages/lib-react-native/android/lib/NDK
+/packages/lib-react-native/android/publish
 **/Cargo.lock
 **/publish/**
 **/target/**

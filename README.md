@@ -2,9 +2,9 @@
 
 This repository contains JavaScript TON Client binding packages:
 - `@tonclient/core` – common binding independent from JavaScript platform you use.
-- `@tonclient/node-addon` – bridge to NodeJs including NodeJs binary addon.
-- `@tonclient/wasm-module` – bridge to browser including WASM module.
-- `@tonclient/react-native-module` – bridge to mobile react-native platform including static libraries for iOS and Android.
+- `@tonclient/lib-node` – bridge to NodeJs including NodeJs binary addon.
+- `@tonclient/lib-web` – bridge to browser including WASM module.
+- `@tonclient/lib-react-native` – bridge to mobile react-native platform including static libraries for iOS and Android.
  
 # Installation
 
@@ -21,17 +21,17 @@ If you want to rebuild binary from sources see [build binaries](#build binaries)
 
 NodeJs:
 ```shell script
-npm i --save @tonclient/node-addon
+npm i --save @tonclient/lib-node
 ```
 
 Web:
 ```shell script
-npm i --save @tonclient/wasm-module
+npm i --save @tonclient/lib-web
 ```
 
 React Native:
 ```shell script
-npm i --save @tonclient/react-native-module
+npm i --save @tonclient/lib-react-native
 ```
 
 To get started using TON JavaScript SDK, see [Add SDK to your Application](https://docs.ton.dev/86757ecb2/p/61b5eb-nodejs).
@@ -46,7 +46,7 @@ You need to attach the chosen binary module to the `TonClient` class.
 NodeJs:
 ```ts
 const {TonClient} = require('@tonclient/core');
-const {nodeAddon} = require('@tonclient/node-addon');
+const {nodeAddon} = require('@tonclient/lib-node');
 
 // Application initialization
 
@@ -56,7 +56,7 @@ TonClient.useBinaryLibrary(nodeAddon)
 Web:
 ```ts
 const {TonClient} = require('@tonclient/core');
-import wasmModule from '@tonclient/wasm-module';
+import wasmModule from '@tonclient/lib-web';
 
 // Application initialization
 
@@ -66,7 +66,7 @@ TonClient.useBinaryLibrary(wasmModule());
 React Native:
 ```ts
 const {TonClient} = require('@tonclient/core');
-import {reactNativeModule} from '@tonclient/react-native-module';
+import {reactNativeModule} from '@tonclient/lib-react-native';
 
 // Application initialization
 
@@ -101,7 +101,7 @@ You can build binaries from sources.
 
 If you install bridge package from `npmjs` you can build with the following commands (e.g. for nodejs):
 ```shell script
-cd node_modules/@tonclient/node-addon/build
+cd node_modules/@tonclient/lib-node/build
 cargo run
 ```
 
@@ -110,21 +110,21 @@ cargo run
 If you checkout this repository you can build binaries for all bridges.
 
 ```shell script
-cd packages/node-addon/build
+cd packages/lib-node/build
 cargo run
-cd ../../../wasm-module/build
+cd ../../../lib-web/build
 cargo run
-cd ../../../react-native-module/android/build
+cd ../../../lib-react-native/android/build
 cargo run
 cd ../../ios/build
 cargo run
 ```
 
 Also the archives will be created to be published on the TON Labs cloud storage. Archives will be placed into the following folders:
-- `packages/node-addon/publish`
-- `packages/wasm-module/publish` 
-- `packages/react-native-module/ios/publish` 
-- `packages/react-native-module/android/publish` 
+- `packages/lib-node/publish`
+- `packages/lib-web/publish` 
+- `packages/lib-react-native/ios/publish`
+- `packages/lib-react-native/android/publish`
 
 # Useful stuff 
 
