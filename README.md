@@ -37,6 +37,65 @@ npm i --save @ton-client/react-native-module
 
 To get started using TON JavaScript SDK, see [Add SDK to your Application](https://docs.ton.dev/86757ecb2/p/61b5eb-nodejs).
 
+## Setup library
+
+You must initialize the library before the first use. The best place to do it is an 
+initialization code of your application.
+
+You need to attach the chosen binary module to the `TonClient` class.
+
+NodeJs:
+```ts
+const {TonClient} = require('@ton-client/core');
+const {nodeAddon} = require('@ton-client/node-addon');
+
+// Application initialization
+
+TonClient.useBinaryLibrary(nodeAddon)
+```
+  
+Web:
+```ts
+const {TonClient} = require('@ton-client/core');
+import wasmModule from '@ton-client/wasm-module';
+
+// Application initialization
+
+TonClient.useBinaryLibrary(wasmModule());
+```
+  
+React Native:
+```ts
+const {TonClient} = require('@ton-client/core');
+import {reactNativeModule} from '@ton-client/react-native-module';
+
+// Application initialization
+
+TonClient.useBinaryLibrary(reactNativeModule);
+```
+  
+## Use library
+
+All library functions are incorporated into `TonClient` class. Each client module is represented as a 
+property of the `TonClient` object.
+
+To start use library you must create an instance of the `TonClient` class:
+```ts
+const client = new TonClient();
+const keys = await client.crypto.generate_random_sign_keys();
+```
+
+You can pass a configuration object in `TonClient` constructor:
+```ts
+const client = new TonClient({
+    network: { 
+        server_address: 'net.ton.dev' 
+    } 
+});
+```
+
+You can find reference guide to `TonClient` here: [TON-SDK API Documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md)
+
 # Build bridge binaries
 
 You can build binaries from sources.

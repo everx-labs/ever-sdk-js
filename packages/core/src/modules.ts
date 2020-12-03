@@ -1377,6 +1377,15 @@ export type OrderBy = {
 
 export type SortDirection = 'ASC' | 'DESC';
 
+export type ParamsOfQuery = {
+    query: string,
+    variables?: any
+};
+
+export type ResultOfQuery = {
+    result: any
+};
+
 export type ParamsOfQueryCollection = {
     collection: string,
     filter?: any,
@@ -1416,6 +1425,10 @@ export class NetModule {
 
     constructor(client: IClient) {
         this.client = client;
+    }
+
+    query(params: ParamsOfQuery): Promise<ResultOfQuery> {
+        return this.client.request('net.query', params);
     }
 
     query_collection(params: ParamsOfQueryCollection): Promise<ResultOfQueryCollection> {
@@ -1470,7 +1483,7 @@ export type ParamsOfAppDebotBrowser = {
     type: 'Input'
     prompt: string
 } | {
-    type: 'LoadKey'
+    type: 'GetSigningBox'
 } | {
     type: 'InvokeDebot'
     debot_addr: string,
@@ -1505,9 +1518,9 @@ export function paramsOfAppDebotBrowserInput(prompt: string): ParamsOfAppDebotBr
     };
 }
 
-export function paramsOfAppDebotBrowserLoadKey(): ParamsOfAppDebotBrowser {
+export function paramsOfAppDebotBrowserGetSigningBox(): ParamsOfAppDebotBrowser {
     return {
-        type: 'LoadKey',
+        type: 'GetSigningBox',
     };
 }
 
@@ -1523,8 +1536,8 @@ export type ResultOfAppDebotBrowser = {
     type: 'Input'
     value: string
 } | {
-    type: 'LoadKey'
-    keys: KeyPair
+    type: 'GetSigningBox'
+    signing_box: SigningBoxHandle
 } | {
     type: 'InvokeDebot'
 };
@@ -1536,10 +1549,10 @@ export function resultOfAppDebotBrowserInput(value: string): ResultOfAppDebotBro
     };
 }
 
-export function resultOfAppDebotBrowserLoadKey(keys: KeyPair): ResultOfAppDebotBrowser {
+export function resultOfAppDebotBrowserGetSigningBox(signing_box: SigningBoxHandle): ResultOfAppDebotBrowser {
     return {
-        type: 'LoadKey',
-        keys,
+        type: 'GetSigningBox',
+        signing_box,
     };
 }
 
@@ -1578,8 +1591,8 @@ type ResultOfAppDebotBrowserInput = {
     value: string
 };
 
-type ResultOfAppDebotBrowserLoadKey = {
-    keys: KeyPair
+type ResultOfAppDebotBrowserGetSigningBox = {
+    signing_box: SigningBoxHandle
 };
 
 type ParamsOfAppDebotBrowserInvokeDebot = {
@@ -1592,7 +1605,7 @@ export interface AppDebotBrowser {
     switch(params: ParamsOfAppDebotBrowserSwitch): void,
     show_action(params: ParamsOfAppDebotBrowserShowAction): void,
     input(params: ParamsOfAppDebotBrowserInput): Promise<ResultOfAppDebotBrowserInput>,
-    load_key(): Promise<ResultOfAppDebotBrowserLoadKey>,
+    get_signing_box(): Promise<ResultOfAppDebotBrowserGetSigningBox>,
     invoke_debot(params: ParamsOfAppDebotBrowserInvokeDebot): Promise<void>,
 }
 
@@ -1612,18 +1625,16 @@ async function dispatchAppDebotBrowser(obj: AppDebotBrowser, params: ParamsOfApp
             case 'Input':
                 result = await obj.input(params);
                 break;
-            case 'LoadKey':
-                result = await obj.load_key();
+            case 'GetSigningBox':
+                result = await obj.get_signing_box();
                 break;
             case 'InvokeDebot':
                 await obj.invoke_debot(params);
                 break;
         }
-        // noinspection ES6MissingAwait
         client.resolve_app_request(app_request_id, { type: params.type, ...result });
     }
     catch (error) {
-        // noinspection ES6MissingAwait
         client.reject_app_request(app_request_id, error);
     }
 }
