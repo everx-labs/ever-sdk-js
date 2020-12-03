@@ -15,7 +15,7 @@
 			"url": "http://www.apache.org/licenses/LICENSE-2.0"
 		}
 	],
-	"homepage": "https://ton.dev/node-se",
+	"homepage": "https://docs.ton.dev/",
 	"engines": {
 		"node": ">=6"
 	},

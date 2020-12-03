@@ -9,9 +9,10 @@
 	},
 	"keywords": [
 		"TON",
-		"Javascript",
-		"API",
-		"Client"
+		"Client",
+		"FreeTON",
+		"TONOS",
+		"SDK"
 	],
 	"author": "TON DEV SOLUTIONS LTD.",
 	"license": "SEE LICENSE IN LICENSE",
@@ -19,7 +20,7 @@
 		"type": "git",
 		"url": "https://github.com/tonlabs/ton-client-web-js.git"
 	},
-	"homepage": "https://ton.dev/node-se",
+	"homepage": "https://docs.ton.dev/",
 	"dependencies": {
 		"@tonclient/core": "file:../core",
 		"@tonclient/tests": "file:../tests",
