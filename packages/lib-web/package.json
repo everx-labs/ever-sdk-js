@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/lib-web",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "TON Client WASM module for browsers",
 	"main": "index.js",
 	"scripts": {
@@ -28,7 +28,5 @@
 	"homepage": "https://docs.ton.dev/",
 	"engines": {
 		"node": ">=6"
-	},
-	"dependencies": {
 	}
 }

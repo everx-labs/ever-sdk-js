@@ -1,6 +1,6 @@
 {
-	"name": "@tonclient/react-native-tests-runner",
-	"version": "1.2.0",
+	"name": "@tonclient/tests-react-native",
+	"version": "1.2.1",
 	"private": true,
 	"main": "index.js",
 	"browser": true,
@@ -15,13 +15,13 @@
 	},
 	"dependencies": {
 		"@tonclient/core": "file:../core",
-		"@tonclient/tests": "file:../tests",
 		"@tonclient/lib-react-native": "file:../lib-react-native",
-		"react": "16.13.1",
-		"react-native": "0.63.3",
-		"buffer": "^6.0.2",
+		"@tonclient/tests": "file:../tests",
 		"assert": "^2.0.0",
-		"find-process": "^1.4.4"
+		"buffer": "^6.0.2",
+		"find-process": "^1.4.4",
+		"react": "16.13.1",
+		"react-native": "0.63.3"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.12.3",

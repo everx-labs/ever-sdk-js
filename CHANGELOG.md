@@ -1,6 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.2.1 - Dec 4, 2020
+
+### Fix
+- Publish npm packages without tests
+
 ## 1.2.0 - Dec 3, 2020
 
 ### New
