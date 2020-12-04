@@ -21,7 +21,7 @@ import type {
     TONCrypto,
     TONHDKeyFromMnemonicParams,
     TONCryptoBoxParams,
-    TONCryptoBox,
+    TONCryptoBox, TONCryptoChaCha20Params, TONCryptoChaCha20Result,
 } from '../../types';
 import { TONClientError } from '../TONClientError';
 import type { TONModuleContext } from '../TONModule';
@@ -297,6 +297,11 @@ export default class TONCryptoModule extends TONModule implements TONCrypto {
         return this.requestCore('crypto.hdkey.xprv.public', { serialized });
     }
 
+    // Encryption
+
+    chacha20(params: TONCryptoChaCha20Params): Promise<TONCryptoChaCha20Result> {
+        return this.requestCore('crypto.chacha20', params);
+    }
 }
 
 TONCryptoModule.moduleName = 'TONCryptoModule';

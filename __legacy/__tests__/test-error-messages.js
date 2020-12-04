@@ -159,7 +159,7 @@ test.each(ABIVersions)('Detailed errors (ABI v%i)', async (abiVersion) => {
     } catch (error) {
         expect(error)
             .toMatchObject({
-                code: TONErrorCode.ACCOUNT_CODE_MISSING,
+                code: 1015,
                 data: {
                     original_error: {
                         code: abiVersion === 1

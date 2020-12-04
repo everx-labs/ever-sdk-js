@@ -1,4 +1,4 @@
-pragma solidity >=0.5.0;
+pragma solidity >=0.6.0;
 pragma AbiHeader time;
 pragma AbiHeader expire;
 
@@ -30,13 +30,13 @@ contract Wallet {
     /// @param dest Transfer target address.
     /// @param value Nanograms value to transfer.
     /// @param bounce Flag that enables bounce message in case of target contract error.
-    function sendTransaction(address payable dest, uint128 value, bool bounce) public view checkOwnerAndAccept {
+    function sendTransaction(address dest, uint128 value, bool bounce) public view checkOwnerAndAccept {
         require(value > 0 && value < address(this).balance, 101);
          // Runtime function that allows to make a transfer with arbitrary settings.
         dest.transfer(value, bounce, 0);
     }
 
-    function sendAllMoney(address payable dest_addr) public checkOwnerAndAccept {
+    function sendAllMoney(address dest_addr) public checkOwnerAndAccept {
         selfdestruct(dest_addr);
     }
 }

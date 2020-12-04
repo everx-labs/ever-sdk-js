@@ -73,7 +73,6 @@
 		}
 	],
 	"data": [
-		{"key":1,"name":"lastID","type":"uint256"}
 	],
 	"events": [
 	]

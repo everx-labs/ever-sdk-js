@@ -1,41 +1,34 @@
 {
 	"ABI version": 2,
-	"header": [
-		"pubkey",
-		"time"
-	],
+	"header": ["pubkey", "time"],
 	"functions": [
 		{
 			"name": "constructor",
 			"inputs": [
-				{
-					"name": "ownerKey",
-					"type": "uint256"
-				}
+				{"name":"ownerKey","type":"uint256"}
 			],
-			"outputs": []
+			"outputs": [
+			]
 		},
 		{
 			"name": "getData",
-			"inputs": [],
+			"inputs": [
+			],
 			"outputs": [
-				{
-					"name": "value0",
-					"type": "uint16"
-				}
+				{"name":"value0","type":"uint16"}
 			]
 		},
 		{
 			"name": "setData",
 			"inputs": [
-				{
-					"name": "input",
-					"type": "uint16"
-				}
+				{"name":"input","type":"uint16"}
 			],
-			"outputs": []
+			"outputs": [
+			]
 		}
 	],
-	"data": [],
-	"events": []
+	"data": [
+	],
+	"events": [
+	]
 }

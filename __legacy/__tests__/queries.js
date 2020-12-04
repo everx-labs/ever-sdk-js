@@ -2,6 +2,7 @@
  * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  */
 import { QTransactionProcessingStatus } from '../src/modules/TONContractsModule';
+import { TONErrorCode } from '../src/TONClientError';
 import { get_grams_from_giver } from './_/giver';
 import { ABIVersions, tests } from './_/init-tests';
 
@@ -11,6 +12,30 @@ const loadPackage = {
 
 beforeAll(tests.init);
 afterAll(tests.done);
+
+test('Close websocket during request', async () => {
+    const queries = tests.client.queries;
+    tests.client.config.data.networkTimeout = 1000;
+    const interval = setInterval(() => {
+        try {
+            queries.wsLink.subscriptionClient.client.close();
+        } catch (error) {
+            console.log('>>>', error);
+        }
+    }, 500);
+    try {
+        await queries.accounts.query({
+            filter: { id: { eq: '1' } },
+            result: 'id',
+            timeout: 10000,
+        });
+        clearInterval(interval);
+        fail('Query must be forcibly aborted');
+    } catch (error) {
+        clearInterval(interval);
+        expect(error.code).toEqual(TONErrorCode.QUERY_FORCIBLY_ABORTED);
+    }
+});
 
 test.skip('(not test) Debug network errors during wait for', async () => {
     const queries = tests.client.queries;

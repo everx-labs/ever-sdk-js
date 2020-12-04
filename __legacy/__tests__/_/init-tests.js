@@ -130,6 +130,7 @@ export const tests: {
         servers: serversConfig,
         messageExpirationTimeout: 10000,
         log_verbose: false,
+        err_log_verbose: true,
         useWebSocketForQueries: true,
         tracer: createJaegerTracer(''),
         accessKey: 'bypass',
