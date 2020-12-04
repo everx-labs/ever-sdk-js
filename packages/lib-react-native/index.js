@@ -1,8 +1,8 @@
 import { NativeModules, NativeEventEmitter } from 'react-native'
 
-export function reactNativeModule() {
-    const module = NativeModules.TonClientModule;
-    const moduleEmitter = new NativeEventEmitter(module);
+export function libReactNative() {
+    const lib = NativeModules.TonClientModule;
+    const libEmitter = new NativeEventEmitter(lib);
     let subscription = null;
     return Promise.resolve({
         setResponseHandler(handler) {
@@ -11,19 +11,19 @@ export function reactNativeModule() {
                 subscription = null;
             }
             if (handler) {
-                subscription = moduleEmitter.addListener('Response', (data) => {
+                subscription = libEmitter.addListener('Response', (data) => {
                     handler(data.requestId, data.paramsJson, data.responseType, data.finished);
                 });
             }
         },
         createContext(configJson) {
-            return new Promise(resolve => module.createContext(configJson, resolve));
+            return new Promise(resolve => lib.createContext(configJson, resolve));
         },
         destroyContext(context) {
-            module.destroyContext(context);
+            lib.destroyContext(context);
         },
         sendRequest(context, requestId, functionName, functionParamsJson) {
-            module.sendRequest(context, requestId, functionName, functionParamsJson);
+            lib.sendRequest(context, requestId, functionName, functionParamsJson);
         },
     });
 }

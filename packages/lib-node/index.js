@@ -36,7 +36,7 @@ function loadAddon() {
     return require(getHomeAddonPath());
 }
 
-function nodeAddon() {
+function libNode() {
     try {
         return Promise.resolve(loadAddon());
     } catch (error) {
@@ -45,5 +45,5 @@ function nodeAddon() {
 }
 
 module.exports = {
-    nodeAddon,
+    libNode,
 }

@@ -28,6 +28,10 @@ Jenkinsfile
 /packages/lib-react-native/ios/publish
 /packages/lib-react-native/android/lib/NDK
 /packages/lib-react-native/android/publish
+/packages/lib-react-native/android/build/.transforms
+/packages/lib-react-native/android/build/generated
+/packages/lib-react-native/android/build/intermediates
+/packages/lib-react-native/android/build/outputs
 **/Cargo.lock
 **/publish/**
 **/target/**

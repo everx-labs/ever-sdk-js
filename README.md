@@ -8,7 +8,7 @@ This repository contains JavaScript TON Client binding packages:
  
 # Installation
 
-##Install core package
+## Install core package
 
 ```shell script
 npm i --save @tonclient/core
@@ -45,32 +45,32 @@ You need to attach the chosen binary module to the `TonClient` class.
 
 NodeJs:
 ```ts
-const {TonClient} = require('@tonclient/core');
-const {nodeAddon} = require('@tonclient/lib-node');
+const {TonClient} = require("@tonclient/core");
+const {libNode} = require("@tonclient/lib-node");
 
 // Application initialization
 
-TonClient.useBinaryLibrary(nodeAddon)
+TonClient.useBinaryLibrary(libNode)
 ```
   
 Web:
 ```ts
-const {TonClient} = require('@tonclient/core');
-import wasmModule from '@tonclient/lib-web';
+import {TonClient} from "@tonclient/core";
+import {libWeb} from "@tonclient/lib-web";
 
 // Application initialization
 
-TonClient.useBinaryLibrary(wasmModule());
+TonClient.useBinaryLibrary(libWeb);
 ```
   
 React Native:
 ```ts
-const {TonClient} = require('@tonclient/core');
-import {reactNativeModule} from '@tonclient/lib-react-native';
+import {TonClient} from "@tonclient/core";
+import {libReactNative} from "@tonclient/lib-react-native";
 
 // Application initialization
 
-TonClient.useBinaryLibrary(reactNativeModule);
+TonClient.useBinaryLibrary(libReactNative);
 ```
   
 ## Use library
@@ -99,7 +99,7 @@ You can find reference guide to `TonClient` here: [TON-SDK API Documentation](ht
 
 You can build binaries from sources.
 
-If you install bridge package from `npmjs` you can build with the following commands (e.g. for nodejs):
+If you install a bridge package from the `npmjs` you can build it with the following commands (e.g. for nodejs):
 ```shell script
 cd node_modules/@tonclient/lib-node/build
 cargo run
@@ -122,7 +122,7 @@ cargo run
 
 Also the archives will be created to be published on the TON Labs cloud storage. Archives will be placed into the following folders:
 - `packages/lib-node/publish`
-- `packages/lib-web/publish` 
+- `packages/lib-web/publish`
 - `packages/lib-react-native/ios/publish`
 - `packages/lib-react-native/android/publish`
 
