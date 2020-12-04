@@ -1,5 +1,9 @@
 # JavaScript TON Client Bindings
 
+**Community links:**
+
+[![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
+
 This repository contains JavaScript TON Client binding packages:
 - `@tonclient/core` – common binding independent from JavaScript platform you use.
 - `@tonclient/lib-node` – bridge to NodeJs including NodeJs binary addon.
