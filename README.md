@@ -38,7 +38,6 @@ React Native:
 npm i --save @tonclient/lib-react-native
 ```
 
-To get started using TON JavaScript SDK, see [Add SDK to your Application](https://docs.ton.dev/86757ecb2/p/61b5eb-nodejs).
 
 ## Setup library
 
@@ -129,17 +128,6 @@ Also the archives will be created to be published on the TON Labs cloud storage.
 - `packages/lib-web/publish`
 - `packages/lib-react-native/ios/publish`
 - `packages/lib-react-native/android/publish`
-
-# Useful stuff 
-
-## Community links
-
-[![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
-[![Gitter](https://badges.gitter.im/ton-sdk/community.svg)](https://gitter.im/ton-sdk/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-
-## Documentation
-  
-[TON-SDK API Documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md)
 
 ---
 Copyright 2018-2020 TON DEV SOLUTIONS LTD.
