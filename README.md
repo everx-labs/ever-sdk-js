@@ -122,9 +122,9 @@ cargo run
 
 Also the archives will be created to be published on the TON Labs cloud storage. Archives will be placed into the following folders:
 - `packages/lib-node/publish`
-- `packages/lib-web/publish` 
-- `packages/lib-react-native/ios/publish` 
-- `packages/lib-react-native/android/publish` 
+- `packages/lib-web/publish`
+- `packages/lib-react-native/ios/publish`
+- `packages/lib-react-native/android/publish`
 
 # Useful stuff 
 
