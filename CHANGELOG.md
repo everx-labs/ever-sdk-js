@@ -1,20 +1,14 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
-## 0.28.1 Nov 19, 2020
+## 1.2.0 - Dec 3, 2020
+
 ### New
-- Ability to disable error logs by using `_errLogVerbose` config param
-
-## 0.28.0 Nov 6, 2020
-### Fixed
-- local error resolving processes `NoGas` and `NoState` errors properly
-
-## 0.27.0 - Oct 27, 2020
-### New
-- `crypto.chacha20`
-
-### Fixed
-- Retry active queries on websocket reconnect
+- Thin binding: JS binding has become very thin - all the implementation, including network layer, was moved to the core [TON-SDK library](https://github.com/tonlabs/TON-SDK). Find out all the key changes in the [core library CHANGELOG](https://github.com/tonlabs/TON-SDK/blob/master/CHANGELOG.md), starting from 1.0.0 release.
+- Mono repository: now all the platform packages are developed in the same repository, platform bridges were also moved here from core repository
+- Typescript: v1 JS binding is written in Typescript
+- Low level API: at the moment the library provides only low level API, **we plan to extend it with high level handy wrappers in the future releases.**
+- new API reference: [core api reference documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md) provides typescript samples of function signatures. 
 
 ## 0.26.2 - Sep 21, 2020
 ### Fixed
@@ -221,7 +215,7 @@ All notable changes to this project will be documented in this file.
             }, parentSpan);
         }
         ````
-    3) Example of creating jaeger tracer can be found in `init-tests.js` file.
+    3) Example of creating jaeger tracer can be found in `init-tests.ts` file.
     4) All SDK functions now have hexademical address representation length check.
 ## 0.19.1 - January 28, 2020
 

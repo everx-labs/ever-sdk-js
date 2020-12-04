@@ -1,0 +1,60 @@
+{
+	"ABI version": 1,
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddressVariable",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "getUintVariable",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
+			"name": "getBooleanVariable",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bool"}
+			]
+		},
+		{
+			"name": "getBytesVariable",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"}
+			]
+		},
+		{
+			"name": "sendAllMoney",
+			"inputs": [
+				{"name":"dest_addr","type":"address"}
+			],
+			"outputs": [
+			]
+		}
+	],
+	"data": [
+		{"key":1,"name":"addressVariable","type":"address"},
+		{"key":2,"name":"uintVariable","type":"uint256"},
+		{"key":3,"name":"booleanVariable","type":"bool"},
+		{"key":4,"name":"bytesVariable","type":"bytes"}
+	],
+	"events": [
+	]
+}

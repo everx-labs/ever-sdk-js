@@ -1,0 +1,35 @@
+{
+	"ABI version": 1,
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"_param1","type":"uint32"},
+				{"name":"_param2","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "get",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint32"},
+				{"name":"value1","type":"uint256"}
+			]
+		},
+		{
+			"name": "sendAllMoney",
+			"inputs": [
+				{"name":"dest_addr","type":"address"}
+			],
+			"outputs": [
+			]
+		}
+	],
+	"data": [
+	],
+	"events": [
+	]
+}
