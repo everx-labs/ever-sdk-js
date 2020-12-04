@@ -22,7 +22,7 @@ for (const name of [
 
 for (const name of [
     '@tonclient/core',
-    '@tonclient/react-native-module',
+    '@tonclient/lib-react-native',
     '@tonclient/tests',
     'react-native',
     '@babel/runtime',

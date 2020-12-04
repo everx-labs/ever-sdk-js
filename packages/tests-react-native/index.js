@@ -13,7 +13,7 @@
  */
 import entry from './entry';
 import { TonClient } from '@tonclient/core';
-import {reactNativeModule} from '@tonclient/react-native-module';
+import {reactNativeModule} from '@tonclient/lib-react-native';
 import { AppRegistry } from 'react-native';
 import App from './App';
 

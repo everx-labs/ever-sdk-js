@@ -1,5 +1,5 @@
 const {TonClient} = require('@tonclient/core');
-const {nodeAddon} = require('@tonclient/node-addon');
+const {nodeAddon} = require('@tonclient/lib-node');
 const {
     TestsLogger,
     TestsRunner,

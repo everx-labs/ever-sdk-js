@@ -1,10 +1,10 @@
 {
-	"name": "@tonclient/wasm-module",
+	"name": "@tonclient/lib-web",
 	"version": "1.2.0",
 	"description": "TON Client WASM module for browsers",
 	"main": "index.js",
 	"scripts": {
-		"install": "node install.js"
+		"postinstall": "node install.js"
 	},
 	"repository": {
 		"type": "git",
@@ -12,9 +12,10 @@
 	},
 	"keywords": [
 		"TON",
-		"Javascript",
-		"API",
-		"Client"
+		"Client",
+		"FreeTON",
+		"TONOS",
+		"SDK"
 	],
 	"author": "TON DEV SOLUTIONS LTD.",
 	"license": "Apache-2.0",
@@ -24,7 +25,7 @@
 			"url": "http://www.apache.org/licenses/LICENSE-2.0"
 		}
 	],
-	"homepage": "https://ton.dev/node-se",
+	"homepage": "https://docs.ton.dev/",
 	"engines": {
 		"node": ">=6"
 	},

@@ -2,9 +2,9 @@
 
 This repository contains JavaScript TON Client binding packages:
 - `@tonclient/core` – common binding independent from JavaScript platform you use.
-- `@tonclient/node-addon` – bridge to NodeJs including NodeJs binary addon.
-- `@tonclient/wasm-module` – bridge to browser including WASM module.
-- `@tonclient/react-native-module` – bridge to mobile react-native platform including static libraries for iOS and Android.
+- `@tonclient/lib-node` – bridge to NodeJs including NodeJs binary addon.
+- `@tonclient/lib-web` – bridge to browser including WASM module.
+- `@tonclient/lib-react-native` – bridge to mobile react-native platform including static libraries for iOS and Android.
  
 # Installation
 

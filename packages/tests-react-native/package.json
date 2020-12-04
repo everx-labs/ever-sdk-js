@@ -16,7 +16,7 @@
 	"dependencies": {
 		"@tonclient/core": "file:../core",
 		"@tonclient/tests": "file:../tests",
-		"@tonclient/react-native-module": "file:../react-native-module",
+		"@tonclient/lib-react-native": "file:../lib-react-native",
 		"react": "16.13.1",
 		"react-native": "0.63.3",
 		"buffer": "^6.0.2",
