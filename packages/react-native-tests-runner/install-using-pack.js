@@ -16,7 +16,7 @@ const path = require('path');
 const child_process = require('child_process');
 const fs = require('fs');
 
-const packages = ['main', 'react-native-module', 'main-tests'];
+const packages = ['main', 'lib-react-native', 'main-tests'];
 
 function pack(names) {
     const tars = [];
@@ -33,9 +33,9 @@ function pack(names) {
 }
 
 function copyBinary(relPath) {
-    const srcPath = path.resolve(__dirname, '..', 'react-native-module', ...relPath);
+    const srcPath = path.resolve(__dirname, '..', 'lib-react-native', ...relPath);
     if (fs.existsSync(srcPath)) {
-        const dstPath = path.resolve(__dirname, 'node_modules', '@tonclient', 'react-native-module', ...relPath);
+        const dstPath = path.resolve(__dirname, 'node_modules', '@tonclient', 'lib-react-native', ...relPath);
         fs.mkdirSync(path.dirname(dstPath), { recursive: true })
         fs.copyFileSync(srcPath, dstPath);
         process.stdout.write(`Copy ${srcPath}\n`);

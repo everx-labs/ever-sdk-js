@@ -22,7 +22,7 @@
 	"dependencies": {
 		"@tonclient/core": "file:../core",
 		"@tonclient/tests": "file:../tests",
-		"@tonclient/node-addon": "file:../node-addon"
+		"@tonclient/lib-node": "file:../lib-node"
 	},
 	"devDependencies": {
 		"typescript": "4.0.3",

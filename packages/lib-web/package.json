@@ -1,16 +1,21 @@
 {
-	"name": "@tonclient/node-addon",
+	"name": "@tonclient/lib-web",
 	"version": "1.2.0",
-	"description": "TON Client NodeJs AddOn",
+	"description": "TON Client WASM module for browsers",
+	"main": "index.js",
+	"scripts": {
+		"postinstall": "node install.js"
+	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/tonlabs/ton-client-js.git"
 	},
 	"keywords": [
 		"TON",
-		"Javascript",
-		"API",
-		"Client"
+		"Client",
+		"FreeTON",
+		"TONOS",
+		"SDK"
 	],
 	"author": "TON DEV SOLUTIONS LTD.",
 	"license": "Apache-2.0",
@@ -24,8 +29,6 @@
 	"engines": {
 		"node": ">=6"
 	},
-	"dependencies": {},
-	"devDependencies": {
-		"@types/node": "14.11.8"
+	"dependencies": {
 	}
 }
