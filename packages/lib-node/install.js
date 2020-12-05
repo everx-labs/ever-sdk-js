@@ -108,12 +108,6 @@ async function dl(dst_path, src) {
 async function main() {
     const binariesTargetPath = resolveBinariesTargetPath();
     await dl(path.join(binariesTargetPath, `tonclient.node`), `tonclient_${binariesVersion}_nodejs_addon_${platform}`);
-    if (platform === 'darwin') {
-        await dl(
-            path.join(binariesTargetPath, 'libtonclientnodejs.dylib'),
-            `tonclient_${binariesVersion}_nodejs_dylib_${platform}`,
-        );
-    }
 }
 
 (async () => {
