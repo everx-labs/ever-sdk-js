@@ -13,11 +13,9 @@ contract CheckPublicVariables {
 
     address zeroAddress;
 
-    function tvm_make_address(int8 wid, uint256 addr) private pure returns (address) {}
-
     constructor() public {
         tvm.accept();
-        zeroAddress = tvm_make_address(0, 0);
+        zeroAddress = address.makeAddrStd(0, 0);
         if (addressVariable == zeroAddress) {
             addressVariable = zeroAddress;
         }

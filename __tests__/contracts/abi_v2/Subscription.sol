@@ -58,7 +58,7 @@ contract SubscriptionContract {
     }
 
     function executeSubscription(uint256 subscriptionId) public {
-        Payment storage subscr = subscriptions[subscriptionId];
+        Payment subscr = subscriptions[subscriptionId];
         require(msg.pubkey() == subscr.pubkey, 102);
         require(subscr.status != 0, 101);
         if (now > (subscr.start + subscr.period)) {
