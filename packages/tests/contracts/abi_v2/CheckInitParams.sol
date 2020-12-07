@@ -19,11 +19,9 @@ contract CheckPublicVariables {
 
     address zeroAddress;
 
-    function tvm_make_address(int8 wid, uint256 addr) private pure returns (address payable) {}
-
-    constructor() public {
+     constructor() public {
         tvm.accept();
-        zeroAddress = tvm_make_address(0, 0);
+        zeroAddress = address.makeAddrStd(0, 0);
         if (addressVariable == zeroAddress) {
             addressVariable = zeroAddress;
         }
@@ -51,7 +49,7 @@ contract CheckPublicVariables {
         _;
     }
 
-    function sendAllMoney(address payable dest_addr) public checkOwnerAndAccept {
+    function sendAllMoney(address dest_addr) public checkOwnerAndAccept {
         selfdestruct(dest_addr);
     }
 

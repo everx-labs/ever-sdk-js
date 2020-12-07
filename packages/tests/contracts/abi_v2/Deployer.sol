@@ -80,7 +80,7 @@ contract ContractDeployer {
 		return addr;
 	}
 
-	function sendAllMoney(address payable dest_addr) public acceptOnlyOwner {
+	function sendAllMoney(address dest_addr) public acceptOnlyOwner {
 		selfdestruct(dest_addr);
 	}
 }

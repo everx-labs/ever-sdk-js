@@ -1,7 +1,6 @@
 pragma solidity >=0.5.0;
 pragma AbiHeader time;
 pragma AbiHeader expire;
-pragma experimental ABIEncoderV2;
 
 contract SubscriptionContract {
 
@@ -15,7 +14,7 @@ contract SubscriptionContract {
 
     struct Payment {
         uint256 pubkey;
-        address payable to;
+        address to;
         uint64 value;
         uint32 period;
         uint32 start;
@@ -42,7 +41,7 @@ contract SubscriptionContract {
     function subscribe(
         uint256 subscriptionId,
         uint256 pubkey,
-        address payable to,
+        address to,
         uint64 value,
         uint32 period) public onlyOwner {
         require(subscriptionId != 0 &&
@@ -59,7 +58,7 @@ contract SubscriptionContract {
     }
 
     function executeSubscription(uint256 subscriptionId) public {
-        Payment storage subscr = subscriptions[subscriptionId];
+        Payment subscr = subscriptions[subscriptionId];
         require(msg.pubkey() == subscr.pubkey, 102);
         require(subscr.status != 0, 101);
         if (now > (subscr.start + subscr.period)) {
@@ -75,7 +74,7 @@ contract SubscriptionContract {
         subscriptions[subscriptionId] = subscr;
     }
     
-    function sendAllMoney(address payable dest_addr) public onlyOwner {
+    function sendAllMoney(address dest_addr) public onlyOwner {
         tvm.accept();
 		selfdestruct(dest_addr);
 	}
