@@ -1,4 +1,4 @@
-# react-native-tests-runner
+# tests-react-native
 
 TON Labs Client Library for React Native Test App
 
