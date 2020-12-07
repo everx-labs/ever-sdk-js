@@ -24,7 +24,7 @@ contract Events {
         return id;
     }
 
-    function sendAllMoney(address payable dest_addr) public OnlyOwner {
+    function sendAllMoney(address dest_addr) public OnlyOwner {
 		selfdestruct(dest_addr);
 	}
 }
