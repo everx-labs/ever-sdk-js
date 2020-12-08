@@ -1,6 +1,15 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.3.0 - Dec 8, 2020
+
+### New
+- TON-SDK 1.3.0 new features. 
+- Inline JSDoc comments.
+
+### Fix
+- Failed downloads issues.  
+
 ## 1.2.1 - Dec 4, 2020
 
 ### Fix
