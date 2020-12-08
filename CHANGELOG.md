@@ -4,7 +4,8 @@ All notable changes to this project will be documented in this file.
 ## 1.3.0 - Dec 8, 2020
 
 ### New
-- TON-SDK 1.3.0 new features. 
+- `net.query method` . Performs custom graphql query that can be copied directly from the playground.
+- `net.suspend` and `net.resume` methods for disabling and enabling network activity. One of the possible use-cases is to manage subscriptions when a mobile application is brought to the background and into the foreground again.
 - Inline JSDoc comments.
 
 ### Fix
