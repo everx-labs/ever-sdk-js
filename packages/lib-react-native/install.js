@@ -105,6 +105,10 @@ function resolveBinariesTargetPath() {
 
 async function dl(dstPath, src) {
     const srcUrl = `${binariesSource}/${src}.gz`;
+    const dstDir = path.dirname(path.resolve(dstPath));
+    if (!fs.existsSync(dstDir)) {
+        fs.mkdirSync(dstDir, { recursive: true });
+    }
     process.stdout.write(`Downloading from ${srcUrl} to ${dstPath} ...`);
     await downloadAndGunzip(dstPath, srcUrl);
     process.stdout.write('\n');

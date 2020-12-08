@@ -21,7 +21,7 @@ contract Setcode {
         return 1;
     }
 
-    function sendAllMoney(address payable dest_addr) public onlyOwner {
+    function sendAllMoney(address dest_addr) public onlyOwner {
         selfdestruct(dest_addr);
     }
 
