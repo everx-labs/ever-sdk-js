@@ -1,22 +1,14 @@
 {
-	"ABI version": 1,
+	"ABI version": 2,
+	"header": ["time", "expire"],
 	"functions": [
 		{
 			"name": "constructor",
 			"inputs": [
-				{"name":"_param1","type":"uint32"},
-				{"name":"_param2","type":"uint256"}
+				{"name":"a","type":"uint256"},
+				{"name":"b","type":"uint32"}
 			],
 			"outputs": [
-			]
-		},
-		{
-			"name": "get",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"value0","type":"uint32"},
-				{"name":"value1","type":"uint256"}
 			]
 		},
 		{
@@ -25,6 +17,22 @@
 				{"name":"dest_addr","type":"address"}
 			],
 			"outputs": [
+			]
+		},
+		{
+			"name": "m_a",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"m_a","type":"uint256"}
+			]
+		},
+		{
+			"name": "m_b",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"m_b","type":"uint32"}
 			]
 		}
 	],

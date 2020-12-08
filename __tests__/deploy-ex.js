@@ -97,76 +97,86 @@ test('Deploy data Abi2', async () => {
         );
 });
 
-test.each(ABIVersions)('Deploy from contract 1 (ABI v%i)', async (abiVersion) => {
-    const { contracts, crypto, queries } = tests.client;
+test('Deploy from contract 1 (ABI v2)', async () => {
+    const {
+        contracts,
+        crypto,
+        queries
+    } = tests.client;
     const keys = await crypto.ed25519Keypair();
-    const deployerPackage = await loadPackage.deployer(abiVersion);
-    const deployeePackage = await loadPackage.deployee(abiVersion);
+    const deployerPackage = await loadPackage.deployer(2);
+    const deployeePackage = await loadPackage.deployee(2);
     const deployer = await tests.deploy_with_giver({
         package: deployerPackage,
         constructorParams: {},
         keyPair: keys,
     });
 
-    await contracts.run({
-        address: deployer.address,
-        functionName: 'setContract',
-        abi: deployerPackage.abi,
-        input: {
-            _contract: deployeePackage.imageBase64,
-        },
-        keyPair: keys,
-    });
-
-    const constructor_id = await contracts.getFunctionId({
-        abi: deployeePackage.abi,
-        function: 'constructor',
-        input: true,
-    });
-
+    const paramA = 1;
+    const paramB = 2;
     const addressResult = await contracts.run({
         address: deployer.address,
-        functionName: 'deploy',
+        functionName: 'deployWithPubkey',
         abi: deployerPackage.abi,
         input: {
+            stateInit: deployeePackage.imageBase64,
             pubkey: `0x${keys.public}`,
-            gram_amount: 300000000,
-            constructor_id: constructor_id.id,
-            constructor_param0: 1,
-            constructor_param1: 2,
+            initialBalance: 300000000,
+            paramA: paramA,
+            paramB: paramB
         },
         keyPair: keys,
     });
 
-    const address = addressResult.output.value0;
-    tests.add_deployed_contract(keys, address, deployeePackage.abi);
+    const resultContracts = await contracts.runLocal({
+        address: deployer.address,
+        functionName: 'contracts',
+        abi: deployerPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
 
+    const address = resultContracts.output.contracts[0];
+    console.log('New deployed contract address', address);
     await queries.accounts.waitFor({
         id: { eq: address },
         balance: { gt: '0' },
     }, 'id balance');
 
-    const result = await contracts.run({
+
+    let resultParams = await contracts.runLocal({
         address,
-        functionName: 'get',
+        functionName: 'm_a',
         abi: deployeePackage.abi,
         input: {},
         keyPair: keys,
     });
+    expect(parseInt(resultParams.output.m_a))
+        .toEqual(paramA);
 
-    expect(result.output)
-        .toEqual({
-            value0: '0x1',
-            value1: '0x2',
-        });
+    resultParams = await contracts.runLocal({
+        address,
+        functionName: 'm_b',
+        abi: deployeePackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+    expect(parseInt(resultParams.output.m_b))
+        .toEqual(paramB);
+
+    tests.add_deployed_contract(keys, address, deployeePackage.abi);
 });
 
-test.each(ABIVersions)('Deploy from contract 2 (ABI v%i)', async (abiVersion) => {
-    const { contracts, crypto, queries } = tests.client;
+test('Deploy from contract 2 (ABI v%i)', async () => {
+    const {
+        contracts,
+        crypto,
+        queries
+    } = tests.client;
     const keys = await crypto.ed25519Keypair();
 
-    const deployerPackage = await loadPackage.deployer(abiVersion);
-    const deployeePackage = await loadPackage.deployee(abiVersion);
+    const deployerPackage = await loadPackage.deployer(2);
+    const deployeePackage = await loadPackage.deployee(2);
 
     const deployer = await tests.deploy_with_giver({
         package: deployerPackage,
@@ -178,43 +188,37 @@ test.each(ABIVersions)('Deploy from contract 2 (ABI v%i)', async (abiVersion) =>
         imageBase64: deployeePackage.imageBase64,
     });
 
-    await contracts.run({
-        address: deployer.address,
-        functionName: 'setCode',
-        abi: deployerPackage.abi,
-        input: {
-            _code: code.codeBase64,
-        },
-        keyPair: keys,
-    });
-
     const deployData = await contracts.getDeployData({
         abi: deployeePackage.abi,
-
         publicKeyHex: keys.public,
     });
-
-    const constructor_id = await contracts.getFunctionId({
-        abi: deployeePackage.abi,
-        function: 'constructor',
-        input: true,
-    });
-
-    const addressResult = await contracts.run({
+    const paramA = 0;
+    const paramB = 10;
+    await contracts.run({
         address: deployer.address,
-        functionName: 'deploy2',
+        functionName: 'deployFromCodeAndData',
         abi: deployerPackage.abi,
         input: {
+            code: code.codeBase64,
             data: deployData.dataBase64,
-            gram_amount: 300000000,
-            constructor_id: constructor_id.id,
-            constructor_param0: 1,
-            constructor_param1: 2,
+            initialBalance: 300000000,
+            paramA: paramA,
+            paramB: paramB,
         },
         keyPair: keys,
     });
 
-    const address = addressResult.output.value0;
+    const resultContracts = await contracts.runLocal({
+        address: deployer.address,
+        functionName: 'contracts',
+        abi: deployerPackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+
+    const address = resultContracts.output.contracts[0];
+    console.log('New deployed contract address', address);
+
     tests.add_deployed_contract(keys, address, deployeePackage.abi);
 
     await queries.accounts.waitFor(
@@ -225,26 +229,37 @@ test.each(ABIVersions)('Deploy from contract 2 (ABI v%i)', async (abiVersion) =>
         'id balance',
     );
 
-    const result = await contracts.run({
+    let resultParams = await contracts.runLocal({
         address,
-        functionName: 'get',
+        functionName: 'm_a',
         abi: deployeePackage.abi,
         input: {},
         keyPair: keys,
     });
+    expect(parseInt(resultParams.output.m_a))
+        .toEqual(paramA);
 
-    expect(result.output)
-        .toEqual({
-            value0: '0x1',
-            value1: '0x2',
-        });
+    resultParams = await contracts.runLocal({
+        address,
+        functionName: 'm_b',
+        abi: deployeePackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+    expect(parseInt(resultParams.output.m_b))
+        .toEqual(paramB);
+    tests.add_deployed_contract(keys, address, deployeePackage.abi);
 });
 
-test.each(ABIVersions)('Deploy from contract 3 (ABI v%i)', async (abiVersion) => {
-    const { contracts, crypto, queries } = tests.client;
+test('Deploy from contract 3 (ABI v2)', async () => {
+    const {
+        contracts,
+        crypto,
+        queries
+    } = tests.client;
     const keys = await crypto.ed25519Keypair();
-    const deployerPackage = await loadPackage.deployer(abiVersion);
-    const deployeePackage = await loadPackage.deployee(abiVersion);
+    const deployerPackage = await loadPackage.deployer(2);
+    const deployeePackage = await loadPackage.deployee(2);
 
     const deployer = await tests.deploy_with_giver({
         package: deployerPackage,
@@ -258,35 +273,46 @@ test.each(ABIVersions)('Deploy from contract 3 (ABI v%i)', async (abiVersion) =>
         publicKeyHex: keys.public,
     });
 
-    const address = `0:${deployData.accountId || ''}`;
+    const futureAddress = `0:${deployData.accountId || ''}`;
+
+
+    const paramA = 1;
+    const paramB = 10;
 
     const runBody = await contracts.createRunBody({
         abi: deployeePackage.abi,
         function: 'constructor',
         params: {
-            _param1: 1,
-            _param2: 2,
+            a: paramA,
+            b: paramB,
         },
         internal: true,
     });
 
-    const addressResult = await contracts.run({
+    await contracts.run({
         address: deployer.address,
-        functionName: 'deploy3',
+        functionName: 'deployWithMsgBody',
         abi: deployerPackage.abi,
         input: {
-            contr: deployData.imageBase64,
-            addr: address,
-            gram_amount: 300000000,
+            stateInit: deployData.imageBase64,
+            wid: 0,
+            initialBalance: 300000000,
             payload: runBody.bodyBase64,
         },
         keyPair: keys,
     });
 
-    expect(addressResult.output.value0)
-        .toEqual(address);
+    const address = (await contracts.runLocal({
+        address: deployer.address,
+        functionName: 'contracts',
+        abi: deployerPackage.abi,
+        input: {},
+        keyPair: keys,
+    })).output.contracts[0];
 
-    tests.add_deployed_contract(keys, address, deployeePackage.abi);
+    console.log('New deployed contract address', address);
+    expect(address)
+        .toEqual(futureAddress);
 
     await queries.accounts.waitFor(
         {
@@ -296,17 +322,24 @@ test.each(ABIVersions)('Deploy from contract 3 (ABI v%i)', async (abiVersion) =>
         'id balance',
     );
 
-    const result = await contracts.run({
+    let resultParams = await contracts.runLocal({
         address,
-        functionName: 'get',
+        functionName: 'm_a',
         abi: deployeePackage.abi,
         input: {},
         keyPair: keys,
     });
+    expect(parseInt(resultParams.output.m_a))
+        .toEqual(paramA);
 
-    expect(result.output)
-        .toEqual({
-            value0: '0x1',
-            value1: '0x2',
-        });
+    resultParams = await contracts.runLocal({
+        address,
+        functionName: 'm_b',
+        abi: deployeePackage.abi,
+        input: {},
+        keyPair: keys,
+    });
+    expect(parseInt(resultParams.output.m_b))
+        .toEqual(paramB);
+    tests.add_deployed_contract(keys, address, deployeePackage.abi);
 });
