@@ -4,4 +4,5 @@ export * from './logger';
 
 export * from './tests/client';
 export * from './tests/crypto';
+export * from './tests/abi';
 export * from './tests/net';
