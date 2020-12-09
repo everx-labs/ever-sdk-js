@@ -3,57 +3,45 @@
 	"header": ["time", "expire"],
 	"functions": [
 		{
-			"name": "setContract",
+			"name": "constructor",
 			"inputs": [
-				{"name":"_contract","type":"cell"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "deploy",
+			"name": "deployWithPubkey",
 			"inputs": [
+				{"name":"stateInit","type":"cell"},
 				{"name":"pubkey","type":"uint256"},
-				{"name":"gram_amount","type":"uint128"},
-				{"name":"constructor_id","type":"uint32"},
-				{"name":"constructor_param0","type":"uint32"},
-				{"name":"constructor_param1","type":"uint256"}
-			],
-			"outputs": [
-				{"name":"value0","type":"address"}
-			]
-		},
-		{
-			"name": "setCode",
-			"inputs": [
-				{"name":"_code","type":"cell"}
+				{"name":"initialBalance","type":"uint128"},
+				{"name":"paramA","type":"uint256"},
+				{"name":"paramB","type":"uint32"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "deploy2",
+			"name": "deployFromCodeAndData",
 			"inputs": [
+				{"name":"code","type":"cell"},
 				{"name":"data","type":"cell"},
-				{"name":"gram_amount","type":"uint128"},
-				{"name":"constructor_id","type":"uint32"},
-				{"name":"constructor_param0","type":"uint32"},
-				{"name":"constructor_param1","type":"uint256"}
+				{"name":"initialBalance","type":"uint128"},
+				{"name":"paramA","type":"uint256"},
+				{"name":"paramB","type":"uint32"}
 			],
 			"outputs": [
-				{"name":"value0","type":"address"}
 			]
 		},
 		{
-			"name": "deploy3",
+			"name": "deployWithMsgBody",
 			"inputs": [
-				{"name":"contr","type":"cell"},
-				{"name":"addr","type":"address"},
-				{"name":"gram_amount","type":"uint128"},
+				{"name":"stateInit","type":"cell"},
+				{"name":"wid","type":"int8"},
+				{"name":"initialBalance","type":"uint128"},
 				{"name":"payload","type":"cell"}
 			],
 			"outputs": [
-				{"name":"value0","type":"address"}
 			]
 		},
 		{
@@ -65,10 +53,11 @@
 			]
 		},
 		{
-			"name": "constructor",
+			"name": "contracts",
 			"inputs": [
 			],
 			"outputs": [
+				{"name":"contracts","type":"address[]"}
 			]
 		}
 	],

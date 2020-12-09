@@ -1,36 +1,30 @@
 pragma solidity >=0.6.0;
-pragma AbiHeader time;
 pragma AbiHeader expire;
 
-contract Simple {
 
-    uint32 param1;
-    uint param2;
+contract SimpleContract {
 
-    constructor(uint32 _param1, uint _param2) public {
-        param1 = _param1;
-        param2 = _param2;
-    }
+	uint public m_a;
+	uint32 public m_b;
 
-	function get() public view alwaysAccept returns (uint32, uint) {
-        return (param1, param2);
-    }
+	constructor(uint a, uint32 b) public {
+		// check that contract's public key is set
+		require(tvm.pubkey() != 0, 101);
 
-    modifier alwaysAccept {
-		// Runtime function that allows contract to process inbound messages spending
-		// its own resources (it's necessary if contract should process all inbound messages,
-		// not only those that carry value with them).
+		// NOTE: To protect from deploying this contract by hacker it's good idea to check msg.sender. See 17_SimpleWallet.sol
+		tvm.accept();
+		m_a = a;
+		m_b = b;
+	}
+    
+    // Modifier that allows public function to accept external calls only from the contract owner.
+	modifier checkOwnerAndAccept {
+		require(msg.pubkey() == tvm.pubkey(), 102);
 		tvm.accept();
 		_;
 	}
 
-	modifier OnlyOwner {
-        require(msg.pubkey() == tvm.pubkey(), 100);
-        tvm.accept();
-        _;
-    }
-
-	function sendAllMoney(address dest_addr) public OnlyOwner {
+    function sendAllMoney(address dest_addr) public checkOwnerAndAccept {
 		selfdestruct(dest_addr);
 	}
 }
