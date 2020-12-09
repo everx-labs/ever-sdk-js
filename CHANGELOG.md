@@ -1,6 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.3.1 - Dec 9, 2020
+
+### Fix
+- AppObject wasn't working.  
+
 ## 1.3.0 - Dec 8, 2020
 
 ### New

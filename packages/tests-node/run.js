@@ -1,5 +1,5 @@
 const {TonClient} = require('@tonclient/core');
-const {nodeAddon} = require('@tonclient/lib-node');
+const {libNode} = require('@tonclient/lib-node');
 const {
     TestsLogger,
     TestsRunner,
@@ -10,7 +10,7 @@ TestsRunner.setTimeout = setTimeout;
 TestsRunner.log = console.log;
 TestsRunner.exit = process.exit;
 
-TonClient.useBinaryLibrary(nodeAddon);
+TonClient.useBinaryLibrary(libNode);
 
 (async () => {
     let state = zeroRunningState;

@@ -9,8 +9,8 @@ export interface BinaryLibrary {
             requestId: number,
             paramsJson: string,
             responseType: number,
-            finished: boolean
-        ) => void
+            finished: boolean,
+        ) => void,
     ): void,
 
     createContext(configJson: string): Promise<string>,
@@ -21,13 +21,16 @@ export interface BinaryLibrary {
         context: number,
         requestId: number,
         functionName: string,
-        functionParamsJson: string
+        functionParamsJson: string,
     ): void,
 }
 
 export enum ResponseType {
     Success = 0,
     Error = 1,
+    Nop = 2,
+    AppRequest = 3,
+    AppNotify = 4,
     Custom = 100,
 }
 
@@ -75,7 +78,7 @@ export function useLibrary(loader: () => Promise<BinaryLibrary>) {
             loadError = error || null;
             saveLoading?.forEach(x => x.reject(error));
         }
-    })
+    });
 
 }
 
@@ -103,12 +106,12 @@ export async function request<P, R>(
             resolve,
             reject,
             responseHandler,
-        }
+        };
         const requestId = generateRequestId();
-        requests.set(requestId, request)
+        requests.set(requestId, request);
         checkResponseHandler();
         const paramsJson = (functionParams === undefined) || (functionParams === null)
-            ? ''
+            ? ""
             : JSON.stringify(functionParams);
         lib.sendRequest(context, requestId, functionName, paramsJson);
     });
@@ -126,7 +129,8 @@ function loadRequired(): Promise<BinaryLibrary> {
     }
     return new Promise<BinaryLibrary>((resolve, reject) => {
         loading?.push({
-            resolve, reject
+            resolve,
+            reject,
         });
     });
 }
@@ -147,7 +151,7 @@ function handleLibraryResponse(
     requestId: number,
     paramsJson: string,
     responseType: number,
-    finished: boolean
+    finished: boolean,
 ) {
     const request = requests.get(requestId);
     if (!request) {
@@ -157,7 +161,7 @@ function handleLibraryResponse(
         requests.delete(requestId);
         checkResponseHandler();
     }
-    const params = paramsJson !== '' ? JSON.parse(paramsJson) : undefined;
+    const params = paramsJson !== "" ? JSON.parse(paramsJson) : undefined;
     switch (responseType) {
     case ResponseType.Success:
         request.resolve(params);
@@ -166,7 +170,10 @@ function handleLibraryResponse(
         request.reject(params);
         break;
     default:
-        if (responseType >= ResponseType.Custom && request.responseHandler) {
+        const isAppObjectOrCustom = responseType === ResponseType.AppNotify
+            || responseType === ResponseType.AppRequest
+            || responseType >= ResponseType.Custom;
+        if (isAppObjectOrCustom && request.responseHandler) {
             request.responseHandler(params, responseType);
         }
     }
@@ -181,7 +188,7 @@ function parseResult(resultJson: string): any {
             data?: any,
         }
     } = JSON.parse(resultJson);
-    if ('error' in result) {
+    if ("error" in result) {
         throw new TonClientError(result.error.code, result.error.message, result.error.data);
     }
     return result.result;
