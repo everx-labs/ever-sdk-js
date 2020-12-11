@@ -18,7 +18,13 @@ const workerScript = '';
 
 //---
 
-function load(options) {
+let options = null;
+
+export function libWebSetup(libOptions) {
+    options = libOptions;
+}
+
+export function libWeb() {
     function debugLog(message) {
         if (options && options.debugLog) {
             options.debugLog(message);
@@ -133,8 +139,4 @@ function load(options) {
     })();
 
     return Promise.resolve(library);
-}
-
-export default function wasmModule(options) {
-    return () => load(options);
 }
