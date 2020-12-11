@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 ## 1.3.2 - Dec 11, 2020
 
 ### Fix
-- `lib-web` index-template wasn't matched to documentation.  
+- `lib-web` index-template matches the documentation now
 
 ## 1.3.1 - Dec 9, 2020
 
