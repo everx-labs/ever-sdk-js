@@ -129,5 +129,37 @@ Also the archives will be created to be published on the TON Labs cloud storage.
 - `packages/lib-react-native/ios/publish`
 - `packages/lib-react-native/android/publish`
 
+# Run tests
+
+This suite has test packages:
+- `tests` – common test package containing all unit tests for a library.
+- `tests-node` – tests runner on node js.
+- `tests-web` – tests runner on web browser.
+- `tests-react-native` – tests runner on react native platform.
+
+## Run tests on node js
+
+```shell script
+cd packages/tests-node
+npm i
+node run
+```
+
+## Run tests on web browser
+
+```shell script
+cd packages/tests-web
+npm i
+node run
+```
+
+## Run tests on react native platform
+
+```shell script
+cd packages/tests-react-native
+npm i
+node run
+```
+
 ---
 Copyright 2018-2020 TON DEV SOLUTIONS LTD.
