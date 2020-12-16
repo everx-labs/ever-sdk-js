@@ -1,5 +1,4 @@
-
-package ton;
+package tonlabs.tonclient;
 
 import java.util.Arrays;
 import java.util.Collections;

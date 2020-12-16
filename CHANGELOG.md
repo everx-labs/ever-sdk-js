@@ -1,6 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.3.3 - Dec 16, 2020
+
+### Fix
+- `lib-react-native` native module package name was changed to `tonlabs.tonclient`.
+
 ## 1.3.2 - Dec 11, 2020
 
 ### Fix
