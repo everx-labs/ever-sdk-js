@@ -1,9 +1,9 @@
 import entry from './entry';
 import { TonClient } from '@tonclient/core';
-import wasmModule from '@tonclient/lib-web';
+import {libWeb} from '@tonclient/lib-web';
 import { TestsRunner } from "@tonclient/tests";
 
-TonClient.useBinaryLibrary(wasmModule());
+TonClient.useBinaryLibrary(libWeb);
 
 window.addEventListener('load', () => {
     (async () => {
