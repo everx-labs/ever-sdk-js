@@ -3411,6 +3411,22 @@ export class NetModule {
     subscribe_collection(params: ParamsOfSubscribeCollection, responseHandler?: ResponseHandler): Promise<ResultOfSubscribeCollection> {
         return this.client.request('net.subscribe_collection', params, responseHandler);
     }
+
+    /**
+     * Suspends network module to stop any network activity
+     * @returns 
+     */
+    suspend(): Promise<void> {
+        return this.client.request('net.suspend');
+    }
+
+    /**
+     * Resumes network module to enable network activity
+     * @returns 
+     */
+    resume(): Promise<void> {
+        return this.client.request('net.resume');
+    }
 }
 
 // debot module
