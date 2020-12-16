@@ -34,7 +34,7 @@ lazy_static! {
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_createContext(
+pub unsafe extern "C" fn Java_tonlabs_tonclient_TonClientJsonInterface_createContext(
     env: JNIEnv,
     _class: JClass,
     config_json: JString,
@@ -51,7 +51,7 @@ pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_createContext(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_destroyContext(
+pub unsafe extern "C" fn Java_tonlabs_tonclient_TonClientJsonInterface_destroyContext(
     _env: JNIEnv,
     _class: JClass,
     context: jlong,
@@ -61,7 +61,7 @@ pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_destroyContext(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_setResponseHandler(
+pub unsafe extern "C" fn Java_tonlabs_tonclient_TonClientJsonInterface_setResponseHandler(
     env: JNIEnv,
     _class: JClass,
     handler: JObject,
@@ -99,7 +99,7 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub unsafe extern "C" fn Java_ton_TonClientJsonInterface_sendRequest(
+pub unsafe extern "C" fn Java_tonlabs_tonclient_TonClientJsonInterface_sendRequest(
     env: JNIEnv,
     _class: JClass,
     context: jlong,
