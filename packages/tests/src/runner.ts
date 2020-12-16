@@ -39,7 +39,7 @@ export class TestsRunner {
     };
     useNodeSE: boolean = true;
     config: ClientConfig = {
-        network: {server_address: "http://localhost:8080"},
+        network: {server_address: process.env.TON_NETWORK_ADDRESS || "http://localhost:8080"},
     };
     private client: TonClient | null = null;
     private giver: Account | null = null;

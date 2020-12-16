@@ -1,4 +1,4 @@
-package ton;
+package tonlabs.tonclient;
 
 import androidx.annotation.NonNull;
 

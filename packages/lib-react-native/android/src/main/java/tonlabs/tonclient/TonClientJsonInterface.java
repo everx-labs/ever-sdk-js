@@ -1,4 +1,4 @@
-package ton;
+package tonlabs.tonclient;
 
 public class TonClientJsonInterface {
     static {
