@@ -1,6 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.3.4 - Dec 18, 2020
+
+### New
+- *.d.ts type declarations in `lib-react-native`, `lib-node`, `lib-web`.
+
 ## 1.3.3 - Dec 16, 2020
 
 ### Fix
