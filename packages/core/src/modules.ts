@@ -1198,6 +1198,13 @@ export class CryptoModule {
     }
 
     /**
+     * Verifies the signature and returns the unsigned message
+     * 
+     * @remarks
+     * Verifies the signature in `signed` using the signer's public key `public`
+     * and returns the message `unsigned`.
+     * 
+     * If the signature fails verification, crypto_sign_open raises an exception.
      * 
      * @param {ParamsOfNaclSignOpen} params
      * @returns ResultOfNaclSignOpen
@@ -1207,6 +1214,11 @@ export class CryptoModule {
     }
 
     /**
+     * Signs the message using the secret key and returns a signature.
+     * 
+     * @remarks
+     * Signs the message `unsigned` using the secret key `secret`
+     * and returns a signature `signature`.
      * 
      * @param {ParamsOfNaclSign} params
      * @returns ResultOfNaclSignDetached
@@ -1216,6 +1228,7 @@ export class CryptoModule {
     }
 
     /**
+     * Generates a random NaCl key pair
      * @returns KeyPair
      */
     nacl_box_keypair(): Promise<KeyPair> {
@@ -2318,6 +2331,22 @@ export type ResultOfGetBocHash = {
     hash: string
 };
 
+export type ParamsOfGetCodeFromTvc = {
+
+    /**
+     * Contract TVC image encoded as base64
+     */
+    tvc: string
+};
+
+export type ResultOfGetCodeFromTvc = {
+
+    /**
+     * Contract code encoded as base64
+     */
+    code: string
+};
+
 /**
  * BOC manipulation module.
  */
@@ -2410,6 +2439,16 @@ export class BocModule {
      */
     get_boc_hash(params: ParamsOfGetBocHash): Promise<ResultOfGetBocHash> {
         return this.client.request('boc.get_boc_hash', params);
+    }
+
+    /**
+     * Extracts code from TVC contract image
+     * 
+     * @param {ParamsOfGetCodeFromTvc} params
+     * @returns ResultOfGetCodeFromTvc
+     */
+    get_code_from_tvc(params: ParamsOfGetCodeFromTvc): Promise<ResultOfGetCodeFromTvc> {
+        return this.client.request('boc.get_code_from_tvc', params);
     }
 }
 
@@ -3122,7 +3161,7 @@ export type ResultOfRunTvm = {
      * Updated account state BOC.
      * 
      * @remarks
-     * Encoded as `base64`.Attention! Only data in account state is updated.
+     * Encoded as `base64`.Attention! Only `account_state.storage.state.data` part of the boc is updated.
      */
     account: string
 };
@@ -3167,6 +3206,28 @@ export class TvmModule {
     }
 
     /**
+     * Emulates all the phases of contract execution locally
+     * 
+     * @remarks
+     * Performs all the phases of contract execution on Transaction Executor -
+     * the same component that is used on Validator Nodes.
+     * 
+     * Can be used for contract debug, to find out the reason of message unsuccessful
+     * delivery - as Validators just throw away failed transactions, here you can catch it.
+     * 
+     * Another use case is to estimate fees for message execution. Set  `AccountForExecutor::Account.unlimited_balance`
+     * to `true` so that emulation will not depend on the actual balance.
+     * 
+     * One more use case - you can procude the sequence of operations,
+     * thus emulating the multiple contract calls locally.
+     * And so on.
+     * 
+     * To get the account boc (bag of cells) - use `net.query` method to download it from graphql api
+     * (field `boc` of `account`) or generate it with `abi.encode_account method`.
+     * To get the message boc - use `abi.encode_message` or prepare it any other way, for instance, with Fift script.
+     * 
+     * If you need this emulation to be as precise as possible then specify `ParamsOfRunExecutor` parameter.
+     * If you need to see the aborted transaction as a result, not as an error, set `skip_transaction_check` to `true`.
      * 
      * @param {ParamsOfRunExecutor} params
      * @returns ResultOfRunExecutor
@@ -3176,6 +3237,21 @@ export class TvmModule {
     }
 
     /**
+     * Executes get methods of ABI-compatible contracts
+     * 
+     * @remarks
+     * Performs only a part of compute phase of transaction execution
+     * that is used to run get-methods of ABI-compatible contracts.
+     * 
+     * If you try to run get methods with `run_executor` you will get an error, because it checks ACCEPT and exits
+     * if there is none, which is actually true for get methods.
+     * 
+     *  To get the account boc (bag of cells) - use `net.query` method to download it from graphql api
+     * (field `boc` of `account`) or generate it with `abi.encode_account method`.
+     * To get the message boc - use `abi.encode_message` or prepare it any other way, for instance, with Fift script.
+     * 
+     * Attention! Updated account state is produces as well, but only
+     * `account_state.storage.state.data`  part of the boc is updated.
      * 
      * @param {ParamsOfRunTvm} params
      * @returns ResultOfRunTvm
@@ -3185,7 +3261,11 @@ export class TvmModule {
     }
 
     /**
-     * Executes getmethod and returns data from TVM stack
+     * Executes a getmethod of FIFT contract
+     * 
+     * @remarks
+     * Executes a getmethod of FIFT contract that fulfills the smc-guidelines https://test.ton.org/smc-guidelines.txt
+     * and returns the result data from TVM's stack
      * 
      * @param {ParamsOfRunGet} params
      * @returns ResultOfRunGet
@@ -3331,6 +3411,22 @@ export type ParamsOfSubscribeCollection = {
     result: string
 };
 
+export type ParamsOfFindLastShardBlock = {
+
+    /**
+     * Account address
+     */
+    address: string
+};
+
+export type ResultOfFindLastShardBlock = {
+
+    /**
+     * Account shard last block ID
+     */
+    block_id: string
+};
+
 /**
  * Network access.
  */
@@ -3427,6 +3523,16 @@ export class NetModule {
     resume(): Promise<void> {
         return this.client.request('net.resume');
     }
+
+    /**
+     * Returns ID of the last block in a specified account shard
+     * 
+     * @param {ParamsOfFindLastShardBlock} params
+     * @returns ResultOfFindLastShardBlock
+     */
+    find_last_shard_block(params: ParamsOfFindLastShardBlock): Promise<ResultOfFindLastShardBlock> {
+        return this.client.request('net.find_last_shard_block', params);
+    }
 }
 
 // debot module
@@ -3510,6 +3616,8 @@ export type ParamsOfAppDebotBrowser = {
      */
     context_id: number
 } | {
+    type: 'SwitchCompleted'
+} | {
     type: 'ShowAction'
 
     /**
@@ -3550,6 +3658,12 @@ export function paramsOfAppDebotBrowserSwitch(context_id: number): ParamsOfAppDe
     return {
         type: 'Switch',
         context_id,
+    };
+}
+
+export function paramsOfAppDebotBrowserSwitchCompleted(): ParamsOfAppDebotBrowser {
+    return {
+        type: 'SwitchCompleted',
     };
 }
 
@@ -3675,6 +3789,7 @@ type ParamsOfAppDebotBrowserInvokeDebot = {
 export interface AppDebotBrowser {
     log(params: ParamsOfAppDebotBrowserLog): void,
     switch(params: ParamsOfAppDebotBrowserSwitch): void,
+    switch_completed(): void,
     show_action(params: ParamsOfAppDebotBrowserShowAction): void,
     input(params: ParamsOfAppDebotBrowserInput): Promise<ResultOfAppDebotBrowserInput>,
     get_signing_box(): Promise<ResultOfAppDebotBrowserGetSigningBox>,
@@ -3690,6 +3805,9 @@ async function dispatchAppDebotBrowser(obj: AppDebotBrowser, params: ParamsOfApp
                 break;
             case 'Switch':
                 obj.switch(params);
+                break;
+            case 'SwitchCompleted':
+                obj.switch_completed();
                 break;
             case 'ShowAction':
                 obj.show_action(params);

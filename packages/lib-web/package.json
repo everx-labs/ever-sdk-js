@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/lib-web",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"description": "TON Client WASM module for browsers",
 	"main": "index.js",
 	"scripts": {

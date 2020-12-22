@@ -1,6 +1,14 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.4.1 Dec 22, 2020
+
+### New
+- `net.find_last_shard_block` function returning account shard last block ID.
+- `boc.get_code_from_tvc` function extracting contract code from TVC image.
+- **Debot Module:**
+  - Add new variant `ParamsOfAppDebotBrowser::SwitchCompleted` to notify browser when all context actions are shown.
+
 ## 1.3.3 - Dec 16, 2020
 
 ### Fix
