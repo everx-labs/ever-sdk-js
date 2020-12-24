@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/lib-node",
-	"version": "1.4.1",
+	"version": "1.5.0",
 	"description": "TON Client NodeJs AddOn",
 	"repository": {
 		"type": "git",

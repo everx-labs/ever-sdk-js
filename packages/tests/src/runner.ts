@@ -37,7 +37,7 @@ export class TestsRunner {
     };
     static exit: (code: number) => void = (_code) => {
     };
-    useNodeSE: boolean = true;
+    useNodeSE: boolean = process.env.USE_NODE_SE !== "false";
     config: ClientConfig = {
         network: {server_address: process.env.TON_NETWORK_ADDRESS || "http://localhost:8080"},
     };
@@ -232,7 +232,7 @@ export class TestsRunner {
                     // ignore exception
                 }
             }
-            await new Promise(resolve => TestsRunner.setTimeout(resolve, 1000));
+            await new Promise(resolve => TestsRunner.setTimeout(resolve as any, 1000));
         }
         if (this.client) {
             await this.client.close();

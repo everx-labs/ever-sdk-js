@@ -15,6 +15,8 @@ interface IClient {
 // client module
 
 
+export type ClientErrorCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33;
+
 export type ClientError = {
 
     /**
@@ -48,30 +50,58 @@ export type ClientConfig = {
 export type NetworkConfig = {
 
     /**
+     * DApp Server public address. For instance, for `net.ton.dev/graphql` GraphQL endpoint the server address will be net.ton.dev
      */
-    server_address: string,
+    server_address?: string,
 
     /**
+     * List of DApp Server addresses.
+     * 
+     * @remarks
+     * Any correct URL format can be specified, including IP addresses
+     */
+    endpoints?: string[],
+
+    /**
+     * The number of automatic network retries that SDK performs in case of connection problems The default value is 5.
      */
     network_retries_count?: number,
 
     /**
+     * The number of automatic message processing retries that SDK performs in case of `Message Expired (507)` error - but only for those messages which local emulation was successfull or failed with replay protection error. The default value is 5.
      */
     message_retries_count?: number,
 
     /**
+     * Timeout that is used to process message delivery for the contracts which ABI does not include "expire" header. If the message is not delivered within the speficied timeout the appropriate error occurs.
      */
     message_processing_timeout?: number,
 
     /**
+     * Maximum timeout that is used for query response. The default value is 40 sec.
      */
     wait_for_timeout?: number,
 
     /**
+     * Maximum time difference between server and client.
+     * 
+     * @remarks
+     * If client's device time is out of sink and difference is more thanthe threshhold then error will occur. Also the error will occur if the specified threshhold is more than
+     * `message_processing_timeout/2`.
+     * The default value is 15 sec.
      */
     out_of_sync_threshold?: number,
 
     /**
+     * Timeout between reconnect attempts
+     */
+    reconnect_timeout?: number,
+
+    /**
+     * Access key to GraphQL API.
+     * 
+     * @remarks
+     * At the moment is not used in production
      */
     access_key?: string
 };
@@ -79,14 +109,17 @@ export type NetworkConfig = {
 export type CryptoConfig = {
 
     /**
+     * Mnemonic dictionary that will be used by default in crypto funcions. If not specified, 1 dictionary will be used.
      */
     mnemonic_dictionary?: number,
 
     /**
+     * Mnemonic word count that will be used by default in crypto functions. If not specified the default value will be 12.
      */
     mnemonic_word_count?: number,
 
     /**
+     * Derivation path that will be used by default in crypto functions. If not specified `m/44'/396'/0'/0/0` will be used.
      */
     hdkey_derivation_path?: string
 };
@@ -94,14 +127,17 @@ export type CryptoConfig = {
 export type AbiConfig = {
 
     /**
+     * Workchain id that is used by default in DeploySet
      */
     workchain?: number,
 
     /**
+     * Message lifetime for contracts which ABI includes "expire" header. The default value is 40 sec.
      */
     message_expiration_timeout?: number,
 
     /**
+     * Factor that increases the expiration timeout for each retry The default value is 1.5
      */
     message_expiration_timeout_grow_factor?: number
 };
@@ -256,6 +292,8 @@ export class ClientModule {
 
 // crypto module
 
+
+export type CryptoErrorCode = 100 | 101 | 102 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118 | 119 | 120 | 121;
 
 export type SigningBoxHandle = number;
 
@@ -1457,6 +1495,8 @@ export class CryptoModule {
 // abi module
 
 
+export type AbiErrorCode = 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | 309 | 310 | 311;
+
 export type Abi = {
     type: 'Contract'
 
@@ -2265,6 +2305,8 @@ export class AbiModule {
 // boc module
 
 
+export type BocErrorCode = 201 | 202 | 203 | 204;
+
 export type ParamsOfParse = {
 
     /**
@@ -2454,6 +2496,8 @@ export class BocModule {
 
 // processing module
 
+
+export type ProcessingErrorCode = 501 | 502 | 503 | 504 | 505 | 506 | 507 | 508 | 509 | 510 | 511 | 512 | 513;
 
 export type ProcessingEvent = {
     type: 'WillFetchFirstBlock'
@@ -2843,11 +2887,7 @@ export class ProcessingModule {
      * The intermediate events, such as `WillFetchFirstBlock`, `WillSend`, `DidSend`,
      * `WillFetchNextBlock`, etc - are switched on/off by `send_events` flag
      * and logged into the supplied callback function.
-     * The retry configuration parameters are defined in config:
-     * <add correct config params here>
-     * pub const DEFAULT_EXPIRATION_RETRIES_LIMIT: i8 = 3; - max number of retries
-     * pub const DEFAULT_EXPIRATION_TIMEOUT: u32 = 40000;  - message expiration timeout in ms.
-     * pub const DEFAULT_....expiration_timeout_grow_factor... = 1.5 - factor that increases the expiration timeout for each retry
+     * The retry configuration parameters are defined in client's `NetworkConfig`.
      * 
      * If contract's ABI does not include "expire" header
      * then, if no transaction is found within the network timeout (see config parameter ), exits with error.
@@ -2948,6 +2988,8 @@ export class UtilsModule {
 
 // tvm module
 
+
+export type TvmErrorCode = 401 | 402 | 403 | 404 | 405 | 406 | 407 | 408 | 409 | 410 | 411 | 412 | 413 | 414;
 
 export type ExecutionOptions = {
 
@@ -3278,6 +3320,8 @@ export class TvmModule {
 // net module
 
 
+export type NetErrorCode = 601 | 602 | 603 | 604 | 605 | 606 | 607 | 608 | 609 | 610 | 611 | 612;
+
 export type OrderBy = {
 
     /**
@@ -3427,6 +3471,14 @@ export type ResultOfFindLastShardBlock = {
     block_id: string
 };
 
+export type EndpointsSet = {
+
+    /**
+     * List of endpoints provided by server
+     */
+    endpoints: string[]
+};
+
 /**
  * Network access.
  */
@@ -3533,10 +3585,30 @@ export class NetModule {
     find_last_shard_block(params: ParamsOfFindLastShardBlock): Promise<ResultOfFindLastShardBlock> {
         return this.client.request('net.find_last_shard_block', params);
     }
+
+    /**
+     * Requests the list of alternative endpoints from server
+     * @returns EndpointsSet
+     */
+    fetch_endpoints(): Promise<EndpointsSet> {
+        return this.client.request('net.fetch_endpoints');
+    }
+
+    /**
+     * Sets the list of endpoints to use on reinit
+     * 
+     * @param {EndpointsSet} params
+     * @returns 
+     */
+    set_endpoints(params: EndpointsSet): Promise<void> {
+        return this.client.request('net.set_endpoints', params);
+    }
 }
 
 // debot module
 
+
+export type DebotErrorCode = 801 | 802 | 803 | 804;
 
 export type DebotHandle = number;
 
