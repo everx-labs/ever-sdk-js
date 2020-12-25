@@ -1,6 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.5.1 Dec 25, 2020
+
+### New
+- *.d.ts type declarations in `lib-react-native`, `lib-node`, `lib-web`.
+
 ## 1.5.0 Dec 25, 2020
 
 ### New

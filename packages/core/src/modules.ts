@@ -15,7 +15,41 @@ interface IClient {
 // client module
 
 
-export type ClientErrorCode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33;
+export enum ClientErrorCode {
+    NotImplemented = 1,
+    InvalidHex = 2,
+    InvalidBase64 = 3,
+    InvalidAddress = 4,
+    CallbackParamsCantBeConvertedToJson = 5,
+    WebsocketConnectError = 6,
+    WebsocketReceiveError = 7,
+    WebsocketSendError = 8,
+    HttpClientCreateError = 9,
+    HttpRequestCreateError = 10,
+    HttpRequestSendError = 11,
+    HttpRequestParseError = 12,
+    CallbackNotRegistered = 13,
+    NetModuleNotInit = 14,
+    InvalidConfig = 15,
+    CannotCreateRuntime = 16,
+    InvalidContextHandle = 17,
+    CannotSerializeResult = 18,
+    CannotSerializeError = 19,
+    CannotConvertJsValueToJson = 20,
+    CannotReceiveSpawnedResult = 21,
+    SetTimerError = 22,
+    InvalidParams = 23,
+    ContractsAddressConversionFailed = 24,
+    UnknownFunction = 25,
+    AppRequestError = 26,
+    NoSuchRequest = 27,
+    CanNotSendRequestResult = 28,
+    CanNotReceiveRequestResult = 29,
+    CanNotParseRequestResult = 30,
+    UnexpectedCallbackResponse = 31,
+    CanNotParseNumber = 32,
+    InternalError = 33
+}
 
 export type ClientError = {
 
@@ -30,7 +64,7 @@ export type ClientError = {
     /**
      */
     data: any
-};
+}
 
 export type ClientConfig = {
 
@@ -45,7 +79,7 @@ export type ClientConfig = {
     /**
      */
     abi?: AbiConfig
-};
+}
 
 export type NetworkConfig = {
 
@@ -104,7 +138,7 @@ export type NetworkConfig = {
      * At the moment is not used in production
      */
     access_key?: string
-};
+}
 
 export type CryptoConfig = {
 
@@ -122,7 +156,7 @@ export type CryptoConfig = {
      * Derivation path that will be used by default in crypto functions. If not specified `m/44'/396'/0'/0/0` will be used.
      */
     hdkey_derivation_path?: string
-};
+}
 
 export type AbiConfig = {
 
@@ -140,7 +174,7 @@ export type AbiConfig = {
      * Factor that increases the expiration timeout for each retry The default value is 1.5
      */
     message_expiration_timeout_grow_factor?: number
-};
+}
 
 export type BuildInfoDependency = {
 
@@ -156,7 +190,7 @@ export type BuildInfoDependency = {
      * Git commit hash of the related repository.
      */
     git_commit: string
-};
+}
 
 export type ParamsOfAppRequest = {
 
@@ -172,7 +206,7 @@ export type ParamsOfAppRequest = {
      * Request describing data
      */
     request_data: any
-};
+}
 
 export type AppRequestResult = {
     type: 'Error'
@@ -188,7 +222,7 @@ export type AppRequestResult = {
      * Request processing result
      */
     result: any
-};
+}
 
 export function appRequestResultError(text: string): AppRequestResult {
     return {
@@ -209,7 +243,7 @@ export type ResultOfGetApiReference = {
     /**
      */
     api: any
-};
+}
 
 export type ResultOfVersion = {
 
@@ -217,7 +251,7 @@ export type ResultOfVersion = {
      * Core Library version
      */
     version: string
-};
+}
 
 export type ResultOfBuildInfo = {
 
@@ -230,7 +264,7 @@ export type ResultOfBuildInfo = {
      * Fingerprint of the most important dependencies.
      */
     dependencies: BuildInfoDependency[]
-};
+}
 
 export type ParamsOfResolveAppRequest = {
 
@@ -243,7 +277,7 @@ export type ParamsOfResolveAppRequest = {
      * Result of request processing
      */
     result: AppRequestResult
-};
+}
 
 /**
  * Provides information about library.
@@ -293,9 +327,29 @@ export class ClientModule {
 // crypto module
 
 
-export type CryptoErrorCode = 100 | 101 | 102 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118 | 119 | 120 | 121;
+export enum CryptoErrorCode {
+    InvalidPublicKey = 100,
+    InvalidSecretKey = 101,
+    InvalidKey = 102,
+    InvalidFactorizeChallenge = 106,
+    InvalidBigInt = 107,
+    ScryptFailed = 108,
+    InvalidKeySize = 109,
+    NaclSecretBoxFailed = 110,
+    NaclBoxFailed = 111,
+    NaclSignFailed = 112,
+    Bip39InvalidEntropy = 113,
+    Bip39InvalidPhrase = 114,
+    Bip32InvalidKey = 115,
+    Bip32InvalidDerivePath = 116,
+    Bip39InvalidDictionary = 117,
+    Bip39InvalidWordCount = 118,
+    MnemonicGenerationFailed = 119,
+    MnemonicFromEntropyFailed = 120,
+    SigningBoxNotRegistered = 121
+}
 
-export type SigningBoxHandle = number;
+export type SigningBoxHandle = number
 
 export type ParamsOfFactorize = {
 
@@ -303,7 +357,7 @@ export type ParamsOfFactorize = {
      * Hexadecimal representation of u64 composite number.
      */
     composite: string
-};
+}
 
 export type ResultOfFactorize = {
 
@@ -311,7 +365,7 @@ export type ResultOfFactorize = {
      * Two factors of composite or empty if composite can't be factorized.
      */
     factors: string[]
-};
+}
 
 export type ParamsOfModularPower = {
 
@@ -329,7 +383,7 @@ export type ParamsOfModularPower = {
      * `modulus` argument of calculation.
      */
     modulus: string
-};
+}
 
 export type ResultOfModularPower = {
 
@@ -337,7 +391,7 @@ export type ResultOfModularPower = {
      * Result of modular exponentiation
      */
     modular_power: string
-};
+}
 
 export type ParamsOfTonCrc16 = {
 
@@ -348,7 +402,7 @@ export type ParamsOfTonCrc16 = {
      * Encoded with `base64`.
      */
     data: string
-};
+}
 
 export type ResultOfTonCrc16 = {
 
@@ -356,7 +410,7 @@ export type ResultOfTonCrc16 = {
      * Calculated CRC for input data.
      */
     crc: number
-};
+}
 
 export type ParamsOfGenerateRandomBytes = {
 
@@ -364,7 +418,7 @@ export type ParamsOfGenerateRandomBytes = {
      * Size of random byte array.
      */
     length: number
-};
+}
 
 export type ResultOfGenerateRandomBytes = {
 
@@ -372,7 +426,7 @@ export type ResultOfGenerateRandomBytes = {
      * Generated bytes encoded in `base64`.
      */
     bytes: string
-};
+}
 
 export type ParamsOfConvertPublicKeyToTonSafeFormat = {
 
@@ -380,7 +434,7 @@ export type ParamsOfConvertPublicKeyToTonSafeFormat = {
      * Public key - 64 symbols hex string
      */
     public_key: string
-};
+}
 
 export type ResultOfConvertPublicKeyToTonSafeFormat = {
 
@@ -388,7 +442,7 @@ export type ResultOfConvertPublicKeyToTonSafeFormat = {
      * Public key represented in TON safe format.
      */
     ton_public_key: string
-};
+}
 
 export type KeyPair = {
 
@@ -401,7 +455,7 @@ export type KeyPair = {
      * Private key - u64 symbols hex string
      */
     secret: string
-};
+}
 
 export type ParamsOfSign = {
 
@@ -414,7 +468,7 @@ export type ParamsOfSign = {
      * Sign keys.
      */
     keys: KeyPair
-};
+}
 
 export type ResultOfSign = {
 
@@ -427,7 +481,7 @@ export type ResultOfSign = {
      * Signature encoded in `hex`.
      */
     signature: string
-};
+}
 
 export type ParamsOfVerifySignature = {
 
@@ -440,7 +494,7 @@ export type ParamsOfVerifySignature = {
      * Signer's public key - 64 symbols hex string
      */
     public: string
-};
+}
 
 export type ResultOfVerifySignature = {
 
@@ -448,7 +502,7 @@ export type ResultOfVerifySignature = {
      * Unsigned data encoded in `base64`.
      */
     unsigned: string
-};
+}
 
 export type ParamsOfHash = {
 
@@ -459,7 +513,7 @@ export type ParamsOfHash = {
      * Encoded with `base64`.
      */
     data: string
-};
+}
 
 export type ResultOfHash = {
 
@@ -470,7 +524,7 @@ export type ResultOfHash = {
      * Encoded with 'hex'.
      */
     hash: string
-};
+}
 
 export type ParamsOfScrypt = {
 
@@ -503,7 +557,7 @@ export type ParamsOfScrypt = {
      * Intended output length in octets of the derived key.
      */
     dk_len: number
-};
+}
 
 export type ResultOfScrypt = {
 
@@ -514,7 +568,7 @@ export type ResultOfScrypt = {
      * Encoded with `hex`.
      */
     key: string
-};
+}
 
 export type ParamsOfNaclSignKeyPairFromSecret = {
 
@@ -522,7 +576,7 @@ export type ParamsOfNaclSignKeyPairFromSecret = {
      * Secret key - unprefixed 0-padded to 64 symbols hex string
      */
     secret: string
-};
+}
 
 export type ParamsOfNaclSign = {
 
@@ -535,7 +589,7 @@ export type ParamsOfNaclSign = {
      * Signer's secret key - unprefixed 0-padded to 64 symbols hex string
      */
     secret: string
-};
+}
 
 export type ResultOfNaclSign = {
 
@@ -543,7 +597,7 @@ export type ResultOfNaclSign = {
      * Signed data, encoded in `base64`.
      */
     signed: string
-};
+}
 
 export type ParamsOfNaclSignOpen = {
 
@@ -559,7 +613,7 @@ export type ParamsOfNaclSignOpen = {
      * Signer's public key - unprefixed 0-padded to 64 symbols hex string
      */
     public: string
-};
+}
 
 export type ResultOfNaclSignOpen = {
 
@@ -567,7 +621,7 @@ export type ResultOfNaclSignOpen = {
      * Unsigned data, encoded in `base64`.
      */
     unsigned: string
-};
+}
 
 export type ResultOfNaclSignDetached = {
 
@@ -575,7 +629,7 @@ export type ResultOfNaclSignDetached = {
      * Signature encoded in `hex`.
      */
     signature: string
-};
+}
 
 export type ParamsOfNaclBoxKeyPairFromSecret = {
 
@@ -583,7 +637,7 @@ export type ParamsOfNaclBoxKeyPairFromSecret = {
      * Secret key - unprefixed 0-padded to 64 symbols hex string
      */
     secret: string
-};
+}
 
 export type ParamsOfNaclBox = {
 
@@ -606,7 +660,7 @@ export type ParamsOfNaclBox = {
      * Sender's private key - unprefixed 0-padded to 64 symbols hex string
      */
     secret: string
-};
+}
 
 export type ResultOfNaclBox = {
 
@@ -614,7 +668,7 @@ export type ResultOfNaclBox = {
      * Encrypted data encoded in `base64`.
      */
     encrypted: string
-};
+}
 
 export type ParamsOfNaclBoxOpen = {
 
@@ -639,7 +693,7 @@ export type ParamsOfNaclBoxOpen = {
      * Receiver's private key - unprefixed 0-padded to 64 symbols hex string
      */
     secret: string
-};
+}
 
 export type ResultOfNaclBoxOpen = {
 
@@ -647,7 +701,7 @@ export type ResultOfNaclBoxOpen = {
      * Decrypted data encoded in `base64`.
      */
     decrypted: string
-};
+}
 
 export type ParamsOfNaclSecretBox = {
 
@@ -668,7 +722,7 @@ export type ParamsOfNaclSecretBox = {
      * Secret key - unprefixed 0-padded to 64 symbols hex string
      */
     key: string
-};
+}
 
 export type ParamsOfNaclSecretBoxOpen = {
 
@@ -689,7 +743,7 @@ export type ParamsOfNaclSecretBoxOpen = {
      * Public key - unprefixed 0-padded to 64 symbols hex string
      */
     key: string
-};
+}
 
 export type ParamsOfMnemonicWords = {
 
@@ -697,7 +751,7 @@ export type ParamsOfMnemonicWords = {
      * Dictionary identifier
      */
     dictionary?: number
-};
+}
 
 export type ResultOfMnemonicWords = {
 
@@ -705,7 +759,7 @@ export type ResultOfMnemonicWords = {
      * The list of mnemonic words
      */
     words: string
-};
+}
 
 export type ParamsOfMnemonicFromRandom = {
 
@@ -718,7 +772,7 @@ export type ParamsOfMnemonicFromRandom = {
      * Mnemonic word count
      */
     word_count?: number
-};
+}
 
 export type ResultOfMnemonicFromRandom = {
 
@@ -726,7 +780,7 @@ export type ResultOfMnemonicFromRandom = {
      * String of mnemonic words
      */
     phrase: string
-};
+}
 
 export type ParamsOfMnemonicFromEntropy = {
 
@@ -747,7 +801,7 @@ export type ParamsOfMnemonicFromEntropy = {
      * Mnemonic word count
      */
     word_count?: number
-};
+}
 
 export type ResultOfMnemonicFromEntropy = {
 
@@ -755,7 +809,7 @@ export type ResultOfMnemonicFromEntropy = {
      * Phrase
      */
     phrase: string
-};
+}
 
 export type ParamsOfMnemonicVerify = {
 
@@ -773,7 +827,7 @@ export type ParamsOfMnemonicVerify = {
      * Word count
      */
     word_count?: number
-};
+}
 
 export type ResultOfMnemonicVerify = {
 
@@ -781,7 +835,7 @@ export type ResultOfMnemonicVerify = {
      * Flag indicating if the mnemonic is valid or not
      */
     valid: boolean
-};
+}
 
 export type ParamsOfMnemonicDeriveSignKeys = {
 
@@ -804,7 +858,7 @@ export type ParamsOfMnemonicDeriveSignKeys = {
      * Word count
      */
     word_count?: number
-};
+}
 
 export type ParamsOfHDKeyXPrvFromMnemonic = {
 
@@ -822,7 +876,7 @@ export type ParamsOfHDKeyXPrvFromMnemonic = {
      * Mnemonic word count
      */
     word_count?: number
-};
+}
 
 export type ResultOfHDKeyXPrvFromMnemonic = {
 
@@ -830,7 +884,7 @@ export type ResultOfHDKeyXPrvFromMnemonic = {
      * Serialized extended master private key
      */
     xprv: string
-};
+}
 
 export type ParamsOfHDKeyDeriveFromXPrv = {
 
@@ -848,7 +902,7 @@ export type ParamsOfHDKeyDeriveFromXPrv = {
      * Indicates the derivation of hardened/not-hardened key (see BIP-0032)
      */
     hardened: boolean
-};
+}
 
 export type ResultOfHDKeyDeriveFromXPrv = {
 
@@ -856,7 +910,7 @@ export type ResultOfHDKeyDeriveFromXPrv = {
      * Serialized extended private key
      */
     xprv: string
-};
+}
 
 export type ParamsOfHDKeyDeriveFromXPrvPath = {
 
@@ -869,7 +923,7 @@ export type ParamsOfHDKeyDeriveFromXPrvPath = {
      * Derivation path, for instance "m/44'/396'/0'/0/0"
      */
     path: string
-};
+}
 
 export type ResultOfHDKeyDeriveFromXPrvPath = {
 
@@ -877,7 +931,7 @@ export type ResultOfHDKeyDeriveFromXPrvPath = {
      * Derived serialized extended private key
      */
     xprv: string
-};
+}
 
 export type ParamsOfHDKeySecretFromXPrv = {
 
@@ -885,7 +939,7 @@ export type ParamsOfHDKeySecretFromXPrv = {
      * Serialized extended private key
      */
     xprv: string
-};
+}
 
 export type ResultOfHDKeySecretFromXPrv = {
 
@@ -893,7 +947,7 @@ export type ResultOfHDKeySecretFromXPrv = {
      * Private key - 64 symbols hex string
      */
     secret: string
-};
+}
 
 export type ParamsOfHDKeyPublicFromXPrv = {
 
@@ -901,7 +955,7 @@ export type ParamsOfHDKeyPublicFromXPrv = {
      * Serialized extended private key
      */
     xprv: string
-};
+}
 
 export type ResultOfHDKeyPublicFromXPrv = {
 
@@ -909,7 +963,7 @@ export type ResultOfHDKeyPublicFromXPrv = {
      * Public key - 64 symbols hex string
      */
     public: string
-};
+}
 
 export type ParamsOfChaCha20 = {
 
@@ -936,7 +990,7 @@ export type ParamsOfChaCha20 = {
      * Must be encoded with `hex`.
      */
     nonce: string
-};
+}
 
 export type ResultOfChaCha20 = {
 
@@ -947,7 +1001,7 @@ export type ResultOfChaCha20 = {
      * Encoded with `base64`.
      */
     data: string
-};
+}
 
 export type RegisteredSigningBox = {
 
@@ -955,7 +1009,7 @@ export type RegisteredSigningBox = {
      * Handle of the signing box.
      */
     handle: SigningBoxHandle
-};
+}
 
 export type ParamsOfAppSigningBox = {
     type: 'GetPublicKey'
@@ -966,7 +1020,7 @@ export type ParamsOfAppSigningBox = {
      * Data to sign encoded as base64
      */
     unsigned: string
-};
+}
 
 export function paramsOfAppSigningBoxGetPublicKey(): ParamsOfAppSigningBox {
     return {
@@ -995,7 +1049,7 @@ export type ResultOfAppSigningBox = {
      * Data signature encoded as hex
      */
     signature: string
-};
+}
 
 export function resultOfAppSigningBoxGetPublicKey(public_key: string): ResultOfAppSigningBox {
     return {
@@ -1020,7 +1074,7 @@ export type ResultOfSigningBoxGetPublicKey = {
      * Encoded with hex
      */
     pubkey: string
-};
+}
 
 export type ParamsOfSigningBoxSign = {
 
@@ -1036,7 +1090,7 @@ export type ParamsOfSigningBoxSign = {
      * Must be encoded with `base64`.
      */
     unsigned: string
-};
+}
 
 export type ResultOfSigningBoxSign = {
 
@@ -1047,19 +1101,19 @@ export type ResultOfSigningBoxSign = {
      * Encoded with `base64`.
      */
     signature: string
-};
+}
 
 type ResultOfAppSigningBoxGetPublicKey = {
     public_key: string
-};
+}
 
 type ParamsOfAppSigningBoxSign = {
     unsigned: string
-};
+}
 
 type ResultOfAppSigningBoxSign = {
     signature: string
-};
+}
 
 export interface AppSigningBox {
     get_public_key(): Promise<ResultOfAppSigningBoxGetPublicKey>,
@@ -1495,7 +1549,19 @@ export class CryptoModule {
 // abi module
 
 
-export type AbiErrorCode = 301 | 302 | 303 | 304 | 305 | 306 | 307 | 308 | 309 | 310 | 311;
+export enum AbiErrorCode {
+    RequiredAddressMissingForEncodeMessage = 301,
+    RequiredCallSetMissingForEncodeMessage = 302,
+    InvalidJson = 303,
+    InvalidMessage = 304,
+    EncodeDeployMessageFailed = 305,
+    EncodeRunMessageFailed = 306,
+    AttachSignatureFailed = 307,
+    InvalidTvcImage = 308,
+    RequiredPublicKeyMissingForFunctionHeader = 309,
+    InvalidSigner = 310,
+    InvalidAbi = 311
+}
 
 export type Abi = {
     type: 'Contract'
@@ -1521,7 +1587,7 @@ export type Abi = {
     /**
      */
     value: AbiContract
-};
+}
 
 export function abiContract(value: AbiContract): Abi {
     return {
@@ -1551,7 +1617,7 @@ export function abiSerialized(value: AbiContract): Abi {
     };
 }
 
-export type AbiHandle = number;
+export type AbiHandle = number
 
 export type FunctionHeader = {
 
@@ -1575,7 +1641,7 @@ export type FunctionHeader = {
      * Encoded in `hex`.If not specified, method fails with exception (if ABI includes `pubkey` header)..
      */
     pubkey?: string
-};
+}
 
 export type CallSet = {
 
@@ -1598,7 +1664,7 @@ export type CallSet = {
      * Function input parameters according to ABI.
      */
     input?: any
-};
+}
 
 export type DeploySet = {
 
@@ -1619,7 +1685,7 @@ export type DeploySet = {
      * List of initial values for contract's public variables.
      */
     initial_data?: any
-};
+}
 
 export type Signer = {
     type: 'None'
@@ -1641,7 +1707,7 @@ export type Signer = {
     /**
      */
     handle: SigningBoxHandle
-};
+}
 
 export function signerNone(): Signer {
     return {
@@ -1670,7 +1736,12 @@ export function signerSigningBox(handle: SigningBoxHandle): Signer {
     };
 }
 
-export type MessageBodyType = 'Input' | 'Output' | 'InternalOutput' | 'Event';
+export enum MessageBodyType {
+    Input = "Input",
+    Output = "Output",
+    InternalOutput = "InternalOutput",
+    Event = "Event"
+}
 
 export type StateInitSource = {
     type: 'Message'
@@ -1718,7 +1789,7 @@ export type StateInitSource = {
     /**
      */
     init_params?: StateInitParams
-};
+}
 
 export function stateInitSourceMessage(source: MessageSource): StateInitSource {
     return {
@@ -1754,7 +1825,7 @@ export type StateInitParams = {
     /**
      */
     value: any
-};
+}
 
 export type MessageSource = {
     type: 'Encoded'
@@ -1768,7 +1839,7 @@ export type MessageSource = {
     abi?: Abi
 } | ({
     type: 'EncodingParams'
-} & ParamsOfEncodeMessage);
+} & ParamsOfEncodeMessage)
 
 export function messageSourceEncoded(message: string, abi?: Abi): MessageSource {
     return {
@@ -1798,7 +1869,7 @@ export type AbiParam = {
     /**
      */
     components?: AbiParam[]
-};
+}
 
 export type AbiEvent = {
 
@@ -1813,7 +1884,7 @@ export type AbiEvent = {
     /**
      */
     id?: string | null
-};
+}
 
 export type AbiData = {
 
@@ -1832,7 +1903,7 @@ export type AbiData = {
     /**
      */
     components?: AbiParam[]
-};
+}
 
 export type AbiFunction = {
 
@@ -1851,7 +1922,7 @@ export type AbiFunction = {
     /**
      */
     id?: string | null
-};
+}
 
 export type AbiContract = {
 
@@ -1878,7 +1949,7 @@ export type AbiContract = {
     /**
      */
     data?: AbiData[]
-};
+}
 
 export type ParamsOfEncodeMessageBody = {
 
@@ -1921,7 +1992,7 @@ export type ParamsOfEncodeMessageBody = {
      * Default value is 0.
      */
     processing_try_index?: number
-};
+}
 
 export type ResultOfEncodeMessageBody = {
 
@@ -1940,7 +2011,7 @@ export type ResultOfEncodeMessageBody = {
      * produce signed message using `abi.attach_signature`.
      */
     data_to_sign?: string
-};
+}
 
 export type ParamsOfAttachSignatureToMessageBody = {
 
@@ -1972,14 +2043,14 @@ export type ParamsOfAttachSignatureToMessageBody = {
      * Must be encoded with `hex`.
      */
     signature: string
-};
+}
 
 export type ResultOfAttachSignatureToMessageBody = {
 
     /**
      */
     body: string
-};
+}
 
 export type ParamsOfEncodeMessage = {
 
@@ -2037,7 +2108,7 @@ export type ParamsOfEncodeMessage = {
      * Default value is 0.
      */
     processing_try_index?: number
-};
+}
 
 export type ResultOfEncodeMessage = {
 
@@ -2065,7 +2136,7 @@ export type ResultOfEncodeMessage = {
      * Message id.
      */
     message_id: string
-};
+}
 
 export type ParamsOfAttachSignature = {
 
@@ -2088,7 +2159,7 @@ export type ParamsOfAttachSignature = {
      * Signature encoded in `hex`.
      */
     signature: string
-};
+}
 
 export type ResultOfAttachSignature = {
 
@@ -2101,7 +2172,7 @@ export type ResultOfAttachSignature = {
      * Message ID
      */
     message_id: string
-};
+}
 
 export type ParamsOfDecodeMessage = {
 
@@ -2114,7 +2185,7 @@ export type ParamsOfDecodeMessage = {
      * Message BOC
      */
     message: string
-};
+}
 
 export type DecodedMessageBody = {
 
@@ -2137,7 +2208,7 @@ export type DecodedMessageBody = {
      * Function header.
      */
     header?: FunctionHeader
-};
+}
 
 export type ParamsOfDecodeMessageBody = {
 
@@ -2155,7 +2226,7 @@ export type ParamsOfDecodeMessageBody = {
      * True if the body belongs to the internal message.
      */
     is_internal: boolean
-};
+}
 
 export type ParamsOfEncodeAccount = {
 
@@ -2178,7 +2249,7 @@ export type ParamsOfEncodeAccount = {
      * Initial value for the `last_paid`.
      */
     last_paid?: number
-};
+}
 
 export type ResultOfEncodeAccount = {
 
@@ -2191,7 +2262,7 @@ export type ResultOfEncodeAccount = {
      * Account ID  encoded in `hex`.
      */
     id: string
-};
+}
 
 /**
  * Provides message encoding and decoding according to the ABI specification.
@@ -2305,7 +2376,12 @@ export class AbiModule {
 // boc module
 
 
-export type BocErrorCode = 201 | 202 | 203 | 204;
+export enum BocErrorCode {
+    InvalidBoc = 201,
+    SerializationError = 202,
+    InappropriateBlock = 203,
+    MissingSourceBoc = 204
+}
 
 export type ParamsOfParse = {
 
@@ -2313,7 +2389,7 @@ export type ParamsOfParse = {
      * BOC encoded as base64
      */
     boc: string
-};
+}
 
 export type ResultOfParse = {
 
@@ -2321,7 +2397,7 @@ export type ResultOfParse = {
      * JSON containing parsed BOC
      */
     parsed: any
-};
+}
 
 export type ParamsOfParseShardstate = {
 
@@ -2339,7 +2415,7 @@ export type ParamsOfParseShardstate = {
      * Workchain shardstate belongs to
      */
     workchain_id: number
-};
+}
 
 export type ParamsOfGetBlockchainConfig = {
 
@@ -2347,7 +2423,7 @@ export type ParamsOfGetBlockchainConfig = {
      * Key block BOC encoded as base64
      */
     block_boc: string
-};
+}
 
 export type ResultOfGetBlockchainConfig = {
 
@@ -2355,7 +2431,7 @@ export type ResultOfGetBlockchainConfig = {
      * Blockchain config BOC encoded as base64
      */
     config_boc: string
-};
+}
 
 export type ParamsOfGetBocHash = {
 
@@ -2363,7 +2439,7 @@ export type ParamsOfGetBocHash = {
      * BOC encoded as base64
      */
     boc: string
-};
+}
 
 export type ResultOfGetBocHash = {
 
@@ -2371,7 +2447,7 @@ export type ResultOfGetBocHash = {
      * BOC root hash encoded with hex
      */
     hash: string
-};
+}
 
 export type ParamsOfGetCodeFromTvc = {
 
@@ -2379,7 +2455,7 @@ export type ParamsOfGetCodeFromTvc = {
      * Contract TVC image encoded as base64
      */
     tvc: string
-};
+}
 
 export type ResultOfGetCodeFromTvc = {
 
@@ -2387,7 +2463,7 @@ export type ResultOfGetCodeFromTvc = {
      * Contract code encoded as base64
      */
     code: string
-};
+}
 
 /**
  * BOC manipulation module.
@@ -2497,7 +2573,21 @@ export class BocModule {
 // processing module
 
 
-export type ProcessingErrorCode = 501 | 502 | 503 | 504 | 505 | 506 | 507 | 508 | 509 | 510 | 511 | 512 | 513;
+export enum ProcessingErrorCode {
+    MessageAlreadyExpired = 501,
+    MessageHasNotDestinationAddress = 502,
+    CanNotBuildMessageCell = 503,
+    FetchBlockFailed = 504,
+    SendMessageFailed = 505,
+    InvalidMessageBoc = 506,
+    MessageExpired = 507,
+    TransactionWaitTimeout = 508,
+    InvalidBlockReceived = 509,
+    CanNotCheckBlockShard = 510,
+    BlockNotFound = 511,
+    InvalidData = 512,
+    ExternalSignerMustNotBeUsed = 513
+}
 
 export type ProcessingEvent = {
     type: 'WillFetchFirstBlock'
@@ -2599,7 +2689,7 @@ export type ProcessingEvent = {
     /**
      */
     error: ClientError
-};
+}
 
 export function processingEventWillFetchFirstBlock(): ProcessingEvent {
     return {
@@ -2699,7 +2789,7 @@ export type ResultOfProcessMessage = {
      * Transaction fees
      */
     fees: TransactionFees
-};
+}
 
 export type DecodedOutput = {
 
@@ -2716,7 +2806,7 @@ export type DecodedOutput = {
      * Decoded body of the function output message.
      */
     output?: any
-};
+}
 
 export type ParamsOfSendMessage = {
 
@@ -2746,7 +2836,7 @@ export type ParamsOfSendMessage = {
      * Flag for requesting events sending
      */
     send_events: boolean
-};
+}
 
 export type ResultOfSendMessage = {
 
@@ -2758,7 +2848,7 @@ export type ResultOfSendMessage = {
      * `wait_for_transaction`.
      */
     shard_block_id: string
-};
+}
 
 export type ParamsOfWaitForTransaction = {
 
@@ -2793,7 +2883,7 @@ export type ParamsOfWaitForTransaction = {
      * Flag that enables/disables intermediate events
      */
     send_events: boolean
-};
+}
 
 export type ParamsOfProcessMessage = {
 
@@ -2806,7 +2896,7 @@ export type ParamsOfProcessMessage = {
      * Flag for requesting events sending
      */
     send_events: boolean
-};
+}
 
 /**
  * Message processing module.
@@ -2921,7 +3011,7 @@ export type AddressStringFormat = {
     /**
      */
     bounce: boolean
-};
+}
 
 export function addressStringFormatAccountId(): AddressStringFormat {
     return {
@@ -2955,7 +3045,7 @@ export type ParamsOfConvertAddress = {
      * Specify the format to convert to.
      */
     output_format: AddressStringFormat
-};
+}
 
 export type ResultOfConvertAddress = {
 
@@ -2963,7 +3053,7 @@ export type ResultOfConvertAddress = {
      * Address in the specified format
      */
     address: string
-};
+}
 
 /**
  * Misc utility Functions.
@@ -2989,7 +3079,22 @@ export class UtilsModule {
 // tvm module
 
 
-export type TvmErrorCode = 401 | 402 | 403 | 404 | 405 | 406 | 407 | 408 | 409 | 410 | 411 | 412 | 413 | 414;
+export enum TvmErrorCode {
+    CanNotReadTransaction = 401,
+    CanNotReadBlockchainConfig = 402,
+    TransactionAborted = 403,
+    InternalError = 404,
+    ActionPhaseFailed = 405,
+    AccountCodeMissing = 406,
+    LowBalance = 407,
+    AccountFrozenOrDeleted = 408,
+    AccountMissing = 409,
+    UnknownExecutionError = 410,
+    InvalidInputStack = 411,
+    InvalidAccountBoc = 412,
+    InvalidMessageType = 413,
+    ContractExecutionError = 414
+}
 
 export type ExecutionOptions = {
 
@@ -3012,7 +3117,7 @@ export type ExecutionOptions = {
      * transaction logical time
      */
     transaction_lt?: bigint
-};
+}
 
 export type AccountForExecutor = {
     type: 'None'
@@ -3036,7 +3141,7 @@ export type AccountForExecutor = {
      * Can be used to calculatetransaction fees without balance check
      */
     unlimited_balance?: boolean
-};
+}
 
 export function accountForExecutorNone(): AccountForExecutor {
     return {
@@ -3083,7 +3188,7 @@ export type TransactionFees = {
     /**
      */
     total_output: bigint
-};
+}
 
 export type ParamsOfRunExecutor = {
 
@@ -3114,7 +3219,7 @@ export type ParamsOfRunExecutor = {
      * Skip transaction check flag
      */
     skip_transaction_check?: boolean
-};
+}
 
 export type ResultOfRunExecutor = {
 
@@ -3153,7 +3258,7 @@ export type ResultOfRunExecutor = {
      * Transaction fees
      */
     fees: TransactionFees
-};
+}
 
 export type ParamsOfRunTvm = {
 
@@ -3182,7 +3287,7 @@ export type ParamsOfRunTvm = {
      * Contract ABI for dedcoding output messages
      */
     abi?: Abi
-};
+}
 
 export type ResultOfRunTvm = {
 
@@ -3206,7 +3311,7 @@ export type ResultOfRunTvm = {
      * Encoded as `base64`.Attention! Only `account_state.storage.state.data` part of the boc is updated.
      */
     account: string
-};
+}
 
 export type ParamsOfRunGet = {
 
@@ -3228,7 +3333,7 @@ export type ParamsOfRunGet = {
     /**
      */
     execution_options?: ExecutionOptions
-};
+}
 
 export type ResultOfRunGet = {
 
@@ -3236,7 +3341,7 @@ export type ResultOfRunGet = {
      * Values returned by getmethod on stack
      */
     output: any
-};
+}
 
 /**
  */
@@ -3320,7 +3425,20 @@ export class TvmModule {
 // net module
 
 
-export type NetErrorCode = 601 | 602 | 603 | 604 | 605 | 606 | 607 | 608 | 609 | 610 | 611 | 612;
+export enum NetErrorCode {
+    QueryFailed = 601,
+    SubscribeFailed = 602,
+    WaitForFailed = 603,
+    GetSubscriptionResultFailed = 604,
+    InvalidServerResponse = 605,
+    ClockOutOfSync = 606,
+    WaitForTimeout = 607,
+    GraphqlError = 608,
+    NetworkModuleSuspended = 609,
+    WebsocketDisconnected = 610,
+    NotSupported = 611,
+    NoEndpointsProvided = 612
+}
 
 export type OrderBy = {
 
@@ -3331,9 +3449,12 @@ export type OrderBy = {
     /**
      */
     direction: SortDirection
-};
+}
 
-export type SortDirection = 'ASC' | 'DESC';
+export enum SortDirection {
+    ASC = "ASC",
+    DESC = "DESC"
+}
 
 export type ParamsOfQuery = {
 
@@ -3349,7 +3470,7 @@ export type ParamsOfQuery = {
      * Must be a map with named values thatcan be used in query.
      */
     variables?: any
-};
+}
 
 export type ResultOfQuery = {
 
@@ -3357,7 +3478,7 @@ export type ResultOfQuery = {
      * Result provided by DAppServer.
      */
     result: any
-};
+}
 
 export type ParamsOfQueryCollection = {
 
@@ -3385,7 +3506,7 @@ export type ParamsOfQueryCollection = {
      * Number of documents to return
      */
     limit?: number
-};
+}
 
 export type ResultOfQueryCollection = {
 
@@ -3393,7 +3514,7 @@ export type ResultOfQueryCollection = {
      * Objects that match the provided criteria
      */
     result: any[]
-};
+}
 
 export type ParamsOfWaitForCollection = {
 
@@ -3416,7 +3537,7 @@ export type ParamsOfWaitForCollection = {
      * Query timeout
      */
     timeout?: number
-};
+}
 
 export type ResultOfWaitForCollection = {
 
@@ -3424,7 +3545,7 @@ export type ResultOfWaitForCollection = {
      * First found object that matches the provided criteria
      */
     result: any
-};
+}
 
 export type ResultOfSubscribeCollection = {
 
@@ -3435,7 +3556,7 @@ export type ResultOfSubscribeCollection = {
      * Must be closed with `unsubscribe`
      */
     handle: number
-};
+}
 
 export type ParamsOfSubscribeCollection = {
 
@@ -3453,7 +3574,7 @@ export type ParamsOfSubscribeCollection = {
      * Projection (result) string
      */
     result: string
-};
+}
 
 export type ParamsOfFindLastShardBlock = {
 
@@ -3461,7 +3582,7 @@ export type ParamsOfFindLastShardBlock = {
      * Account address
      */
     address: string
-};
+}
 
 export type ResultOfFindLastShardBlock = {
 
@@ -3469,7 +3590,7 @@ export type ResultOfFindLastShardBlock = {
      * Account shard last block ID
      */
     block_id: string
-};
+}
 
 export type EndpointsSet = {
 
@@ -3477,7 +3598,7 @@ export type EndpointsSet = {
      * List of endpoints provided by server
      */
     endpoints: string[]
-};
+}
 
 /**
  * Network access.
@@ -3608,9 +3729,14 @@ export class NetModule {
 // debot module
 
 
-export type DebotErrorCode = 801 | 802 | 803 | 804;
+export enum DebotErrorCode {
+    DebotStartFailed = 801,
+    DebotFetchFailed = 802,
+    DebotExecutionFailed = 803,
+    DebotInvalidHandle = 804
+}
 
-export type DebotHandle = number;
+export type DebotHandle = number
 
 export type DebotAction = {
 
@@ -3655,7 +3781,7 @@ export type DebotAction = {
      * Used by debot only.
      */
     misc: string
-};
+}
 
 export type ParamsOfStart = {
 
@@ -3663,7 +3789,7 @@ export type ParamsOfStart = {
      * Debot smart contract address
      */
     address: string
-};
+}
 
 export type RegisteredDebot = {
 
@@ -3671,7 +3797,7 @@ export type RegisteredDebot = {
      * Debot handle which references an instance of debot engine.
      */
     debot_handle: DebotHandle
-};
+}
 
 export type ParamsOfAppDebotBrowser = {
     type: 'Log'
@@ -3717,7 +3843,7 @@ export type ParamsOfAppDebotBrowser = {
      * Debot action to execute.
      */
     action: DebotAction
-};
+}
 
 export function paramsOfAppDebotBrowserLog(msg: string): ParamsOfAppDebotBrowser {
     return {
@@ -3786,7 +3912,7 @@ export type ResultOfAppDebotBrowser = {
     signing_box: SigningBoxHandle
 } | {
     type: 'InvokeDebot'
-};
+}
 
 export function resultOfAppDebotBrowserInput(value: string): ResultOfAppDebotBrowser {
     return {
@@ -3814,7 +3940,7 @@ export type ParamsOfFetch = {
      * Debot smart contract address
      */
     address: string
-};
+}
 
 export type ParamsOfExecute = {
 
@@ -3827,36 +3953,36 @@ export type ParamsOfExecute = {
      * Debot Action that must be executed.
      */
     action: DebotAction
-};
+}
 
 type ParamsOfAppDebotBrowserLog = {
     msg: string
-};
+}
 
 type ParamsOfAppDebotBrowserSwitch = {
     context_id: number
-};
+}
 
 type ParamsOfAppDebotBrowserShowAction = {
     action: DebotAction
-};
+}
 
 type ParamsOfAppDebotBrowserInput = {
     prompt: string
-};
+}
 
 type ResultOfAppDebotBrowserInput = {
     value: string
-};
+}
 
 type ResultOfAppDebotBrowserGetSigningBox = {
     signing_box: SigningBoxHandle
-};
+}
 
 type ParamsOfAppDebotBrowserInvokeDebot = {
     debot_addr: string,
     action: DebotAction
-};
+}
 
 export interface AppDebotBrowser {
     log(params: ParamsOfAppDebotBrowserLog): void,
