@@ -1,6 +1,15 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.5.2 Dec 30, 2020
+
+### New
+- *.d.ts type declarations in `lib-react-native`, `lib-node`, `lib-web`.
+
+### Fixed
+- `net` module functions wait for `net.resume` call instead of returning error if called while the module is suspended
+
+
 ## 1.5.0 Dec 25, 2020
 
 ### New
