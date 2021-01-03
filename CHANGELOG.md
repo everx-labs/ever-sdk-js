@@ -1,6 +1,11 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.5.3 Jan 14, 2021
+
+### Fixed
+- node binary filename for windows
+
 ## 1.5.2 Dec 30, 2020
 
 ### New
