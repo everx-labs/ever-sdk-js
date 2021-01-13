@@ -65,7 +65,22 @@ import {libWeb} from "@tonclient/lib-web";
 
 TonClient.useBinaryLibrary(libWeb);
 ```
-  
+
+By default the library loads wasm module from relative URL `/tonclient.wasm`.
+
+You can specify alternative URL if you want to place (or rename) wasm module.
+```ts
+import {TonClient} from "@tonclient/core";
+import {libWeb, libWebSetup} from "@tonclient/lib-web";
+
+// Application initialization
+libWebSetup({
+    binaryURL: "/assets/tonclient_1_2_3.wasm",
+});
+
+TonClient.useBinaryLibrary(libWeb);
+```
+
 React Native:
 ```ts
 import {TonClient} from "@tonclient/core";
