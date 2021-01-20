@@ -6,7 +6,7 @@ module.exports = {
     devServer: {
         contentBase: path.join(__dirname, './web'),
         compress: true,
-        port: 4000,
+        port: process.env.WEBPACK_DEV_SERVER_PORT || 4000,
         disableHostCheck: true,
         historyApiFallback: true,
     },

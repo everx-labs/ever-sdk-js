@@ -72,7 +72,8 @@ async function killListenerProcess(port) {
 }
 
 async function main() {
-    await killListenerProcess(4000);
+    const WEBPACK_DEV_SERVER_PORT = process.env.WEBPACK_DEV_SERVER_PORT || 4000;
+    await killListenerProcess(WEBPACK_DEV_SERVER_PORT);
     await startWebPackDevServer();
     const browser = await puppeteer.launch({
         args: [
@@ -91,7 +92,7 @@ async function main() {
         (async () => {
             await page.close();
             await browser.close();
-            await killListenerProcess(4000);
+            await killListenerProcess(WEBPACK_DEV_SERVER_PORT);
             process.exit(code);
         })();
     }
@@ -100,7 +101,7 @@ async function main() {
         const text = `${msg.text()}\n`;
         logger.logOutput(text);
     });
-    await page.goto('http://localhost:4000', {});
+    await page.goto('http://localhost:' + WEBPACK_DEV_SERVER_PORT, {});
 }
 
 
