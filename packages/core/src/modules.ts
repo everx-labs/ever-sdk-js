@@ -92,7 +92,7 @@ export type NetworkConfig = {
      * List of DApp Server addresses.
      * 
      * @remarks
-     * Any correct URL format can be specified, including IP addresses
+     * Any correct URL format can be specified, including IP addresses This parameter is prevailing over `server_address`.
      */
     endpoints?: string[],
 
@@ -120,7 +120,7 @@ export type NetworkConfig = {
      * Maximum time difference between server and client.
      * 
      * @remarks
-     * If client's device time is out of sink and difference is more thanthe threshhold then error will occur. Also the error will occur if the specified threshhold is more than
+     * If client's device time is out of sync and difference is more than the threshold then error will occur. Also an error will occur if the specified threshold is more than
      * `message_processing_timeout/2`.
      * The default value is 15 sec.
      */
@@ -143,7 +143,7 @@ export type NetworkConfig = {
 export type CryptoConfig = {
 
     /**
-     * Mnemonic dictionary that will be used by default in crypto funcions. If not specified, 1 dictionary will be used.
+     * Mnemonic dictionary that will be used by default in crypto functions. If not specified, 1 dictionary will be used.
      */
     mnemonic_dictionary?: number,
 
@@ -1098,7 +1098,7 @@ export type ResultOfSigningBoxSign = {
      * Data signature.
      * 
      * @remarks
-     * Encoded with `base64`.
+     * Encoded with `hex`.
      */
     signature: string
 }
@@ -1630,7 +1630,7 @@ export type FunctionHeader = {
      * Message creation time in milliseconds.
      * 
      * @remarks
-     * If not specified, `now` is used(if ABI includes `time` header).
+     * If not specified, `now` is used (if ABI includes `time` header).
      */
     time?: bigint,
 
@@ -1638,7 +1638,7 @@ export type FunctionHeader = {
      * Public key is used by the contract to check the signature.
      * 
      * @remarks
-     * Encoded in `hex`.If not specified, method fails with exception (if ABI includes `pubkey` header)..
+     * Encoded in `hex`. If not specified, method fails with exception (if ABI includes `pubkey` header)..
      */
     pubkey?: string
 }
@@ -2005,7 +2005,7 @@ export type ResultOfEncodeMessageBody = {
      * Optional data to sign.
      * 
      * @remarks
-     * Encoded with `base64`.
+     * Encoded with `base64`. 
      * Presents when `message` is unsigned. Can be used for external
      * message signing. Is this case you need to sing this data and
      * produce signed message using `abi.attach_signature`.
@@ -3139,7 +3139,7 @@ export type AccountForExecutor = {
      * Flag for running account with the unlimited balance.
      * 
      * @remarks
-     * Can be used to calculatetransaction fees without balance check
+     * Can be used to calculate transaction fees without balance check
      */
     unlimited_balance?: boolean
 }
@@ -3309,7 +3309,7 @@ export type ResultOfRunTvm = {
      * Updated account state BOC.
      * 
      * @remarks
-     * Encoded as `base64`.Attention! Only `account_state.storage.state.data` part of the boc is updated.
+     * Encoded as `base64`. Attention! Only `account_state.storage.state.data` part of the boc is updated.
      */
     account: string
 }
@@ -3468,7 +3468,7 @@ export type ParamsOfQuery = {
      * Variables used in query.
      * 
      * @remarks
-     * Must be a map with named values thatcan be used in query.
+     * Must be a map with named values that can be used in query.
      */
     variables?: any
 }
@@ -3745,7 +3745,7 @@ export type DebotAction = {
      * A short action description.
      * 
      * @remarks
-     * Should be used by Debot Browser as name ofmenu item.
+     * Should be used by Debot Browser as name of menu item.
      */
     description: string,
 
@@ -3753,7 +3753,7 @@ export type DebotAction = {
      * Depends on action type.
      * 
      * @remarks
-     * Can be a debot function name or a print string(for Print Action).
+     * Can be a debot function name or a print string (for Print Action).
      */
     name: string,
 
@@ -3771,7 +3771,7 @@ export type DebotAction = {
      * Action attributes.
      * 
      * @remarks
-     * In the form of "param=value,flag".attribute example: instant, args, fargs, sign.
+     * In the form of "param=value,flag". attribute example: instant, args, fargs, sign.
      */
     attributes: string,
 

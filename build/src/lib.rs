@@ -75,7 +75,7 @@ impl Build {
             #[cfg(target_os = "macos")]
             platform: "darwin".into(),
             #[cfg(target_os = "windows")]
-            platform: "win".into(),
+            platform: "win32".into(),
             package_dir,
             lib_dir,
             target_dir,
