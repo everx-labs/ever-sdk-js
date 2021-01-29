@@ -97,9 +97,25 @@ export type NetworkConfig = {
     endpoints?: string[],
 
     /**
-     * The number of automatic network retries that SDK performs in case of connection problems The default value is 5.
+     * Deprecated.
+     * 
+     * @remarks
+     * You must use `network.max_reconnect_timeout` that allows to specify maximum network resolving timeout.
      */
     network_retries_count?: number,
+
+    /**
+     * Maximum time for sequential reconnections in ms.
+     * 
+     * @remarks
+     * Default value is 120000 (2 min)
+     */
+    max_reconnect_timeout?: number,
+
+    /**
+     * Deprecated
+     */
+    reconnect_timeout?: number,
 
     /**
      * The number of automatic message processing retries that SDK performs in case of `Message Expired (507)` error - but only for those messages which local emulation was successfull or failed with replay protection error. The default value is 5.
@@ -125,11 +141,6 @@ export type NetworkConfig = {
      * The default value is 15 sec.
      */
     out_of_sync_threshold?: number,
-
-    /**
-     * Timeout between reconnect attempts
-     */
-    reconnect_timeout?: number,
 
     /**
      * Access key to GraphQL API.
@@ -346,7 +357,8 @@ export enum CryptoErrorCode {
     Bip39InvalidWordCount = 118,
     MnemonicGenerationFailed = 119,
     MnemonicFromEntropyFailed = 120,
-    SigningBoxNotRegistered = 121
+    SigningBoxNotRegistered = 121,
+    InvalidSignature = 122
 }
 
 export type SigningBoxHandle = number
@@ -629,6 +641,38 @@ export type ResultOfNaclSignDetached = {
      * Signature encoded in `hex`.
      */
     signature: string
+}
+
+export type ParamsOfNaclSignDetachedVerify = {
+
+    /**
+     * Unsigned data that must be verified.
+     * 
+     * @remarks
+     * Encoded with `base64`.
+     */
+    unsigned: string,
+
+    /**
+     * Signature that must be verified.
+     * 
+     * @remarks
+     * Encoded with `hex`.
+     */
+    signature: string,
+
+    /**
+     * Signer's public key - unprefixed 0-padded to 64 symbols hex string.
+     */
+    public: string
+}
+
+export type ResultOfNaclSignDetachedVerify = {
+
+    /**
+     * `true` if verification succeeded or `false` if it failed
+     */
+    succeeded: boolean
 }
 
 export type ParamsOfNaclBoxKeyPairFromSecret = {
@@ -1320,6 +1364,16 @@ export class CryptoModule {
     }
 
     /**
+     * Verifies the signature with public key and `unsigned` data.
+     * 
+     * @param {ParamsOfNaclSignDetachedVerify} params
+     * @returns ResultOfNaclSignDetachedVerify
+     */
+    nacl_sign_detached_verify(params: ParamsOfNaclSignDetachedVerify): Promise<ResultOfNaclSignDetachedVerify> {
+        return this.client.request('crypto.nacl_sign_detached_verify', params);
+    }
+
+    /**
      * Generates a random NaCl key pair
      * @returns KeyPair
      */
@@ -1684,7 +1738,18 @@ export type DeploySet = {
     /**
      * List of initial values for contract's public variables.
      */
-    initial_data?: any
+    initial_data?: any,
+
+    /**
+     * Optional public key that can be provided in deploy set in order to substitute one in TVM file or provided by Signer.
+     * 
+     * @remarks
+     * Public key resolving priority:
+     * 1. Public key from deploy set.
+     * 2. Public key, specified in TVM file.
+     * 3. Public key, provided by Signer.
+     */
+    initial_pubkey?: string
 }
 
 export type Signer = {
@@ -2316,9 +2381,17 @@ export class AbiModule {
      * 
      * `Signer::Keys` creates a signed message with provided key pair.
      * 
-     * [SOON] `Signer::SigningBox` Allows using a special interface to imlepement signing
+     * [SOON] `Signer::SigningBox` Allows using a special interface to implement signing
      * without private key disclosure to SDK. For instance, in case of using a cold wallet or HSM,
      * when application calls some API to sign data.
+     * 
+     * There is an optional public key can be provided in deploy set in order to substitute one
+     * in TVM file.
+     * 
+     * Public key resolving priority:
+     * 1. Public key from deploy set.
+     * 2. Public key, specified in TVM file.
+     * 3. Public key, provided by signer.
      * 
      * @param {ParamsOfEncodeMessage} params
      * @returns ResultOfEncodeMessage
@@ -3438,7 +3511,9 @@ export enum NetErrorCode {
     NetworkModuleSuspended = 609,
     WebsocketDisconnected = 610,
     NotSupported = 611,
-    NoEndpointsProvided = 612
+    NoEndpointsProvided = 612,
+    GraphqlWebsocketInitError = 613,
+    NetworkModuleResumed = 614
 }
 
 export type OrderBy = {
@@ -3481,6 +3556,25 @@ export type ResultOfQuery = {
     result: any
 }
 
+export type ParamsOfBatchQuery = {
+
+    /**
+     * List of query operations that must be performed per single fetch.
+     */
+    operations: ParamsOfQueryOperation[]
+}
+
+export type ResultOfBatchQuery = {
+
+    /**
+     * Result values for batched queries.
+     * 
+     * @remarks
+     * Returns an array of values. Each value corresponds to `queries` item.
+     */
+    results: any[]
+}
+
 export type ParamsOfQueryCollection = {
 
     /**
@@ -3515,6 +3609,36 @@ export type ResultOfQueryCollection = {
      * Objects that match the provided criteria
      */
     result: any[]
+}
+
+export type ParamsOfAggregateCollection = {
+
+    /**
+     * Collection name (accounts, blocks, transactions, messages, block_signatures)
+     */
+    collection: string,
+
+    /**
+     * Collection filter.
+     */
+    filter?: any,
+
+    /**
+     * Projection (result) string
+     */
+    fields?: FieldAggregation[]
+}
+
+export type ResultOfAggregateCollection = {
+
+    /**
+     * Values for requested fields.
+     * 
+     * @remarks
+     * Returns an array of strings. Each string refers to the corresponding `fields` item.
+     * Numeric value is returned as a decimal string representations.
+     */
+    values: any
 }
 
 export type ParamsOfWaitForCollection = {
@@ -3622,6 +3746,16 @@ export class NetModule {
     }
 
     /**
+     * Performs multiple queries per single fetch.
+     * 
+     * @param {ParamsOfBatchQuery} params
+     * @returns ResultOfBatchQuery
+     */
+    batch_query(params: ParamsOfBatchQuery): Promise<ResultOfBatchQuery> {
+        return this.client.request('net.batch_query', params);
+    }
+
+    /**
      * Queries collection data
      * 
      * @remarks
@@ -3634,6 +3768,20 @@ export class NetModule {
      */
     query_collection(params: ParamsOfQueryCollection): Promise<ResultOfQueryCollection> {
         return this.client.request('net.query_collection', params);
+    }
+
+    /**
+     * Aggregates collection data.
+     * 
+     * @remarks
+     * Aggregates values from the specified `fields` for records
+     * that satisfies the `filter` conditions,
+     * 
+     * @param {ParamsOfAggregateCollection} params
+     * @returns ResultOfAggregateCollection
+     */
+    aggregate_collection(params: ParamsOfAggregateCollection): Promise<ResultOfAggregateCollection> {
+        return this.client.request('net.aggregate_collection', params);
     }
 
     /**
@@ -3734,7 +3882,10 @@ export enum DebotErrorCode {
     DebotStartFailed = 801,
     DebotFetchFailed = 802,
     DebotExecutionFailed = 803,
-    DebotInvalidHandle = 804
+    DebotInvalidHandle = 804,
+    DebotInvalidJsonParams = 805,
+    DebotInvalidFunctionId = 806,
+    DebotInvalidAbi = 807
 }
 
 export type DebotHandle = number
@@ -3844,6 +3995,16 @@ export type ParamsOfAppDebotBrowser = {
      * Debot action to execute.
      */
     action: DebotAction
+} | {
+    type: 'Send'
+
+    /**
+     * Internal message to DInterface address.
+     * 
+     * @remarks
+     * Message body contains interface function and parameters.
+     */
+    message: string
 }
 
 export function paramsOfAppDebotBrowserLog(msg: string): ParamsOfAppDebotBrowser {
@@ -3891,6 +4052,13 @@ export function paramsOfAppDebotBrowserInvokeDebot(debot_addr: string, action: D
         type: 'InvokeDebot',
         debot_addr,
         action,
+    };
+}
+
+export function paramsOfAppDebotBrowserSend(message: string): ParamsOfAppDebotBrowser {
+    return {
+        type: 'Send',
+        message,
     };
 }
 
@@ -3956,6 +4124,29 @@ export type ParamsOfExecute = {
     action: DebotAction
 }
 
+export type ParamsOfSend = {
+
+    /**
+     * Debot handle which references an instance of debot engine.
+     */
+    debot_handle: DebotHandle,
+
+    /**
+     * Std address of interface or debot.
+     */
+    source: string,
+
+    /**
+     * Function Id to call
+     */
+    func_id: number,
+
+    /**
+     * Json string with parameters
+     */
+    params: string
+}
+
 type ParamsOfAppDebotBrowserLog = {
     msg: string
 }
@@ -3985,6 +4176,10 @@ type ParamsOfAppDebotBrowserInvokeDebot = {
     action: DebotAction
 }
 
+type ParamsOfAppDebotBrowserSend = {
+    message: string
+}
+
 export interface AppDebotBrowser {
     log(params: ParamsOfAppDebotBrowserLog): void,
     switch(params: ParamsOfAppDebotBrowserSwitch): void,
@@ -3993,6 +4188,7 @@ export interface AppDebotBrowser {
     input(params: ParamsOfAppDebotBrowserInput): Promise<ResultOfAppDebotBrowserInput>,
     get_signing_box(): Promise<ResultOfAppDebotBrowserGetSigningBox>,
     invoke_debot(params: ParamsOfAppDebotBrowserInvokeDebot): Promise<void>,
+    send(params: ParamsOfAppDebotBrowserSend): void,
 }
 
 async function dispatchAppDebotBrowser(obj: AppDebotBrowser, params: ParamsOfAppDebotBrowser, app_request_id: number | null, client: IClient) {
@@ -4019,6 +4215,9 @@ async function dispatchAppDebotBrowser(obj: AppDebotBrowser, params: ParamsOfApp
                 break;
             case 'InvokeDebot':
                 await obj.invoke_debot(params);
+                break;
+            case 'Send':
+                obj.send(params);
                 break;
         }
         client.resolve_app_request(app_request_id, { type: params.type, ...result });
@@ -4102,6 +4301,19 @@ export class DebotModule {
      */
     execute(params: ParamsOfExecute): Promise<void> {
         return this.client.request('debot.execute', params);
+    }
+
+    /**
+     * [UNSTABLE](UNSTABLE.md) Sends message to Debot.
+     * 
+     * @remarks
+     * Used by Debot Browser to send response on Dinterface call or from other Debots.
+     * 
+     * @param {ParamsOfSend} params
+     * @returns 
+     */
+    send(params: ParamsOfSend): Promise<void> {
+        return this.client.request('debot.send', params);
     }
 
     /**
