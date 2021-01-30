@@ -3574,6 +3574,14 @@ export type FieldAggregation = {
     fn: AggregationFn
 }
 
+export enum AggregationFn {
+    COUNT = "COUNT",
+    MIN = "MIN",
+    MAX = "MAX",
+    SUM = "SUM",
+    AVERAGE = "AVERAGE"
+}
+
 export type ParamsOfQuery = {
 
     /**
