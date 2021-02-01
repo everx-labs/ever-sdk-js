@@ -3532,6 +3532,48 @@ export enum SortDirection {
     DESC = "DESC"
 }
 
+export type ParamsOfQueryOperation = ({
+    type: 'QueryCollection'
+} & ParamsOfQueryCollection) | ({
+    type: 'WaitForCollection'
+} & ParamsOfWaitForCollection) | ({
+    type: 'AggregateCollection'
+} & ParamsOfAggregateCollection)
+
+export function paramsOfQueryOperationQueryCollection(params: ParamsOfQueryCollection): ParamsOfQueryOperation {
+    return {
+        type: 'QueryCollection',
+        ...params,
+    };
+}
+
+export function paramsOfQueryOperationWaitForCollection(params: ParamsOfWaitForCollection): ParamsOfQueryOperation {
+    return {
+        type: 'WaitForCollection',
+        ...params,
+    };
+}
+
+export function paramsOfQueryOperationAggregateCollection(params: ParamsOfAggregateCollection): ParamsOfQueryOperation {
+    return {
+        type: 'AggregateCollection',
+        ...params,
+    };
+}
+
+export type FieldAggregation = {
+
+    /**
+     * Dot separated path to the field
+     */
+    field: string,
+
+    /**
+     * Aggregation function that must be applied to field values
+     */
+    fn: AggregationFn
+}
+
 export type ParamsOfQuery = {
 
     /**
