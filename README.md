@@ -184,7 +184,8 @@ node run
 ```shell script
 cd packages/tests-react-native
 npm i
-node run
+node run ios
+node run android
 ```
 
 ## To control where your tests will run use this environments
