@@ -152,6 +152,17 @@ This suite has test packages:
 - `tests-web` – tests runner on web browser.
 - `tests-react-native` – tests runner on react native platform.
 
+## Preparation to run tests
+
+```shell script
+cd packages/core
+npm i
+tsc
+cd packages/tests
+npm i
+tsc
+```
+
 ## Run tests on node js
 
 ```shell script
