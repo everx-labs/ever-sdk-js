@@ -1,6 +1,10 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.6.3 Feb 4, 2021
+### Fixed
+- Expired message wasn't retried if local execution succeeded.
+
 ## 1.6.0 Jan 29, 2021
 ### New
 - `nacl_sign_detached_verify` function to verify detached signature.
