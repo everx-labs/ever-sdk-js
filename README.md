@@ -176,6 +176,11 @@ npm i
 node run
 ```
 
+## To control where your tests will run use this environments
+```shell script
+USE_NODE_SE=true TON_NETWORK_ADDRESS=http://localhost:8080 node run
+```
+
 # Download precompiled binaries
 
 Instead of building library yourself, you can download the __latest__ precompiled binaries from 
