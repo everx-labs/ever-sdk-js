@@ -152,6 +152,17 @@ This suite has test packages:
 - `tests-web` – tests runner on web browser.
 - `tests-react-native` – tests runner on react native platform.
 
+## Preparation to run tests
+
+```shell script
+cd packages/core
+npm i
+tsc
+cd packages/tests
+npm i
+tsc
+```
+
 ## Run tests on node js
 
 ```shell script
@@ -173,7 +184,13 @@ node run
 ```shell script
 cd packages/tests-react-native
 npm i
-node run
+node run ios
+node run android
+```
+
+## To control where your tests will run use this environments
+```shell script
+USE_NODE_SE=true TON_NETWORK_ADDRESS=http://localhost:8080 node run
 ```
 
 # Download precompiled binaries

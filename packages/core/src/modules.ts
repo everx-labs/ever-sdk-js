@@ -78,7 +78,11 @@ export type ClientConfig = {
 
     /**
      */
-    abi?: AbiConfig
+    abi?: AbiConfig,
+
+    /**
+     */
+    boc?: BocConfig
 }
 
 export type NetworkConfig = {
@@ -185,6 +189,17 @@ export type AbiConfig = {
      * Factor that increases the expiration timeout for each retry The default value is 1.5
      */
     message_expiration_timeout_grow_factor?: number
+}
+
+export type BocConfig = {
+
+    /**
+     * Maximum BOC cache size in kilobytes.
+     * 
+     * @remarks
+     * Default is 10 MB
+     */
+    cache_max_size?: number
 }
 
 export type BuildInfoDependency = {
@@ -2203,6 +2218,80 @@ export type ResultOfEncodeMessage = {
     message_id: string
 }
 
+export type ParamsOfEncodeInternalMessage = {
+
+    /**
+     * Contract ABI.
+     */
+    abi: Abi,
+
+    /**
+     * Target address the message will be sent to.
+     * 
+     * @remarks
+     * Must be specified in case of non-deploy message.
+     */
+    address?: string,
+
+    /**
+     * Deploy parameters.
+     * 
+     * @remarks
+     * Must be specified in case of deploy message.
+     */
+    deploy_set?: DeploySet,
+
+    /**
+     * Function call parameters.
+     * 
+     * @remarks
+     * Must be specified in case of non-deploy message.
+     * 
+     * In case of deploy message it is optional and contains parameters
+     * of the functions that will to be called upon deploy transaction.
+     */
+    call_set?: CallSet,
+
+    /**
+     * Value in nanograms to be sent with message.
+     */
+    value: string,
+
+    /**
+     * Flag of bounceable message.
+     * 
+     * @remarks
+     * Default is true.
+     */
+    bounce?: boolean,
+
+    /**
+     * Enable Instant Hypercube Routing for the message.
+     * 
+     * @remarks
+     * Default is false.
+     */
+    enable_ihr?: boolean
+}
+
+export type ResultOfEncodeInternalMessage = {
+
+    /**
+     * Message BOC encoded with `base64`.
+     */
+    message: string,
+
+    /**
+     * Destination address.
+     */
+    address: string,
+
+    /**
+     * Message id.
+     */
+    message_id: string
+}
+
 export type ParamsOfAttachSignature = {
 
     /**
@@ -2313,7 +2402,15 @@ export type ParamsOfEncodeAccount = {
     /**
      * Initial value for the `last_paid`.
      */
-    last_paid?: number
+    last_paid?: number,
+
+    /**
+     * Cache type to put the result.
+     * 
+     * @remarks
+     * The BOC intself returned if no cache type provided
+     */
+    boc_cache?: BocCacheType
 }
 
 export type ResultOfEncodeAccount = {
@@ -2401,6 +2498,32 @@ export class AbiModule {
     }
 
     /**
+     * Encodes an internal ABI-compatible message
+     * 
+     * @remarks
+     * Allows to encode deploy and function call messages.
+     * 
+     * Use cases include messages of any possible type:
+     * - deploy with initial function call (i.e. `constructor` or any other function that is used for some kind
+     * of initialization);
+     * - deploy without initial function call;
+     * - simple function call
+     * 
+     * There is an optional public key can be provided in deploy set in order to substitute one
+     * in TVM file.
+     * 
+     * Public key resolving priority:
+     * 1. Public key from deploy set.
+     * 2. Public key, specified in TVM file.
+     * 
+     * @param {ParamsOfEncodeInternalMessage} params
+     * @returns ResultOfEncodeInternalMessage
+     */
+    encode_internal_message(params: ParamsOfEncodeInternalMessage): Promise<ResultOfEncodeInternalMessage> {
+        return this.client.request('abi.encode_internal_message', params);
+    }
+
+    /**
      * Combines `hex`-encoded `signature` with `base64`-encoded `unsigned_message`. Returns signed message encoded in `base64`.
      * 
      * @param {ParamsOfAttachSignature} params
@@ -2449,11 +2572,37 @@ export class AbiModule {
 // boc module
 
 
+export type BocCacheType = {
+    type: 'Pinned'
+
+    /**
+     */
+    pin: string
+} | {
+    type: 'Unpinned'
+}
+
+export function bocCacheTypePinned(pin: string): BocCacheType {
+    return {
+        type: 'Pinned',
+        pin,
+    };
+}
+
+export function bocCacheTypeUnpinned(): BocCacheType {
+    return {
+        type: 'Unpinned',
+    };
+}
+
 export enum BocErrorCode {
     InvalidBoc = 201,
     SerializationError = 202,
     InappropriateBlock = 203,
-    MissingSourceBoc = 204
+    MissingSourceBoc = 204,
+    InsufficientCacheSize = 205,
+    BocRefNotFound = 206,
+    InvalidBocRef = 207
 }
 
 export type ParamsOfParse = {
@@ -2536,6 +2685,59 @@ export type ResultOfGetCodeFromTvc = {
      * Contract code encoded as base64
      */
     code: string
+}
+
+export type ParamsOfBocCacheGet = {
+
+    /**
+     * Reference to the cached BOC
+     */
+    boc_ref: string
+}
+
+export type ResultOfBocCacheGet = {
+
+    /**
+     * BOC encoded as base64.
+     */
+    boc?: string
+}
+
+export type ParamsOfBocCacheSet = {
+
+    /**
+     * BOC encoded as base64 or BOC reference
+     */
+    boc: string,
+
+    /**
+     * Cache type
+     */
+    cache_type: BocCacheType
+}
+
+export type ResultOfBocCacheSet = {
+
+    /**
+     * Reference to the cached BOC
+     */
+    boc_ref: string
+}
+
+export type ParamsOfBocCacheUnpin = {
+
+    /**
+     * Pinned name
+     */
+    pin: string,
+
+    /**
+     * Reference to the cached BOC.
+     * 
+     * @remarks
+     * If it is provided then only referenced BOC is unpinned
+     */
+    boc_ref?: string
 }
 
 /**
@@ -2640,6 +2842,39 @@ export class BocModule {
      */
     get_code_from_tvc(params: ParamsOfGetCodeFromTvc): Promise<ResultOfGetCodeFromTvc> {
         return this.client.request('boc.get_code_from_tvc', params);
+    }
+
+    /**
+     * Get BOC from cache
+     * 
+     * @param {ParamsOfBocCacheGet} params
+     * @returns ResultOfBocCacheGet
+     */
+    cache_get(params: ParamsOfBocCacheGet): Promise<ResultOfBocCacheGet> {
+        return this.client.request('boc.cache_get', params);
+    }
+
+    /**
+     * Save BOC into cache
+     * 
+     * @param {ParamsOfBocCacheSet} params
+     * @returns ResultOfBocCacheSet
+     */
+    cache_set(params: ParamsOfBocCacheSet): Promise<ResultOfBocCacheSet> {
+        return this.client.request('boc.cache_set', params);
+    }
+
+    /**
+     * Unpin BOCs with specified pin.
+     * 
+     * @remarks
+     * BOCs which don't have another pins will be removed from cache
+     * 
+     * @param {ParamsOfBocCacheUnpin} params
+     * @returns 
+     */
+    cache_unpin(params: ParamsOfBocCacheUnpin): Promise<void> {
+        return this.client.request('boc.cache_unpin', params);
     }
 }
 
@@ -3292,7 +3527,23 @@ export type ParamsOfRunExecutor = {
     /**
      * Skip transaction check flag
      */
-    skip_transaction_check?: boolean
+    skip_transaction_check?: boolean,
+
+    /**
+     * Cache type to put the result.
+     * 
+     * @remarks
+     * The BOC intself returned if no cache type provided
+     */
+    boc_cache?: BocCacheType,
+
+    /**
+     * Return updated account flag.
+     * 
+     * @remarks
+     * Empty string is returned if the flag is `false`
+     */
+    return_updated_account?: boolean
 }
 
 export type ResultOfRunExecutor = {
@@ -3360,7 +3611,23 @@ export type ParamsOfRunTvm = {
     /**
      * Contract ABI for dedcoding output messages
      */
-    abi?: Abi
+    abi?: Abi,
+
+    /**
+     * Cache type to put the result.
+     * 
+     * @remarks
+     * The BOC intself returned if no cache type provided
+     */
+    boc_cache?: BocCacheType,
+
+    /**
+     * Return updated account flag.
+     * 
+     * @remarks
+     * Empty string is returned if the flag is `false`
+     */
+    return_updated_account?: boolean
 }
 
 export type ResultOfRunTvm = {
@@ -3935,7 +4202,10 @@ export enum DebotErrorCode {
     DebotInvalidHandle = 804,
     DebotInvalidJsonParams = 805,
     DebotInvalidFunctionId = 806,
-    DebotInvalidAbi = 807
+    DebotInvalidAbi = 807,
+    DebotGetMethodFailed = 808,
+    DebotInvalidMsg = 809,
+    DebotExternaCallFailed = 810
 }
 
 export type DebotHandle = number
