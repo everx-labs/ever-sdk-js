@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/lib-react-native",
-	"version": "1.7.0",
+	"version": "1.8.0",
 	"description": "TON Client React Native Module",
 	"main": "index.js",
 	"repository": {

@@ -242,7 +242,7 @@ test('crypto', async () => {
     expect((await crypto.hdkey_secret_from_xprv({xprv: master.xprv})).secret)
         .toEqual('0c91e53128fa4d67589d63a6c44049c1068ec28a63069a55ca3de30c57f8b365');
     expect((await crypto.hdkey_public_from_xprv({xprv: master.xprv})).public)
-        .toEqual('02a8eb63085f73c33fa31b4d1134259406347284f8dab6fc68f4bf8c96f6c39b75');
+        .toEqual('7b70008d0c40992283d488b1046739cf827afeabf647a5f07c4ad1e7e45a6f89');
 
     const child = await crypto.hdkey_derive_from_xprv({
         xprv: master.xprv,
@@ -255,7 +255,7 @@ test('crypto', async () => {
     expect((await crypto.hdkey_secret_from_xprv({xprv: child.xprv})).secret)
         .toEqual('518afc6489b61d4b738ee9ad9092815fa014ffa6e9a280fa17f84d95f31adb91');
     expect((await crypto.hdkey_public_from_xprv({xprv: child.xprv})).public)
-        .toEqual('027a598c7572dbb4fbb9663a0c805576babf7faa173a4288a48a52f6f427e12be1');
+        .toEqual('b45e1297a5e767341a6eaaac9e20f8ccd7556a0106298316f1272e461b6fbe98');
 
     const second = await crypto.hdkey_derive_from_xprv_path({
         xprv: master.xprv,
@@ -267,7 +267,7 @@ test('crypto', async () => {
     expect((await crypto.hdkey_secret_from_xprv({xprv: second.xprv})).secret)
         .toEqual('1c566ade41169763b155761406d3cef08b29b31cf8014f51be08c0cb4e67c5e1');
     expect((await crypto.hdkey_public_from_xprv({xprv: second.xprv})).public)
-        .toEqual('02a87d9764eedaacee45b0f777b5a242939b05fa06873bf511ca9a59cb46a5f526');
+        .toEqual('302a832bad9e5c9906422a82c28b39ae465dcd60178480f7309e183ee34b5e83');
 
     // NaCl ex
 
