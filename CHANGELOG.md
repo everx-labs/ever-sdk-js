@@ -1,6 +1,20 @@
 # Release Notes
 All notable changes to this project will be documented in this file.
 
+## 1.9.0 Feb 19, 2021
+
+### New
+
+- `tuple_list_as_array` parameter in `tvm.run_get` function which controls lists representation.
+Default is stack-like based on nested tuples. If set to `true` then returned lists are encoded as plain arrays.
+This reduces stack size requirements for long lists.
+- `function_name` field of `CallSet` structure can be the name or id (as string in hex) of calling function.
+- Fields `config_servers`, `query_url`, `account_address`, `gas_used` in specific errors data.
+
+### Fixed
+
+- binaries download links are now under https protocol
+
 ## 1.8.0 Feb 11, 2021
 
 ### New

@@ -1410,7 +1410,7 @@ export class CryptoModule {
      * Public key authenticated encryption
      * 
      * @remarks
-     * Encrypt and authenticate a message using the senders secret key, the recievers public
+     * Encrypt and authenticate a message using the senders secret key, the receivers public
      * key, and a nonce.
      * 
      * @param {ParamsOfNaclBox} params
@@ -1421,7 +1421,7 @@ export class CryptoModule {
     }
 
     /**
-     * Decrypt and verify the cipher text using the recievers secret key, the senders public key, and the nonce.
+     * Decrypt and verify the cipher text using the receivers secret key, the senders public key, and the nonce.
      * 
      * @param {ParamsOfNaclBoxOpen} params
      * @returns ResultOfNaclBoxOpen
@@ -1629,7 +1629,8 @@ export enum AbiErrorCode {
     InvalidTvcImage = 308,
     RequiredPublicKeyMissingForFunctionHeader = 309,
     InvalidSigner = 310,
-    InvalidAbi = 311
+    InvalidAbi = 311,
+    InvalidFunctionId = 312
 }
 
 export type Abi = {
@@ -1715,7 +1716,7 @@ export type FunctionHeader = {
 export type CallSet = {
 
     /**
-     * Function name that is being called.
+     * Function name that is being called. Or function id encoded as string in hex (starting with 0x).
      */
     function_name: string,
 
@@ -2408,7 +2409,7 @@ export type ParamsOfEncodeAccount = {
      * Cache type to put the result.
      * 
      * @remarks
-     * The BOC intself returned if no cache type provided
+     * The BOC itself returned if no cache type provided
      */
     boc_cache?: BocCacheType
 }
@@ -3533,7 +3534,7 @@ export type ParamsOfRunExecutor = {
      * Cache type to put the result.
      * 
      * @remarks
-     * The BOC intself returned if no cache type provided
+     * The BOC itself returned if no cache type provided
      */
     boc_cache?: BocCacheType,
 
@@ -3609,7 +3610,7 @@ export type ParamsOfRunTvm = {
     execution_options?: ExecutionOptions,
 
     /**
-     * Contract ABI for dedcoding output messages
+     * Contract ABI for decoding output messages
      */
     abi?: Abi,
 
@@ -3617,7 +3618,7 @@ export type ParamsOfRunTvm = {
      * Cache type to put the result.
      * 
      * @remarks
-     * The BOC intself returned if no cache type provided
+     * The BOC itself returned if no cache type provided
      */
     boc_cache?: BocCacheType,
 
@@ -3649,7 +3650,7 @@ export type ResultOfRunTvm = {
      * Updated account state BOC.
      * 
      * @remarks
-     * Encoded as `base64`. Attention! Only `account_state.storage.state.data` part of the boc is updated.
+     * Encoded as `base64`. Attention! Only `account_state.storage.state.data` part of the BOC is updated.
      */
     account: string
 }
@@ -3672,14 +3673,23 @@ export type ParamsOfRunGet = {
     input?: any,
 
     /**
+     * Execution options
      */
-    execution_options?: ExecutionOptions
+    execution_options?: ExecutionOptions,
+
+    /**
+     * Convert lists based on nested tuples in result into plain arrays.
+     * 
+     * @remarks
+     * Default is `false`. Input parameters may use any of lists representations
+     */
+    tuple_list_as_array?: boolean
 }
 
 export type ResultOfRunGet = {
 
     /**
-     * Values returned by getmethod on stack
+     * Values returned by get-method on stack
      */
     output: any
 }
@@ -3700,19 +3710,19 @@ export class TvmModule {
      * Performs all the phases of contract execution on Transaction Executor -
      * the same component that is used on Validator Nodes.
      * 
-     * Can be used for contract debug, to find out the reason of message unsuccessful
-     * delivery - as Validators just throw away failed transactions, here you can catch it.
+     * Can be used for contract debugginh, to find out the reason why message was not delivered successfully
+     *  - because Validators just throw away the failed external inbound messages, here you can catch them.
      * 
      * Another use case is to estimate fees for message execution. Set  `AccountForExecutor::Account.unlimited_balance`
      * to `true` so that emulation will not depend on the actual balance.
      * 
-     * One more use case - you can procude the sequence of operations,
+     * One more use case - you can produce the sequence of operations,
      * thus emulating the multiple contract calls locally.
      * And so on.
      * 
-     * To get the account boc (bag of cells) - use `net.query` method to download it from graphql api
-     * (field `boc` of `account`) or generate it with `abi.encode_account method`.
-     * To get the message boc - use `abi.encode_message` or prepare it any other way, for instance, with Fift script.
+     * To get the account BOC (bag of cells) - use `net.query` method to download it from GraphQL API
+     * (field `boc` of `account`) or generate it with `abi.encode_account` method.
+     * To get the message BOC - use `abi.encode_message` or prepare it any other way, for instance, with FIFT script.
      * 
      * If you need this emulation to be as precise as possible then specify `ParamsOfRunExecutor` parameter.
      * If you need to see the aborted transaction as a result, not as an error, set `skip_transaction_check` to `true`.
@@ -3725,21 +3735,21 @@ export class TvmModule {
     }
 
     /**
-     * Executes get methods of ABI-compatible contracts
+     * Executes get-methods of ABI-compatible contracts
      * 
      * @remarks
      * Performs only a part of compute phase of transaction execution
      * that is used to run get-methods of ABI-compatible contracts.
      * 
-     * If you try to run get methods with `run_executor` you will get an error, because it checks ACCEPT and exits
-     * if there is none, which is actually true for get methods.
+     * If you try to run get-methods with `run_executor` you will get an error, because it checks ACCEPT and exits
+     * if there is none, which is actually true for get-methods.
      * 
-     *  To get the account boc (bag of cells) - use `net.query` method to download it from graphql api
+     *  To get the account BOC (bag of cells) - use `net.query` method to download it from GraphQL API
      * (field `boc` of `account`) or generate it with `abi.encode_account method`.
-     * To get the message boc - use `abi.encode_message` or prepare it any other way, for instance, with Fift script.
+     * To get the message BOC - use `abi.encode_message` or prepare it any other way, for instance, with FIFT script.
      * 
      * Attention! Updated account state is produces as well, but only
-     * `account_state.storage.state.data`  part of the boc is updated.
+     * `account_state.storage.state.data`  part of the BOC is updated.
      * 
      * @param {ParamsOfRunTvm} params
      * @returns ResultOfRunTvm
@@ -3749,10 +3759,10 @@ export class TvmModule {
     }
 
     /**
-     * Executes a getmethod of FIFT contract
+     * Executes a get-method of FIFT contract
      * 
      * @remarks
-     * Executes a getmethod of FIFT contract that fulfills the smc-guidelines https://test.ton.org/smc-guidelines.txt
+     * Executes a get-method of FIFT contract that fulfills the smc-guidelines https://test.ton.org/smc-guidelines.txt
      * and returns the result data from TVM's stack
      * 
      * @param {ParamsOfRunGet} params
@@ -4205,7 +4215,7 @@ export enum DebotErrorCode {
     DebotInvalidAbi = 807,
     DebotGetMethodFailed = 808,
     DebotInvalidMsg = 809,
-    DebotExternaCallFailed = 810
+    DebotExternalCallFailed = 810
 }
 
 export type DebotHandle = number
