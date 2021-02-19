@@ -6,6 +6,8 @@ In this repository you can find the source code of Javascript SDK for Web, Node.
 
 [![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
 
+To get a deeper understanding dive into our [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) where you can find extensive explanations and descriptions of each step of DApp development on Free TON.
+
 This SDK is distributed via npm packages:
 - [@tonclient/core](https://www.npmjs.com/package/@tonclient/core) – common binding independent from JavaScript platform you use.
 - [@tonclient/lib-node](https://www.npmjs.com/package/@tonclient/lib-node) – bridge to NodeJs including NodeJs binary addon.
