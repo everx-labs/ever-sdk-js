@@ -21,7 +21,7 @@ const zlib = require('zlib');
 const path = require('path');
 const os = require('os');
 
-const binariesSource = process.env.TON_CLIENT_BIN_SRC || 'http://sdkbinaries-ws.tonlabs.io';
+const binariesSource = process.env.TON_CLIENT_BIN_SRC || 'https://binaries.tonlabs.io';
 const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || require('./package.json')
     .version
     .split('.')[0];

@@ -15,13 +15,13 @@
  */
 
 const fs = require('fs');
-const http = require('http');
+const http = require('https');
 const zlib = require('zlib');
 const path = require('path');
 const os = require('os');
 const platform = os.platform();
 
-const binariesHost = 'sdkbinaries.tonlabs.io';
+const binariesHost = 'binaries.tonlabs.io';
 const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || require('./package.json')
     .version
     .split('.')[0];
@@ -99,7 +99,7 @@ function resolveBinariesTargetPath() {
 }
 
 async function dl(dst_path, src) {
-    const src_url = `http://${binariesHost}/${src}.gz`;
+    const src_url = `https://${binariesHost}/${src}.gz`;
     process.stdout.write(`Downloading from ${src_url} to ${dst_path} ...`);
     await downloadAndGunzip(dst_path, src_url);
     process.stdout.write('\n');
