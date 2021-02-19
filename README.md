@@ -1,14 +1,18 @@
-# JavaScript TON Client Bindings
+# JavaScript Free TON SDK
 
-**Community links:**
+In this repository you can find the source code of Javascript SDK for Web, Node.js and React Native platforms.
+
+**Have a question? Get quick help in our channel:**
 
 [![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
 
-This repository contains JavaScript TON Client binding packages:
-- `@tonclient/core` – common binding independent from JavaScript platform you use.
-- `@tonclient/lib-node` – bridge to NodeJs including NodeJs binary addon.
-- `@tonclient/lib-web` – bridge to browser including WASM module.
-- `@tonclient/lib-react-native` – bridge to mobile react-native platform including static libraries for iOS and Android.
+This SDK is distributed via npm packages:
+- [@tonclient/core](https://www.npmjs.com/package/@tonclient/core) – common binding independent from JavaScript platform you use.
+- [@tonclient/lib-node](https://www.npmjs.com/package/@tonclient/lib-node) – bridge to NodeJs including NodeJs binary addon.
+- [@tonclient/lib-web](https://www.npmjs.com/package/@tonclient/lib-web) – bridge to browser including WASM module.
+- [@tonclient/lib-react-native](https://www.npmjs.com/package/@tonclient/lib-react-native) – bridge to mobile react-native platform including static libraries for iOS and Android.
+
+You can find their source code in this repository.
  
 # Installation
 
@@ -39,7 +43,7 @@ npm i --save @tonclient/lib-react-native
 ```
 
 
-## Setup library
+# Setup library
 
 You must initialize the library before the first use. The best place to do it is an 
 initialization code of your application.
@@ -91,7 +95,7 @@ import {libReactNative} from "@tonclient/lib-react-native";
 TonClient.useBinaryLibrary(libReactNative);
 ```
   
-## Use library
+# Use library
 
 All library functions are incorporated into `TonClient` class. Each client module is represented as a 
 property of the `TonClient` object.
