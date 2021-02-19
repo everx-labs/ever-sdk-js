@@ -3678,10 +3678,13 @@ export type ParamsOfRunGet = {
     execution_options?: ExecutionOptions,
 
     /**
-     * Convert lists based on nested tuples in result into plain arrays.
+     * Convert lists based on nested tuples in the **result** into plain arrays.
      * 
      * @remarks
      * Default is `false`. Input parameters may use any of lists representations
+     * If you receive this error on Web: "Runtime error. Unreachable code should not be executed...",
+     * set this flag to true.
+     * This may happen, for example, when elector contract contains too many participants
      */
     tuple_list_as_array?: boolean
 }
