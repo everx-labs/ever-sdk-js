@@ -12,5 +12,10 @@ crate-type = ["staticlib"]
 libc = "0.2"
 ton_client = { git = "https://github.com/tonlabs/TON-SDK.git" }
 
+# TODO: remove when issue is resolved https://github.com/kornelski/rust-security-framework/issues/122
+security-framework = "=2.0.0"
+security-framework-sys = "=2.0.0"
+
 [profile.release]
 lto = true
+
