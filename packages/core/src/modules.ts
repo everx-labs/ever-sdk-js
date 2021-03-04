@@ -2223,8 +2223,11 @@ export type ParamsOfEncodeInternalMessage = {
 
     /**
      * Contract ABI.
+     * 
+     * @remarks
+     * Can be None if both deploy_set and call_set are None.
      */
-    abi: Abi,
+    abi?: Abi,
 
     /**
      * Target address the message will be sent to.
@@ -2233,6 +2236,11 @@ export type ParamsOfEncodeInternalMessage = {
      * Must be specified in case of non-deploy message.
      */
     address?: string,
+
+    /**
+     * Source address of the message.
+     */
+    src_address?: string,
 
     /**
      * Deploy parameters.
@@ -2254,7 +2262,7 @@ export type ParamsOfEncodeInternalMessage = {
     call_set?: CallSet,
 
     /**
-     * Value in nanograms to be sent with message.
+     * Value in nanotokens to be sent with message.
      */
     value: string,
 
@@ -2643,7 +2651,7 @@ export type ParamsOfParseShardstate = {
 export type ParamsOfGetBlockchainConfig = {
 
     /**
-     * Key block BOC encoded as base64
+     * Key block BOC or zerostate BOC encoded as base64
      */
     block_boc: string
 }
@@ -2741,6 +2749,110 @@ export type ParamsOfBocCacheUnpin = {
     boc_ref?: string
 }
 
+export type BuilderOp = {
+    type: 'Integer'
+
+    /**
+     * Bit size of the value.
+     */
+    size: number,
+
+    /**
+     * Value: - `Number` containing integer number.
+     * 
+     * @remarks
+     * e.g. `123`, `-123`. - Decimal string. e.g. `"123"`, `"-123"`.
+     * - `0x` prefixed hexadecimal string.
+     *   e.g `0x123`, `0X123`, `-0x123`.
+     */
+    value: any
+} | {
+    type: 'BitString'
+
+    /**
+     * Bit string content using bitstring notation. See `TON VM specification` 1.0.
+     * 
+     * @remarks
+     * Contains hexadecimal string representation:
+     * - Can end with `_` tag.
+     * - Can be prefixed with `x` or `X`.
+     * - Can be prefixed with `x{` or `X{` and ended with `}`.
+     * 
+     * Contains binary string represented as a sequence
+     * of `0` and `1` prefixed with `n` or `N`.
+     * 
+     * Examples:
+     * `1AB`, `x1ab`, `X1AB`, `x{1abc}`, `X{1ABC}`
+     * `2D9_`, `x2D9_`, `X2D9_`, `x{2D9_}`, `X{2D9_}`
+     * `n00101101100`, `N00101101100`
+     */
+    value: string
+} | {
+    type: 'Cell'
+
+    /**
+     * Nested cell builder
+     */
+    builder: BuilderOp[]
+} | {
+    type: 'CellBoc'
+
+    /**
+     * Nested cell BOC encoded with `base64` or BOC cache key.
+     */
+    boc: string
+}
+
+export function builderOpInteger(size: number, value: any): BuilderOp {
+    return {
+        type: 'Integer',
+        size,
+        value,
+    };
+}
+
+export function builderOpBitString(value: string): BuilderOp {
+    return {
+        type: 'BitString',
+        value,
+    };
+}
+
+export function builderOpCell(builder: BuilderOp[]): BuilderOp {
+    return {
+        type: 'Cell',
+        builder,
+    };
+}
+
+export function builderOpCellBoc(boc: string): BuilderOp {
+    return {
+        type: 'CellBoc',
+        boc,
+    };
+}
+
+export type ParamsOfEncodeBoc = {
+
+    /**
+     * Cell builder operations.
+     */
+    builder: BuilderOp[],
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfEncodeBoc = {
+
+    /**
+     * Encoded cell BOC or BOC cache key.
+     */
+    boc: string
+}
+
 /**
  * BOC manipulation module.
  */
@@ -2817,6 +2929,7 @@ export class BocModule {
     }
 
     /**
+     * Extract blockchain configuration from key block and also from zerostate.
      * 
      * @param {ParamsOfGetBlockchainConfig} params
      * @returns ResultOfGetBlockchainConfig
@@ -2876,6 +2989,16 @@ export class BocModule {
      */
     cache_unpin(params: ParamsOfBocCacheUnpin): Promise<void> {
         return this.client.request('boc.cache_unpin', params);
+    }
+
+    /**
+     * Encodes BOC from builder operations.
+     * 
+     * @param {ParamsOfEncodeBoc} params
+     * @returns ResultOfEncodeBoc
+     */
+    encode_boc(params: ParamsOfEncodeBoc): Promise<ResultOfEncodeBoc> {
+        return this.client.request('boc.encode_boc', params);
     }
 }
 
@@ -4149,9 +4272,46 @@ export class NetModule {
      * Creates a subscription
      * 
      * @remarks
-     * Triggers for each insert/update of data
-     * that satisfies the `filter` conditions.
+     * Triggers for each insert/update of data that satisfies
+     * the `filter` conditions.
      * The projection fields are limited to `result` fields.
+     * 
+     * The subscription is a persistent communication channel between
+     * client and Free TON Network.
+     * All changes in the blockchain will be reflected in realtime.
+     * Changes means inserts and updates of the blockchain entities.
+     * 
+     * ### Important Notes on Subscriptions
+     * 
+     * Unfortunately sometimes the connection with the network brakes down.
+     * In this situation the library attempts to reconnect to the network.
+     * This reconnection sequence can take significant time.
+     * All of this time the client is disconnected from the network.
+     * 
+     * Bad news is that all blockchain changes that happened while
+     * the client was disconnected are lost.
+     * 
+     * Good news is that the client report errors to the callback when
+     * it loses and resumes connection.
+     * 
+     * So, if the lost changes are important to the application then
+     * the application must handle these error reports.
+     * 
+     * Library reports errors with `responseType` == 101
+     * and the error object passed via `params`.
+     * 
+     * When the library has successfully reconnected
+     * the application receives callback with
+     * `responseType` == 101 and `params.code` == 614 (NetworkModuleResumed).
+     * 
+     * Application can use several ways to handle this situation:
+     * - If application monitors changes for the single blockchain
+     * object (for example specific account):  application
+     * can perform a query for this object and handle actual data as a
+     * regular data from the subscription.
+     * - If application monitors sequence of some blockchain objects
+     * (for example transactions of the specific account): application must
+     * refresh all cached (or visible to user) lists where this sequences presents.
      * 
      * @param {ParamsOfSubscribeCollection} params
      * @returns ResultOfSubscribeCollection
@@ -4281,7 +4441,12 @@ export type RegisteredDebot = {
     /**
      * Debot handle which references an instance of debot engine.
      */
-    debot_handle: DebotHandle
+    debot_handle: DebotHandle,
+
+    /**
+     * Debot abi as json string.
+     */
+    debot_abi: string
 }
 
 export type ParamsOfAppDebotBrowser = {
@@ -4465,19 +4630,9 @@ export type ParamsOfSend = {
     debot_handle: DebotHandle,
 
     /**
-     * Std address of interface or debot.
+     * BOC of internal message to debot encoded in base64 format.
      */
-    source: string,
-
-    /**
-     * Function Id to call
-     */
-    func_id: number,
-
-    /**
-     * Json string with parameters
-     */
-    params: string
+    message: string
 }
 
 type ParamsOfAppDebotBrowserLog = {
