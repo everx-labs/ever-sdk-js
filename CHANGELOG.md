@@ -1,5 +1,37 @@
 # Release Notes
+
 All notable changes to this project will be documented in this file.
+
+## [1.10.0] – 2021-03-04
+
+### New
+- Add optional field `src_address` to [`ParamsOfEncodeInternalMessage`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#encode_internal_message).
+- Field `abi` in [`ParamsOfEncodeInternalMessage`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#encode_internal_message) is optional and can be `None` if `call_set` and `deploy_set` are  `None`.
+- [`boc.encode_boc`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_boc.md#encode_boc) function provides ability to build and serialize any custom tree of cells.
+  Application can use several base Builder serialization primitives like integers, bitstrings
+  and nested cells.
+- [`boc.get_blockchain_config`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_boc.md#get_blockchain_config) function can extract blockchain configuration from key block and also
+from zerostate.
+- [`tvm` module](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_tvm.md) functions download current blockchain configuration if `net` is initialized with
+DApp Server endpoints. Otherwise [default configuration](https://github.com/tonlabs/ton-executor/blob/11f46c416ebf1f145eacfb996587891a0a3cb940/src/blockchain_config.rs#L214) is used.
+- **Debot Module**:
+    - Support for debot invoking in Debot Engine. `send` browser callback is used not only for interface calls but to invoke debots.
+    - `start` and `fetch` functions returns debot ABI.
+    - Added new built-in interface `Hex` which implements hexadecimal encoding and decoding.
+    - Added unstable functions to `Sdk` interface: naclBox, naclBoxOpen, naclKeypairFromSecret, getAccountCodeHash.
+
+### Changed
+- Both `call_set` and `deploy_set` in [`ParamsOfEncodeInternalMessage`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#encode_internal_message) can be omitted. In this case `encode_internal_message` generates internal message with empty body.
+- **Debot Module**:
+    - `send` function accepts one argument - serialized internal message as string encoded into base64.
+### Documentation
+- [Debot browser app object](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_debot.md#AppDebotBrowser) and [signing box app object](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_crypto.md#appsigningbox) descriptions added
+- functions-helpers for enum type variable creation for [Signer](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#signer), [Abi](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#abi), [ParamsOfAppDebotBrowser](mod_debot.md#paramsofappdebotbrowser)
+
+### Fixed
+
+-  doc generator: app object interface description, constructor functions-helpers for enum type variable creation, added new line in the end if api.json
+- library libsecp256k1 upgraded to fix https://rustsec.org/advisories/RUSTSEC-2019-0027
 
 ## 1.9.0 Feb 19, 2021
 
@@ -14,7 +46,7 @@ This reduces stack size requirements for long lists.
 ### Fixed
 
 - Binaries download links are now under https protocol
-- If you receive this error on Web: "Runtime error. Unreachable code should not be executed..." in `run_get`, use the new parameter `tuple_list_as_array = true`. [See the documentation](docs/mod_tvm.md#run_get). This may happen, for example, when elector contract contains too many participants
+- If you receive this error on Web: "Runtime error. Unreachable code should not be executed..." in `run_get`, use the new parameter `tuple_list_as_array = true`. [See the documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_tvm.md#run_get). This may happen, for example, when elector contract contains too many participants
 
 ## 1.8.0 Feb 11, 2021
 
