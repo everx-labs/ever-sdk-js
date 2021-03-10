@@ -33,6 +33,32 @@ import {
 } from "./bin";
 
 export class TonClient {
+    private static _defaultConfig: ClientConfig = {
+        network: {
+            endpoints: ["main.ton.dev"],
+        },
+    };
+    private static _default: TonClient | null = null;
+
+    static set default(client: TonClient) {
+        this._default = client;
+    }
+
+    static get default(): TonClient {
+        if (this._default === null) {
+            this._default = new TonClient(this._defaultConfig);
+        }
+        return this._default;
+    }
+
+    static set defaultConfig(config: ClientConfig) {
+        this._defaultConfig = config;
+    }
+
+    static get defaultConfig(): ClientConfig {
+        return this._defaultConfig;
+    }
+
     readonly client: ClientModule;
     readonly crypto: CryptoModule;
     readonly abi: AbiModule;
