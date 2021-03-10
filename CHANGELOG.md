@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.1] – 2021-03-10
+
+### New
+- New high-level wrapper [Account.ts](packages/core/src/account.ts) that simplifies work with accounts
+
 ## [1.10.0] – 2021-03-04
 
 ### New
