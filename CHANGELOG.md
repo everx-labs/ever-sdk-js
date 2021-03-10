@@ -7,14 +7,14 @@ All notable changes to this project will be documented in this file.
 ### New
 - New high-level wrapper [Account.ts](packages/core/src/account.ts) that simplifies work with accounts:
    
-  `Account` class is intruduced that supports these high-level methods:
+  `Account` class is introduced that supports these high-level methods:
     - (static) `giver` - allows to specify a giver to be used in all deploy operations
     - `deploy` - deploys a contract
     - `run` - executes a contract on-chain
-    - `runLocal` - executes contract off-chain (on client side, contract state does not change) (execution is syncronized with the previously called `deploy` or `run` to be performed on the updated account state)
+    - `runLocal` - executes a contract off-chain (on client side, contract state does not change) (execution is syncronized with the previously called `deploy` or `run` so that it is performed on the updated account state)
     - `getAddress` - returns account address
-    - `getAccount`- returns all data about account in json format
-    - `boc` - returns account boc.
+    - `getAccount`- returns all the data about the account in json format
+    - `boc` - returns the account boc.
    
    `GiverContract` object is introduced that is ititialized with [TON OS SE Giver](https://github.com/tonlabs/tonos-se/tree/master/contracts#giver-v2) address and keys.
 
