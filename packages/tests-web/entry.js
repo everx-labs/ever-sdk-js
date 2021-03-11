@@ -13,7 +13,6 @@
  */
 import buffer from 'buffer';
 
-
 if (!global.Buffer) {
     global.Buffer = buffer.Buffer;
 }
@@ -33,5 +32,8 @@ if (global.process.version === undefined) {
 if (global.process.stdout === undefined) {
     global.process.stdout = {
         isTTY: false,
-    }
+    };
+}
+
+export default function() {
 }
