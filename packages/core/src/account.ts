@@ -351,6 +351,19 @@ export class Account {
             })
         ).parsed;
     }
+
+    /**
+     * Free all internal resources related to this instance
+     * and allocated inside core.
+     *
+     * It is a good practice to call this method when you have finished
+     * with this Account object.
+     *
+     * Note that this instance still fully operable.
+     * So you can continue to work with this instance.
+     */
+    async free(): Promise<void> {
+    }
 }
 
 const GiverContract: Contract & {

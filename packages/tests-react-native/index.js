@@ -17,5 +17,7 @@ import {libReactNative} from '@tonclient/lib-react-native';
 import { AppRegistry } from 'react-native';
 import App from './App';
 
+entry();
+
 TonClient.useBinaryLibrary(libReactNative);
 AppRegistry.registerComponent('tests_runner', () => App);

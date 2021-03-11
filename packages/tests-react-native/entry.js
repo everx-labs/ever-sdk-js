@@ -35,3 +35,6 @@ if (global.process.stdout === undefined) {
         isTTY: false,
     }
 }
+
+export default function() {
+}

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.2] – 2021-03-11
+
+### Fixed
+- `index.d.ts` files in `lib-` packages are refined to be more typed.
+- export of the `account.ts` added to `core/index`.
+
 ## [1.10.1] – 2021-03-10
 
 ### New

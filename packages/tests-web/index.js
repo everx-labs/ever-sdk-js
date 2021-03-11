@@ -3,6 +3,8 @@ import { TonClient } from '@tonclient/core';
 import {libWeb} from '@tonclient/lib-web';
 import { TestsRunner } from "@tonclient/tests";
 
+entry();
+
 TonClient.useBinaryLibrary(libWeb);
 
 window.addEventListener('load', () => {
