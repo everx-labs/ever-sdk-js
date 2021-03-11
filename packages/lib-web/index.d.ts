@@ -49,6 +49,6 @@ type LibWebOptions = {
     binaryURL?: string,
 }
 
-export declare function libWebSetup(libOptions: LibWebOptions): void;
+export declare function libWebSetup(libOptions?: LibWebOptions): void;
 
 export declare function libWeb(): Promise<BinaryLibrary>;
