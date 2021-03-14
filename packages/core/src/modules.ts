@@ -3488,6 +3488,24 @@ export type ResultOfConvertAddress = {
     address: string
 }
 
+export type ParamsOfCalcStorageFee = {
+
+    /**
+     */
+    account: string,
+
+    /**
+     */
+    period: number
+}
+
+export type ResultOfCalcStorageFee = {
+
+    /**
+     */
+    fee: string
+}
+
 /**
  * Misc utility Functions.
  */
@@ -3506,6 +3524,16 @@ export class UtilsModule {
      */
     convert_address(params: ParamsOfConvertAddress): Promise<ResultOfConvertAddress> {
         return this.client.request('utils.convert_address', params);
+    }
+
+    /**
+     * Calculates storage fee for an account over a specified time period
+     * 
+     * @param {ParamsOfCalcStorageFee} params
+     * @returns ResultOfCalcStorageFee
+     */
+    calc_storage_fee(params: ParamsOfCalcStorageFee): Promise<ResultOfCalcStorageFee> {
+        return this.client.request('utils.calc_storage_fee', params);
     }
 }
 
