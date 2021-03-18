@@ -163,10 +163,10 @@ This suite has test packages:
 ```shell script
 cd packages/core
 npm i
-tsc
+npx tsc
 cd packages/tests
 npm i
-tsc
+npx tsc
 ```
 
 ## Run tests on node js
