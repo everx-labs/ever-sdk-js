@@ -1,12 +1,17 @@
-# JavaScript Free TON SDK
+# FreeTON Application Kit
 
-In this repository you can find the source code of Javascript SDK for Web, Node.js and React Native platforms.
+This library is a part of FreeTON SDK for JavaScript.
+
+AppKit is built over the `@tonclient/core` package and purposed to simplify writing 
+applications using FreeTON core library.
 
 **Have a question? Get quick help in our channel:**
 
 [![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
 
-To get a deeper understanding dive into our [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) where you can find extensive explanations and descriptions of each step of DApp development on Free TON.
+To get a deeper understanding dive into our [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) where 
+you can find extensive explanations and descriptions of each step of 
+DApp development on Free TON.
 
 This SDK is distributed via npm packages:
 - [@tonclient/core](https://www.npmjs.com/package/@tonclient/core) – common binding independent from JavaScript platform you use.
@@ -163,10 +168,10 @@ This suite has test packages:
 ```shell script
 cd packages/core
 npm i
-npx tsc
+tsc
 cd packages/tests
 npm i
-npx tsc
+tsc
 ```
 
 ## Run tests on node js
