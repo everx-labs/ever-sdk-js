@@ -15,20 +15,29 @@
 import {
     abiContract,
     ClientConfig,
-    KeyPair,
-    ResultOfProcessMessage, Signer,
+    ResultOfProcessMessage,
+    Signer,
     signerKeys,
-    signerNone,
     TonClient,
 } from "@tonclient/core";
 
 import {
+    DefaultGiverContract,
+    getDefaultGiverAddress,
+    getDefaultGiverKeys,
     giverRequestAmount,
-    givers,
 } from "./givers";
 import {jest} from "./jest";
 import {Account} from "./account";
 import {ContractPackage} from "./contracts";
+
+function resolveConfig(): ClientConfig {
+    return {
+        network: {
+            endpoints: [`${process.env.TON_NETWORK_ADDRESS || "http://localhost"}`],
+        },
+    };
+}
 
 export class TestsRunner {
     static setTimeout: (f: () => void, ms: number) => void = () => {
@@ -37,13 +46,10 @@ export class TestsRunner {
     };
     static exit: (code: number) => void = (_code) => {
     };
-    useNodeSE: boolean = process.env.USE_NODE_SE !== "false";
-    config: ClientConfig = {
-        network: {server_address: process.env.TON_NETWORK_ADDRESS || "http://localhost:8080"},
-    };
+    config = resolveConfig();
+
     private client: TonClient | null = null;
     private giver: Account | null = null;
-    private giverKeys?: KeyPair = undefined;
     private deployedAccounts: Account[] = [];
 
     static async run(
@@ -113,19 +119,6 @@ export class TestsRunner {
         }
     }
 
-    configure(useNodeSE: boolean, config?: ClientConfig, giverKeys?: KeyPair) {
-        this.useNodeSE = useNodeSE;
-        if (giverKeys) {
-            this.giverKeys = giverKeys;
-        }
-        if (config) {
-            this.config = config;
-        }
-        this.client = null;
-        this.giver = null;
-        this.deployedAccounts = [];
-    }
-
     getClient(): TonClient {
         if (!this.client) {
             this.client = new TonClient(this.config);
@@ -138,17 +131,11 @@ export class TestsRunner {
             return this.giver;
         }
         const client = this.getClient();
-        let giver: Account;
-        if (this.useNodeSE) {
-            giver = new Account(client, givers.v1.abi, signerNone(), givers.v1.address);
-        } else {
-            giver = new Account(client, givers.v2.abi, signerKeys(this.giverKeys ?? {
-                secret: "2245e4f44af8af6bbd15c4a53eb67a8f211d541ddc7c197f74d7830dba6d27fe",
-                public: "d542f44146f169c6726c8cf70e4cbb3d33d8d842a4afd799ac122c5808d81ba3",
-            }), {
-                tvc: givers.v2.tvc,
-            });
-        }
+        const giverKeys = await getDefaultGiverKeys(client);
+        const giver = new Account(client,
+            abiContract(DefaultGiverContract.abi),
+            signerKeys(giverKeys),
+            await getDefaultGiverAddress(client, giverKeys));
         this.giver = giver;
         const accounts = (await client.net.query_collection({
             collection: "accounts",
@@ -165,9 +152,8 @@ export class TestsRunner {
         if (!account.balance || Number(account.balance) < giverRequestAmount) {
             throw new Error(`Giver has no money. Send some grams to ${await giver.getAddress()}`);
         }
-
         if (account.acc_type !== 1) {
-            await giver.deploy();
+            throw new Error(`Giver has not deployed.`);
         }
         return giver;
     }
@@ -190,18 +176,11 @@ export class TestsRunner {
     async sendGramsTo(account: string, amount: number = giverRequestAmount): Promise<void> {
         let result: ResultOfProcessMessage;
         const giver = await this.getGiver();
-        if (this.useNodeSE) {
-            result = await giver.run("sendGrams", {
-                dest: account,
-                amount,
-            });
-        } else {
-            result = await giver.run("sendTransaction", {
-                dest: account,
-                value: amount,
-                bounce: false,
-            });
-        }
+        result = await giver.run("sendTransaction", {
+            dest: account,
+            value: amount,
+            bounce: false,
+        });
         for (const boc of result.out_messages) {
             const msg = (await giver.client.boc.parse_message({boc})).parsed;
             if (msg.body_type === 0) {

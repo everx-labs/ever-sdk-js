@@ -21,7 +21,7 @@ import {
     NetModule,
     ProcessingModule,
     TvmModule,
-    UtilsModule
+    UtilsModule,
 } from "./modules";
 import {
     BinaryLibrary,
@@ -29,15 +29,11 @@ import {
     destroyContext,
     ResponseHandler,
     useLibrary,
-    request
+    request,
 } from "./bin";
 
 export class TonClient {
-    private static _defaultConfig: ClientConfig = {
-        network: {
-            endpoints: ["main.ton.dev"],
-        },
-    };
+    private static _defaultConfig: ClientConfig = {};
     private static _default: TonClient | null = null;
 
     static set default(client: TonClient) {
@@ -136,7 +132,13 @@ export class TonClient {
 
     async resolve_app_request(app_request_id: number | null, result: any): Promise<void> {
         if (app_request_id) {
-            await this.client.resolve_app_request({app_request_id, result: {type: "Ok", result}})
+            await this.client.resolve_app_request({
+                app_request_id,
+                result: {
+                    type: "Ok",
+                    result,
+                },
+            });
         }
     }
 
@@ -144,8 +146,11 @@ export class TonClient {
         if (app_request_id) {
             await this.client.resolve_app_request({
                 app_request_id,
-                result: {type: "Error", text: error.message}
-            })
+                result: {
+                    type: "Error",
+                    text: error.message,
+                },
+            });
         }
     }
 }
@@ -153,10 +158,10 @@ export class TonClient {
 // Converts value to hex
 function toHex(value: any, bits: number): string {
     let hex: string;
-    if (typeof value === 'number' || typeof value === 'bigint') {
+    if (typeof value === "number" || typeof value === "bigint") {
         hex = value.toString(16);
-    } else if (typeof value === 'string') {
-        if (value.startsWith('0x')) {
+    } else if (typeof value === "string") {
+        if (value.startsWith("0x")) {
             hex = value.substr(2);
         } else {
             hex = decToHex(value);
@@ -165,10 +170,10 @@ function toHex(value: any, bits: number): string {
         hex = value.toString();
     }
     let len = bits / 4;
-    while (hex.length > len && hex.startsWith('0')) {
+    while (hex.length > len && hex.startsWith("0")) {
         hex = hex.substr(1);
     }
-    return hex.padStart(len, '0');
+    return hex.padStart(len, "0");
 }
 
 function decToHex(dec: string): string {
@@ -180,9 +185,9 @@ function decToHex(dec: string): string {
         const mul10 = add(mul8, mul2);
         bigNum = add(mul10, [d]);
     }
-    let hex = '';
+    let hex = "";
     for (let i = bigNum.length - 1; i >= 0; i -= 1) {
-        hex += bigNum[i].toString(16).padStart(4, '0');
+        hex += bigNum[i].toString(16).padStart(4, "0");
     }
     return hex;
 }
