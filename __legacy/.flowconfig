@@ -1,8 +1,0 @@
-[ignore]
-.*/node_modules/graphql/.*
-.*/node_modules/graphql-tag/lib/graphql-tag.umd.js.flow.*
-
-[options]
-emoji=true
-esproposal.optional_chaining=enable
-esproposal.nullish_coalescing=enable
