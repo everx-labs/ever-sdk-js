@@ -204,7 +204,7 @@ console.log("Account balance now is", await acc.getBalance());
 
 In the example above we demonstrated typical basic usage of the Account object.
 ### Sample source code
-Find the full sample source code here
+Find the sample that demonstrates AppKit usage source code here
 https://github.com/tonlabs/sdk-samples/tree/master/demo/hello
 
 ## Executing Contract on TVM
