@@ -1,41 +1,24 @@
 # FreeTON Application Kit
 
-This library is a part of FreeTON SDK for JavaScript.
+This library is a part of Free TON SDK for JavaScript.
 
 AppKit is built over the `@tonclient/core` package and purposed to simplify writing applications
-using FreeTON core library.
+using Free TON core library.
 
 **Have a question? Get quick help in our channel:**
 
 [![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk)
 
 To get a deeper understanding dive into
-our [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) where you can find extensive
+our [SDK guides](https://docs.ton.dev/86757ecb2/p/37f8fc-guides) where you can find extensive
 explanations and descriptions of each step of DApp development on Free TON.
 
 ## Before You Start
 
-We strongly recommend to install `tondev` utility before you start playing with TON AppKit. This is
-an ultimate set of tools for FreeTON development.
+We strongly recommend to install [TONDEV](https://github.com/tonlabs/tondev) utility before you start playing with TON AppKit. This is
+an ultimate set of tools for Free TON development.
 
-It includes:
-
-- Solidity toolchain – to create and compile smart contracts.
-- TONOS SE – to create a lightweight sandboxed blockchains on your computer for development and
-  debugging.
-- and much more...
-
-Installation is pretty easy:
-
-```shell
-npm i -g tondev
-```
-
-Learn more about [tondev](https://github.com/tonlabs/tondev).
-
-Also we recommend the `TONDev` extension for Visual Studio Code users.
-
-Ok, lets go.
+Also we recommend the [`TONDEV`](https://github.com/tonlabs/tondev-vscode) extension for Visual Studio Code users.
 
 ## Installation
 
