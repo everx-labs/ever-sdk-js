@@ -18,7 +18,7 @@ explanations and descriptions of each step of DApp development on Free TON.
 We strongly recommend to install [TONDEV](https://github.com/tonlabs/tondev) utility before you start playing with TON AppKit. This is
 an ultimate set of tools for Free TON development.
 
-Also we recommend the [`TONDEV`](https://github.com/tonlabs/tondev-vscode) extension for Visual Studio Code users.
+Also we recommend the [TONDEV](https://github.com/tonlabs/tondev-vscode) extension for Visual Studio Code users.
 
 ## Installation
 
@@ -44,7 +44,7 @@ npm i --save @tonclient/appkit
 You must initialize the core library before the first use. The best place to do it is an
 initialization code of your application.
 
-NodeJs:
+### NodeJs:
 
 ```javascript
 const { TonClient } = require("@tonclient/core");
@@ -55,7 +55,7 @@ const { libNode } = require("@tonclient/lib-node");
 TonClient.useBinaryLibrary(libNode)
 ```
 
-Web:
+### Web:
 
 ```javascript
 import { TonClient } from "@tonclient/core";
@@ -86,7 +86,7 @@ libWebSetup({
 TonClient.useBinaryLibrary(libWeb);
 ```
 
-React Native:
+### React Native:
 
 ```javascript
 import { TonClient } from "@tonclient/core";
@@ -99,8 +99,7 @@ TonClient.useBinaryLibrary(libReactNative);
 
 ## Create Client Instance
 
-TON AppKit is built over core library. So you have to create an instance of `TonClient` to use it
-later with TON AppKit objects.
+TON AppKit is built over [core JS library](https://github.com/tonlabs/ton-client-js/tree/master/packages/core). So you have to create an instance of `TonClient` to use it later with TON AppKit objects.
 
 ```javascript
 const client = new TonClient({
@@ -108,7 +107,7 @@ const client = new TonClient({
 });
 ```
 
-Is this sample we create a client instance configured to use TONOS SE instance.
+Is this sample we create a client instance configured to use local blockchain [TON OS SE](https://github.com/tonlabs/tonos-se) instance.
 
 ## A Few Words about the Code
 
@@ -118,7 +117,7 @@ In this code we omit an initialization part because it is the same.
 
 We suppose that we are using lib-node bridge (NodeJs) to write examples.
 
-Also we use the library to deal with local TONOS SE instance.
+Also we use the library to deal with local TON OS SE instance.
 
 So full code of each example can look like this:
 
@@ -204,6 +203,9 @@ console.log("Account balance now is", await acc.getBalance());
 ```
 
 In the example above we demonstrated typical basic usage of the Account object.
+### Sample source code
+Find the full sample source code here
+https://github.com/tonlabs/sdk-samples/tree/master/demo/hello
 
 ## Executing Contract on TVM
 
