@@ -19,7 +19,7 @@ use std::fs;
 use std::io::Write;
 use std::ops::Add;
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, ExitStatus};
 
 pub struct Build {
     pub version: String,
@@ -122,13 +122,13 @@ impl Build {
     }
 }
 
-pub fn exec(cmd: &str, args: &[&str]) {
+pub fn exec(cmd: &str, args: &[&str]) -> ExitStatus {
     Command::new(cmd)
         .args(args)
         .spawn()
         .unwrap()
         .wait()
-        .unwrap();
+        .unwrap()
 }
 
 pub fn exec_out(cmd: &str, args: &[&str]) -> String {
