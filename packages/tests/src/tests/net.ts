@@ -110,6 +110,10 @@ test.each(ABIVersions)("Subscribe for transactions with addresses (ABIv%i)", asy
             transactions.push(d.result);
         })).handle;
 
+    //hack for Windows-assembled TON NODE SE
+    //issue: https://github.com/tonlabs/tonos-se/issues/13
+    await new Promise((resolve=>setTimeout(resolve, 5_000)));
+
     await wallet.deploy();
     await new Promise(resolve => setTimeout(resolve, 1_000));
     await net.unsubscribe({handle: subscription});
