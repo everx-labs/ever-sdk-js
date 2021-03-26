@@ -16,7 +16,7 @@ use ton_client_build::{exec, Build};
 
 fn main() {
     let builder = Build::new();
-    exec("cargo", &["build", "--release"]);
+    assert!(exec("cargo", &["build", "--release"]).success());
 
     #[cfg(target_os = "windows")]
     let (lib, gyp, gyp_args) = ("tonclient.lib", "cmd", ["/c", "node-gyp", "rebuild"]);
@@ -28,7 +28,7 @@ fn main() {
         builder.target_dir.join("release").join(lib),
     );
 
-    exec(gyp, &gyp_args);
+    assert!(exec(gyp, &gyp_args).success());
 
     builder.add_package_file(
         "tonclient.node",

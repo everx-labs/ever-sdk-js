@@ -21,7 +21,19 @@ fn fix_wrapper_script(wrapper: String) -> String {
         ("\nexport function ", "\nfunction "),
         ("\nexport default init;\n", ""),
         ("\n\\s*input = import\\.meta.*\n", ""),
+        ("\\s*import\\s*\\*\\s*as\\s+__wbg_star\\d+\\s+from\\s*'env'\\s*;\\s*\r?\n", ""),
         ("getObject\\(arg0\\) instanceof Window", "true"),
+        (
+            "imports\\['env'\\]\\s*=\\s*__wbg_star\\d+;",
+            "imports['env'] = {\n        \
+                malloc: function(size) {\n            \
+                    return wasm.__wbindgen_malloc(size);\n        \
+                },\n        \
+                free: function(ptr) {\n            \
+                    wasm.__wbindgen_free(ptr);\n        \
+                },\n    \
+            };"
+        ),
     ] {
         wrapper = Regex::new(exp).unwrap().replace_all(&wrapper, *rep).into();
     }
@@ -43,7 +55,7 @@ fn main() {
     let lib_dir = builder.package_dir.join("lib");
     std::env::set_current_dir(&lib_dir).unwrap();
     exec("cargo", &["install", "wasm-pack", "--version", "0.9.1"]);
-    exec("wasm-pack", &["build", "--release", "--target", "web"]);
+    assert!(exec("wasm-pack", &["build", "--release", "--target", "web"]).success());
     let pkg = lib_dir.join("pkg");
     builder.add_package_file("tonclient.wasm", pkg.join("tonclient_bg.wasm"));
     let worker = format!(
