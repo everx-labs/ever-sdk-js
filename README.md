@@ -29,18 +29,18 @@ npm i --save @tonclient/core
 The bridge package will download precompiled binaries from TON Labs cloud storage.
 If you want to rebuild binary from sources see [build binaries](#build binaries) section. 
 
-NodeJs:
+### NodeJs
 ```shell script
 npm i --save @tonclient/lib-node
 ```
 
-Web:
+### Web
 ```shell script
 npm i --save @tonclient/lib-web
 ```
 **Important!** Each time you runs `npm install` the new version of the `tonclient.wasm` and `index.js` is downloaded. So you have to always update the `tonclient.wasm` inside your web package before publishing (starting local web server, creating web bundle etc.). If you use the webpack the best way is to use CopyPlugin.
 
-React Native:
+### React Native
 ```shell script
 npm i --save @tonclient/lib-react-native
 ```
