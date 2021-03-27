@@ -38,6 +38,7 @@ Web:
 ```shell script
 npm i --save @tonclient/lib-web
 ```
+**Important!** Each time you runs `npm install` the new version of the `tonclient.wasm` and `index.js` is downloaded. So you have to always update the `tonclient.wasm` inside your web package before publishing (starting local web server, creating web bundle etc.). If you use the webpack the best way is to use CopyPlugin.
 
 React Native:
 ```shell script
