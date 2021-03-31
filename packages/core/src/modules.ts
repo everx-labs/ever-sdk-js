@@ -3506,6 +3506,55 @@ export type ResultOfCalcStorageFee = {
     fee: string
 }
 
+export type ParamsOfCompressZstd = {
+
+    /**
+     * Uncompressed data.
+     * 
+     * @remarks
+     * Must be encoded as base64.
+     */
+    uncompressed: string,
+
+    /**
+     * Compression level, from 1 to 21. Where: 1 - lowest compression level (fastest compression); 21 - highest compression level (slowest compression). If level is omitted, the default compression level is used (currently `3`).
+     */
+    level?: number
+}
+
+export type ResultOfCompressZstd = {
+
+    /**
+     * Compressed data.
+     * 
+     * @remarks
+     * Must be encoded as base64.
+     */
+    compressed: string
+}
+
+export type ParamsOfDecompressZstd = {
+
+    /**
+     * Compressed data.
+     * 
+     * @remarks
+     * Must be encoded as base64.
+     */
+    compressed: string
+}
+
+export type ResultOfDecompressZstd = {
+
+    /**
+     * Decompressed data.
+     * 
+     * @remarks
+     * Must be encoded as base64.
+     */
+    decompressed: string
+}
+
 /**
  * Misc utility Functions.
  */
@@ -3534,6 +3583,26 @@ export class UtilsModule {
      */
     calc_storage_fee(params: ParamsOfCalcStorageFee): Promise<ResultOfCalcStorageFee> {
         return this.client.request('utils.calc_storage_fee', params);
+    }
+
+    /**
+     * Compresses data using Zstandard algorithm
+     * 
+     * @param {ParamsOfCompressZstd} params
+     * @returns ResultOfCompressZstd
+     */
+    compress_zstd(params: ParamsOfCompressZstd): Promise<ResultOfCompressZstd> {
+        return this.client.request('utils.compress_zstd', params);
+    }
+
+    /**
+     * Decompresses data using Zstandard algorithm
+     * 
+     * @param {ParamsOfDecompressZstd} params
+     * @returns ResultOfDecompressZstd
+     */
+    decompress_zstd(params: ParamsOfDecompressZstd): Promise<ResultOfDecompressZstd> {
+        return this.client.request('utils.decompress_zstd', params);
     }
 }
 
@@ -4456,7 +4525,7 @@ export type DebotAction = {
     misc: string
 }
 
-export type ParamsOfStart = {
+export type ParamsOfInit = {
 
     /**
      * Debot smart contract address
@@ -4474,7 +4543,12 @@ export type RegisteredDebot = {
     /**
      * Debot abi as json string.
      */
-    debot_abi: string
+    debot_abi: string,
+
+    /**
+     * Debot metadata.
+     */
+    info: DebotInfo
 }
 
 export type ParamsOfAppDebotBrowser = {
@@ -4629,12 +4703,28 @@ export function resultOfAppDebotBrowserInvokeDebot(): ResultOfAppDebotBrowser {
     };
 }
 
+export type ParamsOfStart = {
+
+    /**
+     * Debot handle which references an instance of debot engine.
+     */
+    debot_handle: DebotHandle
+}
+
 export type ParamsOfFetch = {
 
     /**
-     * Debot smart contract address
+     * Debot smart contract address.
      */
     address: string
+}
+
+export type ResultOfFetch = {
+
+    /**
+     * Debot metadata.
+     */
+    info: DebotInfo
 }
 
 export type ParamsOfExecute = {
@@ -4661,6 +4751,14 @@ export type ParamsOfSend = {
      * BOC of internal message to debot encoded in base64 format.
      */
     message: string
+}
+
+export type ParamsOfRemove = {
+
+    /**
+     * Debot handle which references an instance of debot engine.
+     */
+    debot_handle: DebotHandle
 }
 
 type ParamsOfAppDebotBrowserLog = {
@@ -4753,24 +4851,20 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Starts an instance of debot.
+     * [UNSTABLE](UNSTABLE.md) Creates and instance of DeBot.
      * 
      * @remarks
-     * Downloads debot smart contract from blockchain and switches it to
-     * context zero.
-     * Returns a debot handle which can be used later in `execute` function.
-     * This function must be used by Debot Browser to start a dialog with debot.
-     * While the function is executing, several Browser Callbacks can be called,
-     * since the debot tries to display all actions from the context 0 to the user.
+     * Downloads debot smart contract (code and data) from blockchain and creates
+     * an instance of Debot Engine for it.
      * 
      * # Remarks
-     * `start` is equivalent to `fetch` + switch to context 0.
+     * It does not switch debot to context 0. Browser Callbacks are not called.
      * 
-     * @param {ParamsOfStart} params
+     * @param {ParamsOfInit} params
      * @returns RegisteredDebot
      */
-    start(params: ParamsOfStart, obj: AppDebotBrowser): Promise<RegisteredDebot> {
-        return this.client.request('debot.start', params, (params: any, responseType: number) => {
+    init(params: ParamsOfInit, obj: AppDebotBrowser): Promise<RegisteredDebot> {
+        return this.client.request('debot.init', params, (params: any, responseType: number) => {
             if (responseType === 3) {
                 dispatchAppDebotBrowser(obj, params.request_data, params.app_request_id, this.client);
             } else if (responseType === 4) {
@@ -4780,26 +4874,38 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Fetches debot from blockchain.
+     * [UNSTABLE](UNSTABLE.md) Starts the DeBot.
      * 
      * @remarks
-     * Downloads debot smart contract (code and data) from blockchain and creates
-     * an instance of Debot Engine for it.
+     * Downloads debot smart contract from blockchain and switches it to
+     * context zero.
      * 
-     * # Remarks
-     * It does not switch debot to context 0. Browser Callbacks are not called.
+     * This function must be used by Debot Browser to start a dialog with debot.
+     * While the function is executing, several Browser Callbacks can be called,
+     * since the debot tries to display all actions from the context 0 to the user.
+     * 
+     * When the debot starts SDK registers `BrowserCallbacks` AppObject.
+     * Therefore when `debote.remove` is called the debot is being deleted and the callback is called
+     * with `finish`=`true` which indicates that it will never be used again.
+     * 
+     * @param {ParamsOfStart} params
+     * @returns 
+     */
+    start(params: ParamsOfStart): Promise<void> {
+        return this.client.request('debot.start', params);
+    }
+
+    /**
+     * [UNSTABLE](UNSTABLE.md) Fetches DeBot metadata from blockchain.
+     * 
+     * @remarks
+     * Downloads DeBot from blockchain and creates and fetches its metadata.
      * 
      * @param {ParamsOfFetch} params
-     * @returns RegisteredDebot
+     * @returns ResultOfFetch
      */
-    fetch(params: ParamsOfFetch, obj: AppDebotBrowser): Promise<RegisteredDebot> {
-        return this.client.request('debot.fetch', params, (params: any, responseType: number) => {
-            if (responseType === 3) {
-                dispatchAppDebotBrowser(obj, params.request_data, params.app_request_id, this.client);
-            } else if (responseType === 4) {
-                dispatchAppDebotBrowser(obj, params, null, this.client);
-            }
-        });
+    fetch(params: ParamsOfFetch): Promise<ResultOfFetch> {
+        return this.client.request('debot.fetch', params);
     }
 
     /**
@@ -4838,10 +4944,10 @@ export class DebotModule {
      * @remarks
      * Removes handle from Client Context and drops debot engine referenced by that handle.
      * 
-     * @param {RegisteredDebot} params
+     * @param {ParamsOfRemove} params
      * @returns 
      */
-    remove(params: RegisteredDebot): Promise<void> {
+    remove(params: ParamsOfRemove): Promise<void> {
         return this.client.request('debot.remove', params);
     }
 }
