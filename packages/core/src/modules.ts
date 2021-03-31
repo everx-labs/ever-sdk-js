@@ -4525,6 +4525,64 @@ export type DebotAction = {
     misc: string
 }
 
+export type DebotInfo = {
+
+    /**
+     * DeBot short name.
+     */
+    name?: string,
+
+    /**
+     * DeBot semantic version.
+     */
+    version?: string,
+
+    /**
+     * The name of DeBot deployer.
+     */
+    publisher?: string,
+
+    /**
+     * Short info about DeBot.
+     */
+    key?: string,
+
+    /**
+     * The name of DeBot developer.
+     */
+    author?: string,
+
+    /**
+     * TON address of author for questions and donations.
+     */
+    support?: string,
+
+    /**
+     * String with the first messsage from DeBot.
+     */
+    hello?: string,
+
+    /**
+     * String with DeBot interface language (ISO-639).
+     */
+    language?: string,
+
+    /**
+     * String with DeBot ABI.
+     */
+    dabi?: string,
+
+    /**
+     * DeBot icon.
+     */
+    icon?: string,
+
+    /**
+     * Vector with IDs of DInterfaces used by DeBot.
+     */
+    interfaces: string[]
+}
+
 export type ParamsOfInit = {
 
     /**
