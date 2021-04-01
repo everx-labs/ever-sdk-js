@@ -4475,7 +4475,9 @@ export enum DebotErrorCode {
     DebotInvalidAbi = 807,
     DebotGetMethodFailed = 808,
     DebotInvalidMsg = 809,
-    DebotExternalCallFailed = 810
+    DebotExternalCallFailed = 810,
+    DebotBrowserCallbackFailed = 811,
+    DebotOperationRejected = 812
 }
 
 export type DebotHandle = number
@@ -4583,6 +4585,65 @@ export type DebotInfo = {
     interfaces: string[]
 }
 
+export type DebotActivity = {
+    type: 'Transaction'
+
+    /**
+     * External inbound message BOC.
+     */
+    msg: string,
+
+    /**
+     * Target smart contract address.
+     */
+    dst: string,
+
+    /**
+     * List of spendings as a result of transaction.
+     */
+    out: Spending[],
+
+    /**
+     * Transaction total fee.
+     */
+    fee: bigint,
+
+    /**
+     * Indicates if target smart contract updates its code.
+     */
+    setcode: boolean,
+
+    /**
+     * Public key from keypair that was used to sign external message.
+     */
+    signkey: string
+}
+
+export function debotActivityTransaction(msg: string, dst: string, out: Spending[], fee: bigint, setcode: boolean, signkey: string): DebotActivity {
+    return {
+        type: 'Transaction',
+        msg,
+        dst,
+        out,
+        fee,
+        setcode,
+        signkey,
+    };
+}
+
+export type Spending = {
+
+    /**
+     * Amount of nanotokens that will be sent to `dst` address.
+     */
+    amount: bigint,
+
+    /**
+     * Destination address of recipient of funds.
+     */
+    dst: string
+}
+
 export type ParamsOfInit = {
 
     /**
@@ -4663,6 +4724,13 @@ export type ParamsOfAppDebotBrowser = {
      * Message body contains interface function and parameters.
      */
     message: string
+} | {
+    type: 'Approve'
+
+    /**
+     * DeBot activity details.
+     */
+    activity: DebotActivity
 }
 
 export function paramsOfAppDebotBrowserLog(msg: string): ParamsOfAppDebotBrowser {
@@ -4720,6 +4788,13 @@ export function paramsOfAppDebotBrowserSend(message: string): ParamsOfAppDebotBr
     };
 }
 
+export function paramsOfAppDebotBrowserApprove(activity: DebotActivity): ParamsOfAppDebotBrowser {
+    return {
+        type: 'Approve',
+        activity,
+    };
+}
+
 export type ResultOfAppDebotBrowser = {
     type: 'Input'
 
@@ -4739,6 +4814,13 @@ export type ResultOfAppDebotBrowser = {
     signing_box: SigningBoxHandle
 } | {
     type: 'InvokeDebot'
+} | {
+    type: 'Approve'
+
+    /**
+     * Indicates whether the DeBot is allowed to perform the specified operation.
+     */
+    approved: boolean
 }
 
 export function resultOfAppDebotBrowserInput(value: string): ResultOfAppDebotBrowser {
@@ -4758,6 +4840,13 @@ export function resultOfAppDebotBrowserGetSigningBox(signing_box: SigningBoxHand
 export function resultOfAppDebotBrowserInvokeDebot(): ResultOfAppDebotBrowser {
     return {
         type: 'InvokeDebot',
+    };
+}
+
+export function resultOfAppDebotBrowserApprove(approved: boolean): ResultOfAppDebotBrowser {
+    return {
+        type: 'Approve',
+        approved,
     };
 }
 
@@ -4852,6 +4941,14 @@ type ParamsOfAppDebotBrowserSend = {
     message: string
 }
 
+type ParamsOfAppDebotBrowserApprove = {
+    activity: DebotActivity
+}
+
+type ResultOfAppDebotBrowserApprove = {
+    approved: boolean
+}
+
 export interface AppDebotBrowser {
     log(params: ParamsOfAppDebotBrowserLog): void,
     switch(params: ParamsOfAppDebotBrowserSwitch): void,
@@ -4861,6 +4958,7 @@ export interface AppDebotBrowser {
     get_signing_box(): Promise<ResultOfAppDebotBrowserGetSigningBox>,
     invoke_debot(params: ParamsOfAppDebotBrowserInvokeDebot): Promise<void>,
     send(params: ParamsOfAppDebotBrowserSend): void,
+    approve(params: ParamsOfAppDebotBrowserApprove): Promise<ResultOfAppDebotBrowserApprove>,
 }
 
 async function dispatchAppDebotBrowser(obj: AppDebotBrowser, params: ParamsOfAppDebotBrowser, app_request_id: number | null, client: IClient) {
@@ -4890,6 +4988,9 @@ async function dispatchAppDebotBrowser(obj: AppDebotBrowser, params: ParamsOfApp
                 break;
             case 'Send':
                 obj.send(params);
+                break;
+            case 'Approve':
+                result = await obj.approve(params);
                 break;
         }
         client.resolve_app_request(app_request_id, { type: params.type, ...result });
