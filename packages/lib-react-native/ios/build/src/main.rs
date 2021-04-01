@@ -20,7 +20,7 @@ fn main() {
     let builder = Build::new();
     check_targets(TARGETS);
     for target in TARGETS {
-        exec("cargo", &["build", "--target", target, "--release"]);
+        assert!(exec("cargo", &["build", "--target", target, "--release"]).success());
     }
 
     let mut args = vec![
@@ -41,9 +41,9 @@ fn main() {
                 .to_string(),
         )
     }
-    exec(
+    assert!(exec(
         "lipo",
         &args.iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
-    );
+    ).success());
     builder.publish_package_file(LIB, "tonclient_{v}_react_native_ios");
 }
