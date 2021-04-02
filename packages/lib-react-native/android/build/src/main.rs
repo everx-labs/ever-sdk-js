@@ -60,7 +60,7 @@ fn main() {
             &builder.lib_dir.join("NDK").join(arch.ndk).join("bin"),
         ));
         std::env::set_var("PATH", path);
-        exec("cargo", &["build", "--target", arch.target, "--release"]);
+        assert!(exec("cargo", &["build", "--target", arch.target, "--release"]).success());
     }
 
     let out_dir = builder.package_dir.join("src/main/jniLibs");
@@ -104,10 +104,10 @@ fn get_ndk(builder: &Build) -> PathBuf {
     let ndk_dir = builder.lib_dir.join("android-ndk-r17c");
     if !ndk_zip_file.exists() {
         println!("Downloading android NDK...");
-        exec("curl", &[NDK_URL, "-o", path_str(&ndk_zip_file)]);
+        assert!(exec("curl", &[NDK_URL, "-o", path_str(&ndk_zip_file)]).success());
     }
     print!("Unzipping android NDK...");
-    exec(
+    assert!(exec(
         "unzip",
         &[
             "-q",
@@ -115,7 +115,7 @@ fn get_ndk(builder: &Build) -> PathBuf {
             path_str(&builder.lib_dir),
             path_str(&ndk_zip_file),
         ],
-    );
+    ).success());
     std::env::set_var("NDK_HOME", path_str(&ndk_dir));
     ndk_dir
 }
@@ -141,7 +141,7 @@ fn check_ndk(builder: &Build) {
     std::fs::create_dir_all(&ndk_dir).unwrap();
     std::env::set_current_dir(&ndk_dir).unwrap();
     for arch in &ARCHS {
-        exec(
+        assert!(exec(
             "python",
             &[
                 path_str(&maker),
@@ -150,7 +150,7 @@ fn check_ndk(builder: &Build) {
                 "--install-dir",
                 arch.ndk,
             ],
-        )
+        ).success());
     }
     std::env::set_current_dir(&builder.lib_dir).unwrap();
 }
