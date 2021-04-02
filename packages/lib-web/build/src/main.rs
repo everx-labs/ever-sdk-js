@@ -20,7 +20,7 @@ fn fix_wrapper_script(wrapper: String) -> String {
     for (exp, rep) in &[
         ("\nexport function ", "\nfunction "),
         ("\nexport default init;\n", ""),
-        ("\n\\s*input = import\\.meta.*\n", ""),
+        ("\n\\s*input\\s*=\\s*new\\s+URL\\('[a-z_]+\\.wasm',\\s*import\\.meta\\.url\\);\n", ""),
         ("\\s*import\\s*\\*\\s*as\\s+__wbg_star\\d+\\s+from\\s*'env'\\s*;\\s*\r?\n", ""),
         ("getObject\\(arg0\\) instanceof Window", "true"),
         (
