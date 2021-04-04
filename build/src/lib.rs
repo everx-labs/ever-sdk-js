@@ -62,9 +62,9 @@ impl Build {
                     .as_str()
                     .unwrap()
                     .split(".")
-                    .next()
-                    .unwrap()
-                    .to_string();
+                    .take(2)
+                    .collect::<Vec<&str>>()
+                    .join("_");
             }
         }
 
