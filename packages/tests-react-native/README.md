@@ -18,7 +18,10 @@ Android:
 # Run Tests
 
 ```shell script
-npm install
+npm i
+cd ios
+pod install
+cd ..
 node run.js ios
 node run.js android
 ```
