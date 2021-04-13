@@ -36,7 +36,7 @@ test("crypto - encrypt large blocks", async () => {
     const ourKeys = await client.crypto.nacl_box_keypair();
     const theirKeys = await client.crypto.nacl_box_keypair();
 
-    for (let i = 0; i < 10; i += 1) {
+    async function testBuffer() {
         const nonce = Buffer.from((await client.crypto.generate_random_bytes({length: 24})).bytes, "base64").toString("hex");
         const decrypted = (await client.crypto.generate_random_bytes({length: 100000000})).bytes;
         const encrypted = (await client.crypto.nacl_box({
@@ -53,6 +53,8 @@ test("crypto - encrypt large blocks", async () => {
         })).decrypted;
         expect(decrypted2).toEqual(decrypted);
     }
+
+    await Promise.all([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(_ => testBuffer()));
 });
 
 test("crypto", async () => {
