@@ -38,19 +38,19 @@ test("crypto - encrypt large blocks", async () => {
 
     for (let i = 0; i < 10; i += 1) {
         const nonce = Buffer.from((await client.crypto.generate_random_bytes({length: 24})).bytes, "base64").toString("hex");
-        const decrypted = Buffer.from((await client.crypto.generate_random_bytes({length: 10000000})).bytes, "base64");
+        const decrypted = (await client.crypto.generate_random_bytes({length: 100000000})).bytes;
         const encrypted = (await client.crypto.nacl_box({
-            decrypted: decrypted.toString("base64"),
+            decrypted: decrypted,
             secret: ourKeys.secret,
             their_public: theirKeys.public,
             nonce,
         })).encrypted;
-        const decrypted2 = Buffer.from((await client.crypto.nacl_box_open({
+        const decrypted2 = (await client.crypto.nacl_box_open({
             encrypted,
             secret: theirKeys.secret,
             their_public: ourKeys.public,
             nonce,
-        })).decrypted, "base64");
+        })).decrypted;
         expect(decrypted2).toEqual(decrypted);
     }
 });
