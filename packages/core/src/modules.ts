@@ -147,6 +147,11 @@ export type NetworkConfig = {
     out_of_sync_threshold?: number,
 
     /**
+     * Maximum number of randomly chosen endpoints the library uses to send message. The default value is 2 endpoints.
+     */
+    sending_endpoint_count?: number,
+
+    /**
      * Access key to GraphQL API.
      * 
      * @remarks
@@ -3279,7 +3284,16 @@ export type ResultOfSendMessage = {
      * This block id must be used as a parameter of the
      * `wait_for_transaction`.
      */
-    shard_block_id: string
+    shard_block_id: string,
+
+    /**
+     * The list of endpoints to which the message was sent.
+     * 
+     * @remarks
+     * This list id must be used as a parameter of the
+     * `wait_for_transaction`.
+     */
+    sending_endpoints: string[]
 }
 
 export type ParamsOfWaitForTransaction = {
@@ -3314,7 +3328,15 @@ export type ParamsOfWaitForTransaction = {
     /**
      * Flag that enables/disables intermediate events
      */
-    send_events: boolean
+    send_events: boolean,
+
+    /**
+     * The list of endpoints to which the message was sent.
+     * 
+     * @remarks
+     * You must provide the same value as the `send_message` has returned.
+     */
+    sending_endpoints?: string[]
 }
 
 export type ParamsOfProcessMessage = {
@@ -4038,7 +4060,9 @@ export type ParamsOfQueryOperation = ({
     type: 'WaitForCollection'
 } & ParamsOfWaitForCollection) | ({
     type: 'AggregateCollection'
-} & ParamsOfAggregateCollection)
+} & ParamsOfAggregateCollection) | ({
+    type: 'QueryCounterparties'
+} & ParamsOfQueryCounterparties)
 
 export function paramsOfQueryOperationQueryCollection(params: ParamsOfQueryCollection): ParamsOfQueryOperation {
     return {
@@ -4057,6 +4081,13 @@ export function paramsOfQueryOperationWaitForCollection(params: ParamsOfWaitForC
 export function paramsOfQueryOperationAggregateCollection(params: ParamsOfAggregateCollection): ParamsOfQueryOperation {
     return {
         type: 'AggregateCollection',
+        ...params,
+    };
+}
+
+export function paramsOfQueryOperationQueryCounterparties(params: ParamsOfQueryCounterparties): ParamsOfQueryOperation {
+    return {
+        type: 'QueryCounterparties',
         ...params,
     };
 }
@@ -4275,6 +4306,29 @@ export type EndpointsSet = {
     endpoints: string[]
 }
 
+export type ParamsOfQueryCounterparties = {
+
+    /**
+     * Account address.
+     */
+    account: string,
+
+    /**
+     * Projection (result) string
+     */
+    result: string,
+
+    /**
+     * Number of counterparties to return.
+     */
+    first?: number,
+
+    /**
+     * `cursor` field of the last received result
+     */
+    after?: string
+}
+
 /**
  * Network access.
  */
@@ -4459,6 +4513,16 @@ export class NetModule {
      */
     set_endpoints(params: EndpointsSet): Promise<void> {
         return this.client.request('net.set_endpoints', params);
+    }
+
+    /**
+     * Performs DAppServer GraphQL query.
+     * 
+     * @param {ParamsOfQueryCounterparties} params
+     * @returns ResultOfQueryCollection
+     */
+    query_counterparties(params: ParamsOfQueryCounterparties): Promise<ResultOfQueryCollection> {
+        return this.client.request('net.query_counterparties', params);
     }
 }
 
