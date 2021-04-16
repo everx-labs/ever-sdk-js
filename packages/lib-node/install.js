@@ -24,7 +24,9 @@ const platform = os.platform();
 const binariesHost = 'binaries.tonlabs.io';
 const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || require('./package.json')
     .version
-    .split('.')[0];
+    .split('.')
+    .slice(0, 2)
+    .join('_');
 const binariesHomePath = path.resolve(os.homedir(), '.tonlabs', 'binaries', binariesVersion);
 
 function downloadAndGunzip(dest, url) {
