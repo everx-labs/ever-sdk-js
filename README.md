@@ -1,13 +1,41 @@
-# JavaScript Free TON SDK
-
-In this repository you can find the source code of Javascript SDK for Web, Node.js and React Native platforms.
+<p align="center"><a href="https://github.com/tonlabs/ton-client-js/"><img src="assets/ton-sdk-blue.png" height="60"/></a></p> 
+<h1 align="center">JavaScript TON OS SDK</h1>
+<p align="center">Client Library built on the TON OS API</p>
+<p align="center">for Web, Node.js and React Native platforms</p>
 
 **Have a question? Get quick help in our channel:**
 
 [![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
 
-To get a deeper understanding dive into our [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) where you can find extensive explanations and descriptions of each step of DApp development on Free TON.
+- [Documentation](#documentation)
+- [Library distribution](#library-distribution)
+- [Installation](#installation)
+  - [Install core package](#install-core-package)
+  - [Install bridge package (depends on target JS platform)](#install-bridge-package-depends-on-target-js-platform)
+    - [NodeJs](#nodejs)
+    - [Web](#web)
+    - [React Native](#react-native)
+- [Setup library](#setup-library)
+- [Use library](#use-library)
+- [Build bridge binaries](#build-bridge-binaries)
+- [Build binaries](#build-binaries)
+- [Run tests](#run-tests)
+  - [Preparation to run tests](#preparation-to-run-tests)
+  - [Run tests on node js](#run-tests-on-node-js)
+  - [Run tests on web browser](#run-tests-on-web-browser)
+  - [Run tests on react native platform](#run-tests-on-react-native-platform)
+  - [To control where your tests will run use this environments](#to-control-where-your-tests-will-run-use-this-environments)
+- [Download precompiled binaries](#download-precompiled-binaries)
 
+
+# Documentation
+- [Quick Start](https://docs.ton.dev/86757ecb2/p/33b76d-quick-start)
+- [API reference](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md)
+- [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk)
+To get a deeper understanding dive into our  where you can find extensive explanations and descriptions of each step of DApp development on Free TON.
+- [SDK Samples](https://github.com/tonlabs/sdk-samples) - a good place to get your hands dirty with SDK:)
+
+# Library distribution
 This SDK is distributed via npm packages:
 - [@tonclient/core](https://www.npmjs.com/package/@tonclient/core) – common binding independent from JavaScript platform you use.
 - [@tonclient/lib-node](https://www.npmjs.com/package/@tonclient/lib-node) – bridge to NodeJs including NodeJs binary addon.
