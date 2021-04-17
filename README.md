@@ -7,6 +7,8 @@
 
 [![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
 
+# Table of Content
+- [Table of Content](#table-of-content)
 - [Documentation](#documentation)
 - [Library distribution](#library-distribution)
 - [Installation](#installation)
@@ -31,9 +33,8 @@
 # Documentation
 - [Quick Start](https://docs.ton.dev/86757ecb2/p/33b76d-quick-start)
 - [API reference](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md)
-- [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk)
-To get a deeper understanding dive into our  where you can find extensive explanations and descriptions of each step of DApp development on Free TON.
-- [SDK Samples](https://github.com/tonlabs/sdk-samples) - a good place to get your hands dirty with SDK:)
+- [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on Free TON.
+- [SDK Samples](https://github.com/tonlabs/sdk-samples) - a good place to get to practice with SDK asap:)
 
 # Library distribution
 This SDK is distributed via npm packages:
