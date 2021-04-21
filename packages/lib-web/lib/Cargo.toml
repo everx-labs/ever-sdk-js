@@ -20,6 +20,9 @@ crate-type = ["staticlib", "cdylib"]
 js-sys = "0.3.50"
 wasm-bindgen = "0.2.73"
 serde_json = "1.0.41"
+# We need to build getrandom with fature "js" even though we don't use it by ourselves,
+# just to fix building of rand for WASM: 
+getrandom = { version = "0.2.2", default-features = false, features = ["js"] }
 
 ton_client = { git = "https://github.com/tonlabs/TON-SDK.git", default-features = false, features = ["wasm"] }
 #ton_client = { path = "../../../../TON-SDK/ton_client/client", default-features = false, features = ["wasm"] }

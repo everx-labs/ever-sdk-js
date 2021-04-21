@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.13.0] – 2021-04-15
+
+### New
+- **Debot module**:
+    - implementation of `Json` DeBot interface in DEngine.
+
 ## [1.12.0] – 2021-04-01
 
 ### New
