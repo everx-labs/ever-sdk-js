@@ -11,7 +11,8 @@ All notable changes to this project will be documented in this file.
   For example it makes possible to use separated response handlers for different 
   requests.
   
-- [`net.query_counterparties`](docs/mod_net.md#query_counterparties) function for querying account counterparties and last messages info beyween counterparties (time and value). 
+- [`net.query_counterparties`](docs/mod_net.md#query_counterparties) - allows to query and paginate through the list of accounts that the specified account 
+ has interacted with, sorted by the time of the last internal message between accounts.   
   Subscription to counterparties collection is available via `net.subscribe_collection` function.
 
 - Blockchain interaction reliability improvement (broadcast): library sends external inbound messages simultaneously 
