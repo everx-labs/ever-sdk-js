@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
   The N parameter is taken from `config.network.sending_endpoint_count` (default is 2).
 
 - Blockchain interaction reliability improvement (bad delivery list): library tracks endpoints 
-  with bad message delivery (expired messages). These endpoints has lower priority when library chooses endpoints 
+  with bad message delivery (expired messages). These endpoints have lower priority when library chooses endpoints 
   to send message.
   
 - **Debot module**:
