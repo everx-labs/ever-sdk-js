@@ -25,11 +25,9 @@ import {
 } from "./modules";
 import {
     BinaryLibrary,
-    createContext,
-    destroyContext,
+    getBridge,
     ResponseHandler,
     useLibrary,
-    request,
 } from "./bin";
 
 export class TonClient {
@@ -110,7 +108,7 @@ export class TonClient {
         const context = this.context;
         if (context !== null) {
             this.context = null;
-            destroyContext(context);
+            getBridge().destroyContext(context);
         }
     }
 
@@ -123,10 +121,10 @@ export class TonClient {
         if (this.context !== null) {
             context = this.context;
         } else {
-            context = await createContext(this.config);
+            context = await getBridge().createContext(this.config);
             this.context = context;
         }
-        return request(context, functionName, functionParams, responseHandler ?? (() => {
+        return getBridge().request(context, functionName, functionParams, responseHandler ?? (() => {
         }));
     }
 

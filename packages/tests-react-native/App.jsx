@@ -1,10 +1,10 @@
-import {TonClient} from "@tonclient/core";
-import React, {Component} from 'react';
+import { TonClient } from "@tonclient/core";
+import React, { Component } from 'react';
 import {
     View,
-    Text,
+    Text, Button,
 } from 'react-native';
-import {TestsRunner} from "@tonclient/tests";
+import { TestsRunner } from "@tonclient/tests";
 
 class App extends Component {
     async componentDidMount() {
@@ -25,6 +25,7 @@ class App extends Component {
     }
 
     render() {
+        const state = this.state || {};
         return (
             <>
                 <View style={{
@@ -33,19 +34,28 @@ class App extends Component {
                     flex: 1,
                 }}
                 >
-                    <Text style={{fontSize: 24}}>Core
-                        Version: {this.state && this.state.version || 'loading...'}</Text>
+                    <Text style={{ fontSize: 24 }}>Core
+                        Version: {state.version || 'loading...'}</Text>
                     <Text style={{
                         fontSize: 24,
                         color: 'green',
-                    }}>Tests Passed: {this.state && this.state.passed || 0}</Text>
+                    }}>Tests Passed: {state.passed || 0}</Text>
                     <Text style={{
                         fontSize: 24,
                         color: 'red',
-                    }}>Tests Failed: {this.state && this.state.failed || 0}</Text>
-                    <Text style={{fontSize: 24}}>{this.state && this.state.finished
-                        ? 'Complete'
-                        : 'Testing...'}</Text>
+                    }}>Tests Failed: {state.failed || 0}</Text>
+                    <Text
+                        style={{ fontSize: 24 }}>{state.finished ? 'Complete' : 'Testing...'}</Text>
+                    <Text style={{
+                        paddingTop: 24,
+                        fontSize: 24
+                    }}>Clicks: {state.clicks || 0}</Text>
+                    <Button title='Test Click' style={{
+                        fontSize: 24
+                    }} onPress={() => this.setState({
+                        ...state,
+                        clicks: (state.clicks || 0) + 1
+                    })} />
                 </View>
             </>
         );
