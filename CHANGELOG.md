@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [1.13.0] – 2021-04-15
 
 ### New
+- Refined bridging model in `core` package. Library introduces new interface BinaryBridge. 
+  Bridge authors can implement this interface instead of BinaryLibrary to 
+  get more precise control over bridging.
+  For example it makes possible to use separated response handlers for different 
+  requests.
+  
 - **Debot module**:
     - implementation of `Json` DeBot interface in DEngine.
 

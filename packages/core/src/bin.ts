@@ -58,9 +58,7 @@ export function getBridge(): BinaryBridge {
 }
 
 export function useLibrary(loader: (() => Promise<BinaryLibrary>) | BinaryBridge) {
-    bridge = ("createRequest" in loader)
-        ? loader
-        : new CommonBinaryBridge(loader as () => Promise<BinaryLibrary>);
+    bridge = ("createContext" in loader) ? loader : new CommonBinaryBridge(loader);
 }
 
 export class CommonBinaryBridge implements BinaryBridge {
