@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.13.0] – 2021-04-21
+
+### New
+- Refined bridging model in `core` package. Library introduces new interface BinaryBridge. 
+  Bridge authors can implement this interface instead of BinaryLibrary to 
+  get more precise control over bridging.
+  For example it makes possible to use separated response handlers for different 
+  requests.
+  
+- [`net.query_counterparties`](docs/mod_net.md#query_counterparties) - allows to query and paginate through the list of accounts that the specified account 
+ has interacted with, sorted by the time of the last internal message between accounts.   
+  Subscription to counterparties collection is available via `net.subscribe_collection` function.
+
+- Blockchain interaction reliability improvement (broadcast): library sends external inbound messages simultaneously 
+  to the N randomly chosen endpoints. If all N endpoints failed to responce then library repeats 
+  sending to another random N endpoints (except the failed one). 
+  If all the available endpoints fail to respond then library throws error.
+  The N parameter is taken from `config.network.sending_endpoint_count` (default is 2).
+
+- Blockchain interaction reliability improvement (bad delivery list): library tracks endpoints 
+  with bad message delivery (expired messages). These endpoints have lower priority when library chooses endpoints 
+  to send message.
+  
+- **Debot module**:
+    - Implementation of `Json` DeBot interface in DEngine.
+
 ## [1.12.0] – 2021-04-01
 
 ### New

@@ -183,7 +183,7 @@ export class TestsRunner {
         });
         for (const boc of result.out_messages) {
             const msg = (await giver.client.boc.parse_message({boc})).parsed;
-            if (msg.body_type === 0) {
+            if (msg.msg_type === 0) {
                 await giver.client.net.wait_for_collection({
                     collection: "transactions",
                     filter: {
