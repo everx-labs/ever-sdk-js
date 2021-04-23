@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.13.0] – 2021-04-21
+## [1.13.0] – 2021-04-23
 
 ### New
 - Refined bridging model in `core` package. Library introduces new interface BinaryBridge. 
@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
   For example it makes possible to use separated response handlers for different 
   requests.
   
-- [`net.query_counterparties`](docs/mod_net.md#query_counterparties) - allows to query and paginate through the list of accounts that the specified account 
+- [`net.query_counterparties`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_net.md#query_counterparties) - allows to query and paginate through the list of accounts that the specified account 
  has interacted with, sorted by the time of the last internal message between accounts.   
   Subscription to counterparties collection is available via `net.subscribe_collection` function.
 
@@ -31,8 +31,8 @@ All notable changes to this project will be documented in this file.
 ## [1.12.0] – 2021-04-01
 
 ### New
-- [`utils.compress_zstd`](docs/mod_utils.md#compress_zstd) compresses data using Facebook's Zstandard algorithm.
-- [`utils.decompress_zstd`](docs/mod_utils.md#decompress_zstd) decompresses data using Facebook's Zstandard algorithm.
+- [`utils.compress_zstd`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_utils.md#compress_zstd) compresses data using Facebook's Zstandard algorithm.
+- [`utils.decompress_zstd`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_utils.md#decompress_zstd) decompresses data using Facebook's Zstandard algorithm.
 - **Debot module**:
     - `init` function that creates an instance of DeBot and returns DeBot metadata.
     - Dengine fetches metadata form DeBot by calling 2 mandatory functions: `getRequiredInterfaces` and `getDebotInfo`. This data is returned by `fetch` and `init` functions.
