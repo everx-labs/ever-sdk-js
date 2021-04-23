@@ -4200,7 +4200,7 @@ export type ParamsOfAggregateCollection = {
     collection: string,
 
     /**
-     * Collection filter.
+     * Collection filter
      */
     filter?: any,
 
@@ -4309,7 +4309,7 @@ export type EndpointsSet = {
 export type ParamsOfQueryCounterparties = {
 
     /**
-     * Account address.
+     * Account address
      */
     account: string,
 
@@ -4319,7 +4319,7 @@ export type ParamsOfQueryCounterparties = {
     result: string,
 
     /**
-     * Number of counterparties to return.
+     * Number of counterparties to return
      */
     first?: number,
 
@@ -4516,7 +4516,12 @@ export class NetModule {
     }
 
     /**
-     * Performs DAppServer GraphQL query.
+     * Allows to query and paginate through the list of accounts that the specified account has interacted with, sorted by the time of the last internal message between accounts
+     * 
+     * @remarks
+     * *Attention* this query retrieves data from 'Counterparties' service which is not supported in
+     * the opensource version of DApp Server (and will not be supported) as well as in TON OS SE (will be supported in SE in future),
+     * but is always accessible via [TON OS Devnet/Mainnet Clouds](https://docs.ton.dev/86757ecb2/p/85c869-networks)
      * 
      * @param {ParamsOfQueryCounterparties} params
      * @returns ResultOfQueryCollection
