@@ -4616,7 +4616,7 @@ export type DebotInfo = {
     /**
      * Short info about DeBot.
      */
-    key?: string,
+    caption?: string,
 
     /**
      * The name of DeBot developer.

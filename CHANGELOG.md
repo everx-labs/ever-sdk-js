@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.14.1] – 2021-04-28
+
+### Fixed
+
+- **Debot module**:
+    - DebotInfo field `key` renamed to `caption`
+
 ## [1.14.0] – 2021-04-28
 
 ### New
