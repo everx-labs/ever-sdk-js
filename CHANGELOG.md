@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.14.2] – 2021-04-30
+
+### Fixed
+
+- Typo in lib-react-native install script
+
 ## [1.14.1] – 2021-04-28
 
 ### Fixed

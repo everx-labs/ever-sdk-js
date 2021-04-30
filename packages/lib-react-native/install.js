@@ -24,6 +24,7 @@ const os = require('os');
 const binariesSource = process.env.TON_CLIENT_BIN_SRC || 'https://binaries.tonlabs.io';
 const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || require('./package.json')
     .version
+    .split('.')
     .slice(0, 2)
     .join('_');
 const binariesHomePath = path.resolve(os.homedir(), '.tonlabs', 'binaries', binariesVersion);
