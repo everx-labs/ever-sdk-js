@@ -1,14 +1,17 @@
 {
 	"name": "@tonclient/lib-web",
-	"version": "1.14.1",
+	"version": "1.14.2",
 	"description": "TON Client WASM module for browsers",
 	"main": "index.js",
-	"scripts": {
-		"postinstall": "node install.js"
-	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/tonlabs/ton-client-js.git"
+	},
+	"scripts": {
+		"postinstall": "node install.js"
+	},
+	"publishConfig": {
+		"access": "public"
 	},
 	"keywords": [
 		"TON",
