@@ -13,15 +13,21 @@ include_directories(
   ../node_modules/react-native/ReactCommon/jsi
   ../node_modules/react-native/ReactCommon/callinvoker
   ../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni/ReactCommon
-  ../node_modules/react-native/ReactCommon/react/nativemodule/core/ReactCommon
-  ../node_modules/react-native/ReactCommon/react/nativemodule/core
+  # for React Native 0.63.4
+  ../node_modules/react-native/ReactCommon/turbomodule/core/
+  # for React Native 0.64.0
+  # ../node_modules/react-native/ReactCommon/react/nativemodule/core/ReactCommon
+  # ../node_modules/react-native/ReactCommon/react/nativemodule/core
   )
 
 add_library(${PACKAGE_NAME}
   SHARED
   ../node_modules/react-native/ReactCommon/jsi/jsi/jsi.cpp
   ../node_modules/react-native/ReactAndroid/src/main/java/com/facebook/react/turbomodule/core/jni/ReactCommon/CallInvokerHolder.cpp
-  ../node_modules/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.cpp
+  # for React Native 0.63.4
+  ../node_modules/react-native/ReactCommon/turbomodule/core/TurboModule.cpp
+  # for React Native 0.64.0
+  # ../node_modules/react-native/ReactCommon/react/nativemodule/core/ReactCommon/TurboModule.cpp
   ../cpp/NativeModules.cpp
   ../cpp/NativeModules.h
   ../cpp/tonclient.h
@@ -33,3 +39,6 @@ add_library(${PACKAGE_NAME}
 find_package(fbjni REQUIRED CONFIG)
 
 target_link_libraries(${PACKAGE_NAME} fbjni::fbjni "${PROJECT_SOURCE_DIR}/src/main/jniLibs/${CMAKE_ANDROID_ARCH_ABI}/libtonclient.so")
+
+# for React Native 0.63.4 only
+add_library(turbomodulejsijni SHARED ../cpp/empty.cpp)

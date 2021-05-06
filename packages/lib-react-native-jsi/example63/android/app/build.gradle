@@ -178,6 +178,14 @@ android {
 
         }
     }
+
+    configurations {
+        all*.exclude module: 'fbjni-java-only'
+    }
+
+    packagingOptions {
+        pickFirst '**/*.so'
+    }
 }
 
 dependencies {
@@ -207,6 +215,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    implementation project(':lib-react-native-jsi')
 }
 
 // Run this once to be able to run the application with BUCK
