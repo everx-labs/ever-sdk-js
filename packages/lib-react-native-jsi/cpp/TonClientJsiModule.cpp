@@ -78,9 +78,9 @@ namespace tonlabs
       });
     };
 
-    request_data_t *request_data = new request_data_t{
-        .requestId = static_cast<uint32_t>(requestId.asNumber()),
-        .jsiModule = this};
+    request_data_t *request_data = new request_data_t;
+    request_data->requestId = static_cast<uint32_t>(requestId.asNumber());
+    request_data->jsiModule = this;
 
     tc_request_ptr(static_cast<uint32_t>(context.asNumber()), function_name, function_params_json, request_data, response_handler);
 

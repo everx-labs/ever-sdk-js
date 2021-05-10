@@ -39,7 +39,7 @@ private:
 
   static void destruct(jni::alias_ref<jni::JClass>)
   {
-    // nop
+    // noop
   }
 };
 
