@@ -17,7 +17,6 @@ include_directories(
   ../node_modules/react-native/ReactCommon/turbomodule/core/
   # for React Native 0.64.0
   # ../node_modules/react-native/ReactCommon/react/nativemodule/core/ReactCommon
-  # ../node_modules/react-native/ReactCommon/react/nativemodule/core
   )
 
 add_library(${PACKAGE_NAME}
