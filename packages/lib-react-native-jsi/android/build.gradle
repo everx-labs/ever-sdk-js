@@ -1,3 +1,7 @@
+def reactProperties = new Properties()
+file("$projectDir/../node_modules/react-native/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
+
 buildscript {
   // Buildscript is evaluated before everything else so we can't use getExtOrDefault
   def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['TonClientJsi_kotlinVersion']
@@ -42,7 +46,7 @@ android {
         cmake {
             cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all"
             abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-            arguments '-DANDROID_STL=c++_shared'
+            arguments '-DANDROID_STL=c++_shared', '-DREACT_NATIVE_VERSION=' + REACT_NATIVE_VERSION
         }
     }
 
