@@ -15,6 +15,7 @@ public:
   static void registerNatives()
   {
     javaClassStatic()->registerNatives({makeNativeMethod("installNative", TonClientJsiModule::installNative)});
+    javaClassStatic()->registerNatives({makeNativeMethod("destruct", TonClientJsiModule::destruct)});
   }
 
 private:
@@ -34,6 +35,11 @@ private:
         *runtime,
         jsi::PropNameID::forAscii(*runtime, "tonClientJsiModule"),
         jsi::Object::createFromHostObject(*runtime, tonClientJsiModule));
+  }
+
+  static void destruct(jni::alias_ref<jni::JClass>)
+  {
+    // nop
   }
 };
 
