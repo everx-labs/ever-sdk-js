@@ -1,11 +1,9 @@
+def nodeModulesDir = new File(rootProject.projectDir, '../node_modules').exists() ? '../node_modules' : '../../../'
 def reactProperties = new Properties()
-file("$projectDir/../node_modules/react-native/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
-def REACT_NATIVE_VERSION = reactProperties.getProperty("VERSION_NAME")
+file("$nodeModulesDir/react-native/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
+def reactNativeVersion = reactProperties.getProperty('VERSION_NAME')
 
 buildscript {
-  // Buildscript is evaluated before everything else so we can't use getExtOrDefault
-  def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['TonClientJsi_kotlinVersion']
-
   repositories {
     google()
     jcenter()
@@ -13,13 +11,10 @@ buildscript {
 
   dependencies {
     classpath 'com.android.tools.build:gradle:4.1.3'
-    // noinspection DifferentKotlinGradleVersion
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
 
 def getExtOrDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['TonClientJsi_' + name]
@@ -46,7 +41,7 @@ android {
         cmake {
             cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all"
             abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-            arguments '-DANDROID_STL=c++_shared', '-DREACT_NATIVE_VERSION=' + REACT_NATIVE_VERSION
+            arguments '-DANDROID_STL=c++_shared', '-DREACT_NATIVE_VERSION=' + reactNativeVersion, '-DNODE_MODULES_DIR=' + nodeModulesDir
         }
     }
 
@@ -143,11 +138,8 @@ repositories {
   }
 }
 
-def kotlin_version = getExtOrDefault('kotlinVersion')
-
 dependencies {
   // noinspection GradleDynamicVersion
   api 'com.facebook.react:react-native:+'
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation 'com.facebook.fbjni:fbjni:0.2.2'
 }

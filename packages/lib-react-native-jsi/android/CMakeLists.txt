@@ -4,7 +4,6 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 14)
 set(PACKAGE_NAME tonclientjsi)
 set(build_DIR ${CMAKE_SOURCE_DIR}/build)
-set(NODE_MODULES_DIR ../node_modules)
 
 if(${REACT_NATIVE_VERSION} VERSION_LESS 0.64.0)
   # for React Native < 0.64.0
