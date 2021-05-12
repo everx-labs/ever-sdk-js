@@ -178,6 +178,14 @@ android {
 
         }
     }
+
+    configurations {
+        all*.exclude module: 'fbjni-java-only'
+    }
+
+    packagingOptions {
+        pickFirst '**/*.so'
+    }
 }
 
 dependencies {
