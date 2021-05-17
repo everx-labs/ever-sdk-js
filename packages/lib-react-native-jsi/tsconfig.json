@@ -22,6 +22,10 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "esnext"
-  }
+    "target": "esnext",
+  },
+  "exclude": [
+    "example63",
+    "example64"
+  ]
 }
