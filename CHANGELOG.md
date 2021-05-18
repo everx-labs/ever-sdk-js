@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.15.0] – 2021-05-17
+## [1.15.0] – 2021-05-18
 
 ### New
 
@@ -11,6 +11,11 @@ All notable changes to this project will be documented in this file.
   
 - Configuration parameters: `latency_detection_interval`, 
   `max_latency`. See client documentation for details. 
+
+- **Debot module**:
+    - signing messages with signing box handles returned from debots.
+    - return any sdk errors to debot in case of external calls.
+    - defining signing box handle used to sign message in approve callback.
 
 ## [1.14.2] – 2021-04-30
 

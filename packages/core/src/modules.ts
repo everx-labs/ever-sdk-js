@@ -4751,10 +4751,15 @@ export type DebotActivity = {
     /**
      * Public key from keypair that was used to sign external message.
      */
-    signkey: string
+    signkey: string,
+
+    /**
+     * Signing box handle used to sign external message.
+     */
+    signing_box_handle: number
 }
 
-export function debotActivityTransaction(msg: string, dst: string, out: Spending[], fee: bigint, setcode: boolean, signkey: string): DebotActivity {
+export function debotActivityTransaction(msg: string, dst: string, out: Spending[], fee: bigint, setcode: boolean, signkey: string, signing_box_handle: number): DebotActivity {
     return {
         type: 'Transaction',
         msg,
@@ -4763,6 +4768,7 @@ export function debotActivityTransaction(msg: string, dst: string, out: Spending
         fee,
         setcode,
         signkey,
+        signing_box_handle,
     };
 }
 
