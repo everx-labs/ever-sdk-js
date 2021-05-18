@@ -22,18 +22,21 @@ if (!global.Buffer) {
 const client = new TonClient();
 
 export default function App() {
+  const [requests, setRequests] = React.useState<number>(0);
   const [text, setText] = React.useState<string>('');
+  const [clicks, setClicks] = React.useState<number>(0);
 
-  const handlePress = async () => {
+  const handleStart = async () => {
     const requestId = Math.ceil(Math.random() * 10000);
 
-    console.log('START', requestId);
+    console.log(`START ${requestId}`);
+    setRequests((requests) => requests + 1);
     setText('Work in progress...');
 
     const ourKeys = await client.crypto.nacl_box_keypair();
     const theirKeys = await client.crypto.nacl_box_keypair();
     const decrypted = (
-      await client.crypto.generate_random_bytes({length: 10000})
+      await client.crypto.generate_random_bytes({length: 20000000})
     ).bytes;
 
     const start = performance.now();
@@ -63,16 +66,28 @@ export default function App() {
     }
 
     const end = performance.now();
+    const duration = Math.round(end - start);
 
-    setText(`${end - start} ms`);
-    console.log('END', requestId, `${end - start} ms`);
+    setRequests((requests) => requests - 1);
+    setText(`${duration} ms`);
+    console.log(`END ${requestId} ${duration} ms`);
+  };
+
+  const handleIncrement = () => {
+    setClicks((clicks) => clicks + 1);
   };
 
   return (
-    <View style={styles.container}>
-      <Button title="Click me!" onPress={handlePress} />
-      <Text>{text}</Text>
-    </View>
+    <>
+      <View style={styles.container}>
+        <Button title="Start crypto stress test" onPress={handleStart} />
+        <Text>{requests} running</Text>
+        <Text>{text}</Text>
+        <View style={{height: 20}}></View>
+        <Button title="Increment" onPress={handleIncrement} />
+        <Text>{clicks} clicks</Text>
+      </View>
+    </>
   );
 }
 
