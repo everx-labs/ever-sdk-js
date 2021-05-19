@@ -109,10 +109,10 @@ export type NetworkConfig = {
     network_retries_count?: number,
 
     /**
-     * Maximum time for sequential reconnections in ms.
+     * Maximum time for sequential reconnections.
      * 
      * @remarks
-     * Default value is 120000 (2 min)
+     * Must be specified in milliseconds. Default is 120000 (2 min).
      */
     max_reconnect_timeout?: number,
 
@@ -122,17 +122,26 @@ export type NetworkConfig = {
     reconnect_timeout?: number,
 
     /**
-     * The number of automatic message processing retries that SDK performs in case of `Message Expired (507)` error - but only for those messages which local emulation was successful or failed with replay protection error. The default value is 5.
+     * The number of automatic message processing retries that SDK performs in case of `Message Expired (507)` error - but only for those messages which local emulation was successful or failed with replay protection error.
+     * 
+     * @remarks
+     * Default is 5.
      */
     message_retries_count?: number,
 
     /**
      * Timeout that is used to process message delivery for the contracts which ABI does not include "expire" header. If the message is not delivered within the specified timeout the appropriate error occurs.
+     * 
+     * @remarks
+     * Must be specified in milliseconds. Default is 40000 (40 sec).
      */
     message_processing_timeout?: number,
 
     /**
-     * Maximum timeout that is used for query response. The default value is 40 sec.
+     * Maximum timeout that is used for query response.
+     * 
+     * @remarks
+     * Must be specified in milliseconds. Default is 40000 (40 sec).
      */
     wait_for_timeout?: number,
 
@@ -142,20 +151,44 @@ export type NetworkConfig = {
      * @remarks
      * If client's device time is out of sync and difference is more than the threshold then error will occur. Also an error will occur if the specified threshold is more than
      * `message_processing_timeout/2`.
-     * The default value is 15 sec.
+     * 
+     * Must be specified in milliseconds. Default is 15000 (15 sec).
      */
     out_of_sync_threshold?: number,
 
     /**
-     * Maximum number of randomly chosen endpoints the library uses to send message. The default value is 2 endpoints.
+     * Maximum number of randomly chosen endpoints the library uses to broadcast a message.
+     * 
+     * @remarks
+     * Default is 2.
      */
     sending_endpoint_count?: number,
+
+    /**
+     * Frequency of sync latency detection.
+     * 
+     * @remarks
+     * Library periodically checks the current endpoint for blockchain data syncronization latency.
+     * If the latency (time-lag) is less then `NetworkConfig.max_latency`
+     * then library selects another endpoint.
+     * 
+     * Must be specified in milliseconds. Default is 60000 (1 min).
+     */
+    latency_detection_interval?: number,
+
+    /**
+     * Maximum value for the endpoint's blockchain data syncronization latency (time-lag). Library periodically checks the current endpoint for blockchain data syncronization latency. If the latency (time-lag) is less then `NetworkConfig.max_latency` then library selects another endpoint.
+     * 
+     * @remarks
+     * Must be specified in milliseconds. Default is 60000 (1 min).
+     */
+    max_latency?: number,
 
     /**
      * Access key to GraphQL API.
      * 
      * @remarks
-     * At the moment is not used in production
+     * At the moment is not used in production.
      */
     access_key?: string
 }
@@ -3955,21 +3988,33 @@ export class TvmModule {
      * Performs all the phases of contract execution on Transaction Executor -
      * the same component that is used on Validator Nodes.
      * 
-     * Can be used for contract debugginh, to find out the reason why message was not delivered successfully
-     *  - because Validators just throw away the failed external inbound messages, here you can catch them.
+     * Can be used for contract debugging, to find out the reason why a message was not delivered successfully.
+     * Validators throw away the failed external inbound messages (if they failed bedore `ACCEPT`) in the real network.
+     * This is why these messages are impossible to debug in the real network.
+     * With the help of run_executor you can do that. In fact, `process_message` function
+     * performs local check with `run_executor` if there was no transaction as a result of processing
+     * and returns the error, if there is one.
      * 
-     * Another use case is to estimate fees for message execution. Set  `AccountForExecutor::Account.unlimited_balance`
+     * Another use case to use `run_executor` is to estimate fees for message execution.
+     * Set  `AccountForExecutor::Account.unlimited_balance`
      * to `true` so that emulation will not depend on the actual balance.
+     * This may be needed to calculate deploy fees for an account that does not exist yet.
+     * JSON with fees is in `fees` field of the result.
      * 
      * One more use case - you can produce the sequence of operations,
-     * thus emulating the multiple contract calls locally.
+     * thus emulating the sequential contract calls locally.
      * And so on.
      * 
-     * To get the account BOC (bag of cells) - use `net.query` method to download it from GraphQL API
+     * Transaction executor requires account BOC (bag of cells) as a parameter.
+     * To get the account BOC - use `net.query` method to download it from GraphQL API
      * (field `boc` of `account`) or generate it with `abi.encode_account` method.
-     * To get the message BOC - use `abi.encode_message` or prepare it any other way, for instance, with FIFT script.
      * 
-     * If you need this emulation to be as precise as possible then specify `ParamsOfRunExecutor` parameter.
+     * Also it requires message BOC. To get the message BOC - use `abi.encode_message` or `abi.encode_internal_message`.
+     * 
+     * If you need this emulation to be as precise as possible (for instance - emulate transaction
+     * with particular lt in particular block or use particular blockchain config,
+     * in case you want to download it from a particular key block - then specify `ParamsOfRunExecutor` parameter.
+     * 
      * If you need to see the aborted transaction as a result, not as an error, set `skip_transaction_check` to `true`.
      * 
      * @param {ParamsOfRunExecutor} params
@@ -4306,6 +4351,19 @@ export type EndpointsSet = {
     endpoints: string[]
 }
 
+export type ResultOfGetEndpoints = {
+
+    /**
+     * Current query endpoint
+     */
+    query: string,
+
+    /**
+     * List of all endpoints used by client
+     */
+    endpoints: string[]
+}
+
 export type ParamsOfQueryCounterparties = {
 
     /**
@@ -4516,6 +4574,14 @@ export class NetModule {
     }
 
     /**
+     * Requests the list of alternative endpoints from server
+     * @returns ResultOfGetEndpoints
+     */
+    get_endpoints(): Promise<ResultOfGetEndpoints> {
+        return this.client.request('net.get_endpoints');
+    }
+
+    /**
      * Allows to query and paginate through the list of accounts that the specified account has interacted with, sorted by the time of the last internal message between accounts
      * 
      * @remarks
@@ -4685,10 +4751,15 @@ export type DebotActivity = {
     /**
      * Public key from keypair that was used to sign external message.
      */
-    signkey: string
+    signkey: string,
+
+    /**
+     * Signing box handle used to sign external message.
+     */
+    signing_box_handle: number
 }
 
-export function debotActivityTransaction(msg: string, dst: string, out: Spending[], fee: bigint, setcode: boolean, signkey: string): DebotActivity {
+export function debotActivityTransaction(msg: string, dst: string, out: Spending[], fee: bigint, setcode: boolean, signkey: string, signing_box_handle: number): DebotActivity {
     return {
         type: 'Transaction',
         msg,
@@ -4697,6 +4768,7 @@ export function debotActivityTransaction(msg: string, dst: string, out: Spending
         fee,
         setcode,
         signkey,
+        signing_box_handle,
     };
 }
 
