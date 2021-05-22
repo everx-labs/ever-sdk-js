@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### New
 
 - `query_transaction_tree` function that returns messages and transactions tree produced 
-  by the specified message was added to `query` module. [See the documentation]Link
+  by the specified message was added to `query` module. [See the documentation](https://github.com/tonlabs/TON-SDK/blob/1.16.0/docs/mod_net.md#query_transaction_tree)
 
 ### Fixed
 
