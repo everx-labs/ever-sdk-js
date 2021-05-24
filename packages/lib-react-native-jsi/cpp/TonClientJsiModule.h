@@ -30,8 +30,8 @@ namespace tonlabs
         jsi::Runtime &rt,
         const jsi::Value &context,
         const jsi::Value &requestId,
-        const jsi::String &functionName,
-        const jsi::String &functionParamsJson) override;
+        const jsi::Value &functionName,
+        const jsi::Value &functionParamsJson) override;
 
     TonClientJsiModule(jsi::Runtime &runtime, std::shared_ptr<facebook::react::CallInvoker> jsInvoker)
         : facebook::react::SchemaCxxSpecJSI(jsInvoker), runtime_(runtime), jsCallInvoker_(jsInvoker){};
@@ -44,8 +44,13 @@ namespace tonlabs
 
   typedef struct
   {
+    uint32_t context;
     uint32_t requestId;
-    TonClientJsiModule *jsiModule;
+    TonClientJsiModule *jsiModule;                            // to access runtime and jsCallInvoker
+    std::shared_ptr<jsi::String> functionParamsJsonSharedPtr; // to control lifetime of jsi::String
+    std::string functionNameStdString;                        // to control lifetime of std::strings
+    std::string functionParamsJsonStdString;
+    std::string responseParamsJsonStdString;
   } request_data_t;
 
 } // namespace tonlabs

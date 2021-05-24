@@ -38,10 +38,10 @@ namespace facebook
 
     static jsi::Value __hostFunction_SchemaCxxSpecJSI_sendRequest(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t count)
     {
-      const jsi::Value context = args[0].asNumber();
-      const jsi::Value requestId = args[1].asNumber();
-      const jsi::String functionName = args[2].asString(rt);
-      const jsi::String functionParamsJson = args[3].asString(rt);
+      const jsi::Value &context = args[0];
+      const jsi::Value &requestId = args[1];
+      const jsi::Value &functionName = args[2];
+      const jsi::Value &functionParamsJson = args[3];
 
       return static_cast<SchemaCxxSpecJSI *>(&turboModule)->sendRequest(rt, context, requestId, functionName, functionParamsJson);
     }

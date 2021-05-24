@@ -42,8 +42,8 @@ namespace facebook
           jsi::Runtime &rt,
           const jsi::Value &context,
           const jsi::Value &requestId,
-          const jsi::String &functionName,
-          const jsi::String &functionParamsJson) = 0;
+          const jsi::Value &functionName,
+          const jsi::Value &functionParamsJson) = 0;
     };
 
   } // namespace react
