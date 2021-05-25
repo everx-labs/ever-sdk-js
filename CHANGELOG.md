@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.16.0] – 2021-05-25
+
+### New
+
+- `query_transaction_tree` function that returns messages and transactions tree produced 
+  by the specified message was added to `query` module. [See the documentation](https://github.com/tonlabs/TON-SDK/blob/1.16.0/docs/mod_net.md#query_transaction_tree)
+- `libOptions.loadModule` – ability to specify alternative WASM module loader. 
+
+### Fixed
+
+- `AbiData.key` type changed to u32.
+- attempt to use `orderBy` instead of `order` in `query_collection` will raise error.
+
 ## [1.15.0] – 2021-05-18
 
 ### New

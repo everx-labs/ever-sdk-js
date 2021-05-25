@@ -2009,7 +2009,7 @@ export type AbiData = {
 
     /**
      */
-    key: bigint,
+    key: number,
 
     /**
      */
@@ -4158,6 +4158,97 @@ export enum AggregationFn {
     AVERAGE = "AVERAGE"
 }
 
+export type TransactionNode = {
+
+    /**
+     * Transaction id.
+     */
+    id: string,
+
+    /**
+     * In message id.
+     */
+    in_msg: string,
+
+    /**
+     * Out message ids.
+     */
+    out_msgs: string[],
+
+    /**
+     * Account address.
+     */
+    account_addr: string,
+
+    /**
+     * Transactions total fees.
+     */
+    total_fees: string,
+
+    /**
+     * Aborted flag.
+     */
+    aborted: boolean,
+
+    /**
+     * Compute phase exit code.
+     */
+    exit_code?: number
+}
+
+export type MessageNode = {
+
+    /**
+     * Message id.
+     */
+    id: string,
+
+    /**
+     * Source transaction id.
+     * 
+     * @remarks
+     * This field is missing for an external inbound messages.
+     */
+    src_transaction_id?: string,
+
+    /**
+     * Destination transaction id.
+     * 
+     * @remarks
+     * This field is missing for an external outbound messages.
+     */
+    dst_transaction_id?: string,
+
+    /**
+     * Source address.
+     */
+    src?: string,
+
+    /**
+     * Destination address.
+     */
+    dst?: string,
+
+    /**
+     * Transferred tokens value.
+     */
+    value?: string,
+
+    /**
+     * Bounce flag.
+     */
+    bounce: boolean,
+
+    /**
+     * Decoded body.
+     * 
+     * @remarks
+     * Library tries to decode message body using provided `params.abi_registry`.
+     * This field will be missing if none of the provided abi can be used to decode.
+     */
+    decoded_body?: DecodedMessageBody
+}
+
 export type ParamsOfQuery = {
 
     /**
@@ -4387,6 +4478,32 @@ export type ParamsOfQueryCounterparties = {
     after?: string
 }
 
+export type ParamsOfQueryTransactionTree = {
+
+    /**
+     * Input message id.
+     */
+    in_msg: string,
+
+    /**
+     * List of contract ABIs that will be used to decode message bodies. Library will try to decode each returned message body using any ABI from the registry.
+     */
+    abi_registry?: Abi[]
+}
+
+export type ResultOfQueryTransactionTree = {
+
+    /**
+     * Messages.
+     */
+    messages: MessageNode[],
+
+    /**
+     * Transactions.
+     */
+    transactions: TransactionNode[]
+}
+
 /**
  * Network access.
  */
@@ -4594,6 +4711,32 @@ export class NetModule {
      */
     query_counterparties(params: ParamsOfQueryCounterparties): Promise<ResultOfQueryCollection> {
         return this.client.request('net.query_counterparties', params);
+    }
+
+    /**
+     * Returns transactions tree for specific message.
+     * 
+     * @remarks
+     * Performs recursive retrieval of the transactions tree produced by the specific message:
+     * in_msg -> dst_transaction -> out_messages -> dst_transaction -> ...
+     * 
+     * All retrieved messages and transactions will be included
+     * into `result.messages` and `result.transactions` respectively.
+     * 
+     * The retrieval process will stop when the retrieved transaction count is more than 50.
+     * 
+     * It is guaranteed that each message in `result.messages` has the corresponding transaction
+     * in the `result.transactions`.
+     * 
+     * But there are no guaranties that all messages from transactions `out_msgs` are
+     * presented in `result.messages`.
+     * So the application have to continue retrieval for missing messages if it requires.
+     * 
+     * @param {ParamsOfQueryTransactionTree} params
+     * @returns ResultOfQueryTransactionTree
+     */
+    query_transaction_tree(params: ParamsOfQueryTransactionTree): Promise<ResultOfQueryTransactionTree> {
+        return this.client.request('net.query_transaction_tree', params);
     }
 }
 
