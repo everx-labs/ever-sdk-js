@@ -132,7 +132,7 @@ export function libWeb() {
 
     (async () => {
         const e = Date.now();
-        const wasmModule = await (options.loadModule() || loadModule());
+        const wasmModule = await ((options && options.loadModule) || loadModule)();
         worker.postMessage({
             type: 'init',
             wasmModule,
