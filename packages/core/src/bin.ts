@@ -13,6 +13,15 @@ export interface BinaryLibrary {
         ) => void,
     ): void,
 
+    setResponseParamsHandler(
+        handler?: (
+            requestId: number,
+            params: any,
+            responseType: number,
+            finished: boolean,
+        ) => void,
+    ): void,
+
     createContext(configJson: string): Promise<string>,
 
     destroyContext(context: number): void,
@@ -22,6 +31,13 @@ export interface BinaryLibrary {
         requestId: number,
         functionName: string,
         functionParamsJson: string,
+    ): void,
+
+    sendRequestParams(
+        context: number,
+        requestId: number,
+        functionName: string,
+        functionParams: any,
     ): void,
 }
 
@@ -65,6 +81,7 @@ export class CommonBinaryBridge implements BinaryBridge {
     private loading: LoadingPromise[] | null = null;
     private loadError: Error | null = null;
     private library: BinaryLibrary | null = null;
+    private librarySupportsDirectParams = false;
     private requests = new Map<number, Request>();
     private nextRequestId: number = 1;
     private contextCount: number = 0;
@@ -77,6 +94,7 @@ export class CommonBinaryBridge implements BinaryBridge {
             this.loading = null;
             if (lib) {
                 this.library = lib;
+                this.librarySupportsDirectParams = !!lib.setResponseParamsHandler;
                 saveLoading?.forEach(x => x.resolve(lib));
             } else {
                 this.loadError = error || null;
@@ -90,14 +108,32 @@ export class CommonBinaryBridge implements BinaryBridge {
         const mustBeAssigned = (this.contextCount > 0) || (this.requests.size > 0);
         if (this.responseHandlerAssigned !== mustBeAssigned) {
             if (mustBeAssigned) {
-                this.library?.setResponseHandler((
-                    requestId: number,
-                    paramsJson: string,
-                    responseType: number,
-                    finished: boolean,
-                ) => this.handleLibraryResponse(requestId, paramsJson, responseType, finished));
+                if (this.librarySupportsDirectParams) {
+                    this.library?.setResponseParamsHandler((
+                        requestId: number,
+                        params: any,
+                        responseType: number,
+                        finished: boolean,
+                    ) => this.handleLibraryResponse(requestId, params, responseType, finished));
+                } else {
+                    this.library?.setResponseHandler((
+                        requestId: number,
+                        paramsJson: string,
+                        responseType: number,
+                        finished: boolean,
+                        ) => this.handleLibraryResponse(
+                        requestId,
+                        paramsJson !== "" ? JSON.parse(paramsJson) : undefined,
+                        responseType,
+                        finished),
+                    );
+                }
             } else {
-                this.library?.setResponseHandler();
+                if (this.librarySupportsDirectParams) {
+                    this.library?.setResponseParamsHandler();
+                } else {
+                    this.library?.setResponseHandler();
+                }
             }
             this.responseHandlerAssigned = mustBeAssigned;
         }
@@ -132,10 +168,14 @@ export class CommonBinaryBridge implements BinaryBridge {
             const requestId = this.generateRequestId();
             this.requests.set(requestId, request);
             this.checkResponseHandler();
-            const paramsJson = (functionParams === undefined) || (functionParams === null)
-                ? ""
-                : JSON.stringify(functionParams);
-            lib.sendRequest(context, requestId, functionName, paramsJson);
+            if (this.librarySupportsDirectParams) {
+                lib.sendRequestParams(context, requestId, functionName, functionParams);
+            } else {
+                const paramsJson = (functionParams === undefined) || (functionParams === null)
+                    ? ""
+                    : JSON.stringify(functionParams);
+                lib.sendRequest(context, requestId, functionName, paramsJson);
+            }
         });
     }
 
@@ -171,7 +211,7 @@ export class CommonBinaryBridge implements BinaryBridge {
 
     private handleLibraryResponse(
         requestId: number,
-        paramsJson: string,
+        params: any,
         responseType: number,
         finished: boolean,
     ) {
@@ -183,7 +223,6 @@ export class CommonBinaryBridge implements BinaryBridge {
             this.requests.delete(requestId);
             this.checkResponseHandler();
         }
-        const params = paramsJson !== "" ? JSON.parse(paramsJson) : undefined;
         switch (responseType) {
         case ResponseType.Success:
             request.resolve(params);
