@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/tests-web",
-	"version": "1.16.0",
+	"version": "1.16.1",
 	"private": true,
 	"description": "TON Client WASM module tests runner",
 	"scripts": {
