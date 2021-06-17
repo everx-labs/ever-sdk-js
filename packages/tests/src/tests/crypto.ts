@@ -23,8 +23,6 @@ import {
     AppEncryptionBox,
     EncryptionBoxHandle,
     EncryptionBoxInfo,
-    EncryptionBoxData,
-    encryptionBoxDataBase64,
 } from "@tonclient/core";
 
 const mnemonicWordCount = [12, 15, 18, 21, 24];
@@ -350,18 +348,13 @@ test("external encryption box", async () => {
             };
         },
         encrypt: async (params) => {
-            const data = params.data;
-            expect(data.type).toEqual("Base64");
             return {
-                data: encryptionBoxDataBase64(data.value + data.value),
+                data: params.data + params.data,
             };
         },
-
         decrypt: async (params) => {
-            const data = params.data;
-            expect(data.type).toEqual("Base64");
             return {
-                data: encryptionBoxDataBase64(data.value.substr(0, data.value.length / 2)),
+                data: params.data.substr(0, params.data.length / 2),
             }
         }
 
@@ -375,19 +368,17 @@ test("external encryption box", async () => {
 
     expect(info.algorithm).toEqual("duplicator");
 
-    const encrypted: EncryptionBoxData = (await client.crypto.encryption_box_encrypt({
+    const encrypted: string = (await client.crypto.encryption_box_encrypt({
         encryption_box: handle,
-        data: encryptionBoxDataBase64("12345"),
+        data: "12345",
     })).data;
 
-    expect(encrypted.type).toEqual("Base64");
-    expect(encrypted.value).toEqual("1234512345");
+    expect(encrypted).toEqual("1234512345");
 
-    const decrypted: EncryptionBoxData = (await client.crypto.encryption_box_decrypt({
+    const decrypted: string = (await client.crypto.encryption_box_decrypt({
         encryption_box: handle,
         data: encrypted,
     })).data;
 
-    expect(decrypted.type).toEqual("Base64");
-    expect(decrypted.value).toEqual("12345");
+    expect(decrypted).toEqual("12345");
 });

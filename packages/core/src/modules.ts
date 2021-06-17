@@ -419,34 +419,6 @@ export type SigningBoxHandle = number
 
 export type EncryptionBoxHandle = number
 
-export type EncryptionBoxData = {
-    type: 'Base64'
-
-    /**
-     */
-    value: string
-} | {
-    type: 'BlobUrl'
-
-    /**
-     */
-    value: string
-}
-
-export function encryptionBoxDataBase64(value: string): EncryptionBoxData {
-    return {
-        type: 'Base64',
-        value,
-    };
-}
-
-export function encryptionBoxDataBlobUrl(value: string): EncryptionBoxData {
-    return {
-        type: 'BlobUrl',
-        value,
-    };
-}
-
 export type EncryptionBoxInfo = {
 
     /**
@@ -1264,14 +1236,16 @@ export type ParamsOfAppEncryptionBox = {
     type: 'Encrypt'
 
     /**
+     * Data, encoded in Base64
      */
-    data: EncryptionBoxData
+    data: string
 } | {
     type: 'Decrypt'
 
     /**
+     * Data, encoded in Base64
      */
-    data: EncryptionBoxData
+    data: string
 }
 
 export function paramsOfAppEncryptionBoxGetInfo(): ParamsOfAppEncryptionBox {
@@ -1280,14 +1254,14 @@ export function paramsOfAppEncryptionBoxGetInfo(): ParamsOfAppEncryptionBox {
     };
 }
 
-export function paramsOfAppEncryptionBoxEncrypt(data: EncryptionBoxData): ParamsOfAppEncryptionBox {
+export function paramsOfAppEncryptionBoxEncrypt(data: string): ParamsOfAppEncryptionBox {
     return {
         type: 'Encrypt',
         data,
     };
 }
 
-export function paramsOfAppEncryptionBoxDecrypt(data: EncryptionBoxData): ParamsOfAppEncryptionBox {
+export function paramsOfAppEncryptionBoxDecrypt(data: string): ParamsOfAppEncryptionBox {
     return {
         type: 'Decrypt',
         data,
@@ -1304,16 +1278,16 @@ export type ResultOfAppEncryptionBox = {
     type: 'Encrypt'
 
     /**
-     * Encrypted data enumeration
+     * Encrypted data, encoded in Base64
      */
-    data: EncryptionBoxData
+    data: string
 } | {
     type: 'Decrypt'
 
     /**
-     * Decrypted data enumeration
+     * Decrypted data, encoded in Base64
      */
-    data: EncryptionBoxData
+    data: string
 }
 
 export function resultOfAppEncryptionBoxGetInfo(info: EncryptionBoxInfo): ResultOfAppEncryptionBox {
@@ -1323,14 +1297,14 @@ export function resultOfAppEncryptionBoxGetInfo(info: EncryptionBoxInfo): Result
     };
 }
 
-export function resultOfAppEncryptionBoxEncrypt(data: EncryptionBoxData): ResultOfAppEncryptionBox {
+export function resultOfAppEncryptionBoxEncrypt(data: string): ResultOfAppEncryptionBox {
     return {
         type: 'Encrypt',
         data,
     };
 }
 
-export function resultOfAppEncryptionBoxDecrypt(data: EncryptionBoxData): ResultOfAppEncryptionBox {
+export function resultOfAppEncryptionBoxDecrypt(data: string): ResultOfAppEncryptionBox {
     return {
         type: 'Decrypt',
         data,
@@ -1361,17 +1335,17 @@ export type ParamsOfEncryptionBoxEncrypt = {
     encryption_box: EncryptionBoxHandle,
 
     /**
-     * Data to be encrypted
+     * Data to be encrypted, encoded in Base64
      */
-    data: EncryptionBoxData
+    data: string
 }
 
 export type ResultOfEncryptionBoxEncrypt = {
 
     /**
-     * Encrypted data
+     * Encrypted data, encoded in Base64
      */
-    data: EncryptionBoxData
+    data: string
 }
 
 export type ParamsOfEncryptionBoxDecrypt = {
@@ -1382,17 +1356,17 @@ export type ParamsOfEncryptionBoxDecrypt = {
     encryption_box: EncryptionBoxHandle,
 
     /**
-     * Data to be decrypted
+     * Data to be decrypted, encoded in Base64
      */
-    data: EncryptionBoxData
+    data: string
 }
 
 export type ResultOfEncryptionBoxDecrypt = {
 
     /**
-     * Decrypted data
+     * Decrypted data, encoded in Base64
      */
-    data: EncryptionBoxData
+    data: string
 }
 
 type ResultOfAppSigningBoxGetPublicKey = {
@@ -1434,19 +1408,19 @@ type ResultOfAppEncryptionBoxGetInfo = {
 }
 
 type ParamsOfAppEncryptionBoxEncrypt = {
-    data: EncryptionBoxData
+    data: string
 }
 
 type ResultOfAppEncryptionBoxEncrypt = {
-    data: EncryptionBoxData
+    data: string
 }
 
 type ParamsOfAppEncryptionBoxDecrypt = {
-    data: EncryptionBoxData
+    data: string
 }
 
 type ResultOfAppEncryptionBoxDecrypt = {
-    data: EncryptionBoxData
+    data: string
 }
 
 export interface AppEncryptionBox {
