@@ -1245,7 +1245,12 @@ export class CryptoModule {
     }
 
     /**
-     * Performs prime factorization – decomposition of a composite number into a product of smaller prime integers (factors). See [https://en.wikipedia.org/wiki/Integer_factorization]
+     * Integer factorization
+     * 
+     * @remarks
+     * Performs prime factorization – decomposition of a composite number
+     * into a product of smaller prime integers (factors).
+     * See [https://en.wikipedia.org/wiki/Integer_factorization]
      * 
      * @param {ParamsOfFactorize} params
      * @returns ResultOfFactorize
@@ -1255,7 +1260,11 @@ export class CryptoModule {
     }
 
     /**
-     * Performs modular exponentiation for big integers (`base`^`exponent` mod `modulus`). See [https://en.wikipedia.org/wiki/Modular_exponentiation]
+     * Modular exponentiation
+     * 
+     * @remarks
+     * Performs modular exponentiation for big integers (`base`^`exponent` mod `modulus`).
+     * See [https://en.wikipedia.org/wiki/Modular_exponentiation]
      * 
      * @param {ParamsOfModularPower} params
      * @returns ResultOfModularPower
@@ -1343,9 +1352,12 @@ export class CryptoModule {
     }
 
     /**
-     * Derives key from `password` and `key` using `scrypt` algorithm. See [https://en.wikipedia.org/wiki/Scrypt].
+     * Perform `scrypt` encryption
      * 
      * @remarks
+     * Derives key from `password` and `key` using `scrypt` algorithm.
+     * See [https://en.wikipedia.org/wiki/Scrypt].
+     * 
      * # Arguments
      * - `log_n` - The log2 of the Scrypt parameter `N`
      * - `r` - The Scrypt parameter `r`
@@ -1499,6 +1511,9 @@ export class CryptoModule {
     }
 
     /**
+     * Generates a random mnemonic
+     * 
+     * @remarks
      * Generates a random mnemonic from the specified dictionary and word count
      * 
      * @param {ParamsOfMnemonicFromRandom} params
@@ -1519,7 +1534,11 @@ export class CryptoModule {
     }
 
     /**
-     * The phrase supplied will be checked for word length and validated according to the checksum specified in BIP0039.
+     * Validates a mnemonic phrase
+     * 
+     * @remarks
+     * The phrase supplied will be checked for word length and validated according to the checksum
+     * specified in BIP0039.
      * 
      * @param {ParamsOfMnemonicVerify} params
      * @returns ResultOfMnemonicVerify
@@ -1529,7 +1548,11 @@ export class CryptoModule {
     }
 
     /**
-     * Validates the seed phrase, generates master key and then derives the key pair from the master key and the specified path
+     * Derives a key pair for signing from the seed phrase
+     * 
+     * @remarks
+     * Validates the seed phrase, generates master key and then derives
+     * the key pair from the master key and the specified path
      * 
      * @param {ParamsOfMnemonicDeriveSignKeys} params
      * @returns KeyPair
@@ -3367,7 +3390,9 @@ export type ParamsOfWaitForTransaction = {
      * The list of endpoints to which the message was sent.
      * 
      * @remarks
-     * You must provide the same value as the `send_message` has returned.
+     * Use this field to get more informative errors.
+     * Provide the same value as the `send_message` has returned.
+     * If the message was not delivered (expired), SDK will log the endpoint URLs, used for its sending.
      */
     sending_endpoints?: string[]
 }
@@ -4488,7 +4513,18 @@ export type ParamsOfQueryTransactionTree = {
     /**
      * List of contract ABIs that will be used to decode message bodies. Library will try to decode each returned message body using any ABI from the registry.
      */
-    abi_registry?: Abi[]
+    abi_registry?: Abi[],
+
+    /**
+     * Timeout used to limit waiting time for the missing messages and transaction.
+     * 
+     * @remarks
+     * If some of the following messages and transactions are missing yet
+     * The maximum waiting time is regulated by this option.
+     * 
+     * Default value is 60000 (1 min).
+     */
+    timeout?: number
 }
 
 export type ResultOfQueryTransactionTree = {
