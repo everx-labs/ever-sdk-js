@@ -422,18 +422,22 @@ export type EncryptionBoxHandle = number
 export type EncryptionBoxInfo = {
 
     /**
+     * Derivation path, for instance "m/44'/396'/0'/0/0"
      */
     hdpath?: string,
 
     /**
+     * Cryptographic algorithm, used by this encryption box
      */
     algorithm?: string,
 
     /**
+     * Options, depends on algorithm and specific encryption box implementation
      */
     options?: any,
 
     /**
+     * Public information, depends on algorithm
      */
     public?: any
 }
