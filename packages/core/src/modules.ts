@@ -411,10 +411,60 @@ export enum CryptoErrorCode {
     MnemonicGenerationFailed = 119,
     MnemonicFromEntropyFailed = 120,
     SigningBoxNotRegistered = 121,
-    InvalidSignature = 122
+    InvalidSignature = 122,
+    EncryptionBoxNotRegistered = 123
 }
 
 export type SigningBoxHandle = number
+
+export type EncryptionBoxHandle = number
+
+export type EncryptionBoxData = {
+    type: 'Base64'
+
+    /**
+     */
+    value: string
+} | {
+    type: 'BlobUrl'
+
+    /**
+     */
+    value: string
+}
+
+export function encryptionBoxDataBase64(value: string): EncryptionBoxData {
+    return {
+        type: 'Base64',
+        value,
+    };
+}
+
+export function encryptionBoxDataBlobUrl(value: string): EncryptionBoxData {
+    return {
+        type: 'BlobUrl',
+        value,
+    };
+}
+
+export type EncryptionBoxInfo = {
+
+    /**
+     */
+    hdpath?: string,
+
+    /**
+     */
+    algorithm?: string,
+
+    /**
+     */
+    options?: any,
+
+    /**
+     */
+    public?: any
+}
 
 export type ParamsOfFactorize = {
 
@@ -1200,6 +1250,151 @@ export type ResultOfSigningBoxSign = {
     signature: string
 }
 
+export type RegisteredEncryptionBox = {
+
+    /**
+     * Handle of the encryption box
+     */
+    handle: EncryptionBoxHandle
+}
+
+export type ParamsOfAppEncryptionBox = {
+    type: 'GetInfo'
+} | {
+    type: 'Encrypt'
+
+    /**
+     */
+    data: EncryptionBoxData
+} | {
+    type: 'Decrypt'
+
+    /**
+     */
+    data: EncryptionBoxData
+}
+
+export function paramsOfAppEncryptionBoxGetInfo(): ParamsOfAppEncryptionBox {
+    return {
+        type: 'GetInfo',
+    };
+}
+
+export function paramsOfAppEncryptionBoxEncrypt(data: EncryptionBoxData): ParamsOfAppEncryptionBox {
+    return {
+        type: 'Encrypt',
+        data,
+    };
+}
+
+export function paramsOfAppEncryptionBoxDecrypt(data: EncryptionBoxData): ParamsOfAppEncryptionBox {
+    return {
+        type: 'Decrypt',
+        data,
+    };
+}
+
+export type ResultOfAppEncryptionBox = {
+    type: 'GetInfo'
+
+    /**
+     */
+    info: EncryptionBoxInfo
+} | {
+    type: 'Encrypt'
+
+    /**
+     * Encrypted data enumeration
+     */
+    data: EncryptionBoxData
+} | {
+    type: 'Decrypt'
+
+    /**
+     * Decrypted data enumeration
+     */
+    data: EncryptionBoxData
+}
+
+export function resultOfAppEncryptionBoxGetInfo(info: EncryptionBoxInfo): ResultOfAppEncryptionBox {
+    return {
+        type: 'GetInfo',
+        info,
+    };
+}
+
+export function resultOfAppEncryptionBoxEncrypt(data: EncryptionBoxData): ResultOfAppEncryptionBox {
+    return {
+        type: 'Encrypt',
+        data,
+    };
+}
+
+export function resultOfAppEncryptionBoxDecrypt(data: EncryptionBoxData): ResultOfAppEncryptionBox {
+    return {
+        type: 'Decrypt',
+        data,
+    };
+}
+
+export type ParamsOfEncryptionBoxGetInfo = {
+
+    /**
+     * Encryption box handle
+     */
+    encryption_box: EncryptionBoxHandle
+}
+
+export type ResultOfEncryptionBoxGetInfo = {
+
+    /**
+     * Encryption box information
+     */
+    info: EncryptionBoxInfo
+}
+
+export type ParamsOfEncryptionBoxEncrypt = {
+
+    /**
+     * Encryption box handle
+     */
+    encryption_box: EncryptionBoxHandle,
+
+    /**
+     * Data to be encrypted
+     */
+    data: EncryptionBoxData
+}
+
+export type ResultOfEncryptionBoxEncrypt = {
+
+    /**
+     * Encrypted data
+     */
+    data: EncryptionBoxData
+}
+
+export type ParamsOfEncryptionBoxDecrypt = {
+
+    /**
+     * Encryption box handle
+     */
+    encryption_box: EncryptionBoxHandle,
+
+    /**
+     * Data to be decrypted
+     */
+    data: EncryptionBoxData
+}
+
+export type ResultOfEncryptionBoxDecrypt = {
+
+    /**
+     * Decrypted data
+     */
+    data: EncryptionBoxData
+}
+
 type ResultOfAppSigningBoxGetPublicKey = {
     public_key: string
 }
@@ -1226,6 +1421,52 @@ async function dispatchAppSigningBox(obj: AppSigningBox, params: ParamsOfAppSign
                 break;
             case 'Sign':
                 result = await obj.sign(params);
+                break;
+        }
+        client.resolve_app_request(app_request_id, { type: params.type, ...result });
+    }
+    catch (error) {
+        client.reject_app_request(app_request_id, error);
+    }
+}
+type ResultOfAppEncryptionBoxGetInfo = {
+    info: EncryptionBoxInfo
+}
+
+type ParamsOfAppEncryptionBoxEncrypt = {
+    data: EncryptionBoxData
+}
+
+type ResultOfAppEncryptionBoxEncrypt = {
+    data: EncryptionBoxData
+}
+
+type ParamsOfAppEncryptionBoxDecrypt = {
+    data: EncryptionBoxData
+}
+
+type ResultOfAppEncryptionBoxDecrypt = {
+    data: EncryptionBoxData
+}
+
+export interface AppEncryptionBox {
+    get_info(): Promise<ResultOfAppEncryptionBoxGetInfo>,
+    encrypt(params: ParamsOfAppEncryptionBoxEncrypt): Promise<ResultOfAppEncryptionBoxEncrypt>,
+    decrypt(params: ParamsOfAppEncryptionBoxDecrypt): Promise<ResultOfAppEncryptionBoxDecrypt>,
+}
+
+async function dispatchAppEncryptionBox(obj: AppEncryptionBox, params: ParamsOfAppEncryptionBox, app_request_id: number | null, client: IClient) {
+    try {
+        let result = {};
+        switch (params.type) {
+            case 'GetInfo':
+                result = await obj.get_info();
+                break;
+            case 'Encrypt':
+                result = await obj.encrypt(params);
+                break;
+            case 'Decrypt':
+                result = await obj.decrypt(params);
                 break;
         }
         client.resolve_app_request(app_request_id, { type: params.type, ...result });
@@ -1673,6 +1914,60 @@ export class CryptoModule {
      */
     remove_signing_box(params: RegisteredSigningBox): Promise<void> {
         return this.client.request('crypto.remove_signing_box', params);
+    }
+
+    /**
+     * Register an application implemented encryption box.
+     * @returns RegisteredEncryptionBox
+     */
+    register_encryption_box(obj: AppEncryptionBox): Promise<RegisteredEncryptionBox> {
+        return this.client.request('crypto.register_encryption_box', undefined, (params: any, responseType: number) => {
+            if (responseType === 3) {
+                dispatchAppEncryptionBox(obj, params.request_data, params.app_request_id, this.client);
+            } else if (responseType === 4) {
+                dispatchAppEncryptionBox(obj, params, null, this.client);
+            }
+        });
+    }
+
+    /**
+     * Removes encryption box from SDK
+     * 
+     * @param {RegisteredEncryptionBox} params
+     * @returns 
+     */
+    remove_encryption_box(params: RegisteredEncryptionBox): Promise<void> {
+        return this.client.request('crypto.remove_encryption_box', params);
+    }
+
+    /**
+     * Queries info from the given encryption box
+     * 
+     * @param {ParamsOfEncryptionBoxGetInfo} params
+     * @returns ResultOfEncryptionBoxGetInfo
+     */
+    encryption_box_get_info(params: ParamsOfEncryptionBoxGetInfo): Promise<ResultOfEncryptionBoxGetInfo> {
+        return this.client.request('crypto.encryption_box_get_info', params);
+    }
+
+    /**
+     * Encrypts data using given encryption box
+     * 
+     * @param {ParamsOfEncryptionBoxEncrypt} params
+     * @returns ResultOfEncryptionBoxEncrypt
+     */
+    encryption_box_encrypt(params: ParamsOfEncryptionBoxEncrypt): Promise<ResultOfEncryptionBoxEncrypt> {
+        return this.client.request('crypto.encryption_box_encrypt', params);
+    }
+
+    /**
+     * Decrypts data using given encryption box
+     * 
+     * @param {ParamsOfEncryptionBoxDecrypt} params
+     * @returns ResultOfEncryptionBoxDecrypt
+     */
+    encryption_box_decrypt(params: ParamsOfEncryptionBoxDecrypt): Promise<ResultOfEncryptionBoxDecrypt> {
+        return this.client.request('crypto.encryption_box_decrypt', params);
     }
 }
 
