@@ -12,6 +12,7 @@
  *
  */
 
+use std::env;
 use std::path::PathBuf;
 use ton_client_build::{check_targets, exec, path_str, Build};
 
@@ -48,10 +49,12 @@ const LIB: &str = "libtonclient.so";
 const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r17c-darwin-x86_64.zip";
 
 fn main() {
+    let target_arg = env::args().nth(1).unwrap_or("".to_string());
+    let the_archs: Vec<&Arch> = ARCHS.iter().filter(|arch| arch.target.starts_with(&target_arg)).collect::<Vec<&Arch>>();
     let builder = Build::new();
-    check_targets(&ARCHS.iter().map(|x| x.target).collect::<Vec<&str>>());
-    check_ndk(&builder);
-    for arch in &ARCHS {
+    check_targets(the_archs.iter().map(|x| x.target).collect::<Vec<&str>>().as_slice());
+    check_ndk(&builder, &the_archs);
+    for arch in &the_archs {
         let mut path = std::env::var("PATH").unwrap_or("".into());
         if !path.is_empty() {
             path.push_str(":");
@@ -64,7 +67,7 @@ fn main() {
     }
 
     let out_dir = builder.package_dir.join("src/main/jniLibs");
-    for arch in &ARCHS {
+    for arch in &the_archs {
         let arch_out_dir = out_dir.join(arch.jni);
         std::fs::create_dir_all(&arch_out_dir).unwrap();
         let src = builder
@@ -120,12 +123,12 @@ fn get_ndk(builder: &Build) -> PathBuf {
     ndk_dir
 }
 
-fn check_ndk(builder: &Build) {
+fn check_ndk(builder: &Build, the_archs: &Vec<&Arch>) {
     let ndk_dir = builder.lib_dir.join("NDK");
-    let missing_archs = ARCHS
+    let missing_archs = the_archs
         .iter()
         .filter(|x| !ndk_dir.join(x.ndk).exists())
-        .collect::<Vec<&Arch>>();
+        .collect::<Vec<&&Arch>>();
     if missing_archs.is_empty() {
         println!("Standalone NDK already exists...");
         return;
@@ -140,7 +143,7 @@ fn check_ndk(builder: &Build) {
     }
     std::fs::create_dir_all(&ndk_dir).unwrap();
     std::env::set_current_dir(&ndk_dir).unwrap();
-    for arch in &ARCHS {
+    for arch in the_archs.into_iter() {
         assert!(exec(
             "python",
             &[
