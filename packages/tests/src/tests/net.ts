@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
+ * Copyright 2018-2021 TON DEV SOLUTIONS LTD.
  *
  * Licensed under the SOFTWARE EVALUATION License (the "License"); you may not use
  * this file except in compliance with the License.  You may obtain a copy of the
@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-import {ABIVersions, runner} from "../runner";
-import {expect, jest, test} from "../jest";
-import {contracts} from "../contracts";
+import { AggregationFn, SortDirection } from "@tonclient/core";
+
+import { ABIVersions, runner } from "../runner";
+import { expect, jest, test } from "../jest";
+import { contracts } from "../contracts";
 
 test("net", async () => {
     const net = runner.getClient().net;
@@ -31,41 +33,72 @@ enum Collection {
     blocks = "blocks",
 }
 
-test("Block signatures", async () => {
+test("net: query_collection - Block signatures", async () => {
     const net = runner.getClient().net;
-    const signatures = await net.query_collection({
+
+    const signaturesQuery = await net.query_collection({
         collection: Collection.blocks_signatures,
         filter: {},
         result: "id",
         limit: 1,
     });
-    expect(signatures.result.length).toBeGreaterThanOrEqual(0);
+
+    expect(signaturesQuery.result.length).toBeGreaterThanOrEqual(0);
 });
 
-test("All Accounts", async () => {
+test("net: query_collection - Accounts", async () => {
     const net = runner.getClient().net;
-    const docs = await net.query_collection({
+
+    const accountsQuery = await net.query_collection({
         collection: Collection.accounts,
         filter: {},
         result: "id balance",
+        limit: 1,
     });
-    expect(docs.result.length).toBeGreaterThan(0);
+
+    expect(accountsQuery.result.length).toBeGreaterThan(0);
 });
 
-// Skipped because of missing id
-test.skip("Message", async () => {
+test("net: query_collection - Messages", async () => {
     const net = runner.getClient().net;
-    const messages = await net.query_collection({
+
+    const messagesQuery = await net.query_collection({
         collection: Collection.messages,
-        filter: {
-            id: {eq: "3a8e38b419a452fe7a0073e71c083f926055d0f249485ab9f8ca6e9825c20b8c"},
-        },
-        result: "body created_at",
+        filter: {},
+        result: "id",
+        limit: 1,
     });
-    expect(messages.result[0].header.ExtOutMsgInfo.created_at).toEqual(1562342740);
+
+    expect(messagesQuery.result.length).toBeGreaterThan(0);
 });
 
-test("Ranges", async () => {
+test("net: query_collection - Transactions", async () => {
+    const net = runner.getClient().net;
+
+    const transactionsQuery = await net.query_collection({
+        collection: Collection.transactions,
+        filter: {},
+        result: "id",
+        limit: 1,
+    });
+    
+    expect(transactionsQuery.result.length).toBeGreaterThan(0);
+});
+
+test("net: query_collection - Blocks", async () => {
+    const net = runner.getClient().net;
+
+    const blocksQuery = await net.query_collection({
+        collection: Collection.blocks,
+        filter: {},
+        result: "id",
+        limit: 1,
+    });
+    
+    expect(blocksQuery.result.length).toBeGreaterThan(0);
+});
+
+test("net: query_collection - Ranges", async () => {
     const net = runner.getClient().net;
     const messages = await net.query_collection({
         collection: Collection.messages,
@@ -75,7 +108,66 @@ test("Ranges", async () => {
     expect(messages.result[0].created_at).toBeGreaterThan(1562342740);
 });
 
-test("Wait For", async () => {
+const testCountAggregation = async (collection: string, count: number) => {
+    const net = runner.getClient().net;
+
+    const result = await net.aggregate_collection({
+        collection,
+        filter: {},
+        fields: [{
+            field: 'id',
+            fn: AggregationFn.COUNT,
+        }],
+    });
+
+    expect(Number(result.values[0])).toBeGreaterThanOrEqual(count);
+};
+
+test("net: aggregate_collection - count", async () => {
+    await testCountAggregation(Collection.blocks_signatures, 0);
+    await testCountAggregation(Collection.accounts, 1);
+    await testCountAggregation(Collection.blocks, 1);
+    await testCountAggregation(Collection.messages, 1);
+    await testCountAggregation(Collection.transactions, 1);
+});
+
+const testAggregateFunctions = async (collection: string, field: string) => {
+    const net = runner.getClient().net;
+
+    const result = await net.aggregate_collection({
+        collection,
+        filter: {},
+        fields: [
+            {
+                field,
+                fn: AggregationFn.MIN,
+            },
+            {
+                field,
+                fn: AggregationFn.MAX,
+            },
+            {
+                field,
+                fn: AggregationFn.SUM,
+            },
+            {
+                field,
+                fn: AggregationFn.AVERAGE,
+            },
+        ],
+    });
+
+    expect(result.values[0]).toBeDefined();
+    expect(result.values[1]).toBeDefined();
+    expect(result.values[2]).toBeDefined();
+    expect(result.values[3]).toBeDefined();
+};
+
+test("net: aggregate_collection - Account balance", async () => {
+    await testAggregateFunctions(Collection.accounts, "balance");
+});
+
+test("net: wait_for_collection", async () => {
     const net = runner.getClient().net;
     const data = await net.wait_for_collection({
         collection: Collection.transactions,
@@ -93,7 +185,7 @@ const transactionWithAddresses = `
     in_message { dst src value }
 `;
 
-test.each(ABIVersions)("Subscribe for transactions with addresses (ABIv%i)", async (abiVersion) => {
+test.each(ABIVersions)("net: Subscribe for transactions with addresses (ABIv%i)", async (abiVersion) => {
     const {net} = runner.getClient();
     const wallet = await runner.getAccount(contracts.WalletContract, abiVersion);
     await runner.sendGramsTo(await wallet.getAddress());
@@ -110,8 +202,8 @@ test.each(ABIVersions)("Subscribe for transactions with addresses (ABIv%i)", asy
             transactions.push(d.result);
         })).handle;
 
-    //hack for Windows-assembled TON NODE SE
-    //issue: https://github.com/tonlabs/tonos-se/issues/13
+    // hack for Windows-assembled TON NODE SE
+    // issue: https://github.com/tonlabs/tonos-se/issues/13
     await new Promise((resolve=>setTimeout(resolve, 5_000)));
 
     await wallet.deploy();
@@ -120,7 +212,8 @@ test.each(ABIVersions)("Subscribe for transactions with addresses (ABIv%i)", asy
     expect(transactions.length).toBeGreaterThan(0);
 });
 
-test.each(ABIVersions)("Subscribe for messages (ABI v%i)", async (abiVersion) => {
+// This is a filter test
+test.each(ABIVersions)("net: Subscribe for messages (ABI v%i)", async (abiVersion) => {
     const {net} = runner.getClient();
     const docs = [];
     const subscription = (await net.subscribe_collection({
@@ -143,7 +236,7 @@ test.each(ABIVersions)("Subscribe for messages (ABI v%i)", async (abiVersion) =>
 });
 
 
-test("Transactions with addresses", async () => {
+test("net: Transactions with addresses", async () => {
     const net = runner.getClient().net;
     const tr = (await net.query_collection({
         collection: Collection.transactions,
@@ -170,6 +263,7 @@ test.skip("Subscribe for failed server", async () => {
     //     setTimeout(resolve, 100_000);
     // })
 });
+
 const shardHashesQuery = `
     workchain_id
     master {
@@ -181,7 +275,7 @@ const shardHashesQuery = `
     }
 `;
 
-test("Check shard_hashes greater then 0", async () => {
+test("net: Check shard_hashes greater then 0", async () => {
     const net = runner.getClient().net;
     const queryResult = await net.query_collection({
         collection: Collection.blocks,
@@ -217,4 +311,92 @@ test.skip("Long time subscription", async () => {
     });
     await new Promise(resolve => setTimeout(resolve, 1_000_000));
     await net.unsubscribe({handle: subscription.handle});
+});
+
+test('net: Validator set', async () => {
+    if (runner.config.network?.endpoints?.[0].startsWith("http://localhost")) {
+        console.log("Skipping validator set test on localhost");
+        return;
+    }
+
+    const net = runner.getClient().net;
+
+    // test https://docs.ton.dev/86757ecb2/p/978847-get-config
+    const result = await net.query_collection({
+        collection: Collection.blocks,
+        filter: {},
+        order: [{
+            path: 'seq_no',
+            direction: SortDirection.DESC,
+        }],
+        limit: 1,
+        result: 'prev_key_block_seqno',
+    });
+    expect(result.result.length)
+        .toEqual(1);
+    const seq_no = result.result[0].prev_key_block_seqno;
+    expect(seq_no)
+        .toBeGreaterThanOrEqual(0);
+
+    // no masterblock before first election and seq_no = 0
+    if (seq_no > 0) {
+        const config = await net.query_collection({
+            collection: Collection.blocks,
+            filter: {
+                seq_no: { eq: seq_no },
+                workchain_id: { eq: -1 },
+            },
+            result: 'master { config { p15 { validators_elected_for elections_start_before elections_end_before stake_held_for } p16 { max_validators max_main_validators min_validators } p17 { min_stake max_stake min_total_stake max_stake_factor } p34 { utime_since utime_until total total_weight list { public_key adnl_addr weight } } } }',
+        });
+        expect(config.result.length)
+            .toEqual(1);
+        const p15ConfigParams = config.result[0].master.config.p15;
+        expect(p15ConfigParams.validators_elected_for)
+            .toBeGreaterThan(0);
+        expect(p15ConfigParams.elections_start_before)
+            .toBeGreaterThan(0);
+        expect(p15ConfigParams.elections_end_before)
+            .toBeGreaterThan(0);
+        expect(p15ConfigParams.stake_held_for)
+            .toBeGreaterThan(0);
+
+        const p16ConfigParams = config.result[0].master.config.p16;
+        expect(BigInt(p16ConfigParams.max_validators))
+            .toBeGreaterThan(BigInt(p16ConfigParams.min_validators));
+        expect(BigInt(p16ConfigParams.max_validators))
+            .toBeGreaterThanOrEqual(p16ConfigParams.max_main_validators);
+
+        const p17ConfigParams = config.result[0].master.config.p17;
+        expect(p17ConfigParams.min_stake)
+            .toBeDefined();
+        expect(p17ConfigParams.max_stake)
+            .toBeDefined();
+        expect(BigInt(p17ConfigParams.min_stake))
+            .toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
+        expect(BigInt(p17ConfigParams.min_total_stake))
+            .toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
+        expect(p17ConfigParams.min_total_stake)
+            .toBeDefined();
+
+
+        expect(p17ConfigParams.max_stake_factor)
+            .toBeDefined();
+
+        const validatorSetList = config.result[0].master.config.p34.list;
+        const p34ConfigParams = config.result[0].master.config.p34;
+        expect(p34ConfigParams.total)
+            .toEqual(validatorSetList.length);
+        let weight = BigInt(0);
+        for (let i = 0; i < validatorSetList.length; i++) {
+            expect(validatorSetList[i].adnl_addr)
+                .toBeDefined();
+            expect(validatorSetList[i].public_key)
+                .toBeDefined();
+            expect(validatorSetList[i].public_key.length)
+                .toEqual(64);
+            weight += BigInt(validatorSetList[i].weight);
+        }
+        expect(BigInt(p34ConfigParams.total_weight))
+            .toEqual(weight);
+    }
 });
