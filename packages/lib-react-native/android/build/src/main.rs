@@ -12,6 +12,7 @@
  *
  */
 
+use std::env;
 use std::path::PathBuf;
 use ton_client_build::{check_targets, exec, path_str, Build};
 
@@ -48,10 +49,12 @@ const LIB: &str = "libtonclient.so";
 const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r17c-darwin-x86_64.zip";
 
 fn main() {
+    let target_arg = env::args().nth(1).unwrap_or("".to_string());
+    let the_archs: Vec<&Arch> = ARCHS.iter().filter(|arch| arch.target.starts_with(&target_arg)).collect();
     let builder = Build::new();
-    check_targets(&ARCHS.iter().map(|x| x.target).collect::<Vec<&str>>());
-    check_ndk(&builder);
-    for arch in &ARCHS {
+    check_targets(&the_archs.iter().map(|x| x.target).collect::<Vec<_>>());
+    check_ndk(&builder, &the_archs);
+    for &arch in &the_archs {
         let mut path = std::env::var("PATH").unwrap_or("".into());
         if !path.is_empty() {
             path.push_str(":");
@@ -64,14 +67,10 @@ fn main() {
     }
 
     let out_dir = builder.package_dir.join("src/main/jniLibs");
-    for arch in &ARCHS {
+    for &arch in &the_archs {
         let arch_out_dir = out_dir.join(arch.jni);
         std::fs::create_dir_all(&arch_out_dir).unwrap();
-        let src = builder
-            .target_dir
-            .join(arch.target)
-            .join("release")
-            .join(LIB);
+        let src = builder.target_dir.join(arch.target).join("release").join(LIB);
         if src.exists() {
             let out_lib = arch_out_dir.join(LIB);
             std::fs::copy(&src, &out_lib).unwrap();
@@ -81,8 +80,8 @@ fn main() {
                 path_str(&out_lib)
             );
             builder.publish_package_file(
-                 &format!("src/main/jniLibs/{}/{}", arch.jni, LIB),
-                 &format!("tonclient_{{v}}_react_native_{}", arch.target),
+                &format!("src/main/jniLibs/{}/{}", arch.jni, LIB),
+                &format!("tonclient_{{v}}_react_native_{}", arch.target),
             );
         } else {
             println!(
@@ -120,12 +119,14 @@ fn get_ndk(builder: &Build) -> PathBuf {
     ndk_dir
 }
 
-fn check_ndk(builder: &Build) {
+fn check_ndk(builder: &Build, the_archs: &[&Arch]) {
     let ndk_dir = builder.lib_dir.join("NDK");
-    let missing_archs = ARCHS
-        .iter()
-        .filter(|x| !ndk_dir.join(x.ndk).exists())
-        .collect::<Vec<&Arch>>();
+    let mut missing_archs = Vec::new();
+    for &a in the_archs {
+        if !ndk_dir.join(a.ndk).exists() {
+            missing_archs.push(a);
+        }
+    }
     if missing_archs.is_empty() {
         println!("Standalone NDK already exists...");
         return;
@@ -140,7 +141,7 @@ fn check_ndk(builder: &Build) {
     }
     std::fs::create_dir_all(&ndk_dir).unwrap();
     std::env::set_current_dir(&ndk_dir).unwrap();
-    for arch in &ARCHS {
+    for &arch in the_archs {
         assert!(exec(
             "python",
             &[
