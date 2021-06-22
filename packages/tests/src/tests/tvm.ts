@@ -25,10 +25,6 @@ import {
     ELECTOR_PARTICIPANT_LIST_AS_TUPLE_LIST,
 } from "./tvm_consts";
 
-// function base642text(base64: string): string {
-//     return Buffer.from(base64, "base64").toString("utf8");
-// }
-
 test("tvm: run_get", async () => {
     const tvm = runner.getClient().tvm;
 
@@ -75,10 +71,10 @@ function replaceBigIntsWithNonZeroFlags(fees: { [key: string]: any }) {
         });
 }
 
-test.each(ABIVersions)("tvm: run_executor (ABIv%i)", async (abiVersion) => {
+test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersion) => {
     const {
         abi,
-        net,
+        processing,
         tvm,
      } = runner.getClient();
     
@@ -134,6 +130,7 @@ test.each(ABIVersions)("tvm: run_executor (ABIv%i)", async (abiVersion) => {
         },
         abi: subscriptionAccount.abi,
         message: subscribeMessage.message,
+        return_updated_account: true,
     });
 
     replaceBigIntsWithNonZeroFlags(subscribeResult.fees);
@@ -166,14 +163,13 @@ test.each(ABIVersions)("tvm: run_executor (ABIv%i)", async (abiVersion) => {
     });
 
     const getSubscriptionResult = await tvm.run_tvm({
-        account: await subscriptionAccount.boc(),
+        account: subscribeResult.account,
         abi: subscriptionAccount.abi,
         message: getSubscriptionMessage.message,
     });
 
-    // !!! the next assertion fails with '0x00..00' pubkey instead of '0x22..22'
-    // expect(getSubscriptionResult.decoded?.output?.value0?.pubkey)
-    //     .toEqual(subscriptionParams.pubkey);
+    expect(getSubscriptionResult.decoded?.output?.value0?.pubkey)
+        .toEqual(subscriptionParams.pubkey);
 
     const pubkey2 = '0x3333333333333333333333333333333333333333333333333333333333333333';
     await processing.process_message({
@@ -201,13 +197,13 @@ test.each(ABIVersions)("tvm: run_executor (ABIv%i)", async (abiVersion) => {
         signer: subscriptionAccount.signer,
     });
 
+    subscriptionAccount.dropCachedData();
     const getSubscriptionResult2 = await tvm.run_tvm({
         account: await subscriptionAccount.boc(),
         abi: subscriptionAccount.abi,
         message: getSubscriptionMessage2.message,
     });
 
-    // !!! the next assertion fails with '0x00..00' pubkey instead of '0x22..22'
-    // expect(getSubscriptionResult2.decoded?.output?.value0?.pubkey)
-    //     .toEqual(pubkey2);
+    expect(getSubscriptionResult2.decoded?.output?.value0?.pubkey)
+        .toEqual(pubkey2);
 });
