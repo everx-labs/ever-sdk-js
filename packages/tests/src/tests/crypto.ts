@@ -19,6 +19,11 @@ import {
     expect,
     test,
 } from "../jest";
+import {
+    AppEncryptionBox,
+    EncryptionBoxHandle,
+    EncryptionBoxInfo,
+} from "@tonclient/core";
 
 const mnemonicWordCount = [12, 15, 18, 21, 24];
 const mnemonicDictionary = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -331,3 +336,49 @@ test("crypto", async () => {
     expect(decryptedB.decrypted).toEqual("AQID");
 });
 
+test("external encryption box", async () => {
+    const client = runner.getClient();
+
+    const encryption_box: AppEncryptionBox = {
+        get_info: async () => {
+            return {
+                info: {
+                    algorithm: "duplicator",
+                }
+            };
+        },
+        encrypt: async (params) => {
+            return {
+                data: params.data + params.data,
+            };
+        },
+        decrypt: async (params) => {
+            return {
+                data: params.data.substr(0, params.data.length / 2),
+            }
+        }
+
+    };
+
+    const handle: EncryptionBoxHandle = (await client.crypto.register_encryption_box(encryption_box)).handle;
+
+    const info: EncryptionBoxInfo = (await client.crypto.encryption_box_get_info({
+        encryption_box: handle,
+    })).info;
+
+    expect(info.algorithm).toEqual("duplicator");
+
+    const encrypted: string = (await client.crypto.encryption_box_encrypt({
+        encryption_box: handle,
+        data: "12345",
+    })).data;
+
+    expect(encrypted).toEqual("1234512345");
+
+    const decrypted: string = (await client.crypto.encryption_box_decrypt({
+        encryption_box: handle,
+        data: encrypted,
+    })).data;
+
+    expect(decrypted).toEqual("12345");
+});
