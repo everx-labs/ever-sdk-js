@@ -108,17 +108,17 @@ test("crypto: generate_random_sign_keys", async () => {
 test("crypto: sign", async () => {
     const crypto = runner.getClient().crypto;
     
-    const signed = await crypto.sign({
+    const result = await crypto.sign({
         keys: {
             public: "bb3e649a4675cdb579803820a97dcba9594f1a1aefa7cb2b4da844ca9d32d348",
-            secret: "52ae9e942cda06326de0905dea4d2c9c2fc7674f3fbd96495a5e92d099fc2507"
+            secret: "52ae9e942cda06326de0905dea4d2c9c2fc7674f3fbd96495a5e92d099fc2507",
         },
         unsigned: "RWFzdGVyIGVnZw==",
     });
 
-    expect(signed).toEqual({
+    expect(result).toEqual({
         signed: "aTRQ4/TbSVcFHB096JpAxZOLwHjs3Sdf07gVVxPsV6csr/ChRoY48Ue9Z5eHzyRxwZZbHl6SYXwgTh0HI1HqB0Vhc3RlciBlZ2c=",
-        signature: "693450e3f4db4957051c1d3de89a40c5938bc078ecdd275fd3b8155713ec57a72caff0a1468638f147bd679787cf2471c1965b1e5e92617c204e1d072351ea07"
+        signature: "693450e3f4db4957051c1d3de89a40c5938bc078ecdd275fd3b8155713ec57a72caff0a1468638f147bd679787cf2471c1965b1e5e92617c204e1d072351ea07",
     });
 });
 
@@ -127,7 +127,7 @@ test("crypto: verify_signature", async () => {
 
     const result = await crypto.verify_signature({
         public: "bb3e649a4675cdb579803820a97dcba9594f1a1aefa7cb2b4da844ca9d32d348",
-        signed: "aTRQ4/TbSVcFHB096JpAxZOLwHjs3Sdf07gVVxPsV6csr/ChRoY48Ue9Z5eHzyRxwZZbHl6SYXwgTh0HI1HqB0Vhc3RlciBlZ2c="
+        signed: "aTRQ4/TbSVcFHB096JpAxZOLwHjs3Sdf07gVVxPsV6csr/ChRoY48Ue9Z5eHzyRxwZZbHl6SYXwgTh0HI1HqB0Vhc3RlciBlZ2c=",
     });
 
     expect(result.unsigned).toEqual("RWFzdGVyIGVnZw==");
@@ -184,11 +184,13 @@ test("crypto: scrypt", async () => {
 test("crypto: nacl_sign_keypair_from_secret_key", async () => {
     const crypto = runner.getClient().crypto;
 
-    const result = await crypto.nacl_sign_keypair_from_secret_key({secret: "56b6a77093d6fdf14e593f36275d872d75de5b341942376b2a08759f3cbae78f"});
+    const result = await crypto.nacl_sign_keypair_from_secret_key({
+        secret: "56b6a77093d6fdf14e593f36275d872d75de5b341942376b2a08759f3cbae78f",
+    });
 
     expect(result).toEqual({
         public: "1869b7ef29d58026217e9cf163cbfbd0de889bdf1bf4daebf5433a312f5b8d6e",
-        secret: "56b6a77093d6fdf14e593f36275d872d75de5b341942376b2a08759f3cbae78f1869b7ef29d58026217e9cf163cbfbd0de889bdf1bf4daebf5433a312f5b8d6e"
+        secret: "56b6a77093d6fdf14e593f36275d872d75de5b341942376b2a08759f3cbae78f1869b7ef29d58026217e9cf163cbfbd0de889bdf1bf4daebf5433a312f5b8d6e",
     });
 });
 
@@ -233,7 +235,7 @@ test("crypto: nacl_sign_detached_verify success", async () => {
     const result = await crypto.nacl_sign_detached_verify({
         public: "1869b7ef29d58026217e9cf163cbfbd0de889bdf1bf4daebf5433a312f5b8d6e",
         signature: "fb0cfe40eea5d6c960652e6ceb904da8a72ee2fcf6e05089cf835203179ff65bb48c57ecf31dcfcd26510bea67e64f3e6898b7c58300dc14338254268cade103",
-        unsigned: text2base64("Test Message")
+        unsigned: text2base64("Test Message"),
     });
 
     expect(result.succeeded).toBeTruthy();
@@ -276,11 +278,11 @@ test("crypto: nacl_box_keypair", async () => {
 test("crypto: nacl_box_keypair_from_secret_key", async () => {
     const crypto = runner.getClient().crypto;
 
-    const result = await crypto.nacl_box_keypair_from_secret_key({secret: "e207b5966fb2c5be1b71ed94ea813202706ab84253bdf4dc55232f82a1caf0d4"});
+    const result = await crypto.nacl_box_keypair_from_secret_key({ secret: "e207b5966fb2c5be1b71ed94ea813202706ab84253bdf4dc55232f82a1caf0d4" });
     
     expect(result).toEqual({
         public: "a53b003d3ffc1e159355cb37332d67fc235a7feb6381e36c803274074dc3933a",
-        secret: "e207b5966fb2c5be1b71ed94ea813202706ab84253bdf4dc55232f82a1caf0d4"
+        secret: "e207b5966fb2c5be1b71ed94ea813202706ab84253bdf4dc55232f82a1caf0d4",
     });
 });
 
@@ -530,7 +532,7 @@ test("crypto: mnemonic_verify", async () => {
         }
     }
 
-    expect((await crypto.mnemonic_verify({phrase: "one two"})).valid).toBeFalsy();
+    expect((await crypto.mnemonic_verify({ phrase: "one two" })).valid).toBeFalsy();
 });
 
 test("crypto: mnemonic_derive_sign_keys", async () => {
@@ -580,7 +582,7 @@ test("crypto: hdkey_secret_from_xprv", async () => {
     const crypto = runner.getClient().crypto;
     
     const result = await crypto.hdkey_secret_from_xprv({
-        xprv: "xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC"
+        xprv: "xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC",
     });
 
     expect(result.secret).toEqual("0c91e53128fa4d67589d63a6c44049c1068ec28a63069a55ca3de30c57f8b365");
@@ -590,7 +592,7 @@ test("crypto: hdkey_public_from_xprv", async () => {
     const crypto = runner.getClient().crypto;
     
     const result = await crypto.hdkey_public_from_xprv({
-        xprv: "xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC"
+        xprv: "xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC",
     });
 
     expect(result.public).toEqual("7b70008d0c40992283d488b1046739cf827afeabf647a5f07c4ad1e7e45a6f89");
@@ -644,7 +646,7 @@ test("crypto: chacha20", async () => {
     const params = {
         key: "01".repeat(32),
         nonce: "ff".repeat(12),
-        data: text2base64("Message")
+        data: text2base64("Message"),
     };
 
     const encrypted = await crypto.chacha20(params);
@@ -661,7 +663,7 @@ test("crypto: signing_box default", async () => {
     const crypto = runner.getClient().crypto;
     const keys = {
         public: "0335e912a6dc50b5727d332aa389d2aeff86c7b7ae5b6483bb0e425f41ee42c0",
-        secret: "6d33449a8b5aeff942789ea69574e8254a52688a3f570590933177b8cbe2b82c"
+        secret: "6d33449a8b5aeff942789ea69574e8254a52688a3f570590933177b8cbe2b82c",
     };
 
     const signing_box = await crypto.get_signing_box(keys);
@@ -679,7 +681,7 @@ test("crypto: signing_box custom", async () => {
     const crypto = runner.getClient().crypto;
     const keys = {
         public: "0335e912a6dc50b5727d332aa389d2aeff86c7b7ae5b6483bb0e425f41ee42c0",
-        secret: "6d33449a8b5aeff942789ea69574e8254a52688a3f570590933177b8cbe2b82c"
+        secret: "6d33449a8b5aeff942789ea69574e8254a52688a3f570590933177b8cbe2b82c",
     };
 
     const signing_box = await crypto.register_signing_box({

@@ -59,8 +59,7 @@ test("tvm: run_get", async () => {
     });
 
     const pastElectionsId = resultPastElectionsId.output[0][0][0];
-    expect(pastElectionsId)
-        .toEqual("1588268660");
+    expect(pastElectionsId).toEqual("1588268660");
 });
 
 function replaceBigIntsWithNonZeroFlags(fees: { [key: string]: any }) {
@@ -126,7 +125,6 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
         account: {
             type: "Account",
             boc: await subscriptionAccount.boc(),
-            //unlimited_balance: true,
         },
         abi: subscriptionAccount.abi,
         message: subscribeMessage.message,
@@ -174,13 +172,13 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
     const pubkey2 = '0x3333333333333333333333333333333333333333333333333333333333333333';
     await processing.process_message({
         message_encode_params: {
-                address: accountAddress,
-                abi: subscriptionAccount.abi,
-                signer: subscriptionAccount.signer,
-                call_set: {
-                    function_name: "subscribe",
-                    input: { ...subscriptionParams, pubkey: pubkey2 },
-                },
+            address: accountAddress,
+            abi: subscriptionAccount.abi,
+            signer: subscriptionAccount.signer,
+            call_set: {
+                function_name: "subscribe",
+                input: { ...subscriptionParams, pubkey: pubkey2 },
+            },
         },
         send_events: false,
     });

@@ -100,11 +100,13 @@ test("net: query_collection - Blocks", async () => {
 
 test("net: query_collection - Ranges", async () => {
     const net = runner.getClient().net;
+
     const messages = await net.query_collection({
         collection: Collection.messages,
         filter: {created_at: {gt: 1562342740}},
         result: "body created_at",
     });
+
     expect(messages.result[0].created_at).toBeGreaterThan(1562342740);
 });
 
@@ -185,8 +187,8 @@ const transactionWithAddresses = `
     in_message { dst src value }
 `;
 
-test.each(ABIVersions)("net: Subscribe for transactions with addresses (ABIv%i)", async (abiVersion) => {
-    const {net} = runner.getClient();
+test.each(ABIVersions)("net: Subscribe (subscribe_collection) for transactions with addresses (ABIv%i)", async (abiVersion) => {
+    const net = runner.getClient().net;
     const wallet = await runner.getAccount(contracts.WalletContract, abiVersion);
     await runner.sendGramsTo(await wallet.getAddress());
 
@@ -209,12 +211,14 @@ test.each(ABIVersions)("net: Subscribe for transactions with addresses (ABIv%i)"
     await wallet.deploy();
     await new Promise(resolve => setTimeout(resolve, 1_000));
     await net.unsubscribe({handle: subscription});
+
     expect(transactions.length).toBeGreaterThan(0);
 });
 
 // This is a filter test
-test.each(ABIVersions)("net: Subscribe for messages (ABI v%i)", async (abiVersion) => {
+test.each(ABIVersions)("net: Subscribe (subscribe_collection) for messages (ABI v%i)", async (abiVersion) => {
     const {net} = runner.getClient();
+
     const docs = [];
     const subscription = (await net.subscribe_collection({
             collection: Collection.messages,
@@ -232,18 +236,21 @@ test.each(ABIVersions)("net: Subscribe for messages (ABI v%i)", async (abiVersio
     await runner.sendGramsTo(await wallet.getAddress());
     await wallet.deploy();
     await net.unsubscribe({handle: subscription});
+
     expect(docs.length).toEqual(0);
 });
 
 
-test("net: Transactions with addresses", async () => {
+test("net: Query (query_collection) transactions with addresses", async () => {
     const net = runner.getClient().net;
-    const tr = (await net.query_collection({
+
+    const queryResult = await net.query_collection({
         collection: Collection.transactions,
         filter: {},
         result: transactionWithAddresses,
-    })).result[0];
-    expect(tr).toBeTruthy();
+    });
+
+    expect(queryResult.result[0]).toBeTruthy();
 });
 
 
@@ -275,13 +282,15 @@ const shardHashesQuery = `
     }
 `;
 
-test("net: Check shard_hashes greater then 0", async () => {
+test("net: Check (query_collection) shard_hashes greater then 0", async () => {
     const net = runner.getClient().net;
+
     const queryResult = await net.query_collection({
         collection: Collection.blocks,
         filter: {},
         result: shardHashesQuery,
     });
+
     expect(queryResult.result.length).toBeGreaterThan(0);
 });
 
@@ -377,8 +386,6 @@ test('net: Validator set', async () => {
             .toBeLessThanOrEqual(BigInt(p17ConfigParams.max_stake));
         expect(p17ConfigParams.min_total_stake)
             .toBeDefined();
-
-
         expect(p17ConfigParams.max_stake_factor)
             .toBeDefined();
 
