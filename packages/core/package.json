@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/core",
-	"version": "1.17.0",
+	"version": "1.18.0",
 	"description": "TON Client for Java Script",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
