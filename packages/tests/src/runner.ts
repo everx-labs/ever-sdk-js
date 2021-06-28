@@ -158,7 +158,7 @@ export class TestsRunner {
         return giver;
     }
 
-    async getAccount(packages: { [abiVersion: number]: ContractPackage }, abiVersion: any, signer?: Signer, initFunctionInput?: any): Promise<Account> {
+    async getAccount(packages: { [abiVersion: number]: ContractPackage }, abiVersion: any, signer?: Signer, initFunctionInput?: any, initData?: any): Promise<Account> {
         const pkg: ContractPackage | undefined = packages[Number(abiVersion) as ABIVersion];
         if (!pkg) {
             throw new Error(`Missing required contract with ABI v${abiVersion}`);
@@ -171,6 +171,7 @@ export class TestsRunner {
                 tvc: pkg.tvc,
                 initFunctionName: "constructor",
                 initFunctionInput,
+                initData,
             });
     }
 

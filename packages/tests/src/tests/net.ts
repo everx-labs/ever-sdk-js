@@ -117,7 +117,7 @@ const testCountAggregation = async (collection: string, count: number) => {
         collection,
         filter: {},
         fields: [{
-            field: 'id',
+            field: "id",
             fn: AggregationFn.COUNT,
         }],
     });
@@ -233,8 +233,7 @@ test.each(ABIVersions)("net: Subscribe (subscribe_collection) for messages (ABI 
     )).handle;
 
     const wallet = await runner.getAccount(contracts.WalletContract, abiVersion);
-    await runner.sendGramsTo(await wallet.getAddress());
-    await wallet.deploy();
+    await runner.deploy(wallet);
     await net.unsubscribe({handle: subscription});
 
     expect(docs.length).toEqual(0);
@@ -335,11 +334,11 @@ test('net: Validator set', async () => {
         collection: Collection.blocks,
         filter: {},
         order: [{
-            path: 'seq_no',
+            path: "seq_no",
             direction: SortDirection.DESC,
         }],
         limit: 1,
-        result: 'prev_key_block_seqno',
+        result: "prev_key_block_seqno",
     });
     expect(result.result.length)
         .toEqual(1);
@@ -355,7 +354,7 @@ test('net: Validator set', async () => {
                 seq_no: { eq: seq_no },
                 workchain_id: { eq: -1 },
             },
-            result: 'master { config { p15 { validators_elected_for elections_start_before elections_end_before stake_held_for } p16 { max_validators max_main_validators min_validators } p17 { min_stake max_stake min_total_stake max_stake_factor } p34 { utime_since utime_until total total_weight list { public_key adnl_addr weight } } } }',
+            result: "master { config { p15 { validators_elected_for elections_start_before elections_end_before stake_held_for } p16 { max_validators max_main_validators min_validators } p17 { min_stake max_stake min_total_stake max_stake_factor } p34 { utime_since utime_until total total_weight list { public_key adnl_addr weight } } } }",
         });
         expect(config.result.length)
             .toEqual(1);

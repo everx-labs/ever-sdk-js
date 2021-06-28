@@ -79,9 +79,8 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
     
     const walletAddress = '0:2222222222222222222222222222222222222222222222222222222222222222';
     const subscriptionAccount = await runner.getAccount(contracts.Subscription, abiVersion, undefined, { wallet: walletAddress });
-    await runner.sendGramsTo(await subscriptionAccount.getAddress());
-    await subscriptionAccount.deploy();
     const accountAddress = await subscriptionAccount.getAddress();
+    await runner.deploy(subscriptionAccount);
 
     const getWalletMessage = await abi.encode_message({
         address: accountAddress,
