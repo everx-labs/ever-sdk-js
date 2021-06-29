@@ -27,8 +27,10 @@ import {
     BinaryLibrary,
     getBridge,
     ResponseHandler,
+    ResponseType,
     useLibrary,
 } from "./bin";
+import {TonClientError} from "./errors";
 
 export class TonClient {
     private static _defaultConfig: ClientConfig = {};
@@ -112,6 +114,22 @@ export class TonClient {
         }
     }
 
+    async resolveError(functionName: string, _params: any, err: TonClientError): Promise<TonClientError> {
+        if (err.code !== 23) {
+            return err;
+        }
+        try {
+            const [modName, funcName] = functionName.split(".");
+            const api = (await this.request("client.get_api_reference", {})).api;
+            const module = api.modules.find((x: any) => x.name === modName);
+            const func = module.functions.find((x: any) => x.name === funcName);
+            err.message = func;
+        } catch (e) {
+            err.message = e;
+        }
+        return err;
+    }
+
     async request(
         functionName: string,
         functionParams: any,
@@ -124,8 +142,19 @@ export class TonClient {
             context = await getBridge().createContext(this.config);
             this.context = context;
         }
-        return getBridge().request(context, functionName, functionParams, responseHandler ?? (() => {
-        }));
+        return new Promise((resolve, reject) => {
+            getBridge().request(context, functionName, functionParams, (params, responseType) => {
+                if (responseHandler) {
+                    if (responseType === ResponseType.Error) {
+                        responseHandler(this.resolveError(functionName, functionParams, params), responseType);
+                    } else {
+                        responseHandler(params, responseType);
+                    }
+                }
+            }).then(resolve).catch((reason) => {
+                reject(this.resolveError(functionName, functionParams, reason));
+            });
+        });
     }
 
     async resolve_app_request(app_request_id: number | null, result: any): Promise<void> {
