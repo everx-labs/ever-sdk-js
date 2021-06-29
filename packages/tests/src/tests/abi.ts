@@ -83,7 +83,6 @@ test("abi: encode_message", async () => {
 test.each(ABIVersions)('abi: encode_message_body -> decode_message_body (ABI v%i)', async (abiVersion) => {
     const abi = runner.getClient().abi;
     const subscriptionAccount = await runner.getAccount(contracts.Subscription, abiVersion);
-    
     const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
 
     const encodeResult = await abi.encode_message_body({
@@ -95,7 +94,6 @@ test.each(ABIVersions)('abi: encode_message_body -> decode_message_body (ABI v%i
         signer: subscriptionAccount.signer,
         is_internal: false,
     });
-
     const decodeResult = await abi.decode_message_body({
         abi: subscriptionAccount.abi,
         body: encodeResult.body,
@@ -114,7 +112,6 @@ test.each(ABIVersions)('abi: encode_message_body -> decode_message_body (ABI v%i
         signer: subscriptionAccount.signer,
         is_internal: true,
     });
-
     const decodeResultInternal = await abi.decode_message_body({
         abi: subscriptionAccount.abi,
         body: encodeResultInternal.body,
@@ -128,7 +125,7 @@ test.each(ABIVersions)('abi: encode_message_body -> decode_message_body (ABI v%i
 test.each(ABIVersions)('abi: encode_message -> decode_message (ABI v%i)', async (abiVersion) => {
     const abi = runner.getClient().abi;
     const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
-    const subscriptionAccount = await runner.getAccount(contracts.Subscription, abiVersion, undefined, { wallet: walletAddress });
+    const subscriptionAccount = await runner.getAccount(contracts.Subscription, abiVersion, undefined, { wallet: walletAddress }, undefined);
     
     const encodeResult = await abi.encode_message({
         abi: subscriptionAccount.abi,
@@ -139,7 +136,6 @@ test.each(ABIVersions)('abi: encode_message -> decode_message (ABI v%i)', async 
         },
         signer: subscriptionAccount.signer,
     });
-
     const decodeResult = await abi.decode_message({
         abi: subscriptionAccount.abi,
         message: encodeResult.message,

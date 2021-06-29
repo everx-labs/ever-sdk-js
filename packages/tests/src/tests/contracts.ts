@@ -25,8 +25,8 @@ import {
     TonClient,
     TvmErrorCode,
 } from "@tonclient/core";
-import { Account } from "../account";
 
+import { Account } from "../account";
 import { ContractPackage, contracts } from "../contracts";
 import { expect, test } from "../jest";
 import { ABIVersions, runner } from "../runner";
@@ -55,37 +55,33 @@ test.each(ABIVersions)("Test hello contract from docs.ton.dev (ABI v%i)", async 
     });
     helloAccount.dropCachedData();
 
-    const localResult1 = await tvm.run_tvm({
-        account: await helloAccount.boc(),
-        message: (await abi.encode_message({
-            address: helloAccountAddress,
-            abi: helloAccount.abi,
-            call_set: {
-                function_name: "sayHello",
-            },
-            signer: helloAccount.signer,
-        })).message,
-        abi: helloAccount.abi,
-    });
-
-    const localResult2 = await tvm.run_tvm({
-        account: await helloAccount.boc(),
-        message: (await abi.encode_message({
-            address: helloAccountAddress,
-            abi: helloAccount.abi,
-            call_set: {
-                function_name: "sayHello",
-            },
-            signer: helloAccount.signer,
-        })).message,
-        abi: helloAccount.abi,
-    });
+    const localResult1 = await run_tvm(helloAccount, "sayHello");
+    const localResult2 = await run_tvm(helloAccount, "sayHello");
 
     expect(localResult1.decoded?.output?.value0)
         .toBeTruthy();
 
     expect(localResult1.decoded?.output?.value0)
         .toEqual(localResult2.decoded?.output?.value0);
+
+    // end of test, start of local functions
+
+    async function run_tvm(account: Account, function_name: string) {
+        const encodeResult = await abi.encode_message({
+            abi: account.abi,
+            address: await account.getAddress(),
+            call_set: {
+                function_name,
+            },
+            signer: account.signer,
+        });
+
+        return await tvm.run_tvm({
+            abi: account.abi,
+            account: await account.boc(),
+            message: encodeResult.message,
+        })
+    }
 });
 
 test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) => {
