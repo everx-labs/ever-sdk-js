@@ -48,7 +48,8 @@ export enum ClientErrorCode {
     CanNotParseRequestResult = 30,
     UnexpectedCallbackResponse = 31,
     CanNotParseNumber = 32,
-    InternalError = 33
+    InternalError = 33,
+    InvalidHandle = 34
 }
 
 export type ClientError = {
@@ -4813,6 +4814,242 @@ export type ResultOfQueryTransactionTree = {
     transactions: TransactionNode[]
 }
 
+export type ParamsOfCreateBlockIterator = {
+
+    /**
+     * Starting time to iterate from.
+     * 
+     * @remarks
+     * If the application specifies this parameter then the iteration
+     * includes blocks with `gen_utime` >= `start_time`.
+     * Otherwise the iteration starts from zero state.
+     * 
+     * Must be specified in seconds.
+     */
+    start_time?: number,
+
+    /**
+     * Optional end time to iterate for.
+     * 
+     * @remarks
+     * If the application specifies this parameter then the iteration
+     * includes blocks with `gen_utime` < `end_time`.
+     * Otherwise the iteration never stops.
+     * 
+     * Must be specified in seconds.
+     */
+    end_time?: number,
+
+    /**
+     * Shard prefix filter.
+     * 
+     * @remarks
+     * If the application specifies this parameter and it is not the empty array
+     * then the iteration will include items related to accounts that belongs to
+     * the specified shard prefixes.
+     * Shard prefix must be represented as a string "workchain:prefix".
+     * Where `workchain` is a signed integer and the `prefix` if a hexadecimal
+     * representation if the 64-bit unsigned integer with tagged shard prefix.
+     * For example: "0:3800000000000000".
+     */
+    shard_filter?: string[],
+
+    /**
+     * Projection (result) string.
+     * 
+     * @remarks
+     * List of the fields that must be returned for iterated items.
+     * This field is the same as the `result` parameter of
+     * the `query_collection` function.
+     * Note that iterated items can contains additional fields that are
+     * not requested in the `result`.
+     */
+    result?: string
+}
+
+export type RegisteredIterator = {
+
+    /**
+     * Iterator handle.
+     * 
+     * @remarks
+     * Must be removed using `remove_iterator`
+     * when it is no more needed for the application.
+     */
+    handle: number
+}
+
+export type ParamsOfResumeBlockIterator = {
+
+    /**
+     * Iterator state from which to resume.
+     * 
+     * @remarks
+     * Same as value returned from `iterator_next`.
+     */
+    resume_state: any
+}
+
+export type ParamsOfCreateTransactionIterator = {
+
+    /**
+     * Starting time to iterate from.
+     * 
+     * @remarks
+     * If the application specifies this parameter then the iteration
+     * includes blocks with `gen_utime` >= `start_time`.
+     * Otherwise the iteration starts from zero state.
+     * 
+     * Must be specified in seconds.
+     */
+    start_time?: number,
+
+    /**
+     * Optional end time to iterate for.
+     * 
+     * @remarks
+     * If the application specifies this parameter then the iteration
+     * includes blocks with `gen_utime` < `end_time`.
+     * Otherwise the iteration never stops.
+     * 
+     * Must be specified in seconds.
+     */
+    end_time?: number,
+
+    /**
+     * Shard prefix filters.
+     * 
+     * @remarks
+     * If the application specifies this parameter and it is not an empty array
+     * then the iteration will include items related to accounts that belongs to
+     * the specified shard prefixes.
+     * Shard prefix must be represented as a string "workchain:prefix".
+     * Where `workchain` is a signed integer and the `prefix` if a hexadecimal
+     * representation if the 64-bit unsigned integer with tagged shard prefix.
+     * For example: "0:3800000000000000".
+     * Account address conforms to the shard filter if
+     * it belongs to the filter workchain and the first bits of address match to
+     * the shard prefix. Only transactions with suitable account addresses are iterated.
+     */
+    shard_filter?: string[],
+
+    /**
+     * Account address filter.
+     * 
+     * @remarks
+     * Application can specify the list of accounts for which
+     * it wants to iterate transactions.
+     * 
+     * If this parameter is missing or an empty list then the library iterates
+     * transactions for all accounts that pass the shard filter.
+     * 
+     * Note that the library doesn't detect conflicts between the account filter and the shard filter
+     * if both are specified.
+     * So it is an application responsibility to specify the correct filter combination.
+     */
+    accounts_filter?: string[],
+
+    /**
+     * Projection (result) string.
+     * 
+     * @remarks
+     * List of the fields that must be returned for iterated items.
+     * This field is the same as the `result` parameter of
+     * the `query_collection` function.
+     * Note that iterated items can contain additional fields that are
+     * not requested in the `result`.
+     */
+    result?: string,
+
+    /**
+     * Include `transfers` field in iterated transactions.
+     * 
+     * @remarks
+     * If this parameter is `true` then each transaction contains field
+     * `transfers` with list of transfer. See more about this structure in function description.
+     */
+    include_transfers?: boolean
+}
+
+export type ParamsOfResumeTransactionIterator = {
+
+    /**
+     * Iterator state from which to resume.
+     * 
+     * @remarks
+     * Same as value returned from `iterator_next`.
+     */
+    resume_state: any,
+
+    /**
+     * Account address filter.
+     * 
+     * @remarks
+     * Application can specify the list of accounts for which
+     * it wants to iterate transactions.
+     * 
+     * If this parameter is missing or an empty list then the library iterates
+     * transactions for all accounts that passes the shard filter.
+     * 
+     * Note that the library doesn't detect conflicts between the account filter and the shard filter
+     * if both are specified.
+     * So it is the application's responsibility to specify the correct filter combination.
+     */
+    accounts_filter?: string[]
+}
+
+export type ParamsOfIteratorNext = {
+
+    /**
+     * Iterator handle
+     */
+    iterator: number,
+
+    /**
+     * Maximum count of the returned items.
+     * 
+     * @remarks
+     * If value is missing or is less than 1 the library uses 1.
+     */
+    limit?: number,
+
+    /**
+     * Indicates that function must return the iterator state that can be used for resuming iteration.
+     */
+    return_resume_state?: boolean
+}
+
+export type ResultOfIteratorNext = {
+
+    /**
+     * Next available items.
+     * 
+     * @remarks
+     * Note that `iterator_next` can return an empty items and `has_more` equals to `true`.
+     * In this case the application have to continue iteration.
+     * Such situation can take place when there is no data yet but
+     * the requested `end_time` is not reached.
+     */
+    items: any[],
+
+    /**
+     * Indicates that there are more available items in iterated range.
+     */
+    has_more: boolean,
+
+    /**
+     * Optional iterator state that can be used for resuming iteration.
+     * 
+     * @remarks
+     * This field is returned only if the `return_resume_state` parameter
+     * is specified.
+     * 
+     * Note that `resume_state` corresponds to the iteration position
+     * after the returned items.
+     */
+    resume_state?: any
+}
+
 /**
  * Network access.
  */
@@ -5046,6 +5283,194 @@ export class NetModule {
      */
     query_transaction_tree(params: ParamsOfQueryTransactionTree): Promise<ResultOfQueryTransactionTree> {
         return this.client.request('net.query_transaction_tree', params);
+    }
+
+    /**
+     * Creates block iterator.
+     * 
+     * @remarks
+     * Block iterator uses robust iteration methods that guaranties that every
+     * block in the specified range isn't missed or iterated twice.
+     * 
+     * Iterated range can be reduced with some filters:
+     * - `start_time` – the bottom time range. Only blocks with `gen_utime`
+     * more or equal to this value is iterated. If this parameter is omitted then there is
+     * no bottom time edge, so all blocks since zero state is iterated.
+     * - `end_time` – the upper time range. Only blocks with `gen_utime`
+     * less then this value is iterated. If this parameter is omitted then there is
+     * no upper time edge, so iterator never finishes.
+     * - `shard_filter` – workchains and shard prefixes that reduce the set of interesting
+     * blocks. Block conforms to the shard filter if it belongs to the filter workchain
+     * and the first bits of block's `shard` fields matches to the shard prefix.
+     * Only blocks with suitable shard are iterated.
+     * 
+     * Items iterated is a JSON objects with block data. The minimal set of returned
+     * fields is:
+     * 
+     *    id
+     *    gen_utime
+     *    workchain_id
+     *    shard
+     *    after_split
+     *    after_merge
+     *    prev_ref {
+     *        root_hash
+     *    }
+     *    prev_alt_ref {
+     *        root_hash
+     *    }
+     * 
+     * Application can request additional fields in the `result` parameter.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfCreateBlockIterator} params
+     * @returns RegisteredIterator
+     */
+    create_block_iterator(params: ParamsOfCreateBlockIterator): Promise<RegisteredIterator> {
+        return this.client.request('net.create_block_iterator', params);
+    }
+
+    /**
+     * Resumes block iterator.
+     * 
+     * @remarks
+     * The iterator stays exactly at the same position where the `resume_state` was catched.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfResumeBlockIterator} params
+     * @returns RegisteredIterator
+     */
+    resume_block_iterator(params: ParamsOfResumeBlockIterator): Promise<RegisteredIterator> {
+        return this.client.request('net.resume_block_iterator', params);
+    }
+
+    /**
+     * Creates transaction iterator.
+     * 
+     * @remarks
+     * Transaction iterator uses robust iteration methods that guaranty that every
+     * transaction in the specified range isn't missed or iterated twice.
+     * 
+     * Iterated range can be reduced with some filters:
+     * - `start_time` – the bottom time range. Only transactions with `now`
+     * more or equal to this value are iterated. If this parameter is omitted then there is
+     * no bottom time edge, so all the transactions since zero state are iterated.
+     * - `end_time` – the upper time range. Only transactions with `now`
+     * less then this value are iterated. If this parameter is omitted then there is
+     * no upper time edge, so iterator never finishes.
+     * - `shard_filter` – workchains and shard prefixes that reduce the set of interesting
+     * accounts. Account address conforms to the shard filter if
+     * it belongs to the filter workchain and the first bits of address match to
+     * the shard prefix. Only transactions with suitable account addresses are iterated.
+     * - `accounts_filter` – set of account addresses whose transactions must be iterated.
+     * Note that accounts filter can conflict with shard filter so application must combine
+     * these filters carefully.
+     * 
+     * Iterated item is a JSON objects with transaction data. The minimal set of returned
+     * fields is:
+     * 
+     *     id
+     *     account_addr
+     *     now
+     *     balance_delta(format:DEC)
+     *     bounce { bounce_type }
+     *     in_message {
+     *         id
+     *         value(format:DEC)
+     *         msg_type
+     *         src
+     *     }
+     *     out_messages {
+     *         id
+     *         value(format:DEC)
+     *         msg_type
+     *         dst
+     *     }
+     * 
+     * Application can request an additional fields in the `result` parameter.
+     * 
+     * Another parameter that affects on the returned fields is the `include_transfers`.
+     * When this parameter is `true` the iterator computes and adds `transfer` field containing
+     * list of the useful `TransactionTransfer` objects.
+     * Each transfer is calculated from the particular message related to the transaction
+     * and has the following structure:
+     * - message – source message identifier.
+     * - isBounced – indicates that the transaction is bounced, which means the value will be returned back to the sender.
+     * - isDeposit – indicates that this transfer is the deposit (true) or withdraw (false).
+     * - counterparty – account address of the transfer source or destination depending on `isDeposit`.
+     * - value – amount of nano tokens transfered. The value is represented as a decimal string
+     * because the actual value can be more precise than the JSON number can represent. Application
+     * must use this string carefully – conversion to number can follow to loose of precision.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfCreateTransactionIterator} params
+     * @returns RegisteredIterator
+     */
+    create_transaction_iterator(params: ParamsOfCreateTransactionIterator): Promise<RegisteredIterator> {
+        return this.client.request('net.create_transaction_iterator', params);
+    }
+
+    /**
+     * Resumes transaction iterator.
+     * 
+     * @remarks
+     * The iterator stays exactly at the same position where the `resume_state` was catched.
+     * Note that `resume_state` doesn't store the account filter. If the application requires
+     * to use the same account filter as it was when the iterator was created then the application
+     * must pass the account filter again in `accounts_filter` parameter.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfResumeTransactionIterator} params
+     * @returns RegisteredIterator
+     */
+    resume_transaction_iterator(params: ParamsOfResumeTransactionIterator): Promise<RegisteredIterator> {
+        return this.client.request('net.resume_transaction_iterator', params);
+    }
+
+    /**
+     * Returns next available items.
+     * 
+     * @remarks
+     * In addition to available items this function returns the `has_more` flag
+     * indicating that the iterator isn't reach the end of the iterated range yet.
+     * 
+     * This function can return the empty list of available items but
+     * indicates that there are more items is available.
+     * This situation appears when the iterator doesn't reach iterated range
+     * but database doesn't contains available items yet.
+     * 
+     * If application requests resume state in `return_resume_state` parameter
+     * then this function returns `resume_state` that can be used later to
+     * resume the iteration from the position after returned items.
+     * 
+     * The structure of the items returned depends on the iterator used.
+     * See the description to the appropriated iterator creation function.
+     * 
+     * @param {ParamsOfIteratorNext} params
+     * @returns ResultOfIteratorNext
+     */
+    iterator_next(params: ParamsOfIteratorNext): Promise<ResultOfIteratorNext> {
+        return this.client.request('net.iterator_next', params);
+    }
+
+    /**
+     * Removes an iterator
+     * 
+     * @remarks
+     * Frees all resources allocated in library to serve iterator.
+     * 
+     * Application always should call the `remove_iterator` when iterator
+     * is no longer required.
+     * 
+     * @param {RegisteredIterator} params
+     * @returns 
+     */
+    remove_iterator(params: RegisteredIterator): Promise<void> {
+        return this.client.request('net.remove_iterator', params);
     }
 }
 
