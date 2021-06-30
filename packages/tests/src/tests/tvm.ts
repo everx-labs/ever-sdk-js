@@ -65,8 +65,8 @@ test("tvm: run_get", async () => {
 function replaceBigIntsWithNonZeroFlags(fees: { [key: string]: any }) {
     Array.from(Object.entries(fees))
         .forEach(([key, value]) => {
-            const s = (value || '').toString();
-            fees[key] = s !== '' && s !== '0' && s !== '0x0';
+            const s = (value || "").toString();
+            fees[key] = s !== "" && s !== "0" && s !== "0x0";
         });
 }
 
@@ -77,7 +77,7 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
         tvm,
      } = runner.getClient();
     
-    const walletAddress = '0:2222222222222222222222222222222222222222222222222222222222222222';
+    const walletAddress = "0:2222222222222222222222222222222222222222222222222222222222222222";
     const subscriptionAccount = await runner.getAccount(contracts.Subscription, abiVersion, undefined, { wallet: walletAddress });
     const accountAddress = await subscriptionAccount.getAddress();
     await runner.deploy(subscriptionAccount);
@@ -99,15 +99,15 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
     });
 
     expect(getWalletResult.decoded?.output).toEqual({
-        value0: '0:2222222222222222222222222222222222222222222222222222222222222222',
+        value0: "0:2222222222222222222222222222222222222222222222222222222222222222",
     });
 
     const subscriptionParams = {
-        subscriptionId: '0x1111111111111111111111111111111111111111111111111111111111111111',
-        pubkey: '0x2222222222222222222222222222222222222222222222222222222222222222',
-        to: '0:3333333333333333333333333333333333333333333333333333333333333333',
-        value: '0x123',
-        period: '0x456',
+        subscriptionId: "0x1111111111111111111111111111111111111111111111111111111111111111",
+        pubkey: "0x2222222222222222222222222222222222222222222222222222222222222222",
+        to: "0:3333333333333333333333333333333333333333333333333333333333333333",
+        value: "0x123",
+        period: "0x456",
     };
     
     const subscribeMessage = await abi.encode_message({
@@ -168,7 +168,7 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
     expect(getSubscriptionResult.decoded?.output?.value0?.pubkey)
         .toEqual(subscriptionParams.pubkey);
 
-    const pubkey2 = '0x3333333333333333333333333333333333333333333333333333333333333333';
+    const pubkey2 = "0x3333333333333333333333333333333333333333333333333333333333333333";
     await processing.process_message({
         message_encode_params: {
             address: accountAddress,

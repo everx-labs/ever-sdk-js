@@ -652,7 +652,7 @@ test("crypto: chacha20", async () => {
     const encrypted = await crypto.chacha20(params);
     const decrypted = await crypto.chacha20({ ...params, data: encrypted.data });
 
-    expect(encrypted.data).toEqual('w5QOGsJodQ==');
+    expect(encrypted.data).toEqual("w5QOGsJodQ==");
     expect(decrypted.data).toEqual(text2base64("Message"));
 });
 

@@ -18,17 +18,17 @@ import { ABIVersions, runner } from '../runner';
 import { expect, test } from "../jest";
 import { contracts } from '../contracts';
 
-test('boc: get_boc_hash', async () => {
+test("boc: get_boc_hash", async () => {
     const boc = runner.getClient().boc;
-    const bocBase64 = 'te6ccgEBAgEAxgABwYgAti0S4VOMe6uIVNX3nuDd7KSO13EsFEXDsUVaKRzBgdQCwaZuyAAAC3iWFUwMAK22OiKIN+R4x+31/j8LXRIYPh8iJGtncSuZ7FONbFNXAAAAAAAAAAAAAAAAAA9CQEABAMD3EJkJ6DsPCkGnV5lMTt6LIPRS7ViXPZjHMhJizNODUeKekStEXEUgmHS2vmokCRRUpsUhmwgFmkWaCatqe4wIlcBqp0PR+QAN1kt1SY8QavS350RCNNfeZ+ommI9hgd8=';
-    const hash = 'adff1e7fd60632bb572b1afe0c2e569d8c68b1169994c48bc1ed92b3515c3b4e';
+    const bocBase64 = "te6ccgEBAgEAxgABwYgAti0S4VOMe6uIVNX3nuDd7KSO13EsFEXDsUVaKRzBgdQCwaZuyAAAC3iWFUwMAK22OiKIN+R4x+31/j8LXRIYPh8iJGtncSuZ7FONbFNXAAAAAAAAAAAAAAAAAA9CQEABAMD3EJkJ6DsPCkGnV5lMTt6LIPRS7ViXPZjHMhJizNODUeKekStEXEUgmHS2vmokCRRUpsUhmwgFmkWaCatqe4wIlcBqp0PR+QAN1kt1SY8QavS350RCNNfeZ+ommI9hgd8=";
+    const hash = "adff1e7fd60632bb572b1afe0c2e569d8c68b1169994c48bc1ed92b3515c3b4e";
 
     const result = await boc.get_boc_hash({ boc: bocBase64});
 
     expect(result.hash).toEqual(hash);
 });
 
-test.each(ABIVersions)('boc: parse_message (ABI v%i)', async (abiVersion) => {
+test.each(ABIVersions)("boc: parse_message (ABI v%i)", async (abiVersion) => {
     const {
         abi,
         boc,

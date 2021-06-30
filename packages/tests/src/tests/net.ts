@@ -256,14 +256,14 @@ test("net: Query (query_collection) transactions with addresses", async () => {
 // Skipped explicitly as disabled
 test.skip("Subscribe for failed server", async () => {
     // const net = runner.getClient().net;
-    // console.log('>>>', 'Subscribed');
+    // console.log(">>>", "Subscribed");
     // tests.client.queries.accounts.subscribe(
     //     {
     //         id: { eq: "-1:3333333333333333333333333333333333333333333333333333333333333333" }
     //     },
-    //     'id balance',
+    //     "id balance",
     //     (e, d) => {
-    //         console.log('>>>', e, d);
+    //         console.log("">>>", e, d);
     //     });
     // await new Promise((resolve) => {
     //     setTimeout(resolve, 100_000);
@@ -298,7 +298,7 @@ test.skip("Subscribe for accounts", async () => {
     // const net = runner.getClient().net;
     // const { queries } = tests.client;
     // const subscriptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    //  .map(i => queries.accounts.subscribe({}, 'id code data', (e, doc) => {
+    //  .map(i => queries.accounts.subscribe({}, "id code data", (e, doc) => {
     //     console.log(i, doc.id);
     // }));
     // await new Promise(resolve => setTimeout(resolve, 1000_000));
@@ -321,7 +321,7 @@ test.skip("Long time subscription", async () => {
     await net.unsubscribe({handle: subscription.handle});
 });
 
-test('net: Validator set', async () => {
+test("net: Validator set", async () => {
     if (runner.config.network?.endpoints?.[0].startsWith("http://localhost")) {
         console.log("Skipping validator set test on localhost");
         return;

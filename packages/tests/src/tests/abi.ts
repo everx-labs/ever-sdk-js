@@ -80,10 +80,10 @@ test("abi: encode_message", async () => {
     expect(signed_with_box.message).toEqual("te6ccgECGAEAA6wAA0eIAAt9aqvShfTon7Lei1PVOhUEkEEZQkhDKPgNyzeTL6YSEbAHAgEA4bE5Gr3mWwDtlcEOWHr6slWoyQlpIWeYyw/00eKFGFkbAJMMFLWnu0mq4HSrPmktmzeeAboa4kxkFymCsRVt44dTHxAj/Hd67jWQF7peccWoU/dbMCBJBB6YdPCVZcJlJkAAAF0ZyXLg19VzGRotV8/gAQHAAwIDzyAGBAEB3gUAA9AgAEHaY+IEf47vXcayAvdLzji1Cn7rZgQJIIPTDp4SrLhMpMwCJv8A9KQgIsABkvSg4YrtU1gw9KEKCAEK9KQg9KEJAAACASANCwHI/38h7UTQINdJwgGOENP/0z/TANF/+GH4Zvhj+GKOGPQFcAGAQPQO8r3XC//4YnD4Y3D4Zn/4YeLTAAGOHYECANcYIPkBAdMAAZTT/wMBkwL4QuIg+GX5EPKoldMAAfJ64tM/AQwAao4e+EMhuSCfMCD4I4ED6KiCCBt3QKC53pL4Y+CANPI02NMfAfgjvPK50x8B8AH4R26S8jzeAgEgEw4CASAQDwC9uotV8/+EFujjXtRNAg10nCAY4Q0//TP9MA0X/4Yfhm+GP4Yo4Y9AVwAYBA9A7yvdcL//hicPhjcPhmf/hh4t74RvJzcfhm0fgA+ELIy//4Q88LP/hGzwsAye1Uf/hngCASASEQDluIAGtb8ILdHCfaiaGn/6Z/pgGi//DD8M3wx/DFvfSDK6mjofSBv6PwikDdJGDhvfCFdeXAyfABkZP2CEGRnwoRnRoIEB9AAAAAAAAAAAAAAAAAAIGeLZMCAQH2AGHwhZGX//CHnhZ/8I2eFgGT2qj/8M8ADFuZPCot8ILdHCfaiaGn/6Z/pgGi//DD8M3wx/DFva4b/yupo6Gn/7+j8AGRF7gAAAAAAAAAAAAAAAAhni2fA58jjyxi9EOeF/+S4/YAYfCFkZf/8IeeFn/wjZ4WAZPaqP/wzwAgFIFxQBCbi3xYJQFQH8+EFujhPtRNDT/9M/0wDRf/hh+Gb4Y/hi3tcN/5XU0dDT/9/R+ADIi9wAAAAAAAAAAAAAAAAQzxbPgc+Rx5YxeiHPC//JcfsAyIvcAAAAAAAAAAAAAAAAEM8Wz4HPklb4sEohzwv/yXH7ADD4QsjL//hDzws/+EbPCwDJ7VR/FgAE+GcActxwItDWAjHSADDcIccAkvI74CHXDR+S8jzhUxGS8jvhwQQighD////9vLGS8jzgAfAB+EdukvI83g==");
 });
 
-test.each(ABIVersions)('abi: encode_message_body -> decode_message_body (ABI v%i)', async (abiVersion) => {
+test.each(ABIVersions)("abi: encode_message_body -> decode_message_body (ABI v%i)", async (abiVersion) => {
     const abi = runner.getClient().abi;
     const subscriptionAccount = await runner.getAccount(contracts.Subscription, abiVersion);
-    const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
+    const walletAddress = "0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357";
 
     const encodeResult = await abi.encode_message_body({
         abi: subscriptionAccount.abi,
@@ -100,7 +100,7 @@ test.each(ABIVersions)('abi: encode_message_body -> decode_message_body (ABI v%i
         is_internal: false,
     });
 
-    expect(decodeResult.name).toEqual('constructor');
+    expect(decodeResult.name).toEqual("constructor");
     expect(decodeResult.value).toEqual({ wallet: walletAddress });
 
     const encodeResultInternal = await abi.encode_message_body({
@@ -118,13 +118,13 @@ test.each(ABIVersions)('abi: encode_message_body -> decode_message_body (ABI v%i
         is_internal: true,
     });
 
-    expect(decodeResultInternal.name).toEqual('constructor');
+    expect(decodeResultInternal.name).toEqual("constructor");
     expect(decodeResultInternal.value).toEqual({ wallet: walletAddress });
 });
 
-test.each(ABIVersions)('abi: encode_message -> decode_message (ABI v%i)', async (abiVersion) => {
+test.each(ABIVersions)("abi: encode_message -> decode_message (ABI v%i)", async (abiVersion) => {
     const abi = runner.getClient().abi;
-    const walletAddress = '0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357';
+    const walletAddress = "0:adb63a228837e478c7edf5fe3f0b5d12183e1f22246b67712b99ec538d6c5357";
     const subscriptionAccount = await runner.getAccount(contracts.Subscription, abiVersion, undefined, { wallet: walletAddress }, undefined);
     
     const encodeResult = await abi.encode_message({
@@ -141,6 +141,6 @@ test.each(ABIVersions)('abi: encode_message -> decode_message (ABI v%i)', async 
         message: encodeResult.message,
     });
 
-    expect(decodeResult.name).toEqual('constructor');
+    expect(decodeResult.name).toEqual("constructor");
     expect(decodeResult.value).toEqual({ wallet: walletAddress });
 });

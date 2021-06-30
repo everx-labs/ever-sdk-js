@@ -15,14 +15,14 @@
 import { runner } from '../runner';
 import { test, expect } from '../jest';
 
-test('Test versions compatibility', async () => {
+test("Test versions compatibility", async () => {
     const client = runner.getClient().client;
     const version = (await client.version()).version;
     console.log(version);
     expect(version.split('.')[0]).toEqual('1');
 });
 
-test('client: Versions in client.get_api_reference() and client.version() should be equal', async () => {
+test("client: Versions in client.get_api_reference() and client.version() should be equal", async () => {
     const client = runner.getClient().client;
 
     const api_reference_version = (await client.get_api_reference()).api.version;

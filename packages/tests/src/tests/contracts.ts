@@ -84,7 +84,7 @@ test.each(ABIVersions)("Test hello contract from docs.ton.dev (ABI v%i)", async 
     }
 });
 
-test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) => {
+test.each(ABIVersions)("Run aborted transaction (ABI v%i)", async (abiVersion) => {
     const {
         processing,
     } = runner.getClient();
@@ -102,7 +102,7 @@ test.each(ABIVersions)('Run aborted transaction (ABI v%i)', async (abiVersion) =
                 call_set: {
                     function_name: "sendTransaction",
                     input: {
-                        dest: '0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF',
+                        dest: "0:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
                         value: 0,
                         bounce: false,
                     },
@@ -331,7 +331,7 @@ test("Test CheckInitParams contract double deployment with different init data",
     }
 });
 
-test.each(ABIVersions)('Test SetCode contracts (ABI v%i)', async (abiVersion) => {
+test.each(ABIVersions)("Test SetCode contracts (ABI v%i)", async (abiVersion) => {
     const {
         boc,
         processing,
@@ -377,7 +377,7 @@ test.each(ABIVersions)('Test SetCode contracts (ABI v%i)', async (abiVersion) =>
     }
 });
 
-test('Test expire retries', async () => {
+test("Test expire retries", async () => {
     const processing = runner.getClient().processing;
 
     const helloAccount = await runner.getAccount(contracts.Hello, 2);
@@ -407,7 +407,7 @@ test('Test expire retries', async () => {
     await Promise.all(runs);
 });
 
-test('Signing', async () => {
+test("Signing", async () => {
     const {
         abi,
         crypto,
