@@ -196,7 +196,9 @@ export class TonClient {
         
         return getBridge()
             .request(context, functionName, functionParams, responseHandler ?? (() => {}))
-            .catch(async (reason) => await this.resolveError(functionName, functionParams, reason));
+            .catch(async (reason) => {
+                throw await this.resolveError(functionName, functionParams, reason);
+            });
     }
 
     async resolve_app_request(app_request_id: number | null, result: any): Promise<void> {
