@@ -134,7 +134,12 @@ export class CommonBinaryBridge implements BinaryBridge {
             this.checkResponseHandler();
             const paramsJson = (functionParams === undefined) || (functionParams === null)
                 ? ""
-                : JSON.stringify(functionParams);
+                : JSON.stringify(functionParams, (_, value) => 
+                    typeof value === 'bigint'
+                    ? (value < Number.MAX_SAFE_INTEGER && value > Number.MIN_SAFE_INTEGER
+                        ? Number(value)
+                        : value)
+                    : value);
             lib.sendRequest(context, requestId, functionName, paramsJson);
         });
     }
