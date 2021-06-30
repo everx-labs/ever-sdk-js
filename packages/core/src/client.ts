@@ -27,10 +27,9 @@ import {
     BinaryLibrary,
     getBridge,
     ResponseHandler,
-    ResponseType,
     useLibrary,
 } from "./bin";
-import {TonClientError} from "./errors";
+import { TonClientError } from "./errors";
 
 export class TonClient {
     private static _defaultConfig: ClientConfig = {};
@@ -115,15 +114,67 @@ export class TonClient {
     }
 
     async resolveError(functionName: string, _params: any, err: TonClientError): Promise<TonClientError> {
-        if (err.code !== 23) {
+        if (err.code !== 23 || !(err.data?.suggest_use_helper_for)) {
             return err;
         }
         try {
             const [modName, funcName] = functionName.split(".");
-            const api = (await this.request("client.get_api_reference", {})).api;
+            const api = (await this.client.get_api_reference()).api;
+            
+            const allTypesArray = api.modules.reduce((accumulator: any, element: any) => accumulator.concat(element.types), []);
+            const allTypesDict: { [name: string]: any } = {};
+            allTypesArray.forEach((element: any) => allTypesDict[element.name] = element);
+
             const module = api.modules.find((x: any) => x.name === modName);
             const func = module.functions.find((x: any) => x.name === funcName);
-            err.message = func;
+            const param = func.params[1];
+
+            // If there is only context param (or AppObject second param), there is nothing to analyze
+            if (!param || param.generic_name == "AppObject") {
+                return err;
+            }
+
+            const paramTypeInfo = allTypesDict[param.ref_name];
+            walkParameters(paramTypeInfo, _params, "");
+
+            function walkParameters(parameter: any, value: any, path: string) {
+                switch (parameter.type) {
+                    case "Array":
+                        if (Array.isArray(value)) {
+                            value.forEach(v => walkParameters(parameter.array_item, v, `${path}[i]`));
+                        }
+                        break;
+                    case "Struct":
+                        parameter.struct_fields.forEach((sf: any) => walkParameters(sf, value[sf.name], path ? `${path}.${sf.name}` : sf.name));
+                        break;
+                    case "Optional":
+                        if (value) {
+                            walkParameters(parameter.optional_inner, value, path);
+                        }
+                        break;
+                    case "Ref":
+                        if (parameter.ref_name != "Value" &&
+                            parameter.ref_name != "API" &&
+                            parameter.ref_name != "AbiParam") {
+
+                            walkParameters(allTypesDict[parameter.ref_name], value, path);
+                        }
+                        break;
+                    case "EnumOfTypes":
+                        if (parameter.enum_types.some((et: any) => et.name == value.type)) {
+                            return;
+                        }
+
+                        let parameterName = parameter.name.toLowerCase();
+                        let helperFunctions: string[] = [];
+                        parameter.enum_types.forEach((et: any) => helperFunctions.push(parameterName + et.name));
+
+                        err.message = `Consider using one of the helper methods (${helperFunctions.join(", ")}) for the \"${path}\" parameter\n` + err.message;
+                        break;
+                    default:
+                        break;
+                }
+            }
         } catch (e) {
             err.message = e;
         }
@@ -142,19 +193,10 @@ export class TonClient {
             context = await getBridge().createContext(this.config);
             this.context = context;
         }
-        return new Promise((resolve, reject) => {
-            getBridge().request(context, functionName, functionParams, (params, responseType) => {
-                if (responseHandler) {
-                    if (responseType === ResponseType.Error) {
-                        responseHandler(this.resolveError(functionName, functionParams, params), responseType);
-                    } else {
-                        responseHandler(params, responseType);
-                    }
-                }
-            }).then(resolve).catch((reason) => {
-                reject(this.resolveError(functionName, functionParams, reason));
-            });
-        });
+        
+        return getBridge()
+            .request(context, functionName, functionParams, responseHandler ?? (() => {}))
+            .catch(async (reason) => await this.resolveError(functionName, functionParams, reason));
     }
 
     async resolve_app_request(app_request_id: number | null, result: any): Promise<void> {
