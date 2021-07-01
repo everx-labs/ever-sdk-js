@@ -113,7 +113,7 @@ export class TonClient {
         }
     }
 
-    async resolveError(functionName: string, _params: any, err: TonClientError): Promise<TonClientError> {
+    async resolveError(functionName: string, params: any, err: TonClientError): Promise<TonClientError> {
         if (err.code !== 23 || !(err.data?.suggest_use_helper_for)) {
             return err;
         }
@@ -135,39 +135,39 @@ export class TonClient {
             }
 
             const paramTypeInfo = allTypesDict[param.ref_name];
-            walkParameters(paramTypeInfo, _params, "");
+            walkParameters(paramTypeInfo, params, "");
 
-            function walkParameters(parameter: any, value: any, path: string) {
-                switch (parameter.type) {
+            function walkParameters(valueTypeInfo: any, value: any, path: string) {
+                switch (valueTypeInfo.type) {
                     case "Array":
                         if (Array.isArray(value)) {
-                            value.forEach(v => walkParameters(parameter.array_item, v, `${path}[i]`));
+                            value.forEach(v => walkParameters(valueTypeInfo.array_item, v, `${path}[i]`));
                         }
                         break;
                     case "Struct":
-                        parameter.struct_fields.forEach((sf: any) => walkParameters(sf, value[sf.name], path ? `${path}.${sf.name}` : sf.name));
+                        valueTypeInfo.struct_fields.forEach((sf: any) => walkParameters(sf, value[sf.name], path ? `${path}.${sf.name}` : sf.name));
                         break;
                     case "Optional":
                         if (value) {
-                            walkParameters(parameter.optional_inner, value, path);
+                            walkParameters(valueTypeInfo.optional_inner, value, path);
                         }
                         break;
                     case "Ref":
-                        if (parameter.ref_name != "Value" &&
-                            parameter.ref_name != "API" &&
-                            parameter.ref_name != "AbiParam") {
+                        if (valueTypeInfo.ref_name != "Value" &&
+                            valueTypeInfo.ref_name != "API" &&
+                            valueTypeInfo.ref_name != "AbiParam") {
 
-                            walkParameters(allTypesDict[parameter.ref_name], value, path);
+                            walkParameters(allTypesDict[valueTypeInfo.ref_name], value, path);
                         }
                         break;
                     case "EnumOfTypes":
-                        if (parameter.enum_types.some((et: any) => et.name == value.type)) {
+                        if (valueTypeInfo.enum_types.some((et: any) => et.name == value.type)) {
                             return;
                         }
 
-                        let parameterName = parameter.name.toLowerCase();
+                        let parameterName = valueTypeInfo.name.toLowerCase();
                         let helperFunctions: string[] = [];
-                        parameter.enum_types.forEach((et: any) => helperFunctions.push(parameterName + et.name));
+                        valueTypeInfo.enum_types.forEach((et: any) => helperFunctions.push(parameterName + et.name));
 
                         err.message = `Consider using one of the helper methods (${helperFunctions.join(", ")}) for the \"${path}\" parameter\n` + err.message;
                         break;
