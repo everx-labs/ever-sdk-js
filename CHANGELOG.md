@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.18.1] – 2021-07-01
+
+### Improved
+
+- Improved error messages regarding Union-typed parameters (e.g. `abi` and `signer` in `encode_message`): helper functions (e.g. `signerNone`, `signerKeys`, etc.) are suggested if applicable.
+
 ## [1.18.0] – 2021-06-26
 
 ### New
