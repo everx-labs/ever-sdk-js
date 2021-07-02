@@ -14,6 +14,8 @@
 
 import { runner } from '../runner';
 import { test, expect } from '../jest';
+import { contracts } from '../contracts';
+import { signerKeys } from '@tonclient/core';
 
 test("Test versions compatibility", async () => {
     const client = runner.getClient().client;
@@ -37,4 +39,101 @@ test("client: build_info", async () => {
     const build_info = await client.build_info();
 
     expect(build_info).not.toBeNull();
-})
+});
+
+test("client: walk api reference", async () => {
+    const client = runner.getClient().client;
+
+    const apiResult = await client.get_api_reference();
+    const api = apiResult.api;
+    
+    const allTypesArray = api.modules.reduce((accumulator: any, element: any) => accumulator.concat(element.types), []);
+    const allTypesDict: { [name: string]: any } = {};
+    allTypesArray.forEach((element: any) => allTypesDict[element.name] = element);
+
+    allTypesArray.forEach((typeInfo: any) => {
+        walkSubtypes(typeInfo);
+    });
+
+    const allFunctionsArray = api.modules.reduce((accumulator: any, element: any) => accumulator.concat(element.functions), []);
+    allFunctionsArray.forEach((functionInfo: any) => {
+        if (functionInfo.params[0].generic_name != "Arc" ||
+            functionInfo.params[2] && (functionInfo.params[2].generic_name != "Arc" && functionInfo.params[2].generic_name != "AppObject") ||
+            functionInfo.params[3] ||
+            functionInfo.params[1] && functionInfo.params[1].generic_name != "AppObject" && !allTypesDict[functionInfo.params[1].ref_name]) {
+                throw Error("The API has changed, need to check helpers suggestions");
+            }
+    });
+    
+    function walkSubtypes(typeInfo: any) {
+        switch (typeInfo.type) {
+            case "Array":
+                walkSubtypes(typeInfo.array_item);
+                break;
+            case "Struct":
+                typeInfo.struct_fields.forEach((sf: any) => walkSubtypes(sf));
+                break;
+            case "Optional":
+                walkSubtypes(typeInfo.optional_inner);
+                break;
+            case "Ref":
+                if (typeInfo.ref_name != "Value" &&
+                    typeInfo.ref_name != "API" &&
+                    typeInfo.ref_name != "AbiParam") {
+
+                    walkSubtypes(allTypesDict[typeInfo.ref_name]);
+                }
+                break;
+            case "EnumOfTypes":
+            case "EnumOfConsts":
+            case "BigInt":
+            case "Boolean":
+            case "Number":
+            case "String":
+                break;
+            default:
+                console.log("Unknown type: ", typeInfo.type);
+        }
+    }
+});
+
+test("client: Should suggest helper functions if applicable", async () => {
+    const {
+        abi,
+        crypto
+    } = runner.getClient();
+
+    const keys = await crypto.generate_random_sign_keys(); 
+    const c = await runner.getAccount(contracts.Hello, 2, signerKeys(keys));
+
+    try {
+        await abi.encode_message({
+            abi: c.abi,
+            address: await c.getAddress(),
+            signer: keys as any,
+            call_set: {
+                function_name: "touch"
+            },
+        });
+        expect("This line should not be reached").toHaveLength(0);
+    } catch (err) {
+        expect(err.message.startsWith("Consider using one of the helper methods (signerNone, signerExternal, signerKeys, signerSigningBox) for the \"signer\" parameter"))
+            .toBeTruthy();
+    }
+
+    try {
+        await abi.encode_message({
+            abi: contracts.Hello[2].abi as any,
+            address: await c.getAddress(),
+            signer: signerKeys(keys),
+            call_set: {
+                function_name: "touch"
+            },
+        });
+        expect("This line should not be reached").toHaveLength(0);
+    } catch (err) {
+        expect(err.message.startsWith("Consider using one of the helper methods (abiContract, abiJson, abiHandle, abiSerialized) for the \"abi\" parameter"))
+            .toBeTruthy();
+    }
+});
+
