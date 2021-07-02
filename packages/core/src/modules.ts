@@ -1965,7 +1965,8 @@ export enum AbiErrorCode {
     RequiredPublicKeyMissingForFunctionHeader = 309,
     InvalidSigner = 310,
     InvalidAbi = 311,
-    InvalidFunctionId = 312
+    InvalidFunctionId = 312,
+    InvalidData = 313
 }
 
 export type Abi = {
@@ -2364,7 +2365,11 @@ export type AbiContract = {
 
     /**
      */
-    data?: AbiData[]
+    data?: AbiData[],
+
+    /**
+     */
+    fields?: AbiParam[]
 }
 
 export type ParamsOfEncodeMessageBody = {
@@ -2770,6 +2775,30 @@ export type ResultOfEncodeAccount = {
     id: string
 }
 
+export type ParamsOfDecodeAccountData = {
+
+    /**
+     * Contract ABI
+     */
+    abi: Abi,
+
+    /**
+     * Data BOC
+     * 
+     * @remarks
+     * Must be encoded with base64
+     */
+    data: string
+}
+
+export type ResultOfDecodeData = {
+
+    /**
+     * Decoded data as a JSON structure.
+     */
+    data: any
+}
+
 /**
  * Provides message encoding and decoding according to the ABI specification.
  */
@@ -2910,6 +2939,19 @@ export class AbiModule {
      */
     encode_account(params: ParamsOfEncodeAccount): Promise<ResultOfEncodeAccount> {
         return this.client.request('abi.encode_account', params);
+    }
+
+    /**
+     * Decodes account data using provided data BOC and ABI.
+     * 
+     * @remarks
+     * Note: this feature requires ABI 2.1 or higher.
+     * 
+     * @param {ParamsOfDecodeAccountData} params
+     * @returns ResultOfDecodeData
+     */
+    decode_account_data(params: ParamsOfDecodeAccountData): Promise<ResultOfDecodeData> {
+        return this.client.request('abi.decode_account_data', params);
     }
 }
 
@@ -5306,20 +5348,20 @@ export class NetModule {
      * 
      * Items iterated is a JSON objects with block data. The minimal set of returned
      * fields is:
-     * 
-     *    id
-     *    gen_utime
-     *    workchain_id
-     *    shard
-     *    after_split
-     *    after_merge
-     *    prev_ref {
-     *        root_hash
-     *    }
-     *    prev_alt_ref {
-     *        root_hash
-     *    }
-     * 
+     * ```text
+     * id
+     * gen_utime
+     * workchain_id
+     * shard
+     * after_split
+     * after_merge
+     * prev_ref {
+     *     root_hash
+     * }
+     * prev_alt_ref {
+     *     root_hash
+     * }
+     * ```
      * Application can request additional fields in the `result` parameter.
      * 
      * Application should call the `remove_iterator` when iterator is no longer required.
@@ -5370,25 +5412,25 @@ export class NetModule {
      * 
      * Iterated item is a JSON objects with transaction data. The minimal set of returned
      * fields is:
-     * 
+     * ```text
+     * id
+     * account_addr
+     * now
+     * balance_delta(format:DEC)
+     * bounce { bounce_type }
+     * in_message {
      *     id
-     *     account_addr
-     *     now
-     *     balance_delta(format:DEC)
-     *     bounce { bounce_type }
-     *     in_message {
-     *         id
-     *         value(format:DEC)
-     *         msg_type
-     *         src
-     *     }
-     *     out_messages {
-     *         id
-     *         value(format:DEC)
-     *         msg_type
-     *         dst
-     *     }
-     * 
+     *     value(format:DEC)
+     *     msg_type
+     *     src
+     * }
+     * out_messages {
+     *     id
+     *     value(format:DEC)
+     *     msg_type
+     *     dst
+     * }
+     * ```
      * Application can request an additional fields in the `result` parameter.
      * 
      * Another parameter that affects on the returned fields is the `include_transfers`.
@@ -5400,7 +5442,7 @@ export class NetModule {
      * - isBounced – indicates that the transaction is bounced, which means the value will be returned back to the sender.
      * - isDeposit – indicates that this transfer is the deposit (true) or withdraw (false).
      * - counterparty – account address of the transfer source or destination depending on `isDeposit`.
-     * - value – amount of nano tokens transfered. The value is represented as a decimal string
+     * - value – amount of nano tokens transferred. The value is represented as a decimal string
      * because the actual value can be more precise than the JSON number can represent. Application
      * must use this string carefully – conversion to number can follow to loose of precision.
      * 
@@ -5417,7 +5459,7 @@ export class NetModule {
      * Resumes transaction iterator.
      * 
      * @remarks
-     * The iterator stays exactly at the same position where the `resume_state` was catched.
+     * The iterator stays exactly at the same position where the `resume_state` was caught.
      * Note that `resume_state` doesn't store the account filter. If the application requires
      * to use the same account filter as it was when the iterator was created then the application
      * must pass the account filter again in `accounts_filter` parameter.
