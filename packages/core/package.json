@@ -34,6 +34,8 @@
 		"node": ">=6"
 	},
 	"devDependencies": {
+		"none": "^1.0.0",
+		"typedoc": "^0.21.2",
 		"typescript": "^4.0.3"
 	}
 }
