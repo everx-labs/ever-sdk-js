@@ -32,7 +32,7 @@
 
 # Documentation
 - [Quick Start](https://docs.ton.dev/86757ecb2/p/33b76d-quick-start)
-- [API reference](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md)
+- [Types and Methods (API Reference)](https://tonlabs.github.io/ton-client-js/)
 - [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on Free TON.
 - [SDK Samples](https://github.com/tonlabs/sdk-samples) - a good place to get to practice with SDK asap:)
 
