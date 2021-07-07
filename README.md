@@ -1,4 +1,4 @@
-<p align="center"><a href="https://github.com/tonlabs/ton-client-js/"><img src="assets/ton-sdk-blue.png" height="60"/></a></p> 
+<p align="center"><a href="https://github.com/tonlabs/ton-client-js/"><img src="media/ton-sdk-blue.png" height="60"/></a></p> 
 <h1 align="center">JavaScript TON OS SDK</h1>
 <p align="center">Client Library built on the TON OS API</p>
 <p align="center">for Web, Node.js and React Native platforms</p>
