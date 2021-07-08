@@ -9,7 +9,7 @@
 
 # Table of Content
 - [Table of Content](#table-of-content)
-- [Documentation](#documentation)
+- [Useful links](#useful-links)
 - [Library distribution](#library-distribution)
 - [Installation](#installation)
   - [Install core package](#install-core-package)
@@ -30,7 +30,7 @@
 - [Download precompiled binaries](#download-precompiled-binaries)
 
 
-# Documentation
+# Useful links
 - [Quick Start](https://docs.ton.dev/86757ecb2/p/33b76d-quick-start)
 - [Types and Methods (API Reference)](https://tonlabs.github.io/ton-client-js/)
 - [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on Free TON.
