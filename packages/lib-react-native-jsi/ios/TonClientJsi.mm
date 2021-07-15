@@ -1,5 +1,6 @@
 #import <React/RCTBridge+Private.h>
 #import <React/RCTUtils.h>
+#import <React/RCTBlobManager.h>
 #import <ReactCommon/RCTTurboModuleManager.h>
 
 #import "TonClientJsiModule.h"
@@ -30,13 +31,18 @@ RCT_EXPORT_MODULE()
 
   jsi::Runtime *runtime = reinterpret_cast<facebook::jsi::Runtime *>(cxxBridge.runtime);
 
+  RCTBlobManager *reactBlobManager = [cxxBridge moduleForName:@"BlobModule"];
+    
+  std::shared_ptr<tonlabs::BlobManager> blobManager =
+    std::make_shared<tonlabs::BlobManager>(reactBlobManager);
+
   std::shared_ptr<tonlabs::TonClientJsiModule> tonClientJsiModule =
-      std::make_shared<tonlabs::TonClientJsiModule>(*runtime, jsCallInvoker);
+    std::make_shared<tonlabs::TonClientJsiModule>(*runtime, jsCallInvoker, blobManager);
 
   runtime->global().setProperty(
-      *runtime,
-      jsi::PropNameID::forAscii(*runtime, "tonClientJsiModule"),
-      jsi::Object::createFromHostObject(*runtime, tonClientJsiModule));
+    *runtime,
+    jsi::PropNameID::forAscii(*runtime, "tonClientJsiModule"),
+    jsi::Object::createFromHostObject(*runtime, tonClientJsiModule));
 }
 
 - (void)invalidate {

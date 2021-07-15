@@ -3,15 +3,16 @@ import type { BinaryLibrary } from './index.d';
 export function libReactNativeJsi(): Promise<BinaryLibrary> {
   const tonClientJsiModule = (global as any).tonClientJsiModule;
   return Promise.resolve({
-    setResponseHandler(
-      responseHandler: (
+    // @ts-ignore // TODO: fix TypeScript error
+    setResponseParamsHandler(
+      handler: (
         requestId: number,
-        paramsJson: string,
+        params: any,
         responseType: number,
         finished: boolean
       ) => void
     ): void {
-      tonClientJsiModule.setResponseHandler(responseHandler);
+      tonClientJsiModule.setResponseParamsHandler(handler);
     },
     createContext(configJson: string): Promise<string> {
       return new Promise((resolve) => {
@@ -21,18 +22,25 @@ export function libReactNativeJsi(): Promise<BinaryLibrary> {
     destroyContext(context: number): void {
       tonClientJsiModule.destroyContext(context);
     },
-    sendRequest(
+    sendRequestParams(
       context: number,
       requestId: number,
       functionName: string,
-      functionParamsJson: string
+      functionParams: any
     ): void {
-      tonClientJsiModule.sendRequest(
+      tonClientJsiModule.sendRequestParams(
         context,
         requestId,
         functionName,
-        functionParamsJson
+        functionParams
       );
     },
   });
 }
+
+function __createBlob(blobId: string, offset: number, size: number): Blob {
+  const BlobManager = require('react-native/Libraries/Blob/BlobManager'); // memoized
+  return BlobManager.createFromOptions({ blobId, offset, size });
+}
+
+(global as any).__createBlob = __createBlob;

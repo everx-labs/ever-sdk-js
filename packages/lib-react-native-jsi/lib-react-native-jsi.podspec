@@ -26,6 +26,7 @@ Pod::Spec.new do |s|
 
   s.header_mappings_dir = "cpp"
   s.source_files = "ios/**/*.{h,m,mm}", "cpp/**/*.{h,cpp}"
+  s.exclude_files = "cpp/BlobManager.cpp" # compiled as Objective-C++ from ios/BlobManager.mm
   s.ios.vendored_library = "ios/libtonclient.a"
 
   s.pod_target_xcconfig = {
@@ -36,7 +37,7 @@ Pod::Spec.new do |s|
   s.compiler_flags = folly_compiler_flags
   s.xcconfig = {
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++14",
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/#{folly_prefix}Folly\"",
+    "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/#{folly_prefix}Folly\" \"$(PODS_ROOT)/boost-for-react-native\"",
     "OTHER_CFLAGS" => "$(inherited)" + " " + folly_flags
   }
   s.requires_arc = true

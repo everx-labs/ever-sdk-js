@@ -25,7 +25,7 @@ namespace facebook
       SchemaCxxSpecJSI(std::shared_ptr<CallInvoker> jsInvoker);
 
     public:
-      virtual jsi::Value setResponseHandler(
+      virtual jsi::Value setResponseParamsHandler(
           jsi::Runtime &rt,
           const jsi::Function &responseHandler) = 0;
 
@@ -38,12 +38,12 @@ namespace facebook
           jsi::Runtime &rt,
           const jsi::Value &context) = 0;
 
-      virtual jsi::Value sendRequest(
+      virtual jsi::Value sendRequestParams(
           jsi::Runtime &rt,
           const jsi::Value &context,
           const jsi::Value &requestId,
           const jsi::Value &functionName,
-          const jsi::Value &functionParamsJson) = 0;
+          const jsi::Value &functionParams) = 0;
     };
 
   } // namespace react

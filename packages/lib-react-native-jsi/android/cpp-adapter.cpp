@@ -21,15 +21,19 @@ public:
 private:
   static void installNative(jni::alias_ref<jni::JClass>,
                             jlong jsContext,
-                            jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder)
+                            jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
+                            jni::alias_ref<tonlabs::TonClientJsiBlobManager> javaBlobManager)
   {
     jsi::Runtime *runtime = reinterpret_cast<facebook::jsi::Runtime *>(jsContext);
 
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker =
         jsCallInvokerHolder->cthis()->getCallInvoker();
 
+    std::shared_ptr<tonlabs::BlobManager> blobManager =
+        std::make_shared<tonlabs::BlobManager>(make_global(javaBlobManager));
+
     std::shared_ptr<tonlabs::TonClientJsiModule> tonClientJsiModule =
-        std::make_shared<tonlabs::TonClientJsiModule>(*runtime, jsCallInvoker);
+        std::make_shared<tonlabs::TonClientJsiModule>(*runtime, jsCallInvoker, blobManager);
 
     runtime->global().setProperty(
         *runtime,
@@ -45,7 +49,6 @@ private:
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *)
 {
-  return facebook::jni::initialize(vm, [] {
-    TonClientJsiModule::registerNatives();
-  });
+  return facebook::jni::initialize(vm, []
+                                   { TonClientJsiModule::registerNatives(); });
 }

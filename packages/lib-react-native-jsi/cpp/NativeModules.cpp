@@ -14,11 +14,11 @@ namespace facebook
 {
   namespace react
   {
-    static jsi::Value __hostFunction_SchemaCxxSpecJSI_setResponseHandler(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t count)
+    static jsi::Value __hostFunction_SchemaCxxSpecJSI_setResponseParamsHandler(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t count)
     {
       const jsi::Function responseHandler = args[0].asObject(rt).asFunction(rt);
 
-      return static_cast<SchemaCxxSpecJSI *>(&turboModule)->setResponseHandler(rt, responseHandler);
+      return static_cast<SchemaCxxSpecJSI *>(&turboModule)->setResponseParamsHandler(rt, responseHandler);
     }
 
     static jsi::Value __hostFunction_SchemaCxxSpecJSI_createContext(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t count)
@@ -36,23 +36,23 @@ namespace facebook
       return static_cast<SchemaCxxSpecJSI *>(&turboModule)->destroyContext(rt, context);
     }
 
-    static jsi::Value __hostFunction_SchemaCxxSpecJSI_sendRequest(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t count)
+    static jsi::Value __hostFunction_SchemaCxxSpecJSI_sendRequestParams(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t count)
     {
       const jsi::Value &context = args[0];
       const jsi::Value &requestId = args[1];
       const jsi::Value &functionName = args[2];
-      const jsi::Value &functionParamsJson = args[3];
+      const jsi::Value &functionParams = args[3];
 
-      return static_cast<SchemaCxxSpecJSI *>(&turboModule)->sendRequest(rt, context, requestId, functionName, functionParamsJson);
+      return static_cast<SchemaCxxSpecJSI *>(&turboModule)->sendRequestParams(rt, context, requestId, functionName, functionParams);
     }
 
     SchemaCxxSpecJSI::SchemaCxxSpecJSI(std::shared_ptr<CallInvoker> jsInvoker)
-        : TurboModule("TrimTurboModule", jsInvoker)
+        : TurboModule("TonClientJsiTurboModule", jsInvoker)
     {
-      methodMap_["setResponseHandler"] = MethodMetadata{1, __hostFunction_SchemaCxxSpecJSI_setResponseHandler};
+      methodMap_["setResponseParamsHandler"] = MethodMetadata{1, __hostFunction_SchemaCxxSpecJSI_setResponseParamsHandler};
       methodMap_["createContext"] = MethodMetadata{2, __hostFunction_SchemaCxxSpecJSI_createContext};
       methodMap_["destroyContext"] = MethodMetadata{1, __hostFunction_SchemaCxxSpecJSI_destroyContext};
-      methodMap_["sendRequest"] = MethodMetadata{4, __hostFunction_SchemaCxxSpecJSI_sendRequest};
+      methodMap_["sendRequestParams"] = MethodMetadata{4, __hostFunction_SchemaCxxSpecJSI_sendRequestParams};
     }
 
   } // namespace react

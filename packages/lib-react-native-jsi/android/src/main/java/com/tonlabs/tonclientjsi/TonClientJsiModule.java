@@ -4,16 +4,19 @@ import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.modules.blob.BlobModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 import com.facebook.react.turbomodule.core.interfaces.CallInvokerHolder;
 
+import java.nio.ByteBuffer;
 
 class TonClientJsiModule extends ReactContextBaseJavaModule {
   static {
     System.loadLibrary("tonclientjsi");
   }
 
-  private static native void installNative(long jsiPtr, CallInvokerHolderImpl jsCallInvokerHolder);
+  private static native void installNative(long jsiPtr, CallInvokerHolderImpl jsCallInvokerHolder, TonClientJsiBlobManager tonClientJsiBlobManager);
+
   private static native void destruct();
 
   public TonClientJsiModule(ReactApplicationContext reactContext) {
@@ -31,9 +34,12 @@ class TonClientJsiModule extends ReactContextBaseJavaModule {
     super.initialize();
 
     ReactApplicationContext context = this.getReactApplicationContext();
-    CallInvokerHolderImpl holder = (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
+    long jsiPtr = context.getJavaScriptContextHolder().get();
+    CallInvokerHolderImpl jsCallInvokerHolder = (CallInvokerHolderImpl) context.getCatalystInstance().getJSCallInvokerHolder();
+    BlobModule reactNativeBlobModule = context.getNativeModule(BlobModule.class);
+    TonClientJsiBlobManager tonClientJsiBlobManager = new TonClientJsiBlobManager(reactNativeBlobModule);
 
-    TonClientJsiModule.installNative(context.getJavaScriptContextHolder().get(), holder);
+    TonClientJsiModule.installNative(jsiPtr, jsCallInvokerHolder, tonClientJsiBlobManager);
   }
 
   @Override
