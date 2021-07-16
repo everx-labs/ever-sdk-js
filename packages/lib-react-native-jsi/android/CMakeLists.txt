@@ -6,8 +6,7 @@ set(CMAKE_CXX_FLAGS "-DFOLLY_NO_CONFIG=1 -DFOLLY_HAVE_CLOCK_GETTIME=1 -DFOLLY_HA
 
 set(PACKAGE_NAME tonclientjsi)
 set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
-set(NODE_MODULES_DIR "../node_modules")
-set(RN_SO_DIR ${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/first-party/react/jni)
+set(RN_SO_DIR "../node_modules/react-native/ReactAndroid/src/main/jni/first-party/react/jni")
 set(LIBRN_DIR ${RN_SO_DIR}/${ANDROID_ABI})
 
 if(${REACT_NATIVE_VERSION} VERSION_LESS 0.64.0)
