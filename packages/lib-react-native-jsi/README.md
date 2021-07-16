@@ -96,17 +96,17 @@ const keys = await client.crypto.generate_random_sign_keys();
 # Interface
 
 ```ts
-setResponseHandler(
-  responseHandler: (
+setResponseParamsHandler(
+  handler: (
     requestId: number,
-    paramsJson: string,
+    params: any,
     responseType: number,
     finished: boolean
   ) => void
 ): void
 ```
 
-Sets the response handler for `sendRequest`.
+Sets the response handler for `sendRequestParams`.
 
 ```ts
 createContext(configJson: string): Promise<string>
@@ -121,11 +121,11 @@ destroyContext(context: number): void
 Calls `tc_destroy_context` from TON SDK.
 
 ```ts
-sendRequest(
+sendRequestParams(
   context: number,
   requestId: number,
   functionName: string,
-  functionParamsJson: string
+  functionParams: any
 ): void
 ```
 
