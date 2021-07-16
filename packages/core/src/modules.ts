@@ -186,6 +186,17 @@ export type NetworkConfig = {
     max_latency?: number,
 
     /**
+     * Default timeout for http requests.
+     * 
+     * @remarks
+     * Is is used when no timeout specified for the request to limit the answer waiting time. If no answer received during the timeout requests ends with
+     * error.
+     * 
+     * Must be specified in milliseconds. Default is 60000 (1 min).
+     */
+    query_timeout?: number,
+
+    /**
      * Access key to GraphQL API.
      * 
      * @remarks
@@ -678,7 +689,7 @@ export type ParamsOfNaclSign = {
     unsigned: string,
 
     /**
-     * Signer's secret key - unprefixed 0-padded to 64 symbols hex string
+     * Signer's secret key - unprefixed 0-padded to 128 symbols hex string (concatenation of 64 symbols secret and 64 symbols public keys). See `nacl_sign_keypair_from_secret_key`.
      */
     secret: string
 }
@@ -1601,6 +1612,11 @@ export class CryptoModule {
     /**
      * Generates a key pair for signing from the secret key
      * 
+     * @remarks
+     * **NOTE:** In the result the secret key is actually the concatenation
+     * of secret and public keys (128 symbols hex string) by design of [NaCL](http://nacl.cr.yp.to/sign.html).
+     * See also [the stackexchange question](https://crypto.stackexchange.com/questions/54353/).
+     * 
      * @param {ParamsOfNaclSignKeyPairFromSecret} params
      * @returns KeyPair
      */
@@ -2353,6 +2369,10 @@ export type AbiContract = {
 
     /**
      */
+    version?: string | null,
+
+    /**
+     */
     header?: string[],
 
     /**
@@ -2783,10 +2803,7 @@ export type ParamsOfDecodeAccountData = {
     abi: Abi,
 
     /**
-     * Data BOC
-     * 
-     * @remarks
-     * Must be encoded with base64
+     * Data BOC or BOC handle
      */
     data: string
 }
