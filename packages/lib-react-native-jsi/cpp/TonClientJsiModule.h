@@ -15,12 +15,12 @@ namespace tonlabs
   public:
     jsi::Value setResponseParamsHandler(
         jsi::Runtime &rt,
-        const jsi::Function &responseHandler) override;
+        const jsi::Value &responseHandler) override;
 
     jsi::Value createContext(
         jsi::Runtime &rt,
-        const jsi::String &configJson,
-        const jsi::Function &onResult) override;
+        const jsi::Value &configJson,
+        const jsi::Value &onResult) override;
 
     jsi::Value destroyContext(
         jsi::Runtime &rt,
@@ -46,7 +46,7 @@ namespace tonlabs
     jsi::Runtime &runtime_;
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
     std::unique_ptr<tonlabs::BlobManager> blobManager_;
-    std::shared_ptr<jsi::Function> responseHandler_;
+    std::unique_ptr<jsi::Function> responseHandler_;
   };
 
 } // namespace tonlabs

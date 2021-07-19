@@ -27,12 +27,12 @@ namespace facebook
     public:
       virtual jsi::Value setResponseParamsHandler(
           jsi::Runtime &rt,
-          const jsi::Function &responseHandler) = 0;
+          const jsi::Value &responseHandler) = 0;
 
       virtual jsi::Value createContext(
           jsi::Runtime &rt,
-          const jsi::String &configJson,
-          const jsi::Function &onResult) = 0;
+          const jsi::Value &configJson,
+          const jsi::Value &onResult) = 0;
 
       virtual jsi::Value destroyContext(
           jsi::Runtime &rt,

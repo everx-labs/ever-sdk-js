@@ -16,15 +16,15 @@ namespace facebook
   {
     static jsi::Value __hostFunction_SchemaCxxSpecJSI_setResponseParamsHandler(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t count)
     {
-      const jsi::Function responseHandler = args[0].asObject(rt).asFunction(rt);
+      const jsi::Value &responseHandler = args[0];
 
       return static_cast<SchemaCxxSpecJSI *>(&turboModule)->setResponseParamsHandler(rt, responseHandler);
     }
 
     static jsi::Value __hostFunction_SchemaCxxSpecJSI_createContext(jsi::Runtime &rt, TurboModule &turboModule, const jsi::Value *args, size_t count)
     {
-      const jsi::String configJson = args[0].asString(rt);
-      const jsi::Function onResult = args[1].asObject(rt).asFunction(rt);
+      const jsi::Value &configJson = args[0];
+      const jsi::Value &onResult = args[1];
 
       return static_cast<SchemaCxxSpecJSI *>(&turboModule)->createContext(rt, configJson, onResult);
     }

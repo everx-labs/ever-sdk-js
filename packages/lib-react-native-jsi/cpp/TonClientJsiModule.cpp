@@ -22,22 +22,22 @@ namespace tonlabs
 {
   jsi::Value TonClientJsiModule::setResponseParamsHandler(
       jsi::Runtime &rt,
-      const jsi::Function &responseHandler)
+      const jsi::Value &responseHandler)
   {
-    this->responseHandler_ = std::make_shared<jsi::Function>(responseHandler.asFunction(rt));
+    this->responseHandler_ = std::make_unique<jsi::Function>(responseHandler.asObject(rt).asFunction(rt));
     return jsi::Value::undefined();
   }
 
   jsi::Value TonClientJsiModule::createContext(
       jsi::Runtime &rt,
-      const jsi::String &configJson,
-      const jsi::Function &onResult)
+      const jsi::Value &configJson,
+      const jsi::Value &onResult)
   {
-    std::string configJsonString = configJson.utf8(rt);
+    std::string configJsonString = configJson.asString(rt).utf8(rt);
     tc_string_data_t config{configJsonString.c_str(), static_cast<uint32_t>(configJsonString.length())};
     tc_string_handle_t *json_ptr = tc_create_context(config);
 
-    std::shared_ptr<jsi::Function> onResultPtr = std::make_shared<jsi::Function>(onResult.asFunction(rt));
+    std::shared_ptr<jsi::Function> onResultPtr = std::make_shared<jsi::Function>(onResult.asObject(rt).asFunction(rt));
     this->jsCallInvoker_->invokeAsync([&rt, onResultPtr, json_ptr]
                                       {
                                         tc_string_data_t json = tc_read_string(json_ptr);
