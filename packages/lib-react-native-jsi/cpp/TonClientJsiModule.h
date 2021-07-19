@@ -33,13 +33,19 @@ namespace tonlabs
         const jsi::Value &functionName,
         const jsi::Value &functionParams) override;
 
-    TonClientJsiModule(jsi::Runtime &runtime, std::shared_ptr<facebook::react::CallInvoker> jsInvoker, std::shared_ptr<tonlabs::BlobManager> blobManager)
-        : facebook::react::SchemaCxxSpecJSI(jsInvoker), runtime_(runtime), jsCallInvoker_(jsInvoker), blobManager_(blobManager){};
+    TonClientJsiModule(
+        jsi::Runtime &runtime,
+        std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker,
+        std::unique_ptr<tonlabs::BlobManager> blobManager)
+        : facebook::react::SchemaCxxSpecJSI(jsCallInvoker),
+          runtime_(runtime),
+          jsCallInvoker_(jsCallInvoker),
+          blobManager_(std::move(blobManager)){};
 
   private:
     jsi::Runtime &runtime_;
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker_;
-    std::shared_ptr<tonlabs::BlobManager> blobManager_;
+    std::unique_ptr<tonlabs::BlobManager> blobManager_;
     std::shared_ptr<jsi::Function> responseHandler_;
   };
 

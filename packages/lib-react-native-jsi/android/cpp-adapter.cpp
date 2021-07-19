@@ -29,16 +29,16 @@ private:
     std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker =
         jsCallInvokerHolder->cthis()->getCallInvoker();
 
-    std::shared_ptr<tonlabs::BlobManager> blobManager =
-        std::make_shared<tonlabs::BlobManager>(make_global(javaBlobManager));
+    std::unique_ptr<tonlabs::BlobManager> blobManager =
+        std::make_unique<tonlabs::BlobManager>(make_global(javaBlobManager));
 
-    std::shared_ptr<tonlabs::TonClientJsiModule> tonClientJsiModule =
-        std::make_shared<tonlabs::TonClientJsiModule>(*runtime, jsCallInvoker, blobManager);
+    std::unique_ptr<tonlabs::TonClientJsiModule> tonClientJsiModule =
+        std::make_unique<tonlabs::TonClientJsiModule>(*runtime, jsCallInvoker, std::move(blobManager));
 
     runtime->global().setProperty(
         *runtime,
         jsi::PropNameID::forAscii(*runtime, "tonClientJsiModule"),
-        jsi::Object::createFromHostObject(*runtime, tonClientJsiModule));
+        jsi::Object::createFromHostObject(*runtime, std::move(tonClientJsiModule)));
   }
 
   static void destruct(jni::alias_ref<jni::JClass>)

@@ -31,18 +31,18 @@ RCT_EXPORT_MODULE()
 
   jsi::Runtime *runtime = reinterpret_cast<facebook::jsi::Runtime *>(cxxBridge.runtime);
 
-  RCTBlobManager *reactBlobManager = [cxxBridge moduleForName:@"BlobModule"];
-    
-  std::shared_ptr<tonlabs::BlobManager> blobManager =
-    std::make_shared<tonlabs::BlobManager>(reactBlobManager);
+  RCTBlobManager *reactBlobManager = [bridge moduleForName:@"BlobModule"];
 
-  std::shared_ptr<tonlabs::TonClientJsiModule> tonClientJsiModule =
-    std::make_shared<tonlabs::TonClientJsiModule>(*runtime, jsCallInvoker, blobManager);
+  std::unique_ptr<tonlabs::BlobManager> blobManager =
+    std::make_unique<tonlabs::BlobManager>(reactBlobManager);
+
+  std::unique_ptr<tonlabs::TonClientJsiModule> tonClientJsiModule =
+    std::make_unique<tonlabs::TonClientJsiModule>(*runtime, jsCallInvoker, std::move(blobManager));
 
   runtime->global().setProperty(
     *runtime,
     jsi::PropNameID::forAscii(*runtime, "tonClientJsiModule"),
-    jsi::Object::createFromHostObject(*runtime, tonClientJsiModule));
+    jsi::Object::createFromHostObject(*runtime, std::move(tonClientJsiModule)));
 }
 
 - (void)invalidate {
