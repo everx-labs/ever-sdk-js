@@ -1,9 +1,16 @@
-import {TonClientError} from "./errors";
-import {ClientConfig} from "./modules";
+import { TonClientError } from "./errors";
+import { ClientConfig } from "./modules";
 
 export type ResponseHandler = (params: any, responseType: number) => void;
 
-export interface BinaryLibrary {
+export interface BinaryLibraryBase {
+    createContext(configJson: string): Promise<string>,
+
+    destroyContext(context: number): void,
+
+}
+
+export interface BinaryLibrary extends BinaryLibraryBase {
     setResponseHandler(
         handler?: (
             requestId: number,
@@ -13,6 +20,15 @@ export interface BinaryLibrary {
         ) => void,
     ): void,
 
+    sendRequest(
+        context: number,
+        requestId: number,
+        functionName: string,
+        functionParamsJson: string,
+    ): void,
+}
+
+export interface BinaryLibraryWithParams extends BinaryLibraryBase {
     setResponseParamsHandler(
         handler?: (
             requestId: number,
@@ -20,17 +36,6 @@ export interface BinaryLibrary {
             responseType: number,
             finished: boolean,
         ) => void,
-    ): void,
-
-    createContext(configJson: string): Promise<string>,
-
-    destroyContext(context: number): void,
-
-    sendRequest(
-        context: number,
-        requestId: number,
-        functionName: string,
-        functionParamsJson: string,
     ): void,
 
     sendRequestParams(
@@ -64,7 +69,7 @@ export interface BinaryBridge {
     ): Promise<R>;
 }
 
-let bridge: BinaryBridge | null = null;
+let bridge: BinaryBridge | undefined = undefined;
 
 export function getBridge(): BinaryBridge {
     if (!bridge) {
@@ -73,31 +78,74 @@ export function getBridge(): BinaryBridge {
     return bridge;
 }
 
-export function useLibrary(loader: (() => Promise<BinaryLibrary>) | BinaryBridge) {
-    bridge = ("createContext" in loader) ? loader : new CommonBinaryBridge(loader);
+export function useLibrary(loader: (() => Promise<BinaryLibrary | BinaryLibraryWithParams>) | BinaryBridge) {
+    if ("createContext" in loader) {
+        bridge = loader;
+    } else {
+        bridge = new CommonBinaryBridge(loader);
+    }
+}
+
+class BinaryLibraryAdapter implements BinaryLibraryWithParams {
+    constructor(private library: BinaryLibrary) {
+    }
+
+    setResponseParamsHandler(handler?: (requestId: number, params: any, responseType: number, finished: boolean) => void) {
+        if (handler === undefined) {
+            this.library.setResponseHandler(undefined);
+        } else {
+            this.library.setResponseHandler((
+                requestId: number,
+                paramsJson: string,
+                responseType: number,
+                finished: boolean,
+                ) => handler(
+                requestId,
+                paramsJson !== "" ? JSON.parse(paramsJson) : undefined,
+                responseType,
+                finished),
+            );
+        }
+    }
+
+    sendRequestParams(context: number, requestId: number, functionName: string, functionParams: any) {
+        const paramsJson = (functionParams === undefined) || (functionParams === null)
+            ? ""
+            : JSON.stringify(functionParams);
+        this.library.sendRequest(context, requestId, functionName, paramsJson);
+    }
+
+    createContext(configJson: string): Promise<string> {
+        return this.library.createContext(configJson);
+    }
+
+    destroyContext(context: number) {
+        this.library.destroyContext(context);
+    }
 }
 
 export class CommonBinaryBridge implements BinaryBridge {
-    private loading: LoadingPromise[] | null = null;
-    private loadError: Error | null = null;
-    private library: BinaryLibrary | null = null;
-    private librarySupportsDirectParams = false;
+    private loading: LoadingPromise[] | undefined = undefined;
+    private loadError: Error | undefined = undefined;
+    private library: BinaryLibraryWithParams | undefined = undefined;
     private requests = new Map<number, Request>();
     private nextRequestId: number = 1;
     private contextCount: number = 0;
     private responseHandlerAssigned = false;
 
-    constructor(loader: () => Promise<BinaryLibrary>) {
+    constructor(loader: () => Promise<BinaryLibrary | BinaryLibraryWithParams>) {
         this.loading = [];
-        loader().then((lib: BinaryLibrary, error?: Error) => {
+        loader().then((library: BinaryLibrary | BinaryLibraryWithParams, error?: Error) => {
             const saveLoading = this.loading;
-            this.loading = null;
-            if (lib) {
-                this.library = lib;
-                this.librarySupportsDirectParams = !!lib.setResponseParamsHandler;
-                saveLoading?.forEach(x => x.resolve(lib));
+            this.loading = undefined;
+            if (library) {
+                let libraryWithParams = "setResponseParamsHandler" in library
+                    ? library
+                    : new BinaryLibraryAdapter(library);
+                this.library = libraryWithParams;
+                saveLoading?.forEach(x => x.resolve(libraryWithParams));
             } else {
-                this.loadError = error || null;
+                this.loadError = error ?? undefined;
                 saveLoading?.forEach(x => x.reject(error));
             }
         });
@@ -108,32 +156,14 @@ export class CommonBinaryBridge implements BinaryBridge {
         const mustBeAssigned = (this.contextCount > 0) || (this.requests.size > 0);
         if (this.responseHandlerAssigned !== mustBeAssigned) {
             if (mustBeAssigned) {
-                if (this.librarySupportsDirectParams) {
-                    this.library?.setResponseParamsHandler((
-                        requestId: number,
-                        params: any,
-                        responseType: number,
-                        finished: boolean,
-                    ) => this.handleLibraryResponse(requestId, params, responseType, finished));
-                } else {
-                    this.library?.setResponseHandler((
-                        requestId: number,
-                        paramsJson: string,
-                        responseType: number,
-                        finished: boolean,
-                        ) => this.handleLibraryResponse(
-                        requestId,
-                        paramsJson !== "" ? JSON.parse(paramsJson) : undefined,
-                        responseType,
-                        finished),
-                    );
-                }
+                this.library?.setResponseParamsHandler((
+                    requestId: number,
+                    params: any,
+                    responseType: number,
+                    finished: boolean,
+                ) => this.handleLibraryResponse(requestId, params, responseType, finished));
             } else {
-                if (this.librarySupportsDirectParams) {
-                    this.library?.setResponseParamsHandler();
-                } else {
-                    this.library?.setResponseHandler();
-                }
+                this.library?.setResponseParamsHandler();
             }
             this.responseHandlerAssigned = mustBeAssigned;
         }
@@ -158,7 +188,7 @@ export class CommonBinaryBridge implements BinaryBridge {
         functionParams: P,
         responseHandler?: ResponseHandler,
     ): Promise<R> {
-        const lib = this.library || await this.loadRequired();
+        const lib = this.library ?? await this.loadRequired();
         return new Promise((resolve, reject) => {
             const request: Request = {
                 resolve,
@@ -168,28 +198,21 @@ export class CommonBinaryBridge implements BinaryBridge {
             const requestId = this.generateRequestId();
             this.requests.set(requestId, request);
             this.checkResponseHandler();
-            if (this.librarySupportsDirectParams) {
-                lib.sendRequestParams(context, requestId, functionName, functionParams);
-            } else {
-                const paramsJson = (functionParams === undefined) || (functionParams === null)
-                    ? ""
-                    : JSON.stringify(functionParams);
-                lib.sendRequest(context, requestId, functionName, paramsJson);
-            }
+            lib.sendRequestParams(context, requestId, functionName, functionParams);
         });
     }
 
-    private loadRequired(): Promise<BinaryLibrary> {
-        if (this.library !== null) {
+    private loadRequired(): Promise<BinaryLibraryWithParams> {
+        if (this.library !== undefined) {
             return Promise.resolve(this.library);
         }
-        if (this.loadError !== null) {
+        if (this.loadError !== undefined) {
             return Promise.reject(this.loadError);
         }
-        if (this.loading === null) {
+        if (this.loading === undefined) {
             return Promise.reject(new TonClientError(1, "TON Client binary library isn't set."));
         }
-        return new Promise<BinaryLibrary>((resolve, reject) => {
+        return new Promise<BinaryLibraryWithParams>((resolve, reject) => {
             this.loading?.push({
                 resolve,
                 reject,
@@ -264,7 +287,7 @@ type Request = {
 }
 
 type LoadingPromise = {
-    resolve: (library: BinaryLibrary) => void,
+    resolve: (library: BinaryLibraryWithParams) => void,
     reject: (error?: Error) => void,
 }
 
