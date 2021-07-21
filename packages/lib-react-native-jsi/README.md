@@ -73,6 +73,30 @@ android {
 +FLIPPER_VERSION=0.78.0
 ```
 
+`android/app/src/main/java/.../MainApplication.java`
+
+```diff
++import com.facebook.react.bridge.JSIModulePackage;
++import com.tonlabs.tonclientjsi.TonClientJSIModulePackage;
+
+public class MainApplication extends Application implements ReactApplication {
+
+  private final ReactNativeHost mReactNativeHost =
+      new ReactNativeHost(this) {
+        ...
+
+        @Override
+        protected String getJSMainModuleName() {
+          return "index";
+        }
+
++        @Override
++        protected JSIModulePackage getJSIModulePackage() {
++          return new TonClientJSIModulePackage();
++        }
+      };
+```
+
 # Setup
 
 `index.tsx`

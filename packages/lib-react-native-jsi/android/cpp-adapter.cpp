@@ -10,19 +10,18 @@ using namespace facebook;
 struct TonClientJsiModule : jni::JavaClass<TonClientJsiModule>
 {
 public:
-  __unused static constexpr auto kJavaDescriptor = "Lcom/tonlabs/tonclientjsi/TonClientJsiModule;";
+  __unused static constexpr auto kJavaDescriptor = "Lcom/tonlabs/tonclientjsi/TonClientJSIModulePackage;";
 
   static void registerNatives()
   {
-    javaClassStatic()->registerNatives({makeNativeMethod("installNative", TonClientJsiModule::installNative)});
-    javaClassStatic()->registerNatives({makeNativeMethod("destruct", TonClientJsiModule::destruct)});
+    javaClassStatic()->registerNatives({makeNativeMethod("installJSIBindings", TonClientJsiModule::installJSIBindings)});
   }
 
 private:
-  static void installNative(jni::alias_ref<jni::JClass>,
-                            jlong jsContext,
-                            jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
-                            jni::alias_ref<tonlabs::TonClientJsiBlobManager> javaBlobManager)
+  static void installJSIBindings(jni::alias_ref<jni::JClass>,
+                                 jlong jsContext,
+                                 jni::alias_ref<facebook::react::CallInvokerHolder::javaobject> jsCallInvokerHolder,
+                                 jni::alias_ref<tonlabs::TonClientJsiBlobManager> javaBlobManager)
   {
     jsi::Runtime *runtime = reinterpret_cast<facebook::jsi::Runtime *>(jsContext);
 
@@ -39,11 +38,6 @@ private:
         *runtime,
         jsi::PropNameID::forAscii(*runtime, "tonClientJsiModule"),
         jsi::Object::createFromHostObject(*runtime, std::move(tonClientJsiModule)));
-  }
-
-  static void destruct(jni::alias_ref<jni::JClass>)
-  {
-    // noop
   }
 };
 
