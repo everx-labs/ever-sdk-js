@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-export interface BinaryLibrary {
-  setResponseHandler(
+export interface BinaryLibraryBase {
+  createContext(configJson: string): Promise<string>;
+
+  destroyContext(context: number): void;
+}
+
+export interface BinaryLibraryWithParams extends BinaryLibraryBase {
+  setResponseParamsHandler(
     handler?: (
       requestId: number,
-      paramsJson: string,
+      params: any,
       responseType: number,
       finished: boolean
     ) => void
   ): void;
 
-  createContext(configJson: string): Promise<string>;
-
-  destroyContext(context: number): void;
-
-  sendRequest(
+  sendRequestParams(
     context: number,
     requestId: number,
     functionName: string,
-    functionParamsJson: string
+    functionParams: any
   ): void;
 }
 
-export declare function libReactNativeJsi(): Promise<BinaryLibrary>;
+export declare function libReactNativeJsi(): Promise<BinaryLibraryWithParams>;

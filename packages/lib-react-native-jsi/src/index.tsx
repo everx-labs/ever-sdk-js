@@ -1,9 +1,8 @@
-import type { BinaryLibrary } from './index.d';
+import type { BinaryLibraryWithParams } from './index.d';
 
-export function libReactNativeJsi(): Promise<BinaryLibrary> {
+export function libReactNativeJsi(): Promise<BinaryLibraryWithParams> {
   const tonClientJsiModule = (global as any).tonClientJsiModule;
   return Promise.resolve({
-    // @ts-ignore // TODO: fix TypeScript error
     setResponseParamsHandler(
       handler: (
         requestId: number,

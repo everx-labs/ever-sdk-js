@@ -15,12 +15,11 @@ import {Button, Image, StyleSheet, Text, View} from 'react-native';
 import {TonClient} from '@tonclient/core';
 import buffer from 'buffer';
 
-// @ts-ignore
 const Buffer = global.Buffer ?? buffer.Buffer;
 
 const client = new TonClient();
 
-const dummyBlob = new Blob([]); // eslint-disable-line no-undef
+const dummyBlob = new Blob([]);
 
 export default function App() {
   const [versionText, setVersionText] = React.useState(null);
@@ -127,7 +126,7 @@ export default function App() {
     paramsRef.current.decrypted = (
       await client.crypto.generate_random_bytes({
         length,
-        // @ts-ignore
+        // @ts-ignore // TODO: return_blob
         dummy: type === 'blob' ? dummyBlob : null,
         // NOTE: keep the reference to dummy blob as well so it does not get garbage-collected, otherwise the app will crash!
       })
