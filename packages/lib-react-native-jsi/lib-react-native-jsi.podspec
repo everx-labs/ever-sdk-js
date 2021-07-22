@@ -2,15 +2,15 @@ require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
-reactNativeVersion = package["devDependencies"]["react-native"].split(".")[1].to_i
+react_native_version = JSON.parse(File.read(File.join(__dir__, "..", "..", "react-native", "package.json")))["version"].split(".")[1].to_i
 
-if reactNativeVersion >= 64
+if react_native_version >= 64
   folly_prefix = "RCT-"
 else
   folly_prefix = ""
 end
 
-folly_flags = "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DRNVERSION=" + reactNativeVersion.to_s
+folly_flags = "-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DRNVERSION=" + react_native_version.to_s
 folly_compiler_flags = folly_flags + " " + "-Wno-comma -Wno-shorten-64-to-32"
 
 Pod::Spec.new do |s|
