@@ -91,19 +91,23 @@ namespace tonlabs
         {
           // replace blobs with strings
           const auto &blobManager = request_data->jsiModule->blobManager_;
-          for (auto &value : request_data->functionParamsFollyDynamic.values())
+          for (auto &[key, value] : request_data->functionParamsFollyDynamic.items())
           {
             if (value.isObject())
             {
               if (value["_data"].isObject())
               {
                 value = blobManager->resolve(Blob::fromDynamic(value));
-                request_data->useBlobs = true;
+                request_data->returnBlob = true;
               }
               else
               {
                 // TODO: handle nested objects
               }
+            }
+            else if (key == "return_blob" && value == true)
+            {
+              request_data->returnBlob = true;
             }
           }
           request_data->functionParamsJsonStdString = folly::toJson(request_data->functionParamsFollyDynamic);
@@ -131,7 +135,7 @@ namespace tonlabs
             const auto &blobManager = request_data->jsiModule->blobManager_;
             for (auto &[key, value] : request_data->responseParamsFollyDynamic.items())
             {
-              if (value.isString() && request_data->useBlobs)
+              if (value.isString() && request_data->returnBlob)
               {
                 request_data->blobs.emplace_back(key.asString(), std::make_unique<Blob>(blobManager->store(value.asString())));
                 value = nullptr; // placeholder for JS Blob

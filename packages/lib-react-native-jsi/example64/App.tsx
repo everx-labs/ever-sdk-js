@@ -19,8 +19,6 @@ const Buffer = global.Buffer ?? buffer.Buffer;
 
 const client = new TonClient();
 
-const dummyBlob = new Blob([]);
-
 export default function App() {
   const [versionText, setVersionText] = React.useState(null);
   const [objectURL, setObjectURL] = React.useState(null);
@@ -127,8 +125,7 @@ export default function App() {
       await client.crypto.generate_random_bytes({
         length,
         // @ts-ignore // TODO: return_blob
-        dummy: type === 'blob' ? dummyBlob : null,
-        // NOTE: keep the reference to dummy blob as well so it does not get garbage-collected, otherwise the app will crash!
+        return_blob: type === 'blob',
       })
     ).bytes;
 
