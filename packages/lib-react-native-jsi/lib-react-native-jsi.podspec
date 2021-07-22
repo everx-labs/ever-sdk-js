@@ -2,7 +2,12 @@ require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
-react_native_version = JSON.parse(File.read(File.join(__dir__, "..", "..", "react-native", "package.json")))["version"].split(".")[1].to_i
+begin
+  react_native_version = JSON.parse(File.read(File.join(__dir__, "..", "..", "react-native", "package.json")))["version"].split(".")[1].to_i
+rescue
+  # example app
+  react_native_version = JSON.parse(File.read(File.join(__dir__, "node_modules", "react-native", "package.json")))["version"].split(".")[1].to_i
+end
 
 if react_native_version >= 64
   folly_prefix = "RCT-"
