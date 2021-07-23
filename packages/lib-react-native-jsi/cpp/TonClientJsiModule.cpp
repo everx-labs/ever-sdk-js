@@ -65,60 +65,65 @@ namespace tonlabs
   {
     // React Native JS thread
 
-    request_data_t *request_data = new request_data_t;
-    request_data->jsiModule = this;
-    request_data->context = static_cast<uint32_t>(context.asNumber());
-    request_data->requestId = static_cast<uint32_t>(requestId.asNumber());
-    request_data->functionNameStdString = functionName.asString(rt).utf8(rt);
-
     if (!(functionParams.isObject() || functionParams.isUndefined() || functionParams.isNull()))
     {
       throw std::runtime_error("Request params must be either a JS object or undefined");
     }
-    request_data->functionParamsFollyDynamic = jsi::dynamicFromValue(rt, functionParams);
 
-    std::thread thread([request_data] { // worker thread
+    request_data_t *request_data = new request_data_t;
+    request_data->jsiModule = this;
+    request_data->context = static_cast<uint32_t>(context.asNumber());
+    request_data->requestId = static_cast<uint32_t>(requestId.asNumber());
+
+    std::string functionNameStdString = functionName.asString(rt).utf8(rt);
+
+    auto functionParamsFollyDynamic = std::make_shared<folly::dynamic>(jsi::dynamicFromValue(rt, functionParams));
+
+    std::thread thread([request_data, functionNameStdString, functionParamsFollyDynamic] { // worker thread
 
 #ifdef __ANDROID__
-      jni::ThreadScope::WithClassLoader([request_data] { // thread attached to JVM
+      jni::ThreadScope::WithClassLoader([&] { // thread attached to JVM
 #endif
         tc_string_data_t function_name{
-            request_data->functionNameStdString.c_str(),
-            static_cast<uint32_t>(request_data->functionNameStdString.length())};
+            functionNameStdString.c_str(),
+            static_cast<uint32_t>(functionNameStdString.length())};
 
-        if (request_data->functionParamsFollyDynamic.isObject())
+        std::string functionParamsJsonStdString = [&]() -> std::string
         {
-          // replace blobs with strings
-          const auto &blobManager = request_data->jsiModule->blobManager_;
-          for (auto &[key, value] : request_data->functionParamsFollyDynamic.items())
+          if (functionParamsFollyDynamic->isObject())
           {
-            if (value.isObject())
+            // replace blobs with strings
+            const auto &blobManager = request_data->jsiModule->blobManager_;
+            for (auto &[key, value] : functionParamsFollyDynamic->items())
             {
-              if (value["_data"].isObject())
+              if (value.isObject())
               {
-                value = blobManager->resolve(Blob::fromDynamic(value));
+                if (value["_data"].isObject())
+                {
+                  value = blobManager->resolve(Blob::fromDynamic(value));
+                  request_data->returnBlob = true;
+                }
+                else
+                {
+                  // TODO: handle nested objects
+                }
+              }
+              else if (key == "return_blob" && value == true)
+              {
                 request_data->returnBlob = true;
               }
-              else
-              {
-                // TODO: handle nested objects
-              }
             }
-            else if (key == "return_blob" && value == true)
-            {
-              request_data->returnBlob = true;
-            }
+            return folly::toJson(*functionParamsFollyDynamic);
           }
-          request_data->functionParamsJsonStdString = folly::toJson(request_data->functionParamsFollyDynamic);
-        }
-        else
-        {
-          request_data->functionParamsJsonStdString = "";
-        }
+          else
+          {
+            return "";
+          }
+        }(); // IIFE
 
         tc_string_data_t function_params_json{
-            request_data->functionParamsJsonStdString.c_str(),
-            static_cast<uint32_t>(request_data->functionParamsJsonStdString.length())};
+            functionParamsJsonStdString.c_str(),
+            static_cast<uint32_t>(functionParamsJsonStdString.length())};
 
         tc_response_handler_ptr_t response_handler =
             [](void *request_ptr, tc_string_data_t params_json, uint32_t response_type, bool finished) -> void { // either TON SDK worker thread or calling thread
