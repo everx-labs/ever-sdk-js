@@ -128,18 +128,19 @@ namespace tonlabs
 #endif
             request_data_t *request_data = reinterpret_cast<request_data_t *>(request_ptr);
 
-            request_data->responseParamsFollyDynamic =
-                params_json.len > 0 ? folly::parseJson(std::string_view(params_json.content, params_json.len)) : "";
+            auto responseParamsFollyDynamic = std::make_shared<folly::dynamic>(
+                params_json.len > 0 ? folly::parseJson(std::string_view(params_json.content, params_json.len)) : "");
 
             // replace strings with blobs
-            if (request_data->responseParamsFollyDynamic.isObject())
+            auto blobs = std::make_shared<std::vector<std::pair<std::string, std::unique_ptr<Blob>>>>();
+            if (responseParamsFollyDynamic->isObject())
             {
               const auto &blobManager = request_data->jsiModule->blobManager_;
-              for (auto &[key, value] : request_data->responseParamsFollyDynamic.items())
+              for (auto &[key, value] : responseParamsFollyDynamic->items())
               {
                 if (value.isString() && request_data->returnBlob)
                 {
-                  request_data->blobs.emplace_back(key.asString(), std::make_unique<Blob>(blobManager->store(value.asString())));
+                  blobs->emplace_back(key.asString(), std::make_unique<Blob>(blobManager->store(value.asString())));
                   value = ""; // placeholder for JS Blob
                 }
                 else if (value.isObject())
@@ -150,7 +151,7 @@ namespace tonlabs
             }
 
             auto &jsCallInvoker = request_data->jsiModule->jsCallInvoker_;
-            jsCallInvoker->invokeAsync([request_data, response_type, finished]
+            jsCallInvoker->invokeAsync([request_data, response_type, finished, responseParamsFollyDynamic, blobs]
                                        {
                                          // React Native JS thread
 
@@ -158,10 +159,10 @@ namespace tonlabs
                                          auto &rt = request_data->jsiModule->runtime_;
                                          auto &requestId = request_data->requestId;
 
-                                         jsi::Value responseParams = jsi::valueFromDynamic(rt, request_data->responseParamsFollyDynamic);
+                                         jsi::Value responseParams = jsi::valueFromDynamic(rt, *responseParamsFollyDynamic);
 
                                          // replace placeholders with created JS Blob objects
-                                         for (const auto &[key, blob] : request_data->blobs)
+                                         for (const auto &[key, blob] : *blobs)
                                          {
                                            responseParams.asObject(rt).setProperty(rt, jsi::String::createFromUtf8(rt, key), blob->toValue(rt));
                                          }
