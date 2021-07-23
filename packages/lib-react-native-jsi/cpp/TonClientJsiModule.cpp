@@ -88,6 +88,41 @@ namespace tonlabs
             functionNameStdString.c_str(),
             static_cast<uint32_t>(functionNameStdString.length())};
 
+        request_data->returnBlob = [&]
+        {
+          if (functionParamsFollyDynamic->isObject())
+          {
+            // override behaviour with return_blob parameter
+            const auto &value = (*functionParamsFollyDynamic)["return_blob"];
+            if (value == "blob")
+            {
+              return true;
+            }
+            if (value == "base64")
+            {
+              return false;
+            }
+
+            // if there is any blob in the request params, then all strings in the response will be replaced with blobs
+            for (const auto &[key, value] : functionParamsFollyDynamic->items())
+            {
+              if (value.isObject())
+              {
+                if (value["_data"].isObject())
+                {
+                  return true;
+                }
+                else
+                {
+                  // TODO: handle nested objects
+                }
+              }
+            }
+          }
+
+          return false; // default
+        }();
+
         std::string functionParamsJsonStdString = [&]() -> std::string
         {
           if (functionParamsFollyDynamic->isObject())
@@ -101,16 +136,11 @@ namespace tonlabs
                 if (value["_data"].isObject())
                 {
                   value = blobManager->resolve(Blob::fromDynamic(value));
-                  request_data->returnBlob = true;
                 }
                 else
                 {
                   // TODO: handle nested objects
                 }
-              }
-              else if (key == "return_blob" && value == true)
-              {
-                request_data->returnBlob = true;
               }
             }
             return folly::toJson(*functionParamsFollyDynamic);

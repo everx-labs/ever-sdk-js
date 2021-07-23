@@ -26,6 +26,7 @@ export default function App() {
   const [randomDataText, setRandomDataText] = React.useState(null);
   const [requests, setRequests] = React.useState(0);
   const [cryptoText, setCryptoText] = React.useState(null);
+  const [hashText, setHashText] = React.useState(null);
   const [clicks, setClicks] = React.useState(0);
   const [now, setNow] = React.useState(performance.now());
 
@@ -124,8 +125,8 @@ export default function App() {
     paramsRef.current.decrypted = (
       await client.crypto.generate_random_bytes({
         length,
-        // @ts-ignore // TODO: return_blob
-        return_blob: type === 'blob',
+        // @ts-ignore // TODO: return_blob: 'base64' | 'blob' | 'as_params'
+        return_blob: type === 'string' ? 'base64' : 'blob',
       })
     ).bytes;
 
@@ -162,6 +163,24 @@ export default function App() {
     setRequests(r => r - 1);
     setCryptoText(`${duration} ms`);
   }, [setCryptoText]);
+
+  const handleCalculateHash = React.useCallback(async () => {
+    const {decrypted} = paramsRef.current;
+    if (decrypted === null) {
+      console.log('Random data not generated yet');
+      return;
+    }
+
+    setHashText('Work in progress...');
+
+    const {hash} = await client.crypto.sha512({
+      data: decrypted,
+      // @ts-ignore // TODO: return_blob: 'base64' | 'blob' | 'as_params'
+      return_blob: 'base64',
+    });
+
+    setHashText(hash.toString());
+  }, []);
 
   const handleIncrement = React.useCallback(() => {
     setClicks(c => c + 1);
@@ -209,6 +228,10 @@ export default function App() {
         <Text>{cryptoText}</Text>
         <View style={styles.separator} />
 
+        <Button title="Calculate hash" onPress={handleCalculateHash} />
+        <Text style={styles.hash}>{hashText}</Text>
+        <View style={styles.separator} />
+
         <Button title="Increment" onPress={handleIncrement} />
         <Text onPress={handleResetClicks}>{clicks} clicks</Text>
         <View style={styles.separator} />
@@ -235,6 +258,10 @@ const styles = StyleSheet.create({
   },
   objectURL: {
     height: 40,
+    marginHorizontal: 20,
+  },
+  hash: {
+    height: 60,
     marginHorizontal: 20,
   },
   horizontal: {
