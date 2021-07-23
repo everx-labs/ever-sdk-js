@@ -128,7 +128,8 @@ namespace tonlabs
 #endif
             request_data_t *request_data = reinterpret_cast<request_data_t *>(request_ptr);
 
-            request_data->responseParamsFollyDynamic = folly::parseJson(std::string_view(params_json.content, params_json.len));
+            request_data->responseParamsFollyDynamic =
+                params_json.len > 0 ? folly::parseJson(std::string_view(params_json.content, params_json.len)) : "";
 
             // replace strings with blobs
             if (request_data->responseParamsFollyDynamic.isObject())
