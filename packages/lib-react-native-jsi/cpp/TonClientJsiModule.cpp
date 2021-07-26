@@ -108,7 +108,7 @@ namespace tonlabs
             {
               if (value.isObject())
               {
-                if (value["_data"].isObject())
+                if (value.find("_data") != value.items().end())
                 {
                   return true;
                 }
@@ -133,7 +133,7 @@ namespace tonlabs
             {
               if (value.isObject())
               {
-                if (value["_data"].isObject())
+                if (value.find("_data") != value.items().end())
                 {
                   value = blobManager->resolve(Blob::fromDynamic(value));
                 }
