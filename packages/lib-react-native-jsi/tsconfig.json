@@ -26,6 +26,7 @@
   },
   "exclude": [
     "example63",
-    "example64"
+    "example64",
+    "example65",
   ]
 }
