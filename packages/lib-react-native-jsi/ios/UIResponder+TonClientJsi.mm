@@ -1,7 +1,3 @@
-#import <React/RCTBridge+Private.h>
-#import <React/RCTBlobManager.h>
-#import <ReactCommon/RCTTurboModuleManager.h>
-
 #if __has_include(<reacthermes/HermesExecutorFactory.h>)
 #import <reacthermes/HermesExecutorFactory.h>
 typedef facebook::react::HermesExecutorFactory ExecutorFactory;
@@ -17,8 +13,8 @@ typedef facebook::react::JSCExecutorFactory ExecutorFactory;
 #import <React/RCTJSIExecutorRuntimeInstaller.h>
 #endif
 
+#import "TONJSIExecutorInitializer.h"
 #import "UIResponder+TonClientJsi.h"
-#import "TonClientJsiModule.h"
 
 #ifndef DONT_AUTOINSTALL_TONCLIENTJSI
 
@@ -26,39 +22,13 @@ typedef facebook::react::JSCExecutorFactory ExecutorFactory;
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
-  __weak __typeof(self) weakSelf = self;
-
-  auto executor = [weakSelf, bridge](facebook::jsi::Runtime &runtime) {
-    if (!bridge) {
-      return;
-    }
-
-    __typeof(self) strongSelf = weakSelf;
-    if (!strongSelf) {
-      return;
-    }
-
-    auto jsCallInvoker = bridge.jsCallInvoker;
-
-    RCTBlobManager *reactBlobManager = [bridge moduleForName:@"BlobModule"];
-
-    std::unique_ptr<tonlabs::BlobManager> blobManager =
-      std::make_unique<tonlabs::BlobManager>(reactBlobManager);
-
-    std::unique_ptr<tonlabs::TonClientJsiModule> tonClientJsiModule =
-      std::make_unique<tonlabs::TonClientJsiModule>(runtime, jsCallInvoker, std::move(blobManager));
-
-    runtime.global().setProperty(
-      runtime,
-      jsi::PropNameID::forAscii(runtime, "tonClientJsiModule"),
-      jsi::Object::createFromHostObject(runtime, std::move(tonClientJsiModule)));
-  };
+  const auto installer = tonlabs::TONJSIExecutorRuntimeInstaller(bridge, nullptr);
 
 #if RNVERSION >= 64
   // installs globals such as console, nativePerformanceNow, etc.
-  return std::make_unique<ExecutorFactory>(facebook::react::RCTJSIExecutorRuntimeInstaller(executor));
+  return std::make_unique<ExecutorFactory>(facebook::react::RCTJSIExecutorRuntimeInstaller(installer));
 #else
-  return std::make_unique<ExecutorFactory>(executor);
+  return std::make_unique<ExecutorFactory>(installer);
 #endif
 }
 

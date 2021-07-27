@@ -70,6 +70,7 @@ PODS:
     - Folly
     - React-callinvoker
     - React-Core
+    - React-jsiexecutor
     - ReactCommon/turbomodule/core
   - libevent (2.1.12)
   - OpenSSL-Universal (1.1.180)
@@ -439,7 +440,7 @@ SPEC CHECKSUMS:
   FlipperKit: 8a20b5c5fcf9436cac58551dc049867247f64b00
   Folly: b73c3869541e86821df3c387eb0af5f65addfab4
   glog: 40a13f7840415b9a77023fbcae0f1e6f43192af3
-  lib-react-native-jsi: 9b0c72d95fd1d00b6882ed681e13a4c510d2478e
+  lib-react-native-jsi: d88c018ec727c3cae75a91335aa7a9aedf42ff8a
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: 1aa4f6a6ee7256b83db99ec1ccdaa80d10f9af9b
   RCTRequired: 082f10cd3f905d6c124597fd1c14f6f2655ff65e

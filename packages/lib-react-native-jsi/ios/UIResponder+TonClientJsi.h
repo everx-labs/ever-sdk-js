@@ -1,10 +1,10 @@
 #import <Foundation/Foundation.h>
 #import <React/RCTCxxBridgeDelegate.h>
 
-#ifndef DONT_AUTOINSTALL_REANIMATED
+#ifndef DONT_AUTOINSTALL_TONCLIENTJSI
 
 @interface UIResponder (TonClientJsi) <RCTCxxBridgeDelegate>
 
 @end
 
-#endif
+#endif // DONT_AUTOINSTALL_TONCLIENTJSI

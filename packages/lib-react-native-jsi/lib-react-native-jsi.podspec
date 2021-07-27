@@ -49,6 +49,7 @@ Pod::Spec.new do |s|
 
   s.dependency "React-Core"
   s.dependency "React-callinvoker"
+  s.dependency "React-jsiexecutor"
   s.dependency "ReactCommon/turbomodule/core"
   s.dependency "#{folly_prefix}Folly"
 end
