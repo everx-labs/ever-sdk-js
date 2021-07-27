@@ -12,6 +12,8 @@ target 'example65' do
     :hermes_enabled => false
   )
 
+  pod 'lib-react-native-jsi', :path => '../..'
+
   target 'example65Tests' do
     inherit! :complete
     # Pods for testing

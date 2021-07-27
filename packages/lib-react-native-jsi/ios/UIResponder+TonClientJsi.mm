@@ -10,7 +10,7 @@ typedef facebook::react::HermesExecutorFactory ExecutorFactory;
 typedef facebook::react::HermesExecutorFactory ExecutorFactory;
 #else
 #import <React/JSCExecutorFactory.h>
-typedef JSCExecutorFactory ExecutorFactory;
+typedef facebook::react::JSCExecutorFactory ExecutorFactory;
 #endif
 
 #if RNVERSION >= 64
