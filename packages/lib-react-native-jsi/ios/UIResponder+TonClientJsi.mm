@@ -1,17 +1,34 @@
-#import <React/JSCExecutorFactory.h>
 #import <React/RCTBridge+Private.h>
 #import <React/RCTBlobManager.h>
 #import <ReactCommon/RCTTurboModuleManager.h>
 
+#if __has_include(<reacthermes/HermesExecutorFactory.h>)
+#import <reacthermes/HermesExecutorFactory.h>
+typedef facebook::react::HermesExecutorFactory ExecutorFactory;
+#elif __has_include(<React/HermesExecutorFactory.h>)
+#import <React/HermesExecutorFactory.h>
+typedef facebook::react::HermesExecutorFactory ExecutorFactory;
+#else
+#import <React/JSCExecutorFactory.h>
+typedef JSCExecutorFactory ExecutorFactory;
+#endif
+
+#if RNVERSION >= 64
+#import <React/RCTJSIExecutorRuntimeInstaller.h>
+#endif
+
 #import "UIResponder+TonClientJsi.h"
 #import "TonClientJsiModule.h"
+
+#ifndef DONT_AUTOINSTALL_TONCLIENTJSI
 
 @implementation UIResponder (TonClientJsi)
 
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
 {
   __weak __typeof(self) weakSelf = self;
-  return std::make_unique<facebook::react::JSCExecutorFactory>([weakSelf, bridge](facebook::jsi::Runtime &runtime) {
+
+  auto executor = [weakSelf, bridge](facebook::jsi::Runtime &runtime) {
     if (!bridge) {
       return;
     }
@@ -35,7 +52,16 @@
       runtime,
       jsi::PropNameID::forAscii(runtime, "tonClientJsiModule"),
       jsi::Object::createFromHostObject(runtime, std::move(tonClientJsiModule)));
-  });
+  };
+
+#if RNVERSION >= 64
+  // installs globals such as console, nativePerformanceNow, etc.
+  return std::make_unique<ExecutorFactory>(facebook::react::RCTJSIExecutorRuntimeInstaller(executor));
+#else
+  return std::make_unique<ExecutorFactory>(executor);
+#endif
 }
 
 @end
+
+#endif // DONT_AUTOINSTALL_TONCLIENTJSI

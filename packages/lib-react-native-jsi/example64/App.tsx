@@ -28,6 +28,7 @@ export default function App() {
   const [cryptoText, setCryptoText] = React.useState(null);
   const [hashText, setHashText] = React.useState(null);
   const [clicks, setClicks] = React.useState(0);
+  const [reactNativeInfo, setReactNativeInfo] = React.useState(null);
   const [now, setNow] = React.useState(performance.now());
 
   const paramsRef = React.useRef({
@@ -39,6 +40,12 @@ export default function App() {
   const blobRef = React.useRef(null);
   const nowRef = React.useRef(null);
   const cancelRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const version = require('./package.json').dependencies['react-native'];
+    const vm = 'HermesInternal' in global ? 'Hermes' : 'JSC';
+    setReactNativeInfo(`React Native ${version} (${vm})`);
+  }, []);
 
   const onAnimationFrame = React.useCallback(() => {
     const prevNow = nowRef.current;
@@ -236,6 +243,7 @@ export default function App() {
         <Text onPress={handleResetClicks}>{clicks} clicks</Text>
         <View style={styles.separator} />
 
+        <Text>{reactNativeInfo}</Text>
         <Text>{now}</Text>
       </View>
     </>
