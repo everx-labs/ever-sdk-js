@@ -52,7 +52,7 @@ android {
     applicationVariants.all { variant ->
         // ...
     }
-+
+
 +    configurations {
 +        all*.exclude module: 'fbjni-java-only'
 +    }
@@ -95,6 +95,29 @@ public class MainApplication extends Application implements ReactApplication {
 +          return new TonClientJSIModulePackage();
 +        }
       };
+```
+
+`android/app/src/main/AndroidManifest.xml`
+
+```diff
+<manifest>
+  <application>
++    <provider
++      android:name="com.facebook.react.modules.blob.BlobProvider"
++      android:authorities="@string/blob_provider_authority"
++      android:exported="false"
++    />
+  </application>
+</manifest>
+```
+
+`android/app/src/main/res/values/strings.xml`
+
+```diff
+<resources>
+  ...
++  <string name="blob_provider_authority">your.app.package.blobs</string>
+</resources>
 ```
 
 # Setup
