@@ -40,55 +40,65 @@ post_install do |installer|
 end
 ```
 
-`UIResponder+AppName.h`
+> **Note:** Don't forget to run `pod install` after doing that.
 
-```mm
-#import <Foundation/Foundation.h>
-#import <React/RCTCxxBridgeDelegate.h>
+Rename `AppDelegate.m` to `AppDelegate.mm`.
 
-@interface UIResponder (AppName) <RCTCxxBridgeDelegate>
+> **Note:** It's important to do it with Xcode.
+
+`AppDelegate.mm`
+
+```diff
+#import "AppDelegate.h"
+
+...
+
++#import <React/RCTCxxBridgeDelegate.h>
++#import <RNReanimated/REAInitializer.h>
++#import <lib-react-native-jsi/TONJSIExecutorInitializer.h>
+
++#if __has_include(<reacthermes/HermesExecutorFactory.h>)
++#import <reacthermes/HermesExecutorFactory.h>
++typedef HermesExecutorFactory ExecutorFactory;
++#elif __has_include(<React/HermesExecutorFactory.h>)
++#import <React/HermesExecutorFactory.h>
++typedef HermesExecutorFactory ExecutorFactory;
++#else
++#import <React/JSCExecutorFactory.h>
++typedef JSCExecutorFactory ExecutorFactory;
++#endif
+
++#if __has_include(<React/RCTJSIExecutorRuntimeInstaller.h>)
++#import <React/RCTJSIExecutorRuntimeInstaller.h>
++#endif
+
+...
+
++@interface AppDelegate() <RCTCxxBridgeDelegate>
++
++@end
+
+@implementation AppDelegate
+
+...
+
++- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
++{
++  const auto installer = tonlabs::TONJSIExecutorRuntimeInstaller(bridge, reanimated::REAJSIExecutorRuntimeInstaller(bridge, NULL));
++
++#if __has_include(<React/RCTJSIExecutorRuntimeInstaller.h>)
++  // installs globals such as console, nativePerformanceNow, etc.
++  return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(installer));
++#else
++  return std::make_unique<ExecutorFactory>(installer);
++#endif
++}
 
 @end
+
 ```
 
-`UIResponder+AppName.mm`
-
-```mm
-#import "UIResponder+AppName.h"
-
-#import <RNReanimated/REAInitializer.h>
-#import <lib-react-native-jsi/TONJSIExecutorInitializer.h>
-
-#if __has_include(<reacthermes/HermesExecutorFactory.h>)
-#import <reacthermes/HermesExecutorFactory.h>
-typedef HermesExecutorFactory ExecutorFactory;
-#elif __has_include(<React/HermesExecutorFactory.h>)
-#import <React/HermesExecutorFactory.h>
-typedef HermesExecutorFactory ExecutorFactory;
-#else
-#import <React/JSCExecutorFactory.h>
-typedef JSCExecutorFactory ExecutorFactory;
-#endif
-
-#if __has_include(<React/RCTJSIExecutorRuntimeInstaller.h>)
-#import <React/RCTJSIExecutorRuntimeInstaller.h>
-#endif
-
-@implementation UIResponder (AppName)
-- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
-{
-  const auto installer = tonlabs::TONJSIExecutorRuntimeInstaller(bridge, reanimated::REAJSIExecutorRuntimeInstaller(bridge, NULL));
-
-#if __has_include(<React/RCTJSIExecutorRuntimeInstaller.h>)
-  // installs globals such as console, nativePerformanceNow, etc.
-  return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(installer));
-#else
-  return std::make_unique<ExecutorFactory>(installer);
-#endif
-}
-
-@end
-```
+> **Note:** Make sure that your project uses C++14 or higher. You can change C++ Language Dialect in the Build Settings of your project.
 
 ## Android
 
