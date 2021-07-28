@@ -26,6 +26,70 @@ Requirements: Xcode 12.5
 cd ios && pod install && cd ..
 ```
 
+On iOS, the library is installed automatically. However, currently it is not possible to autoinstall more than one JSI library. In order to use lib-react-native-jsi and [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated) simultaneously, you need to enable `DONT_AUTOINSTALL_*` flags in Podfile and register JSI bindings in `jsExecutorFactoryForBridge` method:
+
+`Podfile`
+
+```rb
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '-DDONT_AUTOINSTALL_REANIMATED -DDONT_AUTOINSTALL_TONCLIENTJSI'
+    end
+  end
+end
+```
+
+`UIResponder+AppName.h`
+
+```mm
+#import <Foundation/Foundation.h>
+#import <React/RCTCxxBridgeDelegate.h>
+
+@interface UIResponder (AppName) <RCTCxxBridgeDelegate>
+
+@end
+```
+
+`UIResponder+AppName.mm`
+
+```mm
+#import "UIResponder+AppName.h"
+
+#import <RNReanimated/REAInitializer.h>
+#import <lib-react-native-jsi/TONJSIExecutorInitializer.h>
+
+#if __has_include(<reacthermes/HermesExecutorFactory.h>)
+#import <reacthermes/HermesExecutorFactory.h>
+typedef HermesExecutorFactory ExecutorFactory;
+#elif __has_include(<React/HermesExecutorFactory.h>)
+#import <React/HermesExecutorFactory.h>
+typedef HermesExecutorFactory ExecutorFactory;
+#else
+#import <React/JSCExecutorFactory.h>
+typedef JSCExecutorFactory ExecutorFactory;
+#endif
+
+#if __has_include(<React/RCTJSIExecutorRuntimeInstaller.h>)
+#import <React/RCTJSIExecutorRuntimeInstaller.h>
+#endif
+
+@implementation UIResponder (AppName)
+- (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge
+{
+  const auto installer = tonlabs::TONJSIExecutorRuntimeInstaller(bridge, reanimated::REAJSIExecutorRuntimeInstaller(bridge, NULL));
+
+#if __has_include(<React/RCTJSIExecutorRuntimeInstaller.h>)
+  // installs globals such as console, nativePerformanceNow, etc.
+  return std::make_unique<ExecutorFactory>(RCTJSIExecutorRuntimeInstaller(installer));
+#else
+  return std::make_unique<ExecutorFactory>(installer);
+#endif
+}
+
+@end
+```
+
 ## Android
 
 Requirements: Android NDK 21.3.6528147
@@ -191,4 +255,8 @@ cd ..
 yarn react-native start
 yarn react-native run-android
 yarn react-native run-ios
+```
+
+```
+
 ```

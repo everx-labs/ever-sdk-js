@@ -29,7 +29,6 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "10.0" }
   s.source       = { :git => "https://github.com/tonlabs/ton-client-js.git", :tag => "#{s.version}" }
 
-  s.header_mappings_dir = "cpp"
   s.source_files = "ios/**/*.{h,m,mm}", "cpp/**/*.{h,cpp}"
   s.exclude_files = "cpp/BlobManager.cpp" # compiled as Objective-C++ from ios/BlobManager.mm
   s.ios.vendored_library = "ios/libtonclient.a"
