@@ -266,7 +266,3 @@ yarn react-native start
 yarn react-native run-android
 yarn react-native run-ios
 ```
-
-```
-
-```
