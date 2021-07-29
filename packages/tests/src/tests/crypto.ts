@@ -40,8 +40,8 @@ test("crypto - encrypt large blocks", async () => {
         const nonce = Buffer.from((await client.crypto.generate_random_bytes({length: 24})).bytes, "base64").toString("hex");
         const decrypted = (await client.crypto.generate_random_bytes({
             length: 100000000, // 100 MB
-            // @ts-ignore // TODO: return_blob: 'base64' | 'blob' | 'as_params'
-            return_blob: 'blob'
+            // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+            response_binary_type: 'blob'
         })).bytes;
         const encrypted = (await client.crypto.nacl_box({
             decrypted: decrypted,
@@ -62,13 +62,13 @@ test("crypto - encrypt large blocks", async () => {
             // Blob
             const hash = (await client.crypto.sha512({
                 data: decrypted,
-                // @ts-ignore // TODO: return_blob: 'base64' | 'blob' | 'as_params'
-                return_blob: 'base64'
+                // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+                response_binary_type: 'base64'
             })).hash;
             const hash2 = (await client.crypto.sha512({
                 data: decrypted2,
-                // @ts-ignore // TODO: return_blob: 'base64' | 'blob' | 'as_params'
-                return_blob: 'base64'
+                // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+                response_binary_type: 'base64'
             })).hash;
             expect(hash).toEqual(hash2);
         }

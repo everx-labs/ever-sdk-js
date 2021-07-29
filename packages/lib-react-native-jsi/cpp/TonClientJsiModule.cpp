@@ -93,8 +93,8 @@ namespace tonlabs
         {
           if (functionParamsFollyDynamic->isObject())
           {
-            // override behaviour with return_blob parameter
-            const auto &value = (*functionParamsFollyDynamic)["return_blob"];
+            // override behaviour with `response_binary_type` parameter
+            const auto &value = (*functionParamsFollyDynamic)["response_binary_type"];
             if (value == "blob")
             {
               return true;

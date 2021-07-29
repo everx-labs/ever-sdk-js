@@ -132,8 +132,8 @@ export default function App() {
     paramsRef.current.decrypted = (
       await client.crypto.generate_random_bytes({
         length,
-        // @ts-ignore // TODO: return_blob: 'base64' | 'blob' | 'as_params'
-        return_blob: type === 'string' ? 'base64' : 'blob',
+        // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+        response_binary_type: type === 'string' ? 'base64' : 'blob',
       })
     ).bytes;
 
@@ -182,8 +182,8 @@ export default function App() {
 
     const {hash} = await client.crypto.sha512({
       data: decrypted,
-      // @ts-ignore // TODO: return_blob: 'base64' | 'blob' | 'as_params'
-      return_blob: 'base64',
+      // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+      response_binary_type: 'base64',
     });
 
     setHashText(hash.toString());
