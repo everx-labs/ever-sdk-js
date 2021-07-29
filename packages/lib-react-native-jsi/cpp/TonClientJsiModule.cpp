@@ -72,14 +72,15 @@ namespace tonlabs
 
     request_data_t *request_data = new request_data_t;
     request_data->jsiModule = this;
-    request_data->context = static_cast<uint32_t>(context.asNumber());
     request_data->requestId = static_cast<uint32_t>(requestId.asNumber());
+
+    const uint32_t context_uint32 = static_cast<uint32_t>(context.asNumber());
 
     std::string functionNameStdString = functionName.asString(rt).utf8(rt);
 
     auto functionParamsFollyDynamic = std::make_shared<folly::dynamic>(jsi::dynamicFromValue(rt, functionParams));
 
-    std::thread thread([request_data, functionNameStdString, functionParamsFollyDynamic] { // worker thread
+    std::thread thread([this, request_data, context_uint32, functionNameStdString, functionParamsFollyDynamic] { // worker thread
 
 #ifdef __ANDROID__
       jni::ThreadScope::WithClassLoader([&] { // thread attached to JVM
@@ -163,6 +164,15 @@ namespace tonlabs
 #endif
             request_data_t *request_data = reinterpret_cast<request_data_t *>(request_ptr);
 
+            TonClientJsiModule *jsiModule = request_data->jsiModule;
+            const uint32_t requestId = request_data->requestId;
+            const bool returnBlob = request_data->returnBlob;
+
+            if (finished)
+            {
+              delete request_data;
+            }
+
             auto responseParamsFollyDynamic = std::make_shared<folly::dynamic>(
                 params_json.len > 0 ? folly::parseJson(std::string_view(params_json.content, params_json.len)) : "");
 
@@ -170,10 +180,10 @@ namespace tonlabs
             auto blobs = std::make_shared<std::vector<std::pair<std::string, std::unique_ptr<Blob>>>>();
             if (responseParamsFollyDynamic->isObject())
             {
-              const auto &blobManager = request_data->jsiModule->blobManager_;
+              const auto &blobManager = jsiModule->blobManager_;
               for (auto &[key, value] : responseParamsFollyDynamic->items())
               {
-                if (value.isString() && request_data->returnBlob)
+                if (value.isString() && returnBlob)
                 {
                   blobs->emplace_back(key.asString(), std::make_unique<Blob>(blobManager->store(value.asString())));
                   value = ""; // placeholder for JS Blob
@@ -185,16 +195,13 @@ namespace tonlabs
               }
             }
 
-            auto &jsiModule = request_data->jsiModule;
-
-            auto &jsCallInvoker = request_data->jsiModule->jsCallInvoker_;
-            jsCallInvoker->invokeAsync([request_data, response_type, finished, responseParamsFollyDynamic, blobs]
+            auto &jsCallInvoker = jsiModule->jsCallInvoker_;
+            jsCallInvoker->invokeAsync([request_data, response_type, finished, responseParamsFollyDynamic, blobs, requestId, jsiModule]
                                        {
                                          // React Native JS thread
 
-                                         auto &responseHandler = request_data->jsiModule->responseHandler_;
-                                         auto &rt = request_data->jsiModule->runtime_;
-                                         auto &requestId = request_data->requestId;
+                                         auto &responseHandler = jsiModule->responseHandler_;
+                                         auto &rt = jsiModule->runtime_;
 
                                          jsi::Value responseParams = jsi::valueFromDynamic(rt, *responseParamsFollyDynamic);
 
@@ -209,11 +216,6 @@ namespace tonlabs
                                                                responseParams,
                                                                jsi::Value(static_cast<int>(response_type)),
                                                                jsi::Value(finished));
-
-                                         if (finished)
-                                         {
-                                           delete request_data;
-                                         }
                                        }); // invokeAsync
 
             if (finished)
@@ -225,9 +227,9 @@ namespace tonlabs
 #endif
         }; // response_handler
 
-        request_data->jsiModule->incrementActiveRequests();
+        this->incrementActiveRequests();
 
-        tc_request_ptr(request_data->context, function_name, function_params_json, request_data, response_handler);
+        tc_request_ptr(context_uint32, function_name, function_params_json, request_data, response_handler);
 
 #ifdef __ANDROID__
       }); // jni::ThreadScope::WithClassLoader
