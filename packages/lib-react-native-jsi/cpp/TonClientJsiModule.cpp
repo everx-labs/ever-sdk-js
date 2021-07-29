@@ -185,6 +185,8 @@ namespace tonlabs
               }
             }
 
+            auto &jsiModule = request_data->jsiModule;
+
             auto &jsCallInvoker = request_data->jsiModule->jsCallInvoker_;
             jsCallInvoker->invokeAsync([request_data, response_type, finished, responseParamsFollyDynamic, blobs]
                                        {
@@ -213,10 +215,17 @@ namespace tonlabs
                                            delete request_data;
                                          }
                                        }); // invokeAsync
+
+            if (finished)
+            {
+              jsiModule->decrementActiveRequests();
+            }
 #ifdef __ANDROID__
           }); // jni::ThreadScope::WithClassLoader
 #endif
         }; // response_handler
+
+        request_data->jsiModule->incrementActiveRequests();
 
         tc_request_ptr(request_data->context, function_name, function_params_json, request_data, response_handler);
 
