@@ -1,7 +1,10 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <tuple>
+#include <queue>
 #include <utility>
+#include <functional>
 #include <thread>
 
 #include <jsi/JSIDynamic.h>
@@ -105,17 +108,26 @@ namespace tonlabs
             }
 
             // if there is any blob in the request params, then all strings in the response will be replaced with blobs
-            for (const auto &[key, value] : functionParamsFollyDynamic->items())
+            std::queue<std::reference_wrapper<folly::dynamic>> queue;
+            queue.push(*functionParamsFollyDynamic);
+
+            while (!queue.empty())
             {
-              if (value.isObject())
+              folly::dynamic &obj = queue.front().get();
+              queue.pop();
+
+              for (auto &[key, value] : obj.items())
               {
-                if (value.find("_data") != value.items().end())
+                if (value.isObject())
                 {
-                  return true;
-                }
-                else
-                {
-                  // TODO: handle nested objects
+                  if (value.find("_data") != value.items().end())
+                  {
+                    return true;
+                  }
+                  else
+                  {
+                    queue.push(value);
+                  }
                 }
               }
             }
@@ -124,26 +136,36 @@ namespace tonlabs
           return false; // default
         }();
 
-        std::string functionParamsJsonStdString = [&]() -> std::string
+        const std::string functionParamsJsonStdString = [&]() -> std::string
         {
           if (functionParamsFollyDynamic->isObject())
           {
             // replace blobs with strings
             const auto &blobManager = request_data->jsiModule->blobManager_;
-            for (auto &[key, value] : functionParamsFollyDynamic->items())
+            std::queue<std::reference_wrapper<folly::dynamic>> queue;
+            queue.push(*functionParamsFollyDynamic);
+
+            while (!queue.empty())
             {
-              if (value.isObject())
+              folly::dynamic &obj = queue.front().get();
+              queue.pop();
+
+              for (auto &[key, value] : obj.items())
               {
-                if (value.find("_data") != value.items().end())
+                if (value.isObject())
                 {
-                  value = blobManager->resolve(Blob::fromDynamic(value));
-                }
-                else
-                {
-                  // TODO: handle nested objects
+                  if (value.find("_data") != value.items().end())
+                  {
+                    value = blobManager->resolve(Blob::fromDynamic(value));
+                  }
+                  else
+                  {
+                    queue.push(value);
+                  }
                 }
               }
             }
+
             return folly::toJson(*functionParamsFollyDynamic);
           }
           else
@@ -176,21 +198,34 @@ namespace tonlabs
             auto responseParamsFollyDynamic = std::make_shared<folly::dynamic>(
                 params_json.len > 0 ? folly::parseJson(std::string_view(params_json.content, params_json.len)) : "");
 
-            // replace strings with blobs
-            auto blobs = std::make_shared<std::vector<std::pair<std::string, std::unique_ptr<Blob>>>>();
+            // replace strings with placeholders
+            auto blobs = std::make_shared<std::vector<std::tuple<const std::vector<std::string>, std::string, std::unique_ptr<Blob>>>>(); // list of blobs to replace on JS thread (path, key, blob)
             if (responseParamsFollyDynamic->isObject())
             {
               const auto &blobManager = jsiModule->blobManager_;
-              for (auto &[key, value] : responseParamsFollyDynamic->items())
+              std::queue<std::pair<const std::vector<std::string>, std::reference_wrapper<folly::dynamic>>> queue;
+              queue.emplace(std::vector<std::string>(), *responseParamsFollyDynamic);
+
+              while (!queue.empty())
               {
-                if (value.isString() && returnBlob)
+                auto &item = queue.front();
+                queue.pop();
+                const std::vector<std::string> &path = item.first;
+                folly::dynamic &obj = item.second.get();
+
+                for (auto &[key, value] : obj.items())
                 {
-                  blobs->emplace_back(key.asString(), std::make_unique<Blob>(blobManager->store(value.asString())));
-                  value = ""; // placeholder for JS Blob
-                }
-                else if (value.isObject())
-                {
-                  // TODO: handle nested objects
+                  if (value.isString() && returnBlob)
+                  {
+                    blobs->emplace_back(path, key.asString(), std::make_unique<Blob>(blobManager->store(value.asString())));
+                    value = ""; // placeholder for JS Blob
+                  }
+                  else if (value.isObject())
+                  {
+                    std::vector<std::string> new_path(path);
+                    new_path.push_back(key.asString());
+                    queue.emplace(new_path, value);
+                  }
                 }
               }
             }
@@ -205,10 +240,15 @@ namespace tonlabs
 
                                          jsi::Value responseParams = jsi::valueFromDynamic(rt, *responseParamsFollyDynamic);
 
-                                         // replace placeholders with created JS Blob objects
-                                         for (const auto &[key, blob] : *blobs)
+                                         // replace placeholders with JS Blob objects
+                                         for (const auto &[path, key, blob] : *blobs)
                                          {
-                                           responseParams.asObject(rt).setProperty(rt, jsi::String::createFromUtf8(rt, key), blob->toValue(rt));
+                                           jsi::Object obj = responseParams.asObject(rt);
+                                           for (const auto &name : path)
+                                           {
+                                             obj = obj.getPropertyAsObject(rt, name.c_str());
+                                           }
+                                           obj.setProperty(rt, jsi::String::createFromUtf8(rt, key), blob->toValue(rt));
                                          }
 
                                          responseHandler->call(rt,
