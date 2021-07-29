@@ -266,3 +266,21 @@ yarn react-native start
 yarn react-native run-android
 yarn react-native run-ios
 ```
+
+Please remember to set appropriate version of React Native in `lib-react-native-jsi` when developing `example63`, `example64` and `example65` apps using the following commands:
+
+```sh
+cd lib-react-native-jsi
+yarn add react-native@0.63.4
+yarn add react-native@0.64.0
+yarn add react-native@0.65.0-rc.3
+```
+
+When testing the library, install the package from the archive with the following commands:
+
+```
+cd lib-react-native-jsi
+npm pack
+cd ../tests-react-native-jsi
+yarn add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.14.1.tgz
+```
