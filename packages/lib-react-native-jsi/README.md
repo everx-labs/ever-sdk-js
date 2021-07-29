@@ -254,14 +254,26 @@ Calls `tc_request_ptr` from TON SDK.
 
 # Development
 
+First, install the dependencies in `lib-react-native-jsi` directory:
+
 ```sh
 cd packages/lib-react-native-jsi
 yarn install
+```
+
+The library comes with example apps for different versions of React Native. Before running each example app, it is necessary to install its dependencies using `yarn install` as well as its CocoaPods dependencies using `pod install` in `ios` directory.
+
+```sh
 cd example63
 yarn install
 cd ios
 pod install
 cd ..
+```
+
+Then you can build and run the example app on Android or iOS with the following commands:
+
+```sh
 yarn react-native start
 yarn react-native run-android
 yarn react-native run-ios
@@ -276,9 +288,9 @@ yarn add react-native@0.64.0
 yarn add react-native@0.65.0-rc.3
 ```
 
-When testing the library, install the package from the archive with the following commands:
+For testing purposes, first pack the library into an archive and then install the package with the following commands:
 
-```
+```sh
 cd lib-react-native-jsi
 npm pack
 cd ../tests-react-native-jsi
