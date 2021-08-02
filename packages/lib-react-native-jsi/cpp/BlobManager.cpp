@@ -18,9 +18,9 @@ namespace tonlabs
 #ifdef __ANDROID__
     uint8_t *data = (uint8_t *)base64decoded.data();
     jni::local_ref<jni::JByteBuffer> buffer = jni::JByteBuffer::wrapBytes(data, size);
-    std::string blobId = this->javaBlobManager_->store(buffer);
+    std::string blobId = this->javaBlobManager_->store(buffer); // makes a copy
 #elif __APPLE__
-    NSData *data = [NSData dataWithBytes:base64decoded.data() length:size];
+    NSData *data = [NSData dataWithBytes:base64decoded.data() length:size]; // makes a copy
     NSString *blobIdNSString = [this->reactBlobManager_ store:data];
     std::string blobId = std::string([blobIdNSString UTF8String]);
 #endif

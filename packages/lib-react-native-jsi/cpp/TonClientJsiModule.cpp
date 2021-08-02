@@ -92,6 +92,9 @@ namespace tonlabs
             functionNameStdString.c_str(),
             static_cast<uint32_t>(functionNameStdString.length())};
 
+        // if `response_binary_type` request param is set to 'blob'
+        // or there is any blob in the request params and `response_binary_type` is not set,
+        // then all strings in the response params will be converted from base64 to raw binary JS Blobs
         request_data->returnBlob = [&]
         {
           if (functionParamsFollyDynamic->isObject())

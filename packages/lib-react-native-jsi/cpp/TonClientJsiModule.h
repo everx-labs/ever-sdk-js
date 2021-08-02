@@ -47,6 +47,7 @@ namespace tonlabs
 
     ~TonClientJsiModule()
     {
+      // prevents JS runtime deallocation until all pending requests are complete
       std::unique_lock<std::mutex> lock(this->mutex_);
       this->cv_.wait(lock, [this]
                      { return this->activeRequests_ == 0; });

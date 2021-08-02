@@ -7,9 +7,9 @@
 
 #elif __APPLE__
 
-#ifdef __OBJC__
+#ifdef __OBJC__ // when compiled as Objective-C++
 #import <React/RCTBlobManager.h>
-#else
+#else // when compiled as C++
 typedef struct objc_object RCTBlobManager;
 #endif // __OBJC__
 
