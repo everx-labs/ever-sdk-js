@@ -287,6 +287,16 @@ It is also possible to pass blob object URL directly as source prop of `<Pdf />`
 
 > **Note**: The above requires [this pull request](https://github.com/wonday/react-native-pdf/pull/581) which has not been merged yet.
 
+> **Note**: It is advisable to keep the reference to the Blob object as long as its object URL is used with other components. Otherwise, the JavaScript garbage collector may collect the JS Blob object and consequently deallocate the memory associated with this blob (both on [Android](https://github.com/facebook/react-native/blob/4fcf46813152f5555a79ecb0ab06fe5d84e21624/ReactAndroid/src/main/java/com/facebook/react/modules/blob/jni/BlobCollector.cpp#L27-L34) and [iOS](https://github.com/facebook/react-native/blob/1465c8f3874cdee8c325ab4a4916fda0b3e43bdb/Libraries/Blob/RCTBlobCollector.mm#L19-L25)). This will lead to a crash due to bad memory access when the component tries to access blob data again, for example during UI interaction or re-render.
+
+After you're done with the object URL, don't forget to revoke it:
+
+```js
+URL.revokeObjectURL(objectURL);
+```
+
+> **Note:** Currently, the React Native implementation [does nothing](https://github.com/facebook/react-native/blob/4fcf46813152f5555a79ecb0ab06fe5d84e21624/Libraries/Blob/URL.js#L123-L125), but this function is still a part of [URL API](https://developer.mozilla.org/en-US/docs/Web/API/URL_API).
+
 This library provides two ways of transferring large binary payloads between React Native and TON SDK:
 
 - as base64-encoded JS strings
