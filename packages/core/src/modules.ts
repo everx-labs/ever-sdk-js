@@ -48,7 +48,8 @@ export enum ClientErrorCode {
     CanNotParseRequestResult = 30,
     UnexpectedCallbackResponse = 31,
     CanNotParseNumber = 32,
-    InternalError = 33
+    InternalError = 33,
+    InvalidHandle = 34
 }
 
 export type ClientError = {
@@ -109,10 +110,10 @@ export type NetworkConfig = {
     network_retries_count?: number,
 
     /**
-     * Maximum time for sequential reconnections in ms.
+     * Maximum time for sequential reconnections.
      * 
      * @remarks
-     * Default value is 120000 (2 min)
+     * Must be specified in milliseconds. Default is 120000 (2 min).
      */
     max_reconnect_timeout?: number,
 
@@ -122,17 +123,26 @@ export type NetworkConfig = {
     reconnect_timeout?: number,
 
     /**
-     * The number of automatic message processing retries that SDK performs in case of `Message Expired (507)` error - but only for those messages which local emulation was successful or failed with replay protection error. The default value is 5.
+     * The number of automatic message processing retries that SDK performs in case of `Message Expired (507)` error - but only for those messages which local emulation was successful or failed with replay protection error.
+     * 
+     * @remarks
+     * Default is 5.
      */
     message_retries_count?: number,
 
     /**
      * Timeout that is used to process message delivery for the contracts which ABI does not include "expire" header. If the message is not delivered within the specified timeout the appropriate error occurs.
+     * 
+     * @remarks
+     * Must be specified in milliseconds. Default is 40000 (40 sec).
      */
     message_processing_timeout?: number,
 
     /**
-     * Maximum timeout that is used for query response. The default value is 40 sec.
+     * Maximum timeout that is used for query response.
+     * 
+     * @remarks
+     * Must be specified in milliseconds. Default is 40000 (40 sec).
      */
     wait_for_timeout?: number,
 
@@ -142,20 +152,55 @@ export type NetworkConfig = {
      * @remarks
      * If client's device time is out of sync and difference is more than the threshold then error will occur. Also an error will occur if the specified threshold is more than
      * `message_processing_timeout/2`.
-     * The default value is 15 sec.
+     * 
+     * Must be specified in milliseconds. Default is 15000 (15 sec).
      */
     out_of_sync_threshold?: number,
 
     /**
-     * Maximum number of randomly chosen endpoints the library uses to send message. The default value is 2 endpoints.
+     * Maximum number of randomly chosen endpoints the library uses to broadcast a message.
+     * 
+     * @remarks
+     * Default is 2.
      */
     sending_endpoint_count?: number,
+
+    /**
+     * Frequency of sync latency detection.
+     * 
+     * @remarks
+     * Library periodically checks the current endpoint for blockchain data syncronization latency.
+     * If the latency (time-lag) is less then `NetworkConfig.max_latency`
+     * then library selects another endpoint.
+     * 
+     * Must be specified in milliseconds. Default is 60000 (1 min).
+     */
+    latency_detection_interval?: number,
+
+    /**
+     * Maximum value for the endpoint's blockchain data syncronization latency (time-lag). Library periodically checks the current endpoint for blockchain data syncronization latency. If the latency (time-lag) is less then `NetworkConfig.max_latency` then library selects another endpoint.
+     * 
+     * @remarks
+     * Must be specified in milliseconds. Default is 60000 (1 min).
+     */
+    max_latency?: number,
+
+    /**
+     * Default timeout for http requests.
+     * 
+     * @remarks
+     * Is is used when no timeout specified for the request to limit the answer waiting time. If no answer received during the timeout requests ends with
+     * error.
+     * 
+     * Must be specified in milliseconds. Default is 60000 (1 min).
+     */
+    query_timeout?: number,
 
     /**
      * Access key to GraphQL API.
      * 
      * @remarks
-     * At the moment is not used in production
+     * At the moment is not used in production.
      */
     access_key?: string
 }
@@ -378,10 +423,36 @@ export enum CryptoErrorCode {
     MnemonicGenerationFailed = 119,
     MnemonicFromEntropyFailed = 120,
     SigningBoxNotRegistered = 121,
-    InvalidSignature = 122
+    InvalidSignature = 122,
+    EncryptionBoxNotRegistered = 123
 }
 
 export type SigningBoxHandle = number
+
+export type EncryptionBoxHandle = number
+
+export type EncryptionBoxInfo = {
+
+    /**
+     * Derivation path, for instance "m/44'/396'/0'/0/0"
+     */
+    hdpath?: string,
+
+    /**
+     * Cryptographic algorithm, used by this encryption box
+     */
+    algorithm?: string,
+
+    /**
+     * Options, depends on algorithm and specific encryption box implementation
+     */
+    options?: any,
+
+    /**
+     * Public information, depends on algorithm
+     */
+    public?: any
+}
 
 export type ParamsOfFactorize = {
 
@@ -618,7 +689,7 @@ export type ParamsOfNaclSign = {
     unsigned: string,
 
     /**
-     * Signer's secret key - unprefixed 0-padded to 64 symbols hex string
+     * Signer's secret key - unprefixed 0-padded to 128 symbols hex string (concatenation of 64 symbols secret and 64 symbols public keys). See `nacl_sign_keypair_from_secret_key`.
      */
     secret: string
 }
@@ -1167,6 +1238,153 @@ export type ResultOfSigningBoxSign = {
     signature: string
 }
 
+export type RegisteredEncryptionBox = {
+
+    /**
+     * Handle of the encryption box
+     */
+    handle: EncryptionBoxHandle
+}
+
+export type ParamsOfAppEncryptionBox = {
+    type: 'GetInfo'
+} | {
+    type: 'Encrypt'
+
+    /**
+     * Data, encoded in Base64
+     */
+    data: string
+} | {
+    type: 'Decrypt'
+
+    /**
+     * Data, encoded in Base64
+     */
+    data: string
+}
+
+export function paramsOfAppEncryptionBoxGetInfo(): ParamsOfAppEncryptionBox {
+    return {
+        type: 'GetInfo',
+    };
+}
+
+export function paramsOfAppEncryptionBoxEncrypt(data: string): ParamsOfAppEncryptionBox {
+    return {
+        type: 'Encrypt',
+        data,
+    };
+}
+
+export function paramsOfAppEncryptionBoxDecrypt(data: string): ParamsOfAppEncryptionBox {
+    return {
+        type: 'Decrypt',
+        data,
+    };
+}
+
+export type ResultOfAppEncryptionBox = {
+    type: 'GetInfo'
+
+    /**
+     */
+    info: EncryptionBoxInfo
+} | {
+    type: 'Encrypt'
+
+    /**
+     * Encrypted data, encoded in Base64
+     */
+    data: string
+} | {
+    type: 'Decrypt'
+
+    /**
+     * Decrypted data, encoded in Base64
+     */
+    data: string
+}
+
+export function resultOfAppEncryptionBoxGetInfo(info: EncryptionBoxInfo): ResultOfAppEncryptionBox {
+    return {
+        type: 'GetInfo',
+        info,
+    };
+}
+
+export function resultOfAppEncryptionBoxEncrypt(data: string): ResultOfAppEncryptionBox {
+    return {
+        type: 'Encrypt',
+        data,
+    };
+}
+
+export function resultOfAppEncryptionBoxDecrypt(data: string): ResultOfAppEncryptionBox {
+    return {
+        type: 'Decrypt',
+        data,
+    };
+}
+
+export type ParamsOfEncryptionBoxGetInfo = {
+
+    /**
+     * Encryption box handle
+     */
+    encryption_box: EncryptionBoxHandle
+}
+
+export type ResultOfEncryptionBoxGetInfo = {
+
+    /**
+     * Encryption box information
+     */
+    info: EncryptionBoxInfo
+}
+
+export type ParamsOfEncryptionBoxEncrypt = {
+
+    /**
+     * Encryption box handle
+     */
+    encryption_box: EncryptionBoxHandle,
+
+    /**
+     * Data to be encrypted, encoded in Base64
+     */
+    data: string
+}
+
+export type ResultOfEncryptionBoxEncrypt = {
+
+    /**
+     * Encrypted data, encoded in Base64
+     */
+    data: string
+}
+
+export type ParamsOfEncryptionBoxDecrypt = {
+
+    /**
+     * Encryption box handle
+     */
+    encryption_box: EncryptionBoxHandle,
+
+    /**
+     * Data to be decrypted, encoded in Base64
+     */
+    data: string
+}
+
+export type ResultOfEncryptionBoxDecrypt = {
+
+    /**
+     * Decrypted data, encoded in Base64
+     */
+    data: string
+}
+
 type ResultOfAppSigningBoxGetPublicKey = {
     public_key: string
 }
@@ -1201,6 +1419,52 @@ async function dispatchAppSigningBox(obj: AppSigningBox, params: ParamsOfAppSign
         client.reject_app_request(app_request_id, error);
     }
 }
+type ResultOfAppEncryptionBoxGetInfo = {
+    info: EncryptionBoxInfo
+}
+
+type ParamsOfAppEncryptionBoxEncrypt = {
+    data: string
+}
+
+type ResultOfAppEncryptionBoxEncrypt = {
+    data: string
+}
+
+type ParamsOfAppEncryptionBoxDecrypt = {
+    data: string
+}
+
+type ResultOfAppEncryptionBoxDecrypt = {
+    data: string
+}
+
+export interface AppEncryptionBox {
+    get_info(): Promise<ResultOfAppEncryptionBoxGetInfo>,
+    encrypt(params: ParamsOfAppEncryptionBoxEncrypt): Promise<ResultOfAppEncryptionBoxEncrypt>,
+    decrypt(params: ParamsOfAppEncryptionBoxDecrypt): Promise<ResultOfAppEncryptionBoxDecrypt>,
+}
+
+async function dispatchAppEncryptionBox(obj: AppEncryptionBox, params: ParamsOfAppEncryptionBox, app_request_id: number | null, client: IClient) {
+    try {
+        let result = {};
+        switch (params.type) {
+            case 'GetInfo':
+                result = await obj.get_info();
+                break;
+            case 'Encrypt':
+                result = await obj.encrypt(params);
+                break;
+            case 'Decrypt':
+                result = await obj.decrypt(params);
+                break;
+        }
+        client.resolve_app_request(app_request_id, { type: params.type, ...result });
+    }
+    catch (error) {
+        client.reject_app_request(app_request_id, error);
+    }
+}
 /**
  * Crypto functions.
  */
@@ -1212,7 +1476,12 @@ export class CryptoModule {
     }
 
     /**
-     * Performs prime factorization – decomposition of a composite number into a product of smaller prime integers (factors). See [https://en.wikipedia.org/wiki/Integer_factorization]
+     * Integer factorization
+     * 
+     * @remarks
+     * Performs prime factorization – decomposition of a composite number
+     * into a product of smaller prime integers (factors).
+     * See [https://en.wikipedia.org/wiki/Integer_factorization]
      * 
      * @param {ParamsOfFactorize} params
      * @returns ResultOfFactorize
@@ -1222,7 +1491,11 @@ export class CryptoModule {
     }
 
     /**
-     * Performs modular exponentiation for big integers (`base`^`exponent` mod `modulus`). See [https://en.wikipedia.org/wiki/Modular_exponentiation]
+     * Modular exponentiation
+     * 
+     * @remarks
+     * Performs modular exponentiation for big integers (`base`^`exponent` mod `modulus`).
+     * See [https://en.wikipedia.org/wiki/Modular_exponentiation]
      * 
      * @param {ParamsOfModularPower} params
      * @returns ResultOfModularPower
@@ -1310,9 +1583,12 @@ export class CryptoModule {
     }
 
     /**
-     * Derives key from `password` and `key` using `scrypt` algorithm. See [https://en.wikipedia.org/wiki/Scrypt].
+     * Perform `scrypt` encryption
      * 
      * @remarks
+     * Derives key from `password` and `key` using `scrypt` algorithm.
+     * See [https://en.wikipedia.org/wiki/Scrypt].
+     * 
      * # Arguments
      * - `log_n` - The log2 of the Scrypt parameter `N`
      * - `r` - The Scrypt parameter `r`
@@ -1335,6 +1611,11 @@ export class CryptoModule {
 
     /**
      * Generates a key pair for signing from the secret key
+     * 
+     * @remarks
+     * **NOTE:** In the result the secret key is actually the concatenation
+     * of secret and public keys (128 symbols hex string) by design of [NaCL](http://nacl.cr.yp.to/sign.html).
+     * See also [the stackexchange question](https://crypto.stackexchange.com/questions/54353/).
      * 
      * @param {ParamsOfNaclSignKeyPairFromSecret} params
      * @returns KeyPair
@@ -1466,6 +1747,9 @@ export class CryptoModule {
     }
 
     /**
+     * Generates a random mnemonic
+     * 
+     * @remarks
      * Generates a random mnemonic from the specified dictionary and word count
      * 
      * @param {ParamsOfMnemonicFromRandom} params
@@ -1486,7 +1770,11 @@ export class CryptoModule {
     }
 
     /**
-     * The phrase supplied will be checked for word length and validated according to the checksum specified in BIP0039.
+     * Validates a mnemonic phrase
+     * 
+     * @remarks
+     * The phrase supplied will be checked for word length and validated according to the checksum
+     * specified in BIP0039.
      * 
      * @param {ParamsOfMnemonicVerify} params
      * @returns ResultOfMnemonicVerify
@@ -1496,7 +1784,11 @@ export class CryptoModule {
     }
 
     /**
-     * Validates the seed phrase, generates master key and then derives the key pair from the master key and the specified path
+     * Derives a key pair for signing from the seed phrase
+     * 
+     * @remarks
+     * Validates the seed phrase, generates master key and then derives
+     * the key pair from the master key and the specified path
      * 
      * @param {ParamsOfMnemonicDeriveSignKeys} params
      * @returns KeyPair
@@ -1618,6 +1910,60 @@ export class CryptoModule {
     remove_signing_box(params: RegisteredSigningBox): Promise<void> {
         return this.client.request('crypto.remove_signing_box', params);
     }
+
+    /**
+     * Register an application implemented encryption box.
+     * @returns RegisteredEncryptionBox
+     */
+    register_encryption_box(obj: AppEncryptionBox): Promise<RegisteredEncryptionBox> {
+        return this.client.request('crypto.register_encryption_box', undefined, (params: any, responseType: number) => {
+            if (responseType === 3) {
+                dispatchAppEncryptionBox(obj, params.request_data, params.app_request_id, this.client);
+            } else if (responseType === 4) {
+                dispatchAppEncryptionBox(obj, params, null, this.client);
+            }
+        });
+    }
+
+    /**
+     * Removes encryption box from SDK
+     * 
+     * @param {RegisteredEncryptionBox} params
+     * @returns 
+     */
+    remove_encryption_box(params: RegisteredEncryptionBox): Promise<void> {
+        return this.client.request('crypto.remove_encryption_box', params);
+    }
+
+    /**
+     * Queries info from the given encryption box
+     * 
+     * @param {ParamsOfEncryptionBoxGetInfo} params
+     * @returns ResultOfEncryptionBoxGetInfo
+     */
+    encryption_box_get_info(params: ParamsOfEncryptionBoxGetInfo): Promise<ResultOfEncryptionBoxGetInfo> {
+        return this.client.request('crypto.encryption_box_get_info', params);
+    }
+
+    /**
+     * Encrypts data using given encryption box
+     * 
+     * @param {ParamsOfEncryptionBoxEncrypt} params
+     * @returns ResultOfEncryptionBoxEncrypt
+     */
+    encryption_box_encrypt(params: ParamsOfEncryptionBoxEncrypt): Promise<ResultOfEncryptionBoxEncrypt> {
+        return this.client.request('crypto.encryption_box_encrypt', params);
+    }
+
+    /**
+     * Decrypts data using given encryption box
+     * 
+     * @param {ParamsOfEncryptionBoxDecrypt} params
+     * @returns ResultOfEncryptionBoxDecrypt
+     */
+    encryption_box_decrypt(params: ParamsOfEncryptionBoxDecrypt): Promise<ResultOfEncryptionBoxDecrypt> {
+        return this.client.request('crypto.encryption_box_decrypt', params);
+    }
 }
 
 // abi module
@@ -1635,7 +1981,8 @@ export enum AbiErrorCode {
     RequiredPublicKeyMissingForFunctionHeader = 309,
     InvalidSigner = 310,
     InvalidAbi = 311,
-    InvalidFunctionId = 312
+    InvalidFunctionId = 312,
+    InvalidData = 313
 }
 
 export type Abi = {
@@ -1976,7 +2323,7 @@ export type AbiData = {
 
     /**
      */
-    key: bigint,
+    key: number,
 
     /**
      */
@@ -2022,6 +2369,10 @@ export type AbiContract = {
 
     /**
      */
+    version?: string | null,
+
+    /**
+     */
     header?: string[],
 
     /**
@@ -2034,7 +2385,11 @@ export type AbiContract = {
 
     /**
      */
-    data?: AbiData[]
+    data?: AbiData[],
+
+    /**
+     */
+    fields?: AbiParam[]
 }
 
 export type ParamsOfEncodeMessageBody = {
@@ -2440,6 +2795,27 @@ export type ResultOfEncodeAccount = {
     id: string
 }
 
+export type ParamsOfDecodeAccountData = {
+
+    /**
+     * Contract ABI
+     */
+    abi: Abi,
+
+    /**
+     * Data BOC or BOC handle
+     */
+    data: string
+}
+
+export type ResultOfDecodeData = {
+
+    /**
+     * Decoded data as a JSON structure.
+     */
+    data: any
+}
+
 /**
  * Provides message encoding and decoding according to the ABI specification.
  */
@@ -2580,6 +2956,19 @@ export class AbiModule {
      */
     encode_account(params: ParamsOfEncodeAccount): Promise<ResultOfEncodeAccount> {
         return this.client.request('abi.encode_account', params);
+    }
+
+    /**
+     * Decodes account data using provided data BOC and ABI.
+     * 
+     * @remarks
+     * Note: this feature requires ABI 2.1 or higher.
+     * 
+     * @param {ParamsOfDecodeAccountData} params
+     * @returns ResultOfDecodeData
+     */
+    decode_account_data(params: ParamsOfDecodeAccountData): Promise<ResultOfDecodeData> {
+        return this.client.request('abi.decode_account_data', params);
     }
 }
 
@@ -3334,7 +3723,9 @@ export type ParamsOfWaitForTransaction = {
      * The list of endpoints to which the message was sent.
      * 
      * @remarks
-     * You must provide the same value as the `send_message` has returned.
+     * Use this field to get more informative errors.
+     * Provide the same value as the `send_message` has returned.
+     * If the message was not delivered (expired), SDK will log the endpoint URLs, used for its sending.
      */
     sending_endpoints?: string[]
 }
@@ -3489,6 +3880,12 @@ export function addressStringFormatBase64(url: boolean, test: boolean, bounce: b
     };
 }
 
+export enum AccountAddressType {
+    AccountId = "AccountId",
+    Hex = "Hex",
+    Base64 = "Base64"
+}
+
 export type ParamsOfConvertAddress = {
 
     /**
@@ -3508,6 +3905,22 @@ export type ResultOfConvertAddress = {
      * Address in the specified format
      */
     address: string
+}
+
+export type ParamsOfGetAddressType = {
+
+    /**
+     * Account address in any TON format.
+     */
+    address: string
+}
+
+export type ResultOfGetAddressType = {
+
+    /**
+     * Account address type.
+     */
+    address_type: AccountAddressType
 }
 
 export type ParamsOfCalcStorageFee = {
@@ -3595,6 +4008,26 @@ export class UtilsModule {
      */
     convert_address(params: ParamsOfConvertAddress): Promise<ResultOfConvertAddress> {
         return this.client.request('utils.convert_address', params);
+    }
+
+    /**
+     * Validates and returns the type of any TON address.
+     * 
+     * @remarks
+     * Address types are the following
+     * 
+     * `0:919db8e740d50bf349df2eea03fa30c385d846b991ff5542e67098ee833fc7f7` - standart TON address most
+     * commonly used in all cases. Also called as hex addres
+     * `919db8e740d50bf349df2eea03fa30c385d846b991ff5542e67098ee833fc7f7` - account ID. A part of full
+     * address. Identifies account inside particular workchain
+     * `EQCRnbjnQNUL80nfLuoD+jDDhdhGuZH/VULmcJjugz/H9wam` - base64 address. Also called "user-friendly".
+     * Was used at the beginning of TON. Now it is supported for compatibility
+     * 
+     * @param {ParamsOfGetAddressType} params
+     * @returns ResultOfGetAddressType
+     */
+    get_address_type(params: ParamsOfGetAddressType): Promise<ResultOfGetAddressType> {
+        return this.client.request('utils.get_address_type', params);
     }
 
     /**
@@ -3955,21 +4388,33 @@ export class TvmModule {
      * Performs all the phases of contract execution on Transaction Executor -
      * the same component that is used on Validator Nodes.
      * 
-     * Can be used for contract debugginh, to find out the reason why message was not delivered successfully
-     *  - because Validators just throw away the failed external inbound messages, here you can catch them.
+     * Can be used for contract debugging, to find out the reason why a message was not delivered successfully.
+     * Validators throw away the failed external inbound messages (if they failed bedore `ACCEPT`) in the real network.
+     * This is why these messages are impossible to debug in the real network.
+     * With the help of run_executor you can do that. In fact, `process_message` function
+     * performs local check with `run_executor` if there was no transaction as a result of processing
+     * and returns the error, if there is one.
      * 
-     * Another use case is to estimate fees for message execution. Set  `AccountForExecutor::Account.unlimited_balance`
+     * Another use case to use `run_executor` is to estimate fees for message execution.
+     * Set  `AccountForExecutor::Account.unlimited_balance`
      * to `true` so that emulation will not depend on the actual balance.
+     * This may be needed to calculate deploy fees for an account that does not exist yet.
+     * JSON with fees is in `fees` field of the result.
      * 
      * One more use case - you can produce the sequence of operations,
-     * thus emulating the multiple contract calls locally.
+     * thus emulating the sequential contract calls locally.
      * And so on.
      * 
-     * To get the account BOC (bag of cells) - use `net.query` method to download it from GraphQL API
+     * Transaction executor requires account BOC (bag of cells) as a parameter.
+     * To get the account BOC - use `net.query` method to download it from GraphQL API
      * (field `boc` of `account`) or generate it with `abi.encode_account` method.
-     * To get the message BOC - use `abi.encode_message` or prepare it any other way, for instance, with FIFT script.
      * 
-     * If you need this emulation to be as precise as possible then specify `ParamsOfRunExecutor` parameter.
+     * Also it requires message BOC. To get the message BOC - use `abi.encode_message` or `abi.encode_internal_message`.
+     * 
+     * If you need this emulation to be as precise as possible (for instance - emulate transaction
+     * with particular lt in particular block or use particular blockchain config,
+     * in case you want to download it from a particular key block - then specify `ParamsOfRunExecutor` parameter.
+     * 
      * If you need to see the aborted transaction as a result, not as an error, set `skip_transaction_check` to `true`.
      * 
      * @param {ParamsOfRunExecutor} params
@@ -4111,6 +4556,97 @@ export enum AggregationFn {
     MAX = "MAX",
     SUM = "SUM",
     AVERAGE = "AVERAGE"
+}
+
+export type TransactionNode = {
+
+    /**
+     * Transaction id.
+     */
+    id: string,
+
+    /**
+     * In message id.
+     */
+    in_msg: string,
+
+    /**
+     * Out message ids.
+     */
+    out_msgs: string[],
+
+    /**
+     * Account address.
+     */
+    account_addr: string,
+
+    /**
+     * Transactions total fees.
+     */
+    total_fees: string,
+
+    /**
+     * Aborted flag.
+     */
+    aborted: boolean,
+
+    /**
+     * Compute phase exit code.
+     */
+    exit_code?: number
+}
+
+export type MessageNode = {
+
+    /**
+     * Message id.
+     */
+    id: string,
+
+    /**
+     * Source transaction id.
+     * 
+     * @remarks
+     * This field is missing for an external inbound messages.
+     */
+    src_transaction_id?: string,
+
+    /**
+     * Destination transaction id.
+     * 
+     * @remarks
+     * This field is missing for an external outbound messages.
+     */
+    dst_transaction_id?: string,
+
+    /**
+     * Source address.
+     */
+    src?: string,
+
+    /**
+     * Destination address.
+     */
+    dst?: string,
+
+    /**
+     * Transferred tokens value.
+     */
+    value?: string,
+
+    /**
+     * Bounce flag.
+     */
+    bounce: boolean,
+
+    /**
+     * Decoded body.
+     * 
+     * @remarks
+     * Library tries to decode message body using provided `params.abi_registry`.
+     * This field will be missing if none of the provided abi can be used to decode.
+     */
+    decoded_body?: DecodedMessageBody
 }
 
 export type ParamsOfQuery = {
@@ -4306,6 +4842,19 @@ export type EndpointsSet = {
     endpoints: string[]
 }
 
+export type ResultOfGetEndpoints = {
+
+    /**
+     * Current query endpoint
+     */
+    query: string,
+
+    /**
+     * List of all endpoints used by client
+     */
+    endpoints: string[]
+}
+
 export type ParamsOfQueryCounterparties = {
 
     /**
@@ -4327,6 +4876,279 @@ export type ParamsOfQueryCounterparties = {
      * `cursor` field of the last received result
      */
     after?: string
+}
+
+export type ParamsOfQueryTransactionTree = {
+
+    /**
+     * Input message id.
+     */
+    in_msg: string,
+
+    /**
+     * List of contract ABIs that will be used to decode message bodies. Library will try to decode each returned message body using any ABI from the registry.
+     */
+    abi_registry?: Abi[],
+
+    /**
+     * Timeout used to limit waiting time for the missing messages and transaction.
+     * 
+     * @remarks
+     * If some of the following messages and transactions are missing yet
+     * The maximum waiting time is regulated by this option.
+     * 
+     * Default value is 60000 (1 min).
+     */
+    timeout?: number
+}
+
+export type ResultOfQueryTransactionTree = {
+
+    /**
+     * Messages.
+     */
+    messages: MessageNode[],
+
+    /**
+     * Transactions.
+     */
+    transactions: TransactionNode[]
+}
+
+export type ParamsOfCreateBlockIterator = {
+
+    /**
+     * Starting time to iterate from.
+     * 
+     * @remarks
+     * If the application specifies this parameter then the iteration
+     * includes blocks with `gen_utime` >= `start_time`.
+     * Otherwise the iteration starts from zero state.
+     * 
+     * Must be specified in seconds.
+     */
+    start_time?: number,
+
+    /**
+     * Optional end time to iterate for.
+     * 
+     * @remarks
+     * If the application specifies this parameter then the iteration
+     * includes blocks with `gen_utime` < `end_time`.
+     * Otherwise the iteration never stops.
+     * 
+     * Must be specified in seconds.
+     */
+    end_time?: number,
+
+    /**
+     * Shard prefix filter.
+     * 
+     * @remarks
+     * If the application specifies this parameter and it is not the empty array
+     * then the iteration will include items related to accounts that belongs to
+     * the specified shard prefixes.
+     * Shard prefix must be represented as a string "workchain:prefix".
+     * Where `workchain` is a signed integer and the `prefix` if a hexadecimal
+     * representation if the 64-bit unsigned integer with tagged shard prefix.
+     * For example: "0:3800000000000000".
+     */
+    shard_filter?: string[],
+
+    /**
+     * Projection (result) string.
+     * 
+     * @remarks
+     * List of the fields that must be returned for iterated items.
+     * This field is the same as the `result` parameter of
+     * the `query_collection` function.
+     * Note that iterated items can contains additional fields that are
+     * not requested in the `result`.
+     */
+    result?: string
+}
+
+export type RegisteredIterator = {
+
+    /**
+     * Iterator handle.
+     * 
+     * @remarks
+     * Must be removed using `remove_iterator`
+     * when it is no more needed for the application.
+     */
+    handle: number
+}
+
+export type ParamsOfResumeBlockIterator = {
+
+    /**
+     * Iterator state from which to resume.
+     * 
+     * @remarks
+     * Same as value returned from `iterator_next`.
+     */
+    resume_state: any
+}
+
+export type ParamsOfCreateTransactionIterator = {
+
+    /**
+     * Starting time to iterate from.
+     * 
+     * @remarks
+     * If the application specifies this parameter then the iteration
+     * includes blocks with `gen_utime` >= `start_time`.
+     * Otherwise the iteration starts from zero state.
+     * 
+     * Must be specified in seconds.
+     */
+    start_time?: number,
+
+    /**
+     * Optional end time to iterate for.
+     * 
+     * @remarks
+     * If the application specifies this parameter then the iteration
+     * includes blocks with `gen_utime` < `end_time`.
+     * Otherwise the iteration never stops.
+     * 
+     * Must be specified in seconds.
+     */
+    end_time?: number,
+
+    /**
+     * Shard prefix filters.
+     * 
+     * @remarks
+     * If the application specifies this parameter and it is not an empty array
+     * then the iteration will include items related to accounts that belongs to
+     * the specified shard prefixes.
+     * Shard prefix must be represented as a string "workchain:prefix".
+     * Where `workchain` is a signed integer and the `prefix` if a hexadecimal
+     * representation if the 64-bit unsigned integer with tagged shard prefix.
+     * For example: "0:3800000000000000".
+     * Account address conforms to the shard filter if
+     * it belongs to the filter workchain and the first bits of address match to
+     * the shard prefix. Only transactions with suitable account addresses are iterated.
+     */
+    shard_filter?: string[],
+
+    /**
+     * Account address filter.
+     * 
+     * @remarks
+     * Application can specify the list of accounts for which
+     * it wants to iterate transactions.
+     * 
+     * If this parameter is missing or an empty list then the library iterates
+     * transactions for all accounts that pass the shard filter.
+     * 
+     * Note that the library doesn't detect conflicts between the account filter and the shard filter
+     * if both are specified.
+     * So it is an application responsibility to specify the correct filter combination.
+     */
+    accounts_filter?: string[],
+
+    /**
+     * Projection (result) string.
+     * 
+     * @remarks
+     * List of the fields that must be returned for iterated items.
+     * This field is the same as the `result` parameter of
+     * the `query_collection` function.
+     * Note that iterated items can contain additional fields that are
+     * not requested in the `result`.
+     */
+    result?: string,
+
+    /**
+     * Include `transfers` field in iterated transactions.
+     * 
+     * @remarks
+     * If this parameter is `true` then each transaction contains field
+     * `transfers` with list of transfer. See more about this structure in function description.
+     */
+    include_transfers?: boolean
+}
+
+export type ParamsOfResumeTransactionIterator = {
+
+    /**
+     * Iterator state from which to resume.
+     * 
+     * @remarks
+     * Same as value returned from `iterator_next`.
+     */
+    resume_state: any,
+
+    /**
+     * Account address filter.
+     * 
+     * @remarks
+     * Application can specify the list of accounts for which
+     * it wants to iterate transactions.
+     * 
+     * If this parameter is missing or an empty list then the library iterates
+     * transactions for all accounts that passes the shard filter.
+     * 
+     * Note that the library doesn't detect conflicts between the account filter and the shard filter
+     * if both are specified.
+     * So it is the application's responsibility to specify the correct filter combination.
+     */
+    accounts_filter?: string[]
+}
+
+export type ParamsOfIteratorNext = {
+
+    /**
+     * Iterator handle
+     */
+    iterator: number,
+
+    /**
+     * Maximum count of the returned items.
+     * 
+     * @remarks
+     * If value is missing or is less than 1 the library uses 1.
+     */
+    limit?: number,
+
+    /**
+     * Indicates that function must return the iterator state that can be used for resuming iteration.
+     */
+    return_resume_state?: boolean
+}
+
+export type ResultOfIteratorNext = {
+
+    /**
+     * Next available items.
+     * 
+     * @remarks
+     * Note that `iterator_next` can return an empty items and `has_more` equals to `true`.
+     * In this case the application have to continue iteration.
+     * Such situation can take place when there is no data yet but
+     * the requested `end_time` is not reached.
+     */
+    items: any[],
+
+    /**
+     * Indicates that there are more available items in iterated range.
+     */
+    has_more: boolean,
+
+    /**
+     * Optional iterator state that can be used for resuming iteration.
+     * 
+     * @remarks
+     * This field is returned only if the `return_resume_state` parameter
+     * is specified.
+     * 
+     * Note that `resume_state` corresponds to the iteration position
+     * after the returned items.
+     */
+    resume_state?: any
 }
 
 /**
@@ -4516,6 +5338,14 @@ export class NetModule {
     }
 
     /**
+     * Requests the list of alternative endpoints from server
+     * @returns ResultOfGetEndpoints
+     */
+    get_endpoints(): Promise<ResultOfGetEndpoints> {
+        return this.client.request('net.get_endpoints');
+    }
+
+    /**
      * Allows to query and paginate through the list of accounts that the specified account has interacted with, sorted by the time of the last internal message between accounts
      * 
      * @remarks
@@ -4528,6 +5358,220 @@ export class NetModule {
      */
     query_counterparties(params: ParamsOfQueryCounterparties): Promise<ResultOfQueryCollection> {
         return this.client.request('net.query_counterparties', params);
+    }
+
+    /**
+     * Returns transactions tree for specific message.
+     * 
+     * @remarks
+     * Performs recursive retrieval of the transactions tree produced by the specific message:
+     * in_msg -> dst_transaction -> out_messages -> dst_transaction -> ...
+     * 
+     * All retrieved messages and transactions will be included
+     * into `result.messages` and `result.transactions` respectively.
+     * 
+     * The retrieval process will stop when the retrieved transaction count is more than 50.
+     * 
+     * It is guaranteed that each message in `result.messages` has the corresponding transaction
+     * in the `result.transactions`.
+     * 
+     * But there are no guaranties that all messages from transactions `out_msgs` are
+     * presented in `result.messages`.
+     * So the application have to continue retrieval for missing messages if it requires.
+     * 
+     * @param {ParamsOfQueryTransactionTree} params
+     * @returns ResultOfQueryTransactionTree
+     */
+    query_transaction_tree(params: ParamsOfQueryTransactionTree): Promise<ResultOfQueryTransactionTree> {
+        return this.client.request('net.query_transaction_tree', params);
+    }
+
+    /**
+     * Creates block iterator.
+     * 
+     * @remarks
+     * Block iterator uses robust iteration methods that guaranties that every
+     * block in the specified range isn't missed or iterated twice.
+     * 
+     * Iterated range can be reduced with some filters:
+     * - `start_time` – the bottom time range. Only blocks with `gen_utime`
+     * more or equal to this value is iterated. If this parameter is omitted then there is
+     * no bottom time edge, so all blocks since zero state is iterated.
+     * - `end_time` – the upper time range. Only blocks with `gen_utime`
+     * less then this value is iterated. If this parameter is omitted then there is
+     * no upper time edge, so iterator never finishes.
+     * - `shard_filter` – workchains and shard prefixes that reduce the set of interesting
+     * blocks. Block conforms to the shard filter if it belongs to the filter workchain
+     * and the first bits of block's `shard` fields matches to the shard prefix.
+     * Only blocks with suitable shard are iterated.
+     * 
+     * Items iterated is a JSON objects with block data. The minimal set of returned
+     * fields is:
+     * ```text
+     * id
+     * gen_utime
+     * workchain_id
+     * shard
+     * after_split
+     * after_merge
+     * prev_ref {
+     *     root_hash
+     * }
+     * prev_alt_ref {
+     *     root_hash
+     * }
+     * ```
+     * Application can request additional fields in the `result` parameter.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfCreateBlockIterator} params
+     * @returns RegisteredIterator
+     */
+    create_block_iterator(params: ParamsOfCreateBlockIterator): Promise<RegisteredIterator> {
+        return this.client.request('net.create_block_iterator', params);
+    }
+
+    /**
+     * Resumes block iterator.
+     * 
+     * @remarks
+     * The iterator stays exactly at the same position where the `resume_state` was catched.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfResumeBlockIterator} params
+     * @returns RegisteredIterator
+     */
+    resume_block_iterator(params: ParamsOfResumeBlockIterator): Promise<RegisteredIterator> {
+        return this.client.request('net.resume_block_iterator', params);
+    }
+
+    /**
+     * Creates transaction iterator.
+     * 
+     * @remarks
+     * Transaction iterator uses robust iteration methods that guaranty that every
+     * transaction in the specified range isn't missed or iterated twice.
+     * 
+     * Iterated range can be reduced with some filters:
+     * - `start_time` – the bottom time range. Only transactions with `now`
+     * more or equal to this value are iterated. If this parameter is omitted then there is
+     * no bottom time edge, so all the transactions since zero state are iterated.
+     * - `end_time` – the upper time range. Only transactions with `now`
+     * less then this value are iterated. If this parameter is omitted then there is
+     * no upper time edge, so iterator never finishes.
+     * - `shard_filter` – workchains and shard prefixes that reduce the set of interesting
+     * accounts. Account address conforms to the shard filter if
+     * it belongs to the filter workchain and the first bits of address match to
+     * the shard prefix. Only transactions with suitable account addresses are iterated.
+     * - `accounts_filter` – set of account addresses whose transactions must be iterated.
+     * Note that accounts filter can conflict with shard filter so application must combine
+     * these filters carefully.
+     * 
+     * Iterated item is a JSON objects with transaction data. The minimal set of returned
+     * fields is:
+     * ```text
+     * id
+     * account_addr
+     * now
+     * balance_delta(format:DEC)
+     * bounce { bounce_type }
+     * in_message {
+     *     id
+     *     value(format:DEC)
+     *     msg_type
+     *     src
+     * }
+     * out_messages {
+     *     id
+     *     value(format:DEC)
+     *     msg_type
+     *     dst
+     * }
+     * ```
+     * Application can request an additional fields in the `result` parameter.
+     * 
+     * Another parameter that affects on the returned fields is the `include_transfers`.
+     * When this parameter is `true` the iterator computes and adds `transfer` field containing
+     * list of the useful `TransactionTransfer` objects.
+     * Each transfer is calculated from the particular message related to the transaction
+     * and has the following structure:
+     * - message – source message identifier.
+     * - isBounced – indicates that the transaction is bounced, which means the value will be returned back to the sender.
+     * - isDeposit – indicates that this transfer is the deposit (true) or withdraw (false).
+     * - counterparty – account address of the transfer source or destination depending on `isDeposit`.
+     * - value – amount of nano tokens transferred. The value is represented as a decimal string
+     * because the actual value can be more precise than the JSON number can represent. Application
+     * must use this string carefully – conversion to number can follow to loose of precision.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfCreateTransactionIterator} params
+     * @returns RegisteredIterator
+     */
+    create_transaction_iterator(params: ParamsOfCreateTransactionIterator): Promise<RegisteredIterator> {
+        return this.client.request('net.create_transaction_iterator', params);
+    }
+
+    /**
+     * Resumes transaction iterator.
+     * 
+     * @remarks
+     * The iterator stays exactly at the same position where the `resume_state` was caught.
+     * Note that `resume_state` doesn't store the account filter. If the application requires
+     * to use the same account filter as it was when the iterator was created then the application
+     * must pass the account filter again in `accounts_filter` parameter.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfResumeTransactionIterator} params
+     * @returns RegisteredIterator
+     */
+    resume_transaction_iterator(params: ParamsOfResumeTransactionIterator): Promise<RegisteredIterator> {
+        return this.client.request('net.resume_transaction_iterator', params);
+    }
+
+    /**
+     * Returns next available items.
+     * 
+     * @remarks
+     * In addition to available items this function returns the `has_more` flag
+     * indicating that the iterator isn't reach the end of the iterated range yet.
+     * 
+     * This function can return the empty list of available items but
+     * indicates that there are more items is available.
+     * This situation appears when the iterator doesn't reach iterated range
+     * but database doesn't contains available items yet.
+     * 
+     * If application requests resume state in `return_resume_state` parameter
+     * then this function returns `resume_state` that can be used later to
+     * resume the iteration from the position after returned items.
+     * 
+     * The structure of the items returned depends on the iterator used.
+     * See the description to the appropriated iterator creation function.
+     * 
+     * @param {ParamsOfIteratorNext} params
+     * @returns ResultOfIteratorNext
+     */
+    iterator_next(params: ParamsOfIteratorNext): Promise<ResultOfIteratorNext> {
+        return this.client.request('net.iterator_next', params);
+    }
+
+    /**
+     * Removes an iterator
+     * 
+     * @remarks
+     * Frees all resources allocated in library to serve iterator.
+     * 
+     * Application always should call the `remove_iterator` when iterator
+     * is no longer required.
+     * 
+     * @param {RegisteredIterator} params
+     * @returns 
+     */
+    remove_iterator(params: RegisteredIterator): Promise<void> {
+        return this.client.request('net.remove_iterator', params);
     }
 }
 
@@ -4685,10 +5729,15 @@ export type DebotActivity = {
     /**
      * Public key from keypair that was used to sign external message.
      */
-    signkey: string
+    signkey: string,
+
+    /**
+     * Signing box handle used to sign external message.
+     */
+    signing_box_handle: number
 }
 
-export function debotActivityTransaction(msg: string, dst: string, out: Spending[], fee: bigint, setcode: boolean, signkey: string): DebotActivity {
+export function debotActivityTransaction(msg: string, dst: string, out: Spending[], fee: bigint, setcode: boolean, signkey: string, signing_box_handle: number): DebotActivity {
     return {
         type: 'Transaction',
         msg,
@@ -4697,6 +5746,7 @@ export function debotActivityTransaction(msg: string, dst: string, out: Spending
         fee,
         setcode,
         signkey,
+        signing_box_handle,
     };
 }
 

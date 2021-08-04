@@ -2,6 +2,98 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.20.0] – 2021-07-16
+
+### New
+- ABI version `2.1` supported.
+- Now all requests to GraphQL are limited with timeout to react on unexpected server unavailability.
+Existing timeouts in waiting functions keep the same behaviour. All other requests timeout now can 
+be set with `net.query_timeout` config parameter. Its default value is 60000 ms
+- **Debot module**:
+    - added `encrypt`, `decrypt` functions to Sdk interface which accept encryption box handles.
+
+### Fixed
+- Deployment with empty signer in cases of public key set in TVC or deploy set.
+
+## [1.19.0] – 2021-07-07
+
+### New
+- `get_address_type` function in `utils` module, which validates address and returns its type. See the documentation.
+- `decode_account_data` function in `abi` module that converts account data BOC into JSON representation according to ABI 2.1. See the documentation.
+- Diagnostic fields `filter` and `timestamp` added to `wait_for_collection` error
+- `main.ton.dev` and `net.ton.dev` endpoints that will be deprecated on 12.07.21 are now replaced with [proper endpoints list](https://docs.ton.dev/86757ecb2/p/85c869-networks), if they were specified in network `endpoints` config 
+
+### Fixed
+- Search of the first master blocks during the network start period was fixed in blocks and transactions iterators
+
+## [1.18.1] – 2021-07-01
+
+### Improved
+
+- Improved error messages regarding Union-typed parameters (e.g. `abi` and `signer` in `encode_message`): helper functions (e.g. `signerNone`, `signerKeys`, etc.) are suggested if applicable.
+
+## [1.18.0] – 2021-06-26
+
+### New
+- Iterators in `net` module: robust way to iterate blockchain items (blocks, transactions) 
+  in specified range. See documentation for `create_block_iterator` , `create_transaction_iterator`, 
+  `resume_block_iterator`, `resume_transaction_iterator`, `iterator_next`, `iterator_remove` 
+  functions.
+- Library adds `http://` protocol to endpoints `localhost`, `127.0.0.1`, `0.0.0.0` if protocol 
+  isn't specified in config.
+- **Debot module**:
+    - added tests for Json interface.
+## [1.17.0] – 2021-06-21
+
+### New
+- Added support of external encryption boxes. [See the documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_crypto.md#register_encryption_box)
+- **Debot module**:
+    - Dengine waits for completion of all transactions in a chain initiated by debot's onchain call.
+
+## [1.16.1] – 2021-06-16
+
+### New
+- `timeout` option to `query_transaction_tree` – timeout used to limit waiting time for the next 
+  message and transaction in the transaction tree.
+  
+### Improved
+
+- Improved error messages regarding ABI and JSON interface. SDK now shows additional tips for the user in cases of 
+  errors.
+
+### Fixed
+- Warnings in Rust 1.52+. Little fixes in the documentation.
+- `total_output` field in fees was always 0.
+- `query_transaction_tree` didn't wait for messages.
+
+## [1.16.0] – 2021-05-25
+
+### New
+
+- `query_transaction_tree` function that returns messages and transactions tree produced 
+  by the specified message was added to `net` module. [See the documentation](https://github.com/tonlabs/TON-SDK/blob/1.16.0/docs/mod_net.md#query_transaction_tree)
+- `libOptions.loadModule` – ability to specify alternative WASM module loader. 
+
+### Fixed
+
+- `AbiData.key` type changed to u32.
+- attempt to use `orderBy` instead of `order` in `query_collection` will raise error.
+
+## [1.15.0] – 2021-05-18
+
+### New
+
+- Sync latency detection increases connection reliability. Library will change the current endpoint 
+  when it detects data sync latency on it.
+  
+- Configuration parameters: `latency_detection_interval`, 
+  `max_latency`. See client documentation for details. 
+
+- **Debot module**:
+    - signing messages with signing box handles returned from debots.
+    - return any sdk errors to debot in case of external calls.
+    - defining signing box handle used to sign message in approve callback.
+
 ## [1.14.2] – 2021-04-30
 
 ### Fixed

@@ -66,6 +66,7 @@ export class Account {
             signer: this.signer,
             deploy_set: {
                 tvc: params.tvc,
+                initial_data: params.initData,
             },
             call_set: params.initFunctionName
                 ? {

@@ -47,6 +47,10 @@ type LibWebOptions = {
      * Default is "/tonclient.wasm"
      */
     binaryURL?: string,
+    /**
+     * Alternative WASM module loader.
+     */
+    loadModule?: () => Promise<WebAssembly.Module>,
 }
 
 export declare function libWebSetup(libOptions?: LibWebOptions): void;

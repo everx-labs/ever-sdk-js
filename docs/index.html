@@ -1,0 +1,1295 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>@tonclient/core</title>
+	<meta name="description" content="Documentation for @tonclient/core">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+	<script async src="assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">@tonclient/core</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<h1>@tonclient/core</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<p align="center"><a href="https://github.com/tonlabs/ton-client-js/"><img src="media/ton-sdk-blue.png" height="60"/></a></p>
+				<h1 align="center">JavaScript TON OS SDK</h1>
+				<p align="center">Client Library built on the TON OS API</p>
+				<p align="center">for Web, Node.js and React Native platforms</p>
+				<p><strong>Have a question? Get quick help in our channel:</strong></p>
+				<p><a href="https://t.me/ton_sdk"><img src="https://img.shields.io/badge/chat-on%20telegram-9cf.svg" alt="Chat on Telegram"></a> </p>
+				<a href="#table-of-content" id="table-of-content" style="color: inherit; text-decoration: none;">
+					<h1>Table of Content</h1>
+				</a>
+				<ul>
+					<li><a href="#table-of-content">Table of Content</a></li>
+					<li><a href="#useful-links">Useful links</a></li>
+					<li><a href="#library-distribution">Library distribution</a></li>
+					<li><a href="#installation">Installation</a><ul>
+							<li><a href="#install-core-package">Install core package</a></li>
+							<li><a href="#install-bridge-package-depends-on-target-js-platform">Install bridge package (depends on target JS platform)</a><ul>
+									<li><a href="#nodejs">NodeJs</a></li>
+									<li><a href="#web">Web</a></li>
+									<li><a href="#react-native">React Native</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#setup-library">Setup library</a></li>
+					<li><a href="#use-library">Use library</a></li>
+					<li><a href="#build-bridge-binaries">Build bridge binaries</a></li>
+					<li><a href="#build-binaries">Build binaries</a></li>
+					<li><a href="#run-tests">Run tests</a><ul>
+							<li><a href="#preparation-to-run-tests">Preparation to run tests</a></li>
+							<li><a href="#run-tests-on-node-js">Run tests on node js</a></li>
+							<li><a href="#run-tests-on-web-browser">Run tests on web browser</a></li>
+							<li><a href="#run-tests-on-react-native-platform">Run tests on react native platform</a></li>
+							<li><a href="#to-control-where-your-tests-will-run-use-this-environments">To control where your tests will run use this environments</a></li>
+						</ul>
+					</li>
+					<li><a href="#download-precompiled-binaries">Download precompiled binaries</a></li>
+				</ul>
+				<a href="#useful-links" id="useful-links" style="color: inherit; text-decoration: none;">
+					<h1>Useful links</h1>
+				</a>
+				<ul>
+					<li><a href="https://docs.ton.dev/86757ecb2/p/33b76d-quick-start">Quick Start</a></li>
+					<li><a href="https://tonlabs.github.io/ton-client-js/">Types and Methods (API Reference)</a></li>
+					<li><a href="https://github.com/tonlabs/appkit-js">AppKit</a> - JS package built on top of <a href="https://www.npmjs.com/package/@tonclient/core">@tonclient/core</a> package which purpose is to simplify writing applications on Free TON. It helps to implement most common use-cases with less coding. </li>
+					<li><a href="https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk">SDK guides</a> - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on Free TON.</li>
+					<li><a href="https://github.com/tonlabs/sdk-samples">SDK Samples</a> - a good place to get to practice with SDK asap:)</li>
+				</ul>
+				<a href="#library-distribution" id="library-distribution" style="color: inherit; text-decoration: none;">
+					<h1>Library distribution</h1>
+				</a>
+				<p>This SDK is distributed via npm packages:</p>
+				<ul>
+					<li><a href="https://www.npmjs.com/package/@tonclient/core">@tonclient/core</a> – common binding independent from JavaScript platform you use.</li>
+					<li><a href="https://www.npmjs.com/package/@tonclient/lib-node">@tonclient/lib-node</a> – bridge to NodeJs including NodeJs binary addon.</li>
+					<li><a href="https://www.npmjs.com/package/@tonclient/lib-web">@tonclient/lib-web</a> – bridge to browser including WASM module.</li>
+					<li><a href="https://www.npmjs.com/package/@tonclient/lib-react-native">@tonclient/lib-react-native</a> – bridge to mobile react-native platform including static libraries for iOS and Android.</li>
+				</ul>
+				<p>You can find their source code in this repository.</p>
+				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+					<h1>Installation</h1>
+				</a>
+				<a href="#install-core-package" id="install-core-package" style="color: inherit; text-decoration: none;">
+					<h2>Install core package</h2>
+				</a>
+				<pre><code class="language-shell"><span style="color: #000000">npm i --save @tonclient/core</span>
+</code></pre>
+				<a href="#install-bridge-package-depends-on-target-js-platform" id="install-bridge-package-depends-on-target-js-platform" style="color: inherit; text-decoration: none;">
+					<h2>Install bridge package (depends on target JS platform)</h2>
+				</a>
+				<p>The bridge package will download precompiled binaries from TON Labs cloud storage.
+				If you want to rebuild binary from sources see [build binaries](#build binaries) section. </p>
+				<a href="#nodejs" id="nodejs" style="color: inherit; text-decoration: none;">
+					<h3>NodeJs</h3>
+				</a>
+				<pre><code class="language-shell"><span style="color: #000000">npm i --save @tonclient/lib-node</span>
+</code></pre>
+				<a href="#web" id="web" style="color: inherit; text-decoration: none;">
+					<h3>Web</h3>
+				</a>
+				<pre><code class="language-shell"><span style="color: #000000">npm i --save @tonclient/lib-web</span>
+</code></pre>
+				<p><strong>Important!</strong> Each time you run <code>npm install</code> the new version of the <code>tonclient.wasm</code> and <code>index.js</code> is downloaded. So you have to always update the <code>tonclient.wasm</code> inside your web package before publishing (starting local web server, creating web bundle etc.). If you use Webpack the best way is to use CopyPlugin.</p>
+				<a href="#react-native" id="react-native" style="color: inherit; text-decoration: none;">
+					<h3>React Native</h3>
+				</a>
+				<pre><code class="language-shell"><span style="color: #000000">npm i --save @tonclient/lib-react-native</span>
+</code></pre>
+				<a href="#setup-library" id="setup-library" style="color: inherit; text-decoration: none;">
+					<h1>Setup library</h1>
+				</a>
+				<p>You must initialize the library before the first use. The best place to do it is an
+				initialization code of your application.</p>
+				<p>You need to attach the chosen binary module to the <code>TonClient</code> class.</p>
+				<p>NodeJs:</p>
+				<pre><code class="language-ts"><span style="color: #0000FF">const</span><span style="color: #000000"> {</span><span style="color: #0070C1">TonClient</span><span style="color: #000000">} = </span><span style="color: #795E26">require</span><span style="color: #000000">(</span><span style="color: #A31515">&quot;@tonclient/core&quot;</span><span style="color: #000000">);</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> {</span><span style="color: #0070C1">libNode</span><span style="color: #000000">} = </span><span style="color: #795E26">require</span><span style="color: #000000">(</span><span style="color: #A31515">&quot;@tonclient/lib-node&quot;</span><span style="color: #000000">);</span>
+
+<span style="color: #008000">// Application initialization</span>
+
+<span style="color: #001080">TonClient</span><span style="color: #000000">.</span><span style="color: #795E26">useBinaryLibrary</span><span style="color: #000000">(</span><span style="color: #001080">libNode</span><span style="color: #000000">)</span>
+</code></pre>
+				<p>Web:</p>
+				<pre><code class="language-ts"><span style="color: #AF00DB">import</span><span style="color: #000000"> {</span><span style="color: #001080">TonClient</span><span style="color: #000000">} </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&quot;@tonclient/core&quot;</span><span style="color: #000000">;</span>
+<span style="color: #AF00DB">import</span><span style="color: #000000"> {</span><span style="color: #001080">libWeb</span><span style="color: #000000">} </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&quot;@tonclient/lib-web&quot;</span><span style="color: #000000">;</span>
+
+<span style="color: #008000">// Application initialization</span>
+
+<span style="color: #001080">TonClient</span><span style="color: #000000">.</span><span style="color: #795E26">useBinaryLibrary</span><span style="color: #000000">(</span><span style="color: #001080">libWeb</span><span style="color: #000000">);</span>
+</code></pre>
+				<p>By default the library loads wasm module from relative URL <code>/tonclient.wasm</code>.</p>
+				<p>You can specify alternative URL if you want to place (or rename) wasm module.</p>
+				<pre><code class="language-ts"><span style="color: #AF00DB">import</span><span style="color: #000000"> {</span><span style="color: #001080">TonClient</span><span style="color: #000000">} </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&quot;@tonclient/core&quot;</span><span style="color: #000000">;</span>
+<span style="color: #AF00DB">import</span><span style="color: #000000"> {</span><span style="color: #001080">libWeb</span><span style="color: #000000">, </span><span style="color: #001080">libWebSetup</span><span style="color: #000000">} </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&quot;@tonclient/lib-web&quot;</span><span style="color: #000000">;</span>
+
+<span style="color: #008000">// Application initialization</span>
+<span style="color: #795E26">libWebSetup</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">binaryURL:</span><span style="color: #000000"> </span><span style="color: #A31515">&quot;/assets/tonclient_1_2_3.wasm&quot;</span><span style="color: #000000">,</span>
+<span style="color: #000000">});</span>
+
+<span style="color: #001080">TonClient</span><span style="color: #000000">.</span><span style="color: #795E26">useBinaryLibrary</span><span style="color: #000000">(</span><span style="color: #001080">libWeb</span><span style="color: #000000">);</span>
+</code></pre>
+				<p>React Native:</p>
+				<pre><code class="language-ts"><span style="color: #AF00DB">import</span><span style="color: #000000"> {</span><span style="color: #001080">TonClient</span><span style="color: #000000">} </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&quot;@tonclient/core&quot;</span><span style="color: #000000">;</span>
+<span style="color: #AF00DB">import</span><span style="color: #000000"> {</span><span style="color: #001080">libReactNative</span><span style="color: #000000">} </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&quot;@tonclient/lib-react-native&quot;</span><span style="color: #000000">;</span>
+
+<span style="color: #008000">// Application initialization</span>
+
+<span style="color: #001080">TonClient</span><span style="color: #000000">.</span><span style="color: #795E26">useBinaryLibrary</span><span style="color: #000000">(</span><span style="color: #001080">libReactNative</span><span style="color: #000000">);</span>
+</code></pre>
+				<a href="#use-library" id="use-library" style="color: inherit; text-decoration: none;">
+					<h1>Use library</h1>
+				</a>
+				<p>All library functions are incorporated into <code>TonClient</code> class. Each client module is represented as a
+				property of the <code>TonClient</code> object.</p>
+				<p>To start use library you must create an instance of the <code>TonClient</code> class:</p>
+				<pre><code class="language-ts"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">TonClient</span><span style="color: #000000">();</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">keys</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #001080">crypto</span><span style="color: #000000">.</span><span style="color: #795E26">generate_random_sign_keys</span><span style="color: #000000">();</span>
+</code></pre>
+				<p>You can pass a configuration object in <code>TonClient</code> constructor:</p>
+				<pre><code class="language-ts"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">TonClient</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">network:</span><span style="color: #000000"> { </span>
+<span style="color: #000000">        </span><span style="color: #001080">server_address:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;net.ton.dev&#039;</span><span style="color: #000000"> </span>
+<span style="color: #000000">    } </span>
+<span style="color: #000000">});</span>
+</code></pre>
+				<p>In the end, close client to close all the sockets related to it:</p>
+				<pre><code class="language-ts"><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">close</span><span style="color: #000000">();</span>
+</code></pre>
+				<p>You can find reference guide to <code>TonClient</code> here: <a href="https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md">TON-SDK API Documentation</a></p>
+				<a href="#build-bridge-binaries" id="build-bridge-binaries" style="color: inherit; text-decoration: none;">
+					<h1>Build bridge binaries</h1>
+				</a>
+				<p>You can build binaries from sources.</p>
+				<p>If you install a bridge package from the <code>npmjs</code> you can build it with the following commands (e.g. for nodejs):</p>
+				<pre><code class="language-shell"><span style="color: #795E26">cd</span><span style="color: #000000"> node_modules/@tonclient/lib-node/build</span>
+<span style="color: #000000">cargo run</span>
+</code></pre>
+				<a href="#build-binaries" id="build-binaries" style="color: inherit; text-decoration: none;">
+					<h1>Build binaries</h1>
+				</a>
+				<p>If you checkout this repository you can build binaries for all bridges.</p>
+				<pre><code class="language-shell"><span style="color: #795E26">cd</span><span style="color: #000000"> packages/lib-node/build</span>
+<span style="color: #000000">cargo run</span>
+<span style="color: #795E26">cd</span><span style="color: #000000"> ../../../lib-web/build</span>
+<span style="color: #000000">cargo run</span>
+<span style="color: #795E26">cd</span><span style="color: #000000"> ../../../lib-react-native/android/build</span>
+<span style="color: #000000">cargo run</span>
+<span style="color: #795E26">cd</span><span style="color: #000000"> ../../ios/build</span>
+<span style="color: #000000">cargo run</span>
+</code></pre>
+				<p>Also the archives will be created to be published on the TON Labs cloud storage. Archives will be placed into the following folders:</p>
+				<ul>
+					<li><code>packages/lib-node/publish</code></li>
+					<li><code>packages/lib-web/publish</code></li>
+					<li><code>packages/lib-react-native/ios/publish</code></li>
+					<li><code>packages/lib-react-native/android/publish</code></li>
+				</ul>
+				<a href="#run-tests" id="run-tests" style="color: inherit; text-decoration: none;">
+					<h1>Run tests</h1>
+				</a>
+				<p>This suite has test packages:</p>
+				<ul>
+					<li><code>tests</code> – common test package containing all unit tests for a library.</li>
+					<li><code>tests-node</code> – tests runner on node js.</li>
+					<li><code>tests-web</code> – tests runner on web browser.</li>
+					<li><code>tests-react-native</code> – tests runner on react native platform.</li>
+				</ul>
+				<a href="#preparation-to-run-tests" id="preparation-to-run-tests" style="color: inherit; text-decoration: none;">
+					<h2>Preparation to run tests</h2>
+				</a>
+				<pre><code class="language-shell"><span style="color: #795E26">cd</span><span style="color: #000000"> packages/core</span>
+<span style="color: #000000">npm i</span>
+<span style="color: #000000">npx tsc</span>
+<span style="color: #795E26">cd</span><span style="color: #000000"> packages/tests</span>
+<span style="color: #000000">npm i</span>
+<span style="color: #000000">npx tsc</span>
+</code></pre>
+				<a href="#run-tests-on-node-js" id="run-tests-on-node-js" style="color: inherit; text-decoration: none;">
+					<h2>Run tests on node js</h2>
+				</a>
+				<pre><code class="language-shell"><span style="color: #795E26">cd</span><span style="color: #000000"> packages/tests-node</span>
+<span style="color: #000000">npm i</span>
+<span style="color: #000000">node run</span>
+</code></pre>
+				<a href="#run-tests-on-web-browser" id="run-tests-on-web-browser" style="color: inherit; text-decoration: none;">
+					<h2>Run tests on web browser</h2>
+				</a>
+				<pre><code class="language-shell"><span style="color: #795E26">cd</span><span style="color: #000000"> packages/tests-web</span>
+<span style="color: #000000">npm i</span>
+<span style="color: #000000">node run</span>
+</code></pre>
+				<a href="#run-tests-on-react-native-platform" id="run-tests-on-react-native-platform" style="color: inherit; text-decoration: none;">
+					<h2>Run tests on react native platform</h2>
+				</a>
+				<pre><code class="language-shell"><span style="color: #795E26">cd</span><span style="color: #000000"> packages/tests-react-native</span>
+<span style="color: #000000">npm i</span>
+<span style="color: #000000">node run ios</span>
+<span style="color: #000000">node run android</span>
+</code></pre>
+				<a href="#to-control-where-your-tests-will-run-use-this-environments" id="to-control-where-your-tests-will-run-use-this-environments" style="color: inherit; text-decoration: none;">
+					<h2>To control where your tests will run use this environments</h2>
+				</a>
+				<pre><code class="language-shell"><span style="color: #000000">TON_USE_SE=true TON_NETWORK_ADDRESS=http://localhost node run</span>
+</code></pre>
+				<a href="#download-precompiled-binaries" id="download-precompiled-binaries" style="color: inherit; text-decoration: none;">
+					<h1>Download precompiled binaries</h1>
+				</a>
+				<p>Instead of building library yourself, you can download the <strong>latest</strong> precompiled binaries from
+				TON Labs SDK Binaries Store.</p>
+				<table>
+					<thead>
+						<tr>
+							<th>Binary</th>
+							<th>Target</th>
+							<th>Major</th>
+							<th>Download links</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td>Node.js AddOn</td>
+							<td>Win32</td>
+							<td>1</td>
+							<td><a href="https://binaries.tonlabs.io/tonclient_1_nodejs_addon_win32.gz"><code>tonclient.node</code></a></td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td>macOS</td>
+							<td>1</td>
+							<td><a href="https://binaries.tonlabs.io/tonclient_1_nodejs_addon_darwin.gz"><code>tonclient.node</code></a></td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td>Linux</td>
+							<td>1</td>
+							<td><a href="https://binaries.tonlabs.io/tonclient_1_nodejs_addon_linux.gz"><code>tonclient.node</code></a></td>
+						</tr>
+						<tr>
+							<td>React Native Module</td>
+							<td>Android x86_64</td>
+							<td>1</td>
+							<td><a href="https://binaries.tonlabs.io/tonclient_1_react_native_x86_64-linux-android.gz"><code>libtonclient.so</code></a></td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td>Android i686</td>
+							<td>1</td>
+							<td><a href="https://binaries.tonlabs.io/tonclient_1_react_native_i686-linux-android.gz"><code>libtonclient.so</code></a></td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td>Android armv7</td>
+							<td>1</td>
+							<td><a href="https://binaries.tonlabs.io/tonclient_1_react_native_armv7-linux-android.gz"><code>libtonclient.so</code></a></td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td>Android aarch64</td>
+							<td>1</td>
+							<td><a href="https://binaries.tonlabs.io/tonclient_1_react_native_aarch64-linux-android.gz"><code>libtonclient.so</code></a></td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
+							<td>iOS</td>
+							<td>1</td>
+							<td><a href="https://binaries.tonlabs.io/tonclient_1_react_native_ios.gz"><code>libtonclient.a</code></a></td>
+						</tr>
+						<tr>
+							<td>WASM Module</td>
+							<td>Browser</td>
+							<td>1</td>
+							<td><a href="https://binaries.tonlabs.io/tonclient_1_wasm.gz"><code>tonclient.wasm</code></a>, <a href="https://binaries.tonlabs.io/tonclient_1_wasm_js.gz"><code>index.js</code></a></td>
+						</tr>
+				</tbody></table>
+				<p><em>Downloaded archive is gzipped file</em></p>
+				<hr>
+				<p>Copyright 2018-2020 TON DEV SOLUTIONS LTD.</p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="modules.html">Exports</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="enums/abierrorcode.html" class="tsd-kind-icon">Abi<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/accountaddresstype.html" class="tsd-kind-icon">Account<wbr>Address<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/aggregationfn.html" class="tsd-kind-icon">Aggregation<wbr>Fn</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/bocerrorcode.html" class="tsd-kind-icon">Boc<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/clienterrorcode.html" class="tsd-kind-icon">Client<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/cryptoerrorcode.html" class="tsd-kind-icon">Crypto<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/deboterrorcode.html" class="tsd-kind-icon">Debot<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/messagebodytype.html" class="tsd-kind-icon">Message<wbr>Body<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/neterrorcode.html" class="tsd-kind-icon">Net<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/processingerrorcode.html" class="tsd-kind-icon">Processing<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/sortdirection.html" class="tsd-kind-icon">Sort<wbr>Direction</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/tvmerrorcode.html" class="tsd-kind-icon">Tvm<wbr>Error<wbr>Code</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/abimodule.html" class="tsd-kind-icon">Abi<wbr>Module</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/bocmodule.html" class="tsd-kind-icon">Boc<wbr>Module</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/clientmodule.html" class="tsd-kind-icon">Client<wbr>Module</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/cryptomodule.html" class="tsd-kind-icon">Crypto<wbr>Module</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/debotmodule.html" class="tsd-kind-icon">Debot<wbr>Module</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/netmodule.html" class="tsd-kind-icon">Net<wbr>Module</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/processingmodule.html" class="tsd-kind-icon">Processing<wbr>Module</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/tonclient.html" class="tsd-kind-icon">Ton<wbr>Client</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/tvmmodule.html" class="tsd-kind-icon">Tvm<wbr>Module</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/utilsmodule.html" class="tsd-kind-icon">Utils<wbr>Module</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/appdebotbrowser.html" class="tsd-kind-icon">App<wbr>Debot<wbr>Browser</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/appencryptionbox.html" class="tsd-kind-icon">App<wbr>Encryption<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/appsigningbox.html" class="tsd-kind-icon">App<wbr>Signing<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/binarylibrary.html" class="tsd-kind-icon">Binary<wbr>Library</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#abi" class="tsd-kind-icon">Abi</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#abiconfig" class="tsd-kind-icon">Abi<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#abicontract" class="tsd-kind-icon">Abi<wbr>Contract</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#abidata" class="tsd-kind-icon">Abi<wbr>Data</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#abievent" class="tsd-kind-icon">Abi<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#abifunction" class="tsd-kind-icon">Abi<wbr>Function</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#abihandle" class="tsd-kind-icon">Abi<wbr>Handle</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#abiparam" class="tsd-kind-icon">Abi<wbr>Param</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#accountforexecutor" class="tsd-kind-icon">Account<wbr>For<wbr>Executor</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#addressstringformat" class="tsd-kind-icon">Address<wbr>String<wbr>Format</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#apprequestresult" class="tsd-kind-icon">App<wbr>Request<wbr>Result</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#boccachetype" class="tsd-kind-icon">Boc<wbr>Cache<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#bocconfig" class="tsd-kind-icon">Boc<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#buildinfodependency" class="tsd-kind-icon">Build<wbr>Info<wbr>Dependency</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#builderop" class="tsd-kind-icon">Builder<wbr>Op</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#callset" class="tsd-kind-icon">Call<wbr>Set</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#clientconfig" class="tsd-kind-icon">Client<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#clienterror" class="tsd-kind-icon">Client<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#cryptoconfig" class="tsd-kind-icon">Crypto<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#debotaction" class="tsd-kind-icon">Debot<wbr>Action</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#debotactivity" class="tsd-kind-icon">Debot<wbr>Activity</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#debothandle" class="tsd-kind-icon">Debot<wbr>Handle</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#debotinfo" class="tsd-kind-icon">Debot<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#decodedmessagebody" class="tsd-kind-icon">Decoded<wbr>Message<wbr>Body</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#decodedoutput" class="tsd-kind-icon">Decoded<wbr>Output</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#deployset" class="tsd-kind-icon">Deploy<wbr>Set</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#encryptionboxhandle" class="tsd-kind-icon">Encryption<wbr>Box<wbr>Handle</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#encryptionboxinfo" class="tsd-kind-icon">Encryption<wbr>Box<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#endpointsset" class="tsd-kind-icon">Endpoints<wbr>Set</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#executionoptions" class="tsd-kind-icon">Execution<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#fieldaggregation" class="tsd-kind-icon">Field<wbr>Aggregation</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#functionheader" class="tsd-kind-icon">Function<wbr>Header</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#keypair" class="tsd-kind-icon">Key<wbr>Pair</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#messagenode" class="tsd-kind-icon">Message<wbr>Node</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#messagesource" class="tsd-kind-icon">Message<wbr>Source</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#networkconfig" class="tsd-kind-icon">Network<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#orderby" class="tsd-kind-icon">Order<wbr>By</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofaggregatecollection" class="tsd-kind-icon">Params<wbr>OfAggregate<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofappdebotbrowser" class="tsd-kind-icon">Params<wbr>OfApp<wbr>Debot<wbr>Browser</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofappencryptionbox" class="tsd-kind-icon">Params<wbr>OfApp<wbr>Encryption<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofapprequest" class="tsd-kind-icon">Params<wbr>OfApp<wbr>Request</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofappsigningbox" class="tsd-kind-icon">Params<wbr>OfApp<wbr>Signing<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofattachsignature" class="tsd-kind-icon">Params<wbr>OfAttach<wbr>Signature</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofattachsignaturetomessagebody" class="tsd-kind-icon">Params<wbr>OfAttach<wbr>Signature<wbr>ToMessage<wbr>Body</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofbatchquery" class="tsd-kind-icon">Params<wbr>OfBatch<wbr>Query</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofboccacheget" class="tsd-kind-icon">Params<wbr>OfBoc<wbr>Cache<wbr>Get</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofboccacheset" class="tsd-kind-icon">Params<wbr>OfBoc<wbr>Cache<wbr>Set</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofboccacheunpin" class="tsd-kind-icon">Params<wbr>OfBoc<wbr>Cache<wbr>Unpin</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofcalcstoragefee" class="tsd-kind-icon">Params<wbr>OfCalc<wbr>Storage<wbr>Fee</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofchacha20" class="tsd-kind-icon">Params<wbr>OfCha<wbr>Cha20</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofcompresszstd" class="tsd-kind-icon">Params<wbr>OfCompress<wbr>Zstd</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofconvertaddress" class="tsd-kind-icon">Params<wbr>OfConvert<wbr>Address</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofconvertpublickeytotonsafeformat" class="tsd-kind-icon">Params<wbr>OfConvert<wbr>Public<wbr>Key<wbr>ToTon<wbr>Safe<wbr>Format</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofcreateblockiterator" class="tsd-kind-icon">Params<wbr>OfCreate<wbr>Block<wbr>Iterator</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofcreatetransactioniterator" class="tsd-kind-icon">Params<wbr>OfCreate<wbr>Transaction<wbr>Iterator</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofdecodeaccountdata" class="tsd-kind-icon">Params<wbr>OfDecode<wbr>Account<wbr>Data</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofdecodemessage" class="tsd-kind-icon">Params<wbr>OfDecode<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofdecodemessagebody" class="tsd-kind-icon">Params<wbr>OfDecode<wbr>Message<wbr>Body</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofdecompresszstd" class="tsd-kind-icon">Params<wbr>OfDecompress<wbr>Zstd</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofencodeaccount" class="tsd-kind-icon">Params<wbr>OfEncode<wbr>Account</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofencodeboc" class="tsd-kind-icon">Params<wbr>OfEncode<wbr>Boc</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofencodeinternalmessage" class="tsd-kind-icon">Params<wbr>OfEncode<wbr>Internal<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofencodemessage" class="tsd-kind-icon">Params<wbr>OfEncode<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofencodemessagebody" class="tsd-kind-icon">Params<wbr>OfEncode<wbr>Message<wbr>Body</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofencryptionboxdecrypt" class="tsd-kind-icon">Params<wbr>OfEncryption<wbr>Box<wbr>Decrypt</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofencryptionboxencrypt" class="tsd-kind-icon">Params<wbr>OfEncryption<wbr>Box<wbr>Encrypt</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofencryptionboxgetinfo" class="tsd-kind-icon">Params<wbr>OfEncryption<wbr>Box<wbr>Get<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofexecute" class="tsd-kind-icon">Params<wbr>OfExecute</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsoffactorize" class="tsd-kind-icon">Params<wbr>OfFactorize</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsoffetch" class="tsd-kind-icon">Params<wbr>OfFetch</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsoffindlastshardblock" class="tsd-kind-icon">Params<wbr>OfFind<wbr>Last<wbr>Shard<wbr>Block</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofgeneraterandombytes" class="tsd-kind-icon">Params<wbr>OfGenerate<wbr>Random<wbr>Bytes</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofgetaddresstype" class="tsd-kind-icon">Params<wbr>OfGet<wbr>Address<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofgetblockchainconfig" class="tsd-kind-icon">Params<wbr>OfGet<wbr>Blockchain<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofgetbochash" class="tsd-kind-icon">Params<wbr>OfGet<wbr>Boc<wbr>Hash</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofgetcodefromtvc" class="tsd-kind-icon">Params<wbr>OfGet<wbr>Code<wbr>From<wbr>Tvc</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofhdkeyderivefromxprv" class="tsd-kind-icon">Params<wbr>OfHDKey<wbr>Derive<wbr>FromXPrv</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofhdkeyderivefromxprvpath" class="tsd-kind-icon">Params<wbr>OfHDKey<wbr>Derive<wbr>FromXPrv<wbr>Path</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofhdkeypublicfromxprv" class="tsd-kind-icon">Params<wbr>OfHDKey<wbr>Public<wbr>FromXPrv</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofhdkeysecretfromxprv" class="tsd-kind-icon">Params<wbr>OfHDKey<wbr>Secret<wbr>FromXPrv</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofhdkeyxprvfrommnemonic" class="tsd-kind-icon">Params<wbr>OfHDKeyXPrv<wbr>From<wbr>Mnemonic</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofhash" class="tsd-kind-icon">Params<wbr>OfHash</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofinit" class="tsd-kind-icon">Params<wbr>OfInit</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofiteratornext" class="tsd-kind-icon">Params<wbr>OfIterator<wbr>Next</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofmnemonicderivesignkeys" class="tsd-kind-icon">Params<wbr>OfMnemonic<wbr>Derive<wbr>Sign<wbr>Keys</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofmnemonicfromentropy" class="tsd-kind-icon">Params<wbr>OfMnemonic<wbr>From<wbr>Entropy</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofmnemonicfromrandom" class="tsd-kind-icon">Params<wbr>OfMnemonic<wbr>From<wbr>Random</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofmnemonicverify" class="tsd-kind-icon">Params<wbr>OfMnemonic<wbr>Verify</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofmnemonicwords" class="tsd-kind-icon">Params<wbr>OfMnemonic<wbr>Words</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofmodularpower" class="tsd-kind-icon">Params<wbr>OfModular<wbr>Power</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofnaclbox" class="tsd-kind-icon">Params<wbr>OfNacl<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofnaclboxkeypairfromsecret" class="tsd-kind-icon">Params<wbr>OfNacl<wbr>Box<wbr>Key<wbr>Pair<wbr>From<wbr>Secret</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofnaclboxopen" class="tsd-kind-icon">Params<wbr>OfNacl<wbr>Box<wbr>Open</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofnaclsecretbox" class="tsd-kind-icon">Params<wbr>OfNacl<wbr>Secret<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofnaclsecretboxopen" class="tsd-kind-icon">Params<wbr>OfNacl<wbr>Secret<wbr>Box<wbr>Open</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofnaclsign" class="tsd-kind-icon">Params<wbr>OfNacl<wbr>Sign</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofnaclsigndetachedverify" class="tsd-kind-icon">Params<wbr>OfNacl<wbr>Sign<wbr>Detached<wbr>Verify</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofnaclsignkeypairfromsecret" class="tsd-kind-icon">Params<wbr>OfNacl<wbr>Sign<wbr>Key<wbr>Pair<wbr>From<wbr>Secret</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofnaclsignopen" class="tsd-kind-icon">Params<wbr>OfNacl<wbr>Sign<wbr>Open</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofparse" class="tsd-kind-icon">Params<wbr>OfParse</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofparseshardstate" class="tsd-kind-icon">Params<wbr>OfParse<wbr>Shardstate</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofprocessmessage" class="tsd-kind-icon">Params<wbr>OfProcess<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofquery" class="tsd-kind-icon">Params<wbr>OfQuery</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofquerycollection" class="tsd-kind-icon">Params<wbr>OfQuery<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofquerycounterparties" class="tsd-kind-icon">Params<wbr>OfQuery<wbr>Counterparties</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofqueryoperation" class="tsd-kind-icon">Params<wbr>OfQuery<wbr>Operation</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofquerytransactiontree" class="tsd-kind-icon">Params<wbr>OfQuery<wbr>Transaction<wbr>Tree</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofremove" class="tsd-kind-icon">Params<wbr>OfRemove</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofresolveapprequest" class="tsd-kind-icon">Params<wbr>OfResolve<wbr>App<wbr>Request</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofresumeblockiterator" class="tsd-kind-icon">Params<wbr>OfResume<wbr>Block<wbr>Iterator</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofresumetransactioniterator" class="tsd-kind-icon">Params<wbr>OfResume<wbr>Transaction<wbr>Iterator</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofrunexecutor" class="tsd-kind-icon">Params<wbr>OfRun<wbr>Executor</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofrunget" class="tsd-kind-icon">Params<wbr>OfRun<wbr>Get</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofruntvm" class="tsd-kind-icon">Params<wbr>OfRun<wbr>Tvm</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofscrypt" class="tsd-kind-icon">Params<wbr>OfScrypt</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofsend" class="tsd-kind-icon">Params<wbr>OfSend</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofsendmessage" class="tsd-kind-icon">Params<wbr>OfSend<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofsign" class="tsd-kind-icon">Params<wbr>OfSign</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofsigningboxsign" class="tsd-kind-icon">Params<wbr>OfSigning<wbr>Box<wbr>Sign</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofstart" class="tsd-kind-icon">Params<wbr>OfStart</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofsubscribecollection" class="tsd-kind-icon">Params<wbr>OfSubscribe<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsoftoncrc16" class="tsd-kind-icon">Params<wbr>OfTon<wbr>Crc16</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofverifysignature" class="tsd-kind-icon">Params<wbr>OfVerify<wbr>Signature</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofwaitforcollection" class="tsd-kind-icon">Params<wbr>OfWait<wbr>For<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#paramsofwaitfortransaction" class="tsd-kind-icon">Params<wbr>OfWait<wbr>For<wbr>Transaction</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#processingevent" class="tsd-kind-icon">Processing<wbr>Event</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#registereddebot" class="tsd-kind-icon">Registered<wbr>Debot</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#registeredencryptionbox" class="tsd-kind-icon">Registered<wbr>Encryption<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#registerediterator" class="tsd-kind-icon">Registered<wbr>Iterator</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#registeredsigningbox" class="tsd-kind-icon">Registered<wbr>Signing<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#responsehandler" class="tsd-kind-icon">Response<wbr>Handler</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofaggregatecollection" class="tsd-kind-icon">Result<wbr>OfAggregate<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofappdebotbrowser" class="tsd-kind-icon">Result<wbr>OfApp<wbr>Debot<wbr>Browser</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofappencryptionbox" class="tsd-kind-icon">Result<wbr>OfApp<wbr>Encryption<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofappsigningbox" class="tsd-kind-icon">Result<wbr>OfApp<wbr>Signing<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofattachsignature" class="tsd-kind-icon">Result<wbr>OfAttach<wbr>Signature</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofattachsignaturetomessagebody" class="tsd-kind-icon">Result<wbr>OfAttach<wbr>Signature<wbr>ToMessage<wbr>Body</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofbatchquery" class="tsd-kind-icon">Result<wbr>OfBatch<wbr>Query</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofboccacheget" class="tsd-kind-icon">Result<wbr>OfBoc<wbr>Cache<wbr>Get</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofboccacheset" class="tsd-kind-icon">Result<wbr>OfBoc<wbr>Cache<wbr>Set</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofbuildinfo" class="tsd-kind-icon">Result<wbr>OfBuild<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofcalcstoragefee" class="tsd-kind-icon">Result<wbr>OfCalc<wbr>Storage<wbr>Fee</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofchacha20" class="tsd-kind-icon">Result<wbr>OfCha<wbr>Cha20</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofcompresszstd" class="tsd-kind-icon">Result<wbr>OfCompress<wbr>Zstd</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofconvertaddress" class="tsd-kind-icon">Result<wbr>OfConvert<wbr>Address</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofconvertpublickeytotonsafeformat" class="tsd-kind-icon">Result<wbr>OfConvert<wbr>Public<wbr>Key<wbr>ToTon<wbr>Safe<wbr>Format</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofdecodedata" class="tsd-kind-icon">Result<wbr>OfDecode<wbr>Data</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofdecompresszstd" class="tsd-kind-icon">Result<wbr>OfDecompress<wbr>Zstd</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofencodeaccount" class="tsd-kind-icon">Result<wbr>OfEncode<wbr>Account</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofencodeboc" class="tsd-kind-icon">Result<wbr>OfEncode<wbr>Boc</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofencodeinternalmessage" class="tsd-kind-icon">Result<wbr>OfEncode<wbr>Internal<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofencodemessage" class="tsd-kind-icon">Result<wbr>OfEncode<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofencodemessagebody" class="tsd-kind-icon">Result<wbr>OfEncode<wbr>Message<wbr>Body</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofencryptionboxdecrypt" class="tsd-kind-icon">Result<wbr>OfEncryption<wbr>Box<wbr>Decrypt</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofencryptionboxencrypt" class="tsd-kind-icon">Result<wbr>OfEncryption<wbr>Box<wbr>Encrypt</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofencryptionboxgetinfo" class="tsd-kind-icon">Result<wbr>OfEncryption<wbr>Box<wbr>Get<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultoffactorize" class="tsd-kind-icon">Result<wbr>OfFactorize</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultoffetch" class="tsd-kind-icon">Result<wbr>OfFetch</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultoffindlastshardblock" class="tsd-kind-icon">Result<wbr>OfFind<wbr>Last<wbr>Shard<wbr>Block</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofgeneraterandombytes" class="tsd-kind-icon">Result<wbr>OfGenerate<wbr>Random<wbr>Bytes</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofgetaddresstype" class="tsd-kind-icon">Result<wbr>OfGet<wbr>Address<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofgetapireference" class="tsd-kind-icon">Result<wbr>OfGet<wbr>Api<wbr>Reference</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofgetblockchainconfig" class="tsd-kind-icon">Result<wbr>OfGet<wbr>Blockchain<wbr>Config</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofgetbochash" class="tsd-kind-icon">Result<wbr>OfGet<wbr>Boc<wbr>Hash</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofgetcodefromtvc" class="tsd-kind-icon">Result<wbr>OfGet<wbr>Code<wbr>From<wbr>Tvc</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofgetendpoints" class="tsd-kind-icon">Result<wbr>OfGet<wbr>Endpoints</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofhdkeyderivefromxprv" class="tsd-kind-icon">Result<wbr>OfHDKey<wbr>Derive<wbr>FromXPrv</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofhdkeyderivefromxprvpath" class="tsd-kind-icon">Result<wbr>OfHDKey<wbr>Derive<wbr>FromXPrv<wbr>Path</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofhdkeypublicfromxprv" class="tsd-kind-icon">Result<wbr>OfHDKey<wbr>Public<wbr>FromXPrv</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofhdkeysecretfromxprv" class="tsd-kind-icon">Result<wbr>OfHDKey<wbr>Secret<wbr>FromXPrv</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofhdkeyxprvfrommnemonic" class="tsd-kind-icon">Result<wbr>OfHDKeyXPrv<wbr>From<wbr>Mnemonic</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofhash" class="tsd-kind-icon">Result<wbr>OfHash</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofiteratornext" class="tsd-kind-icon">Result<wbr>OfIterator<wbr>Next</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofmnemonicfromentropy" class="tsd-kind-icon">Result<wbr>OfMnemonic<wbr>From<wbr>Entropy</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofmnemonicfromrandom" class="tsd-kind-icon">Result<wbr>OfMnemonic<wbr>From<wbr>Random</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofmnemonicverify" class="tsd-kind-icon">Result<wbr>OfMnemonic<wbr>Verify</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofmnemonicwords" class="tsd-kind-icon">Result<wbr>OfMnemonic<wbr>Words</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofmodularpower" class="tsd-kind-icon">Result<wbr>OfModular<wbr>Power</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofnaclbox" class="tsd-kind-icon">Result<wbr>OfNacl<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofnaclboxopen" class="tsd-kind-icon">Result<wbr>OfNacl<wbr>Box<wbr>Open</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofnaclsign" class="tsd-kind-icon">Result<wbr>OfNacl<wbr>Sign</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofnaclsigndetached" class="tsd-kind-icon">Result<wbr>OfNacl<wbr>Sign<wbr>Detached</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofnaclsigndetachedverify" class="tsd-kind-icon">Result<wbr>OfNacl<wbr>Sign<wbr>Detached<wbr>Verify</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofnaclsignopen" class="tsd-kind-icon">Result<wbr>OfNacl<wbr>Sign<wbr>Open</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofparse" class="tsd-kind-icon">Result<wbr>OfParse</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofprocessmessage" class="tsd-kind-icon">Result<wbr>OfProcess<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofquery" class="tsd-kind-icon">Result<wbr>OfQuery</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofquerycollection" class="tsd-kind-icon">Result<wbr>OfQuery<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofquerytransactiontree" class="tsd-kind-icon">Result<wbr>OfQuery<wbr>Transaction<wbr>Tree</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofrunexecutor" class="tsd-kind-icon">Result<wbr>OfRun<wbr>Executor</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofrunget" class="tsd-kind-icon">Result<wbr>OfRun<wbr>Get</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofruntvm" class="tsd-kind-icon">Result<wbr>OfRun<wbr>Tvm</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofscrypt" class="tsd-kind-icon">Result<wbr>OfScrypt</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofsendmessage" class="tsd-kind-icon">Result<wbr>OfSend<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofsign" class="tsd-kind-icon">Result<wbr>OfSign</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofsigningboxgetpublickey" class="tsd-kind-icon">Result<wbr>OfSigning<wbr>Box<wbr>Get<wbr>Public<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofsigningboxsign" class="tsd-kind-icon">Result<wbr>OfSigning<wbr>Box<wbr>Sign</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofsubscribecollection" class="tsd-kind-icon">Result<wbr>OfSubscribe<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultoftoncrc16" class="tsd-kind-icon">Result<wbr>OfTon<wbr>Crc16</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofverifysignature" class="tsd-kind-icon">Result<wbr>OfVerify<wbr>Signature</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofversion" class="tsd-kind-icon">Result<wbr>OfVersion</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#resultofwaitforcollection" class="tsd-kind-icon">Result<wbr>OfWait<wbr>For<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#signer" class="tsd-kind-icon">Signer</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#signingboxhandle" class="tsd-kind-icon">Signing<wbr>Box<wbr>Handle</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#spending" class="tsd-kind-icon">Spending</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#stateinitparams" class="tsd-kind-icon">State<wbr>Init<wbr>Params</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#stateinitsource" class="tsd-kind-icon">State<wbr>Init<wbr>Source</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#transactionfees" class="tsd-kind-icon">Transaction<wbr>Fees</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#transactionnode" class="tsd-kind-icon">Transaction<wbr>Node</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#abicontract" class="tsd-kind-icon">abi<wbr>Contract</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#abihandle" class="tsd-kind-icon">abi<wbr>Handle</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#abijson" class="tsd-kind-icon">abi<wbr>Json</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#abiserialized" class="tsd-kind-icon">abi<wbr>Serialized</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#accountforexecutoraccount" class="tsd-kind-icon">account<wbr>For<wbr>Executor<wbr>Account</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#accountforexecutornone" class="tsd-kind-icon">account<wbr>For<wbr>Executor<wbr>None</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#accountforexecutoruninit" class="tsd-kind-icon">account<wbr>For<wbr>Executor<wbr>Uninit</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#addressstringformataccountid" class="tsd-kind-icon">address<wbr>String<wbr>Format<wbr>Account<wbr>Id</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#addressstringformatbase64" class="tsd-kind-icon">address<wbr>String<wbr>Format<wbr>Base64</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#addressstringformathex" class="tsd-kind-icon">address<wbr>String<wbr>Format<wbr>Hex</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#apprequestresulterror" class="tsd-kind-icon">app<wbr>Request<wbr>Result<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#apprequestresultok" class="tsd-kind-icon">app<wbr>Request<wbr>Result<wbr>Ok</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#boccachetypepinned" class="tsd-kind-icon">boc<wbr>Cache<wbr>Type<wbr>Pinned</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#boccachetypeunpinned" class="tsd-kind-icon">boc<wbr>Cache<wbr>Type<wbr>Unpinned</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#builderopbitstring" class="tsd-kind-icon">builder<wbr>OpBit<wbr>String</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#builderopcell" class="tsd-kind-icon">builder<wbr>OpCell</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#builderopcellboc" class="tsd-kind-icon">builder<wbr>OpCell<wbr>Boc</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#builderopinteger" class="tsd-kind-icon">builder<wbr>OpInteger</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#debotactivitytransaction" class="tsd-kind-icon">debot<wbr>Activity<wbr>Transaction</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#messagesourceencoded" class="tsd-kind-icon">message<wbr>Source<wbr>Encoded</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#messagesourceencodingparams" class="tsd-kind-icon">message<wbr>Source<wbr>Encoding<wbr>Params</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappdebotbrowserapprove" class="tsd-kind-icon">params<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Approve</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappdebotbrowsergetsigningbox" class="tsd-kind-icon">params<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Get<wbr>Signing<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappdebotbrowserinput" class="tsd-kind-icon">params<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Input</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappdebotbrowserinvokedebot" class="tsd-kind-icon">params<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Invoke<wbr>Debot</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappdebotbrowserlog" class="tsd-kind-icon">params<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Log</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappdebotbrowsersend" class="tsd-kind-icon">params<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Send</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappdebotbrowsershowaction" class="tsd-kind-icon">params<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Show<wbr>Action</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappdebotbrowserswitch" class="tsd-kind-icon">params<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Switch</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappdebotbrowserswitchcompleted" class="tsd-kind-icon">params<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Switch<wbr>Completed</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappencryptionboxdecrypt" class="tsd-kind-icon">params<wbr>OfApp<wbr>Encryption<wbr>Box<wbr>Decrypt</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappencryptionboxencrypt" class="tsd-kind-icon">params<wbr>OfApp<wbr>Encryption<wbr>Box<wbr>Encrypt</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappencryptionboxgetinfo" class="tsd-kind-icon">params<wbr>OfApp<wbr>Encryption<wbr>Box<wbr>Get<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappsigningboxgetpublickey" class="tsd-kind-icon">params<wbr>OfApp<wbr>Signing<wbr>Box<wbr>Get<wbr>Public<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofappsigningboxsign" class="tsd-kind-icon">params<wbr>OfApp<wbr>Signing<wbr>Box<wbr>Sign</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofqueryoperationaggregatecollection" class="tsd-kind-icon">params<wbr>OfQuery<wbr>Operation<wbr>Aggregate<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofqueryoperationquerycollection" class="tsd-kind-icon">params<wbr>OfQuery<wbr>Operation<wbr>Query<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofqueryoperationquerycounterparties" class="tsd-kind-icon">params<wbr>OfQuery<wbr>Operation<wbr>Query<wbr>Counterparties</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#paramsofqueryoperationwaitforcollection" class="tsd-kind-icon">params<wbr>OfQuery<wbr>Operation<wbr>Wait<wbr>For<wbr>Collection</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#processingeventdidsend" class="tsd-kind-icon">processing<wbr>Event<wbr>Did<wbr>Send</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#processingeventfetchfirstblockfailed" class="tsd-kind-icon">processing<wbr>Event<wbr>Fetch<wbr>First<wbr>Block<wbr>Failed</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#processingeventfetchnextblockfailed" class="tsd-kind-icon">processing<wbr>Event<wbr>Fetch<wbr>Next<wbr>Block<wbr>Failed</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#processingeventmessageexpired" class="tsd-kind-icon">processing<wbr>Event<wbr>Message<wbr>Expired</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#processingeventsendfailed" class="tsd-kind-icon">processing<wbr>Event<wbr>Send<wbr>Failed</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#processingeventwillfetchfirstblock" class="tsd-kind-icon">processing<wbr>Event<wbr>Will<wbr>Fetch<wbr>First<wbr>Block</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#processingeventwillfetchnextblock" class="tsd-kind-icon">processing<wbr>Event<wbr>Will<wbr>Fetch<wbr>Next<wbr>Block</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#processingeventwillsend" class="tsd-kind-icon">processing<wbr>Event<wbr>Will<wbr>Send</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#resultofappdebotbrowserapprove" class="tsd-kind-icon">result<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Approve</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#resultofappdebotbrowsergetsigningbox" class="tsd-kind-icon">result<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Get<wbr>Signing<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#resultofappdebotbrowserinput" class="tsd-kind-icon">result<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Input</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#resultofappdebotbrowserinvokedebot" class="tsd-kind-icon">result<wbr>OfApp<wbr>Debot<wbr>Browser<wbr>Invoke<wbr>Debot</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#resultofappencryptionboxdecrypt" class="tsd-kind-icon">result<wbr>OfApp<wbr>Encryption<wbr>Box<wbr>Decrypt</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#resultofappencryptionboxencrypt" class="tsd-kind-icon">result<wbr>OfApp<wbr>Encryption<wbr>Box<wbr>Encrypt</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#resultofappencryptionboxgetinfo" class="tsd-kind-icon">result<wbr>OfApp<wbr>Encryption<wbr>Box<wbr>Get<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#resultofappsigningboxgetpublickey" class="tsd-kind-icon">result<wbr>OfApp<wbr>Signing<wbr>Box<wbr>Get<wbr>Public<wbr>Key</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#resultofappsigningboxsign" class="tsd-kind-icon">result<wbr>OfApp<wbr>Signing<wbr>Box<wbr>Sign</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#signerexternal" class="tsd-kind-icon">signer<wbr>External</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#signerkeys" class="tsd-kind-icon">signer<wbr>Keys</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#signernone" class="tsd-kind-icon">signer<wbr>None</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#signersigningbox" class="tsd-kind-icon">signer<wbr>Signing<wbr>Box</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#stateinitsourcemessage" class="tsd-kind-icon">state<wbr>Init<wbr>Source<wbr>Message</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#stateinitsourcestateinit" class="tsd-kind-icon">state<wbr>Init<wbr>Source<wbr>State<wbr>Init</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#stateinitsourcetvc" class="tsd-kind-icon">state<wbr>Init<wbr>Source<wbr>Tvc</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -95,15 +95,15 @@ class BinaryLibraryAdapter implements BinaryLibraryWithParams {
             this.library.setResponseHandler(undefined);
         } else {
             this.library.setResponseHandler((
-                requestId: number,
-                paramsJson: string,
-                responseType: number,
-                finished: boolean,
+                    requestId: number,
+                    paramsJson: string,
+                    responseType: number,
+                    finished: boolean,
                 ) => handler(
-                requestId,
-                paramsJson !== "" ? JSON.parse(paramsJson) : undefined,
-                responseType,
-                finished),
+                    requestId,
+                    paramsJson !== "" ? JSON.parse(paramsJson) : undefined,
+                    responseType,
+                    finished),
             );
         }
     }
@@ -111,7 +111,12 @@ class BinaryLibraryAdapter implements BinaryLibraryWithParams {
     sendRequestParams(context: number, requestId: number, functionName: string, functionParams: any) {
         const paramsJson = (functionParams === undefined) || (functionParams === null)
             ? ""
-            : JSON.stringify(functionParams);
+            : JSON.stringify(functionParams, (_, value) =>
+                typeof value === "bigint"
+                    ? (value < Number.MAX_SAFE_INTEGER && value > Number.MIN_SAFE_INTEGER
+                        ? Number(value)
+                        : value.toString())
+                    : value);
         this.library.sendRequest(context, requestId, functionName, paramsJson);
     }
 

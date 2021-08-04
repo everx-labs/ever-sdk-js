@@ -120,17 +120,19 @@ export function libWeb() {
         console.log(`Error from Web Worker: ${evt.message}`);
     };
 
-    (async () => {
-        const e = Date.now();
-        let wasmModule;
+    const loadModule = async () => {
         const fetched = fetch((options && options.binaryURL) || '/tonclient.wasm');
         if (WebAssembly.compileStreaming) {
             debugLog('compileStreaming binary');
-            wasmModule = await WebAssembly.compileStreaming(fetched);
-        } else {
-            debugLog('compile binary');
-            wasmModule = await WebAssembly.compile(await (await fetched).arrayBuffer());
+            return await WebAssembly.compileStreaming(fetched);
         }
+        debugLog('compile binary');
+        return await WebAssembly.compile(await (await fetched).arrayBuffer());
+    };
+
+    (async () => {
+        const e = Date.now();
+        const wasmModule = await ((options && options.loadModule) || loadModule)();
         worker.postMessage({
             type: 'init',
             wasmModule,
