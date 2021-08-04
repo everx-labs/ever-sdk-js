@@ -3,14 +3,10 @@
 	"packages": [
 		"packages/*"
 	],
-	"version": "1.14.2",
+	"version": "1.20.0",
 	"command": {
 		"version": {
-			"message": "Release",
-			"ignoreChanges": [
-				"**/*.md"
-			],
-			"includeMergedTags": true
+			"message": "Release"
 		}
 	}
 }
