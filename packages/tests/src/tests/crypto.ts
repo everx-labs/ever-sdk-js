@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import { runner } from "../runner";
-import { expect, test } from "../jest";
-
 import {
     AppEncryptionBox,
     EncryptionBoxHandle,
     EncryptionBoxInfo,
 } from "@tonclient/core";
+import { expect, test } from "../jest";
+
+import { runner } from "../runner";
 
 function text2base64(text: string): string {
     return Buffer.from(text, "utf8").toString("base64");
@@ -789,14 +789,18 @@ test("crypto: external encryption box (register_encryption_box, encryption_box_g
 // ------------------------- ---- -------------------------
 
 // Intentionally disabled (was created for react-native, shouldn't go to the master branch)
-test.skip("crypto: encrypt large blocks", async () => {
+test("crypto: encrypt large blocks", async () => {
     const client = runner.getClient();
     const ourKeys = await client.crypto.nacl_box_keypair();
     const theirKeys = await client.crypto.nacl_box_keypair();
 
     async function testBuffer() {
         const nonce = Buffer.from((await client.crypto.generate_random_bytes({length: 24})).bytes, "base64").toString("hex");
-        const decrypted = (await client.crypto.generate_random_bytes({length: 100000000})).bytes;
+        const decrypted = (await client.crypto.generate_random_bytes({
+            length: 100000000, // 100 MB
+            // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+            response_binary_type: 'blob'
+        })).bytes;
         const encrypted = (await client.crypto.nacl_box({
             decrypted: decrypted,
             secret: ourKeys.secret,
@@ -809,7 +813,23 @@ test.skip("crypto: encrypt large blocks", async () => {
             their_public: ourKeys.public,
             nonce,
         })).decrypted;
-        expect(decrypted2).toEqual(decrypted);
+
+        if (typeof decrypted2 === 'string') {
+            expect(decrypted2).toEqual(decrypted);
+        } else {
+            // Blob
+            const hash = (await client.crypto.sha512({
+                data: decrypted,
+                // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+                response_binary_type: 'base64'
+            })).hash;
+            const hash2 = (await client.crypto.sha512({
+                data: decrypted2,
+                // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+                response_binary_type: 'base64'
+            })).hash;
+            expect(hash).toEqual(hash2);
+        }
     }
 
     await Promise.all([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(_ => testBuffer()));
