@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>AppEncryptionBox | @tonclient/core</title>
+	<title>AppSigningBox | @tonclient/core</title>
 	<meta name="description" content="Documentation for @tonclient/core">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,10 +55,10 @@
 					<a href="../modules.html">@tonclient/core</a>
 				</li>
 				<li>
-					<a href="appencryptionbox.html">AppEncryptionBox</a>
+					<a href="AppSigningBox.html">AppSigningBox</a>
 				</li>
 			</ul>
-			<h1>Interface AppEncryptionBox</h1>
+			<h1>Interface AppSigningBox</h1>
 		</div>
 	</div>
 </header>
@@ -69,7 +69,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">AppEncryptionBox</span>
+						<span class="target">AppSigningBox</span>
 					</li>
 				</ul>
 			</section>
@@ -80,9 +80,8 @@
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="appencryptionbox.html#decrypt" class="tsd-kind-icon">decrypt</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="appencryptionbox.html#encrypt" class="tsd-kind-icon">encrypt</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="appencryptionbox.html#get_info" class="tsd-kind-icon">get_<wbr>info</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="AppSigningBox.html#get_public_key" class="tsd-kind-icon">get_<wbr>public_<wbr>key</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="AppSigningBox.html#sign" class="tsd-kind-icon">sign</a></li>
 							</ul>
 						</section>
 					</div>
@@ -91,65 +90,42 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="decrypt" class="tsd-anchor"></a>
-					<h3>decrypt</h3>
+					<a name="get_public_key" class="tsd-anchor"></a>
+					<h3>get_<wbr>public_<wbr>key</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">decrypt<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ParamsOfAppEncryptionBoxDecrypt</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppEncryptionBoxDecrypt</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">get_<wbr>public_<wbr>key<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppSigningBoxGetPublicKey</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L1445">modules.ts:1445</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1401">modules.ts:1401</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppSigningBoxGetPublicKey</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="sign" class="tsd-anchor"></a>
+					<h3>sign</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">sign<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ParamsOfAppSigningBoxSign</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppSigningBoxSign</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1402">modules.ts:1402</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>params: <span class="tsd-signature-type">ParamsOfAppEncryptionBoxDecrypt</span></h5>
+									<h5>params: <span class="tsd-signature-type">ParamsOfAppSigningBoxSign</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppEncryptionBoxDecrypt</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="encrypt" class="tsd-anchor"></a>
-					<h3>encrypt</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">encrypt<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ParamsOfAppEncryptionBoxEncrypt</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppEncryptionBoxEncrypt</span><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L1444">modules.ts:1444</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>params: <span class="tsd-signature-type">ParamsOfAppEncryptionBoxEncrypt</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppEncryptionBoxEncrypt</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
-					<a name="get_info" class="tsd-anchor"></a>
-					<h3>get_<wbr>info</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">get_<wbr>info<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppEncryptionBoxGetInfo</span><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L1443">modules.ts:1443</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppEncryptionBoxGetInfo</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">ResultOfAppSigningBoxSign</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -168,16 +144,13 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface">
-						<a href="appencryptionbox.html" class="tsd-kind-icon">App<wbr>Encryption<wbr>Box</a>
+						<a href="AppSigningBox.html" class="tsd-kind-icon">App<wbr>Signing<wbr>Box</a>
 						<ul>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="appencryptionbox.html#decrypt" class="tsd-kind-icon">decrypt</a>
+								<a href="AppSigningBox.html#get_public_key" class="tsd-kind-icon">get_<wbr>public_<wbr>key</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="appencryptionbox.html#encrypt" class="tsd-kind-icon">encrypt</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="appencryptionbox.html#get_info" class="tsd-kind-icon">get_<wbr>info</a>
+								<a href="AppSigningBox.html#sign" class="tsd-kind-icon">sign</a>
 							</li>
 						</ul>
 					</li>
