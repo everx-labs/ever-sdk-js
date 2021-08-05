@@ -789,7 +789,7 @@ test("crypto: external encryption box (register_encryption_box, encryption_box_g
 // ------------------------- ---- -------------------------
 
 // Intentionally disabled (was created for react-native, shouldn't go to the master branch)
-test("crypto: encrypt large blocks", async () => {
+test.skip("crypto: encrypt large blocks", async () => {
     const client = runner.getClient();
     const ourKeys = await client.crypto.nacl_box_keypair();
     const theirKeys = await client.crypto.nacl_box_keypair();
