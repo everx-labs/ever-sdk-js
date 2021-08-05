@@ -212,7 +212,6 @@ namespace tonlabs
               while (!queue.empty())
               {
                 auto &item = queue.front();
-                queue.pop();
                 const std::vector<std::string> &path = item.first;
                 folly::dynamic &obj = item.second.get();
 
@@ -230,6 +229,8 @@ namespace tonlabs
                     queue.emplace(new_path, value);
                   }
                 }
+
+                queue.pop();
               }
             }
 
