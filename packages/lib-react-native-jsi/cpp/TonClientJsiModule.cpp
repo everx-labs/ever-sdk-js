@@ -83,7 +83,9 @@ namespace tonlabs
 
     auto functionParamsFollyDynamic = std::make_shared<folly::dynamic>(jsi::dynamicFromValue(rt, functionParams));
 
-    std::thread thread([this, request_data, context_uint32, functionNameStdString, functionParamsFollyDynamic] { // worker thread
+    auto functionParamsSharedPtr = std::make_shared<jsi::Value>(jsi::Value(rt, functionParams)); // to keep the JS object alive in worker thread and prevent deallocating blobs before they get resolved
+
+    std::thread thread([this, request_data, context_uint32, functionNameStdString, functionParamsFollyDynamic, functionParamsSharedPtr] { // worker thread
 
 #ifdef __ANDROID__
       jni::ThreadScope::WithClassLoader([&] { // thread attached to JVM
