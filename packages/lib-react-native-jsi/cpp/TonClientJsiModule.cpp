@@ -85,204 +85,215 @@ namespace tonlabs
 
     auto functionParamsSharedPtr = std::make_shared<jsi::Value>(jsi::Value(rt, functionParams)); // to keep the JS object alive in worker thread and prevent deallocating blobs before they get resolved
 
-    std::thread thread([this, request_data, context_uint32, functionNameStdString, functionParamsFollyDynamic, functionParamsSharedPtr] { // worker thread
+    // React Native JS Blobs are registered in `NativeModule.createFromParts` method which is asynchronous.
+    // Using `invokeAsync` here ensures that the following code will be executed after the blob is registered.
+    // Otherwise, the JS code might run continuously without any await/async operations,
+    // so the blob might not be available yet when trying to resolve it from the worker thread.
+    this->jsCallInvoker_->invokeAsync(
+        [this, request_data, context_uint32, functionNameStdString, functionParamsFollyDynamic, functionParamsSharedPtr]
+        {
+          // JS thread
+
+          std::thread thread([this, request_data, context_uint32, functionNameStdString, functionParamsFollyDynamic, functionParamsSharedPtr] { // worker thread
 
 #ifdef __ANDROID__
-      jni::ThreadScope::WithClassLoader([&] { // thread attached to JVM
+            jni::ThreadScope::WithClassLoader([&] { // thread attached to JVM
 #endif
-        tc_string_data_t function_name{
-            functionNameStdString.c_str(),
-            static_cast<uint32_t>(functionNameStdString.length())};
+              tc_string_data_t function_name{
+                  functionNameStdString.c_str(),
+                  static_cast<uint32_t>(functionNameStdString.length())};
 
-        // if `response_binary_type` request param is set to 'blob'
-        // or there is any blob in the request params and `response_binary_type` is not set,
-        // then all strings in the response params will be converted from base64 to raw binary JS Blobs
-        request_data->returnBlob = [&]
-        {
-          if (functionParamsFollyDynamic->isObject())
-          {
-            // override behaviour with `response_binary_type` parameter
-            const auto &value = (*functionParamsFollyDynamic)["response_binary_type"];
-            if (value == "blob")
-            {
-              return true;
-            }
-            if (value == "base64")
-            {
-              return false;
-            }
-
-            // if there is any blob in the request params, then all strings in the response will be replaced with blobs
-            std::queue<std::reference_wrapper<folly::dynamic>> queue;
-            queue.push(*functionParamsFollyDynamic);
-
-            while (!queue.empty())
-            {
-              folly::dynamic &obj = queue.front().get();
-              queue.pop();
-
-              for (auto &[key, value] : obj.items())
+              // if `response_binary_type` request param is set to 'blob'
+              // or there is any blob in the request params and `response_binary_type` is not set,
+              // then all strings in the response params will be converted from base64 to raw binary JS Blobs
+              request_data->returnBlob = [&]
               {
-                if (value.isObject())
+                if (functionParamsFollyDynamic->isObject())
                 {
-                  if (value.find("_data") != value.items().end())
+                  // override behaviour with `response_binary_type` parameter
+                  const auto &value = (*functionParamsFollyDynamic)["response_binary_type"];
+                  if (value == "blob")
                   {
                     return true;
                   }
-                  else
+                  if (value == "base64")
                   {
-                    queue.push(value);
+                    return false;
+                  }
+
+                  // if there is any blob in the request params, then all strings in the response will be replaced with blobs
+                  std::queue<std::reference_wrapper<folly::dynamic>> queue;
+                  queue.push(*functionParamsFollyDynamic);
+
+                  while (!queue.empty())
+                  {
+                    folly::dynamic &obj = queue.front().get();
+                    queue.pop();
+
+                    for (auto &[key, value] : obj.items())
+                    {
+                      if (value.isObject())
+                      {
+                        if (value.find("_data") != value.items().end())
+                        {
+                          return true;
+                        }
+                        else
+                        {
+                          queue.push(value);
+                        }
+                      }
+                    }
                   }
                 }
-              }
-            }
-          }
 
-          return false; // default
-        }();
+                return false; // default
+              }();
 
-        const std::string functionParamsJsonStdString = [&]() -> std::string
-        {
-          if (functionParamsFollyDynamic->isObject())
-          {
-            // replace blobs with strings
-            const auto &blobManager = request_data->jsiModule->blobManager_;
-            std::queue<std::reference_wrapper<folly::dynamic>> queue;
-            queue.push(*functionParamsFollyDynamic);
-
-            while (!queue.empty())
-            {
-              folly::dynamic &obj = queue.front().get();
-              queue.pop();
-
-              for (auto &[key, value] : obj.items())
+              const std::string functionParamsJsonStdString = [&]() -> std::string
               {
-                if (value.isObject())
+                if (functionParamsFollyDynamic->isObject())
                 {
-                  if (value.find("_data") != value.items().end())
+                  // replace blobs with strings
+                  const auto &blobManager = request_data->jsiModule->blobManager_;
+                  std::queue<std::reference_wrapper<folly::dynamic>> queue;
+                  queue.push(*functionParamsFollyDynamic);
+
+                  while (!queue.empty())
                   {
-                    value = blobManager->resolve(Blob::fromDynamic(value));
+                    folly::dynamic &obj = queue.front().get();
+                    queue.pop();
+
+                    for (auto &[key, value] : obj.items())
+                    {
+                      if (value.isObject())
+                      {
+                        if (value.find("_data") != value.items().end())
+                        {
+                          value = blobManager->resolve(Blob::fromDynamic(value));
+                        }
+                        else
+                        {
+                          queue.push(value);
+                        }
+                      }
+                    }
                   }
-                  else
-                  {
-                    queue.push(value);
-                  }
+
+                  return folly::toJson(*functionParamsFollyDynamic);
                 }
-              }
-            }
-
-            return folly::toJson(*functionParamsFollyDynamic);
-          }
-          else
-          {
-            return "";
-          }
-        }(); // IIFE
-
-        tc_string_data_t function_params_json{
-            functionParamsJsonStdString.c_str(),
-            static_cast<uint32_t>(functionParamsJsonStdString.length())};
-
-        tc_response_handler_ptr_t response_handler =
-            [](void *request_ptr, tc_string_data_t params_json, uint32_t response_type, bool finished) -> void { // either TON SDK worker thread or calling thread
-
-#ifdef __ANDROID__
-          jni::ThreadScope::WithClassLoader([&] { // thread attached to JVM
-#endif
-            request_data_t *request_data = reinterpret_cast<request_data_t *>(request_ptr);
-
-            TonClientJsiModule *jsiModule = request_data->jsiModule;
-            const uint32_t requestId = request_data->requestId;
-            const bool returnBlob = request_data->returnBlob;
-
-            if (finished)
-            {
-              delete request_data;
-            }
-
-            auto responseParamsFollyDynamic = std::make_shared<folly::dynamic>(
-                params_json.len > 0 ? folly::parseJson(std::string_view(params_json.content, params_json.len)) : "");
-
-            // replace strings with placeholders
-            auto blobs = std::make_shared<std::vector<std::tuple<const std::vector<std::string>, std::string, std::unique_ptr<Blob>>>>(); // list of blobs to replace on JS thread (path, key, blob)
-            if (responseParamsFollyDynamic->isObject())
-            {
-              const auto &blobManager = jsiModule->blobManager_;
-              std::queue<std::pair<const std::vector<std::string>, std::reference_wrapper<folly::dynamic>>> queue;
-              queue.emplace(std::vector<std::string>(), *responseParamsFollyDynamic);
-
-              while (!queue.empty())
-              {
-                auto &item = queue.front();
-                const std::vector<std::string> &path = item.first;
-                folly::dynamic &obj = item.second.get();
-
-                for (auto &[key, value] : obj.items())
+                else
                 {
-                  if (value.isString() && returnBlob)
-                  {
-                    blobs->emplace_back(path, key.asString(), std::make_unique<Blob>(blobManager->store(value.asString())));
-                    value = ""; // placeholder for JS Blob
-                  }
-                  else if (value.isObject())
-                  {
-                    std::vector<std::string> new_path(path);
-                    new_path.push_back(key.asString());
-                    queue.emplace(new_path, value);
-                  }
+                  return "";
                 }
+              }(); // IIFE
 
-                queue.pop();
-              }
-            }
+              tc_string_data_t function_params_json{
+                  functionParamsJsonStdString.c_str(),
+                  static_cast<uint32_t>(functionParamsJsonStdString.length())};
 
-            auto &jsCallInvoker = jsiModule->jsCallInvoker_;
-            jsCallInvoker->invokeAsync([request_data, response_type, finished, responseParamsFollyDynamic, blobs, requestId, jsiModule]
-                                       {
-                                         // React Native JS thread
-
-                                         auto &responseHandler = jsiModule->responseHandler_;
-                                         auto &rt = jsiModule->runtime_;
-
-                                         jsi::Value responseParams = jsi::valueFromDynamic(rt, *responseParamsFollyDynamic);
-
-                                         // replace placeholders with JS Blob objects
-                                         for (const auto &[path, key, blob] : *blobs)
-                                         {
-                                           jsi::Object obj = responseParams.asObject(rt);
-                                           for (const auto &name : path)
-                                           {
-                                             obj = obj.getPropertyAsObject(rt, name.c_str());
-                                           }
-                                           obj.setProperty(rt, jsi::String::createFromUtf8(rt, key), blob->toValue(rt));
-                                         }
-
-                                         responseHandler->call(rt,
-                                                               jsi::Value(static_cast<int>(requestId)),
-                                                               responseParams,
-                                                               jsi::Value(static_cast<int>(response_type)),
-                                                               jsi::Value(finished));
-                                       }); // invokeAsync
-
-            if (finished)
-            {
-              jsiModule->decrementActiveRequests();
-            }
-#ifdef __ANDROID__
-          }); // jni::ThreadScope::WithClassLoader
-#endif
-        }; // response_handler
-
-        this->incrementActiveRequests();
-
-        tc_request_ptr(context_uint32, function_name, function_params_json, request_data, response_handler);
+              tc_response_handler_ptr_t response_handler =
+                  [](void *request_ptr, tc_string_data_t params_json, uint32_t response_type, bool finished) -> void { // either TON SDK worker thread or calling thread
 
 #ifdef __ANDROID__
-      }); // jni::ThreadScope::WithClassLoader
+                jni::ThreadScope::WithClassLoader([&] { // thread attached to JVM
 #endif
-    }); // std::thread
+                  request_data_t *request_data = reinterpret_cast<request_data_t *>(request_ptr);
 
-    thread.detach();
+                  TonClientJsiModule *jsiModule = request_data->jsiModule;
+                  const uint32_t requestId = request_data->requestId;
+                  const bool returnBlob = request_data->returnBlob;
+
+                  if (finished)
+                  {
+                    delete request_data;
+                  }
+
+                  auto responseParamsFollyDynamic = std::make_shared<folly::dynamic>(
+                      params_json.len > 0 ? folly::parseJson(std::string_view(params_json.content, params_json.len)) : "");
+
+                  // replace strings with placeholders
+                  auto blobs = std::make_shared<std::vector<std::tuple<const std::vector<std::string>, std::string, std::unique_ptr<Blob>>>>(); // list of blobs to replace on JS thread (path, key, blob)
+                  if (responseParamsFollyDynamic->isObject())
+                  {
+                    const auto &blobManager = jsiModule->blobManager_;
+                    std::queue<std::pair<const std::vector<std::string>, std::reference_wrapper<folly::dynamic>>> queue;
+                    queue.emplace(std::vector<std::string>(), *responseParamsFollyDynamic);
+
+                    while (!queue.empty())
+                    {
+                      auto &item = queue.front();
+                      const std::vector<std::string> &path = item.first;
+                      folly::dynamic &obj = item.second.get();
+
+                      for (auto &[key, value] : obj.items())
+                      {
+                        if (value.isString() && returnBlob)
+                        {
+                          blobs->emplace_back(path, key.asString(), std::make_unique<Blob>(blobManager->store(value.asString())));
+                          value = ""; // placeholder for JS Blob
+                        }
+                        else if (value.isObject())
+                        {
+                          std::vector<std::string> new_path(path);
+                          new_path.push_back(key.asString());
+                          queue.emplace(new_path, value);
+                        }
+                      }
+
+                      queue.pop();
+                    }
+                  }
+
+                  auto &jsCallInvoker = jsiModule->jsCallInvoker_;
+                  jsCallInvoker->invokeAsync(
+                      [request_data, response_type, finished, responseParamsFollyDynamic, blobs, requestId, jsiModule]
+                      {
+                        // React Native JS thread
+
+                        auto &responseHandler = jsiModule->responseHandler_;
+                        auto &rt = jsiModule->runtime_;
+
+                        jsi::Value responseParams = jsi::valueFromDynamic(rt, *responseParamsFollyDynamic);
+
+                        // replace placeholders with JS Blob objects
+                        for (const auto &[path, key, blob] : *blobs)
+                        {
+                          jsi::Object obj = responseParams.asObject(rt);
+                          for (const auto &name : path)
+                          {
+                            obj = obj.getPropertyAsObject(rt, name.c_str());
+                          }
+                          obj.setProperty(rt, jsi::String::createFromUtf8(rt, key), blob->toValue(rt));
+                        }
+
+                        responseHandler->call(rt,
+                                              jsi::Value(static_cast<int>(requestId)),
+                                              responseParams,
+                                              jsi::Value(static_cast<int>(response_type)),
+                                              jsi::Value(finished));
+                      }); // invokeAsync
+
+                  if (finished)
+                  {
+                    jsiModule->decrementActiveRequests();
+                  }
+#ifdef __ANDROID__
+                }); // jni::ThreadScope::WithClassLoader
+#endif
+              }; // response_handler
+
+              this->incrementActiveRequests();
+
+              tc_request_ptr(context_uint32, function_name, function_params_json, request_data, response_handler);
+
+#ifdef __ANDROID__
+            }); // jni::ThreadScope::WithClassLoader
+#endif
+          }); // std::thread
+
+          thread.detach();
+        }); // invokeAsync
 
     return jsi::Value::undefined();
   }
