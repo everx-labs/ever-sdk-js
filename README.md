@@ -147,7 +147,7 @@ You can pass a configuration object in `TonClient` constructor:
 ```ts
 const client = new TonClient({
     network: { 
-        server_address: 'net.ton.dev' 
+        endpoints: ['net.ton.dev']
     } 
 });
 ```
