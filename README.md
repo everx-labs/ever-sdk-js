@@ -12,6 +12,7 @@
 - [Useful links](#useful-links)
 - [Library distribution](#library-distribution)
 - [Installation](#installation)
+  - [Prerequisites](#prerequisites)
   - [Install core package](#install-core-package)
   - [Install bridge package (depends on target JS platform)](#install-bridge-package-depends-on-target-js-platform)
     - [NodeJs](#nodejs)
@@ -51,6 +52,12 @@ This SDK is distributed via npm packages:
 You can find their source code in this repository.
  
 # Installation
+
+## Prerequisites
+
+- Node.js 14 LTS  
+  
+*Package probably works OK on other Node.js versions, but we use 14 version in our testing pipelines so we quarantee its stable work only on 14 version.*
 
 ## Install core package
 
