@@ -40,7 +40,7 @@
   
 - [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on Free TON.
   
-- [SDK Samples](https://github.com/tonlabs/sdk-samples) - a good place to get to practice with SDK asap:)
+- [SDK Samples](https://github.com/tonlabs/sdk-samples) - a good place to get to practice with SDK examples asap:)
 
 # Library distribution
 This SDK is distributed via npm packages:
