@@ -209,8 +209,11 @@ namespace tonlabs
                     delete request_data;
                   }
 
+                  folly::json::serialization_opts opts;
+                  opts.recursion_limit = 10000; // required for "tvm: run_get"
+
                   auto responseParamsFollyDynamic = std::make_shared<folly::dynamic>(
-                      params_json.len > 0 ? folly::parseJson(std::string_view(params_json.content, params_json.len)) : "");
+                      params_json.len > 0 ? folly::parseJson(std::string_view(params_json.content, params_json.len), opts) : "");
 
                   // replace strings with placeholders
                   auto blobs = std::make_shared<std::vector<std::tuple<const std::vector<std::string>, std::string, std::unique_ptr<Blob>>>>(); // list of blobs to replace on JS thread (path, key, blob)
