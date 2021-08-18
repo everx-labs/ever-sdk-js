@@ -23,6 +23,7 @@
             'shell32.lib',
             'Secur32.lib',
             'Crypt32.lib',
+            'Bcrypt.lib',
           ],
         }, {
           'libraries': [

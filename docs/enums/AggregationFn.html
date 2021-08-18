@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>BocErrorCode | @tonclient/core</title>
+	<title>AggregationFn | @tonclient/core</title>
 	<meta name="description" content="Documentation for @tonclient/core">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,10 +55,10 @@
 					<a href="../modules.html">@tonclient/core</a>
 				</li>
 				<li>
-					<a href="bocerrorcode.html">BocErrorCode</a>
+					<a href="AggregationFn.html">AggregationFn</a>
 				</li>
 			</ul>
-			<h1>Enumeration BocErrorCode</h1>
+			<h1>Enumeration AggregationFn</h1>
 		</div>
 	</div>
 </header>
@@ -72,13 +72,11 @@
 						<section class="tsd-index-section ">
 							<h3>Enumeration members</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="bocerrorcode.html#bocrefnotfound" class="tsd-kind-icon">Boc<wbr>Ref<wbr>Not<wbr>Found</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="bocerrorcode.html#inappropriateblock" class="tsd-kind-icon">Inappropriate<wbr>Block</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="bocerrorcode.html#insufficientcachesize" class="tsd-kind-icon">Insufficient<wbr>Cache<wbr>Size</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="bocerrorcode.html#invalidboc" class="tsd-kind-icon">Invalid<wbr>Boc</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="bocerrorcode.html#invalidbocref" class="tsd-kind-icon">Invalid<wbr>Boc<wbr>Ref</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="bocerrorcode.html#missingsourceboc" class="tsd-kind-icon">Missing<wbr>Source<wbr>Boc</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="bocerrorcode.html#serializationerror" class="tsd-kind-icon">Serialization<wbr>Error</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="AggregationFn.html#AVERAGE" class="tsd-kind-icon">AVERAGE</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="AggregationFn.html#COUNT" class="tsd-kind-icon">COUNT</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="AggregationFn.html#MAX" class="tsd-kind-icon">MAX</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="AggregationFn.html#MIN" class="tsd-kind-icon">MIN</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="AggregationFn.html#SUM" class="tsd-kind-icon">SUM</a></li>
 							</ul>
 						</section>
 					</div>
@@ -87,72 +85,52 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Enumeration members</h2>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="bocrefnotfound" class="tsd-anchor"></a>
-					<h3>Boc<wbr>Ref<wbr>Not<wbr>Found</h3>
-					<div class="tsd-signature tsd-kind-icon">Boc<wbr>Ref<wbr>Not<wbr>Found<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = 206</span></div>
+					<a name="AVERAGE" class="tsd-anchor"></a>
+					<h3>AVERAGE</h3>
+					<div class="tsd-signature tsd-kind-icon">AVERAGE<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;AVERAGE&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L3007">modules.ts:3007</a></li>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L4558">modules.ts:4558</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="inappropriateblock" class="tsd-anchor"></a>
-					<h3>Inappropriate<wbr>Block</h3>
-					<div class="tsd-signature tsd-kind-icon">Inappropriate<wbr>Block<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = 203</span></div>
+					<a name="COUNT" class="tsd-anchor"></a>
+					<h3>COUNT</h3>
+					<div class="tsd-signature tsd-kind-icon">COUNT<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;COUNT&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L3004">modules.ts:3004</a></li>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L4554">modules.ts:4554</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="insufficientcachesize" class="tsd-anchor"></a>
-					<h3>Insufficient<wbr>Cache<wbr>Size</h3>
-					<div class="tsd-signature tsd-kind-icon">Insufficient<wbr>Cache<wbr>Size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = 205</span></div>
+					<a name="MAX" class="tsd-anchor"></a>
+					<h3>MAX</h3>
+					<div class="tsd-signature tsd-kind-icon">MAX<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;MAX&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L3006">modules.ts:3006</a></li>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L4556">modules.ts:4556</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="invalidboc" class="tsd-anchor"></a>
-					<h3>Invalid<wbr>Boc</h3>
-					<div class="tsd-signature tsd-kind-icon">Invalid<wbr>Boc<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = 201</span></div>
+					<a name="MIN" class="tsd-anchor"></a>
+					<h3>MIN</h3>
+					<div class="tsd-signature tsd-kind-icon">MIN<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;MIN&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L3002">modules.ts:3002</a></li>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L4555">modules.ts:4555</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="invalidbocref" class="tsd-anchor"></a>
-					<h3>Invalid<wbr>Boc<wbr>Ref</h3>
-					<div class="tsd-signature tsd-kind-icon">Invalid<wbr>Boc<wbr>Ref<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = 207</span></div>
+					<a name="SUM" class="tsd-anchor"></a>
+					<h3>SUM</h3>
+					<div class="tsd-signature tsd-kind-icon">SUM<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;SUM&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L3008">modules.ts:3008</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="missingsourceboc" class="tsd-anchor"></a>
-					<h3>Missing<wbr>Source<wbr>Boc</h3>
-					<div class="tsd-signature tsd-kind-icon">Missing<wbr>Source<wbr>Boc<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = 204</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L3005">modules.ts:3005</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="serializationerror" class="tsd-anchor"></a>
-					<h3>Serialization<wbr>Error</h3>
-					<div class="tsd-signature tsd-kind-icon">Serialization<wbr>Error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = 202</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/da46f80/packages/core/src/modules.ts#L3003">modules.ts:3003</a></li>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L4557">modules.ts:4557</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -171,28 +149,22 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-enum">
-						<a href="bocerrorcode.html" class="tsd-kind-icon">Boc<wbr>Error<wbr>Code</a>
+						<a href="AggregationFn.html" class="tsd-kind-icon">Aggregation<wbr>Fn</a>
 						<ul>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="bocerrorcode.html#bocrefnotfound" class="tsd-kind-icon">Boc<wbr>Ref<wbr>Not<wbr>Found</a>
+								<a href="AggregationFn.html#AVERAGE" class="tsd-kind-icon">AVERAGE</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="bocerrorcode.html#inappropriateblock" class="tsd-kind-icon">Inappropriate<wbr>Block</a>
+								<a href="AggregationFn.html#COUNT" class="tsd-kind-icon">COUNT</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="bocerrorcode.html#insufficientcachesize" class="tsd-kind-icon">Insufficient<wbr>Cache<wbr>Size</a>
+								<a href="AggregationFn.html#MAX" class="tsd-kind-icon">MAX</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="bocerrorcode.html#invalidboc" class="tsd-kind-icon">Invalid<wbr>Boc</a>
+								<a href="AggregationFn.html#MIN" class="tsd-kind-icon">MIN</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="bocerrorcode.html#invalidbocref" class="tsd-kind-icon">Invalid<wbr>Boc<wbr>Ref</a>
-							</li>
-							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="bocerrorcode.html#missingsourceboc" class="tsd-kind-icon">Missing<wbr>Source<wbr>Boc</a>
-							</li>
-							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="bocerrorcode.html#serializationerror" class="tsd-kind-icon">Serialization<wbr>Error</a>
+								<a href="AggregationFn.html#SUM" class="tsd-kind-icon">SUM</a>
 							</li>
 						</ul>
 					</li>
