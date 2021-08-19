@@ -1126,7 +1126,7 @@
     "@sinonjs/commons" "^1.7.0"
 
 "@tonclient/core@file:../../core":
-  version "1.13.0"
+  version "1.21.0"
 
 "@types/babel__core@^7.0.0", "@types/babel__core@^7.1.7":
   version "7.1.14"

@@ -1113,7 +1113,7 @@
     type-detect "4.0.8"
 
 "@tonclient/core@file:../../core":
-  version "1.14.2"
+  version "1.21.0"
 
 "@types/babel__core@^7.1.7":
   version "7.1.14"

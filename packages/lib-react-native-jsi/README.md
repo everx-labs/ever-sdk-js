@@ -372,5 +372,5 @@ For testing purposes, first pack the library into an archive and then install th
 cd lib-react-native-jsi
 npm pack
 cd ../tests-react-native-jsi
-yarn add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.14.1.tgz
+yarn add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.21.0.tgz
 ```

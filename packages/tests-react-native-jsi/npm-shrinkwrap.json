@@ -1292,16 +1292,16 @@
       "dev": true
     },
     "@tonclient/core": {
-      "version": "file:../core/tonclient-core-1.20.1.tgz",
-      "integrity": "sha512-Arcm42J/xV4aQWBOa3Ald9HslMmjohKeHV/AlN+3ItknrPCkvqsNodJPad+srXSejxF9XVJXBb/kHW2jzrwWjQ=="
+      "version": "file:../core/tonclient-core-1.21.0.tgz",
+      "integrity": "sha512-J1O9ddeq4Qk/6HToXAnTUxzS5DSm1WG3l6AY0EUGntekhnVuo81cxz6J+sMjOJepQ7SJRM1RnUvk8KOJWevuuw=="
     },
     "@tonclient/lib-react-native-jsi": {
-      "version": "file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.20.1.tgz",
-      "integrity": "sha512-wdZorGRuZjgnPZUsWNHgn/VAk+FkAGO0UGMnZVy6VVozJldpqk+hipjB+azqh3cAZ7/AXO6mDw7kP+bES4lyEQ=="
+      "version": "file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.21.0.tgz",
+      "integrity": "sha512-6x/Hw4fRZ2no8sflu6/01hLAq+XvuYt9T3Pl0/U78JAv1OPJg6pJQaLB/gZOEborTKhd0tPTEYnm/MxB6wc9RA=="
     },
     "@tonclient/tests": {
-      "version": "file:../tests/tonclient-tests-1.20.1.tgz",
-      "integrity": "sha512-tWYhXPefpR0rhDC5VyLC4n6oqT3FIsIQQ4BVvocvIGHOP31QBt8W6cNVC9ml3kgZSoWexlPxSYsBacVvyDULdQ==",
+      "version": "file:../tests/tonclient-tests-1.21.0.tgz",
+      "integrity": "sha512-3WyAhltt6M3JKUS3eeQx0zhZ5hg7a7L1AYzfPkhOhHJTuldlQBh4RSQBZFtQRRpiR09di+DaJZHa8ERwMpEkQQ==",
       "requires": {
         "@babel/core": "^7.8.4",
         "@babel/runtime": "^7.8.4",

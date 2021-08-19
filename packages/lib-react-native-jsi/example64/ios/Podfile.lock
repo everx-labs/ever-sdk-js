@@ -58,7 +58,7 @@ PODS:
     - FlipperKit/FlipperKitNetworkPlugin
   - glog (0.3.5)
   - hermes-engine (0.7.2)
-  - lib-react-native-jsi (1.14.1):
+  - lib-react-native-jsi (1.21.0):
     - RCT-Folly
     - React-callinvoker
     - React-Core
