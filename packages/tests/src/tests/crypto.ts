@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import { runner } from "../runner";
-import { expect, test } from "../jest";
-
 import {
     AppEncryptionBox,
     EncryptionBoxHandle,
     EncryptionBoxInfo,
 } from "@tonclient/core";
+import { expect, test } from "../jest";
+
+import { runner } from "../runner";
 
 function text2base64(text: string): string {
     return Buffer.from(text, "utf8").toString("base64");
@@ -29,7 +29,51 @@ function text2base64(text: string): string {
 
 // The "//-----" partitions are derived from TON-SDK/ton_client/src/crypto file structure
 
-// ------------------------- math -------------------------
+test("crypto - encrypt large blocks", async () => {
+    const client = runner.getClient();
+    const ourKeys = await client.crypto.nacl_box_keypair();
+    const theirKeys = await client.crypto.nacl_box_keypair();
+
+    async function testBuffer() {
+        const nonce = Buffer.from((await client.crypto.generate_random_bytes({length: 24})).bytes, "base64").toString("hex");
+        const decrypted = (await client.crypto.generate_random_bytes({
+            length: 100000000, // 100 MB
+            // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+            response_binary_type: 'blob'
+        })).bytes;
+        const encrypted = (await client.crypto.nacl_box({
+            decrypted: decrypted,
+            secret: ourKeys.secret,
+            their_public: theirKeys.public,
+            nonce,
+        })).encrypted;
+        const decrypted2 = (await client.crypto.nacl_box_open({
+            encrypted,
+            secret: theirKeys.secret,
+            their_public: ourKeys.public,
+            nonce,
+        })).decrypted;
+
+        if (typeof decrypted2 === 'string') {
+            expect(decrypted2).toEqual(decrypted);
+        } else {
+            // Blob
+            const hash = (await client.crypto.sha512({
+                data: decrypted,
+                // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+                response_binary_type: 'base64'
+            })).hash;
+            const hash2 = (await client.crypto.sha512({
+                data: decrypted2,
+                // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+                response_binary_type: 'base64'
+            })).hash;
+            expect(hash).toEqual(hash2);
+        }
+    }
+
+    await Promise.all([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(_ => testBuffer()));
+});
 
 test("crypto: factorize", async () => {
     const crypto = runner.getClient().crypto;
@@ -79,7 +123,7 @@ test("crypto: generate_random_bytes", async () => {
 
 test("crypto: convert_public_key_to_ton_safe_format", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.convert_public_key_to_ton_safe_format({
         public_key: "5329c056c33e3a2a787bf2ae4c2afda87e4231898a5438e0cfd7a06dc4fac067",
     });
@@ -96,7 +140,7 @@ test("crypto: generate_random_sign_keys", async () => {
     expect(result.public.length).toEqual(64);
     expect(result.secret.length).toEqual(64);
     expect(result.public).not.toEqual(result.secret);
-    
+
     expect(result2.public.length).toEqual(64);
     expect(result2.secret.length).toEqual(64);
     expect(result2.public).not.toEqual(result2.secret);
@@ -107,7 +151,7 @@ test("crypto: generate_random_sign_keys", async () => {
 
 test("crypto: sign", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.sign({
         keys: {
             public: "bb3e649a4675cdb579803820a97dcba9594f1a1aefa7cb2b4da844ca9d32d348",
@@ -138,7 +182,7 @@ test("crypto: verify_signature", async () => {
 
 test("crypto: sha256", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.sha256({
         data: text2base64("Message to hash with sha 256"),
     });
@@ -148,7 +192,7 @@ test("crypto: sha256", async () => {
 
 test("crypto: sha512", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.sha512({
         data: text2base64("Message to hash with sha 512"),
     });
@@ -212,7 +256,7 @@ test("crypto: nacl_sign_open", async () => {
         signed: "+wz+QO6l1slgZS5s65BNqKcu4vz24FCJz4NSAxef9lu0jFfs8x3PzSZRC+pn5k8+aJi3xYMA3BQzglQmjK3hA1Rlc3QgTWVzc2FnZQ==",
         public: "1869b7ef29d58026217e9cf163cbfbd0de889bdf1bf4daebf5433a312f5b8d6e",
     });
-    
+
     expect(result.unsigned).toEqual(text2base64("Test Message"));
 });
 
@@ -264,7 +308,7 @@ test("crypto: nacl_box_keypair", async () => {
     expect(result.public)
         .toEqual(
             (await crypto.nacl_box_keypair_from_secret_key({ secret: result.secret })).public);
-    
+
     expect(result2.public.length).toEqual(64);
     expect(result2.secret.length).toEqual(64);
     expect(result2.public)
@@ -279,7 +323,7 @@ test("crypto: nacl_box_keypair_from_secret_key", async () => {
     const crypto = runner.getClient().crypto;
 
     const result = await crypto.nacl_box_keypair_from_secret_key({ secret: "e207b5966fb2c5be1b71ed94ea813202706ab84253bdf4dc55232f82a1caf0d4" });
-    
+
     expect(result).toEqual({
         public: "a53b003d3ffc1e159355cb37332d67fc235a7feb6381e36c803274074dc3933a",
         secret: "e207b5966fb2c5be1b71ed94ea813202706ab84253bdf4dc55232f82a1caf0d4",
@@ -332,7 +376,7 @@ test("crypto: nacl_box_open", async () => {
 
 test("crypto: nacl_secret_box", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.nacl_secret_box({
         decrypted: text2base64("Test Message"),
         nonce: "2a33564717595ebe53d91a785b9e068aba625c8453a76e45",
@@ -344,7 +388,7 @@ test("crypto: nacl_secret_box", async () => {
 
 test("crypto: nacl_secret_box_open", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.nacl_box_open({
         encrypted: "li4XED4kx/pjQ2qdP0eR2d/K30uN94voNADxwA==",
         nonce: "cd7f99924bf422544046e83595dd5803f17536f5c9a11746",
@@ -357,7 +401,7 @@ test("crypto: nacl_secret_box_open", async () => {
 
 test("crypto: nacl_secret_box and nacl_secret_box_open with ' and \" and : {} in the text", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const box = await crypto.nacl_secret_box({
         decrypted: text2base64("Text with ' and \" and : {}"),
         nonce: "2a33564717595ebe53d91a785b9e068aba625c8453a76e45",
@@ -378,7 +422,7 @@ test("crypto: nacl_secret_box and nacl_secret_box_open with ' and \" and : {} in
 
 test("crypto: mnemonic_words", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.mnemonic_words({});
 
     expect(result.words.split(" ").length).toEqual(2048);
@@ -394,14 +438,14 @@ test("crypto: mnemonic_words", async () => {
             "ball bamboo banana banner bar barely bargain barrel base basic basket battle beach bean beauty because become beef before begin behave " +
             "behind believe below belt bench benefit best betray better between beyond bicycle bid bike bind biology bird birth bitter black blade " +
             "blame blanket blast bleak bless blind blood blossom blouse blue blur blush board boat body boil bomb bone bonus book boost border boring " +
-            "borrow boss bottom bounce box boy bracket brain brand brass brave bread breeze brick bridge brief bright bring brisk broccoli broken " + 
+            "borrow boss bottom bounce box boy bracket brain brand brass brave bread breeze brick bridge brief bright bring brisk broccoli broken " +
             "bronze broom brother brown brush bubble buddy budget buffalo build bulb bulk bullet bundle bunker burden burger burst bus business busy " +
             "butter buyer buzz cabbage cabin cable cactus cage cake call calm camera camp can canal cancel candy cannon canoe canvas canyon capable " +
-            "capital captain car carbon card cargo carpet carry cart case cash casino castle casual cat catalog catch category cattle caught cause " + 
+            "capital captain car carbon card cargo carpet carry cart case cash casino castle casual cat catalog catch category cattle caught cause " +
             "caution cave ceiling celery cement census century cereal certain chair chalk champion change chaos chapter charge chase chat cheap check " +
             "cheese chef cherry chest chicken chief child chimney choice choose chronic chuckle chunk churn cigar cinnamon circle citizen city civil " +
             "claim clap clarify claw clay clean clerk clever click client cliff climb clinic clip clock clog close cloth cloud clown club clump " +
-            "cluster clutch coach coast coconut code coffee coil coin collect color column combine come comfort comic common company concert conduct " + 
+            "cluster clutch coach coast coconut code coffee coil coin collect color column combine come comfort comic common company concert conduct " +
             "confirm congress connect consider control convince cook cool copper copy coral core corn correct cost cotton couch country couple course " +
             "cousin cover coyote crack cradle craft cram crane crash crater crawl crazy cream credit creek crew cricket crime crisp critic crop cross " +
             "crouch crowd crucial cruel cruise crumble crunch crush cry crystal cube culture cup cupboard curious current curtain curve cushion " +
@@ -489,7 +533,7 @@ const mnemonicDictionary = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
 test("crypto: mnemonic_from_random", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     let phrase = await crypto.mnemonic_from_random({});
     expect(phrase.phrase.split(" ").length).toEqual(12);
 
@@ -505,7 +549,7 @@ test("crypto: mnemonic_from_random", async () => {
 
 test("crypto: mnemonic_from_entropy", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.mnemonic_from_entropy({
         entropy: "00112233445566778899AABBCCDDEEFF",
         dictionary: 1,
@@ -518,7 +562,7 @@ test("crypto: mnemonic_from_entropy", async () => {
 
 test("crypto: mnemonic_verify", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     for (const dictionary of mnemonicDictionary) {
         for (const word_count of mnemonicWordCount) {
             expect((await crypto.mnemonic_verify({
@@ -537,7 +581,7 @@ test("crypto: mnemonic_verify", async () => {
 
 test("crypto: mnemonic_derive_sign_keys", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const keys = await crypto.mnemonic_derive_sign_keys({
         phrase: "unit follow zone decline glare flower crisp vocal adapt magic much mesh cherry teach mechanic rain float vicious solution assume hedgehog rail sort chuckle",
         dictionary: 0,
@@ -552,12 +596,12 @@ test("crypto: mnemonic_derive_sign_keys", async () => {
 
 test("crypto: entropy->mnemonic->ton_public_key test", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const entropy = "2199ebe996f14d9e4e2595113ad1e627";
     const phrase = await crypto.mnemonic_from_entropy({ entropy });
     const public2 = (await crypto.mnemonic_derive_sign_keys({ phrase: phrase.phrase })).public;
     const ton_public = await crypto.convert_public_key_to_ton_safe_format({ public_key: public2 });
-    
+
     expect(ton_public.ton_public_key).toEqual("PuZdw_KyXIzo8IksTrERN3_WoAoYTyK7OvM-yaLk711sUIB3");
 });
 
@@ -566,7 +610,7 @@ test("crypto: entropy->mnemonic->ton_public_key test", async () => {
 
 test("crypto: hdkey_xprv_from_mnemonic", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.hdkey_xprv_from_mnemonic({
         dictionary: 1,
         word_count: 12,
@@ -580,7 +624,7 @@ test("crypto: hdkey_xprv_from_mnemonic", async () => {
 
 test("crypto: hdkey_secret_from_xprv", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.hdkey_secret_from_xprv({
         xprv: "xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC",
     });
@@ -590,7 +634,7 @@ test("crypto: hdkey_secret_from_xprv", async () => {
 
 test("crypto: hdkey_public_from_xprv", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.hdkey_public_from_xprv({
         xprv: "xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC",
     });
@@ -601,7 +645,7 @@ test("crypto: hdkey_public_from_xprv", async () => {
 
 test("crypto: hdkey_derive_from_xprv", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.hdkey_derive_from_xprv({
         xprv: "xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC",
         child_index: 0,
@@ -621,7 +665,7 @@ test("crypto: hdkey_derive_from_xprv", async () => {
 
 test("crypto: hdkey_derive_from_xprv_path", async () => {
     const crypto = runner.getClient().crypto;
-    
+
     const result = await crypto.hdkey_derive_from_xprv_path({
         xprv: "xprv9s21ZrQH143K25JhKqEwvJW7QAiVvkmi4WRenBZanA6kxHKtKAQQKwZG65kCyW5jWJ8NY9e3GkRoistUjjcpHNsGBUv94istDPXvqGNuWpC",
         path: "m/44'/60'/0'/0'",
@@ -630,7 +674,7 @@ test("crypto: hdkey_derive_from_xprv_path", async () => {
     expect(result.xprv)
         .toEqual(
             "xprvA1KNMo63UcGjmDF1bX39Cw2BXGUwrwMjeD5qvQ3tA3qS3mZQkGtpf4DHq8FDLKAvAjXsYGLHDP2dVzLu9ycta8PXLuSYib2T3vzLf3brVgZ");
-    
+
     expect((await crypto.hdkey_secret_from_xprv({xprv: result.xprv})).secret)
         .toEqual("1c566ade41169763b155761406d3cef08b29b31cf8014f51be08c0cb4e67c5e1");
     expect((await crypto.hdkey_public_from_xprv({xprv: result.xprv})).public)
@@ -752,7 +796,11 @@ test.skip("crypto: encrypt large blocks", async () => {
 
     async function testBuffer() {
         const nonce = Buffer.from((await client.crypto.generate_random_bytes({length: 24})).bytes, "base64").toString("hex");
-        const decrypted = (await client.crypto.generate_random_bytes({length: 100000000})).bytes;
+        const decrypted = (await client.crypto.generate_random_bytes({
+            length: 100000000, // 100 MB
+            // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+            response_binary_type: 'blob'
+        })).bytes;
         const encrypted = (await client.crypto.nacl_box({
             decrypted: decrypted,
             secret: ourKeys.secret,
@@ -765,7 +813,23 @@ test.skip("crypto: encrypt large blocks", async () => {
             their_public: ourKeys.public,
             nonce,
         })).decrypted;
-        expect(decrypted2).toEqual(decrypted);
+
+        if (typeof decrypted2 === 'string') {
+            expect(decrypted2).toEqual(decrypted);
+        } else {
+            // Blob
+            const hash = (await client.crypto.sha512({
+                data: decrypted,
+                // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+                response_binary_type: 'base64'
+            })).hash;
+            const hash2 = (await client.crypto.sha512({
+                data: decrypted2,
+                // @ts-ignore // TODO: response_binary_type: 'base64' | 'blob' | 'as_params'
+                response_binary_type: 'base64'
+            })).hash;
+            expect(hash).toEqual(hash2);
+        }
     }
 
     await Promise.all([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(_ => testBuffer()));

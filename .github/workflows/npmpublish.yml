@@ -32,6 +32,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: ReactNativeJsi
+        run: npm publish --access public
+        working-directory: ./packages/lib-react-native-jsi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: WASM
         run: npm publish --access public
         working-directory: ./packages/lib-web
