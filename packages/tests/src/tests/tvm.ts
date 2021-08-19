@@ -33,8 +33,8 @@ test("tvm: run_get", async () => {
         function_name: "participant_list",
     });
 
-    expect(JSON.stringify(tuple_participant_list.output))
-        .toEqual(ELECTOR_PARTICIPANT_LIST_AS_TUPLE_LIST);
+    expect(tuple_participant_list.output)
+        .toEqual(JSON.parse(ELECTOR_PARTICIPANT_LIST_AS_TUPLE_LIST));
 
     const plain_participant_list = await tvm.run_get({
         account: ELECTOR_ACCOUNT,
@@ -42,8 +42,8 @@ test("tvm: run_get", async () => {
         tuple_list_as_array: true,
     });
 
-    expect(JSON.stringify(plain_participant_list.output))
-        .toEqual(ELECTOR_PARTICIPANT_LIST_AS_PLAIN_LIST);
+    expect(plain_participant_list.output)
+        .toEqual(JSON.parse(ELECTOR_PARTICIPANT_LIST_AS_PLAIN_LIST));
 
     const result_with_input = await tvm.run_get({
         account: ELECTOR_ACCOUNT,
