@@ -424,7 +424,13 @@ export enum CryptoErrorCode {
     MnemonicFromEntropyFailed = 120,
     SigningBoxNotRegistered = 121,
     InvalidSignature = 122,
-    EncryptionBoxNotRegistered = 123
+    EncryptionBoxNotRegistered = 123,
+    InvalidIvSize = 124,
+    UnsupportedCipherMode = 125,
+    CannotCreateCipher = 126,
+    EncryptDataError = 127,
+    DecryptDataError = 128,
+    IvRequired = 129
 }
 
 export type SigningBoxHandle = number
@@ -452,6 +458,51 @@ export type EncryptionBoxInfo = {
      * Public information, depends on algorithm
      */
     public?: any
+}
+
+export type EncryptionAlgorithm = ({
+    type: 'AES'
+} & AesParams)
+
+export function encryptionAlgorithmAES(params: AesParams): EncryptionAlgorithm {
+    return {
+        type: 'AES',
+        ...params,
+    };
+}
+
+export enum CipherMode {
+    CBC = "CBC",
+    CFB = "CFB",
+    CTR = "CTR",
+    ECB = "ECB",
+    OFB = "OFB"
+}
+
+export type AesParams = {
+
+    /**
+     */
+    mode: CipherMode,
+
+    /**
+     */
+    key: string,
+
+    /**
+     */
+    iv?: string
+}
+
+export type AesInfo = {
+
+    /**
+     */
+    mode: CipherMode,
+
+    /**
+     */
+    iv?: string
 }
 
 export type ParamsOfFactorize = {
@@ -1359,7 +1410,10 @@ export type ParamsOfEncryptionBoxEncrypt = {
 export type ResultOfEncryptionBoxEncrypt = {
 
     /**
-     * Encrypted data, encoded in Base64
+     * Encrypted data, encoded in Base64.
+     * 
+     * @remarks
+     * Padded to cipher block size
      */
     data: string
 }
@@ -1380,9 +1434,17 @@ export type ParamsOfEncryptionBoxDecrypt = {
 export type ResultOfEncryptionBoxDecrypt = {
 
     /**
-     * Decrypted data, encoded in Base64
+     * Decrypted data, encoded in Base64.
      */
     data: string
+}
+
+export type ParamsOfCreateEncryptionBox = {
+
+    /**
+     * Encryption algorithm specifier including cipher parameters (key, IV, etc)
+     */
+    algorithm: EncryptionAlgorithm
 }
 
 type ResultOfAppSigningBoxGetPublicKey = {
@@ -1946,7 +2008,11 @@ export class CryptoModule {
     }
 
     /**
-     * Encrypts data using given encryption box
+     * Encrypts data using given encryption box Note.
+     * 
+     * @remarks
+     * Block cipher algorithms pad data to cipher block size so encrypted data can be longer then original data. Client should store the original data size after encryption and use it after
+     * decryption to retrieve the original data from decrypted data.
      * 
      * @param {ParamsOfEncryptionBoxEncrypt} params
      * @returns ResultOfEncryptionBoxEncrypt
@@ -1956,13 +2022,27 @@ export class CryptoModule {
     }
 
     /**
-     * Decrypts data using given encryption box
+     * Decrypts data using given encryption box Note.
+     * 
+     * @remarks
+     * Block cipher algorithms pad data to cipher block size so encrypted data can be longer then original data. Client should store the original data size after encryption and use it after
+     * decryption to retrieve the original data from decrypted data.
      * 
      * @param {ParamsOfEncryptionBoxDecrypt} params
      * @returns ResultOfEncryptionBoxDecrypt
      */
     encryption_box_decrypt(params: ParamsOfEncryptionBoxDecrypt): Promise<ResultOfEncryptionBoxDecrypt> {
         return this.client.request('crypto.encryption_box_decrypt', params);
+    }
+
+    /**
+     * Creates encryption box with specified algorithm
+     * 
+     * @param {ParamsOfCreateEncryptionBox} params
+     * @returns RegisteredEncryptionBox
+     */
+    create_encryption_box(params: ParamsOfCreateEncryptionBox): Promise<RegisteredEncryptionBox> {
+        return this.client.request('crypto.create_encryption_box', params);
     }
 }
 
@@ -4413,7 +4493,7 @@ export class TvmModule {
      * 
      * If you need this emulation to be as precise as possible (for instance - emulate transaction
      * with particular lt in particular block or use particular blockchain config,
-     * in case you want to download it from a particular key block - then specify `ParamsOfRunExecutor` parameter.
+     * downloaded from a particular key block - then specify `execution_options` parameter.
      * 
      * If you need to see the aborted transaction as a result, not as an error, set `skip_transaction_check` to `true`.
      * 

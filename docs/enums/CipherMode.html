@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>SortDirection | @tonclient/core</title>
+	<title>CipherMode | @tonclient/core</title>
 	<meta name="description" content="Documentation for @tonclient/core">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,10 +55,10 @@
 					<a href="../modules.html">@tonclient/core</a>
 				</li>
 				<li>
-					<a href="SortDirection.html">SortDirection</a>
+					<a href="CipherMode.html">CipherMode</a>
 				</li>
 			</ul>
-			<h1>Enumeration SortDirection</h1>
+			<h1>Enumeration CipherMode</h1>
 		</div>
 	</div>
 </header>
@@ -72,8 +72,11 @@
 						<section class="tsd-index-section ">
 							<h3>Enumeration members</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="SortDirection.html#ASC" class="tsd-kind-icon">ASC</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="SortDirection.html#DESC" class="tsd-kind-icon">DESC</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="CipherMode.html#CBC" class="tsd-kind-icon">CBC</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="CipherMode.html#CFB" class="tsd-kind-icon">CFB</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="CipherMode.html#CTR" class="tsd-kind-icon">CTR</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="CipherMode.html#ECB" class="tsd-kind-icon">ECB</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="CipherMode.html#OFB" class="tsd-kind-icon">OFB</a></li>
 							</ul>
 						</section>
 					</div>
@@ -82,22 +85,52 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Enumeration members</h2>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="ASC" class="tsd-anchor"></a>
-					<h3>ASC</h3>
-					<div class="tsd-signature tsd-kind-icon">ASC<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;ASC&quot;</span></div>
+					<a name="CBC" class="tsd-anchor"></a>
+					<h3>CBC</h3>
+					<div class="tsd-signature tsd-kind-icon">CBC<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;CBC&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/23950cd/packages/core/src/modules.ts#L4578">modules.ts:4578</a></li>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/23950cd/packages/core/src/modules.ts#L475">modules.ts:475</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="DESC" class="tsd-anchor"></a>
-					<h3>DESC</h3>
-					<div class="tsd-signature tsd-kind-icon">DESC<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;DESC&quot;</span></div>
+					<a name="CFB" class="tsd-anchor"></a>
+					<h3>CFB</h3>
+					<div class="tsd-signature tsd-kind-icon">CFB<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;CFB&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/23950cd/packages/core/src/modules.ts#L4579">modules.ts:4579</a></li>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/23950cd/packages/core/src/modules.ts#L476">modules.ts:476</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="CTR" class="tsd-anchor"></a>
+					<h3>CTR</h3>
+					<div class="tsd-signature tsd-kind-icon">CTR<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;CTR&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/23950cd/packages/core/src/modules.ts#L477">modules.ts:477</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="ECB" class="tsd-anchor"></a>
+					<h3>ECB</h3>
+					<div class="tsd-signature tsd-kind-icon">ECB<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;ECB&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/23950cd/packages/core/src/modules.ts#L478">modules.ts:478</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="OFB" class="tsd-anchor"></a>
+					<h3>OFB</h3>
+					<div class="tsd-signature tsd-kind-icon">OFB<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> = &quot;OFB&quot;</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/23950cd/packages/core/src/modules.ts#L479">modules.ts:479</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -116,13 +149,22 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-enum">
-						<a href="SortDirection.html" class="tsd-kind-icon">Sort<wbr>Direction</a>
+						<a href="CipherMode.html" class="tsd-kind-icon">Cipher<wbr>Mode</a>
 						<ul>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="SortDirection.html#ASC" class="tsd-kind-icon">ASC</a>
+								<a href="CipherMode.html#CBC" class="tsd-kind-icon">CBC</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="SortDirection.html#DESC" class="tsd-kind-icon">DESC</a>
+								<a href="CipherMode.html#CFB" class="tsd-kind-icon">CFB</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="CipherMode.html#CTR" class="tsd-kind-icon">CTR</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="CipherMode.html#ECB" class="tsd-kind-icon">ECB</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="CipherMode.html#OFB" class="tsd-kind-icon">OFB</a>
 							</li>
 						</ul>
 					</li>
