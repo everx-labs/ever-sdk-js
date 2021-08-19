@@ -31,10 +31,30 @@ export function libReactNativeJsi(): Promise<BinaryLibraryWithParams> {
         context,
         requestId,
         functionName,
-        functionParams
+        replaceBigInts(functionParams)
       );
     },
   });
+}
+
+function replaceBigInts(value: any): any {
+  if (typeof value === 'bigint') {
+    if (value < Number.MAX_SAFE_INTEGER && value > Number.MIN_SAFE_INTEGER) {
+      return Number(value);
+    } else {
+      return value.toString();
+    }
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    const result = Array.isArray(value) ? [] : {};
+    for (const key in value) {
+      (result as any)[key] = replaceBigInts(value[key]);
+    }
+    return result;
+  }
+
+  return value;
 }
 
 function __createBlob(blobId: string, offset: number, size: number): Blob {

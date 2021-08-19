@@ -70,7 +70,7 @@ namespace tonlabs
 
     if (!(functionParams.isObject() || functionParams.isUndefined() || functionParams.isNull()))
     {
-      throw std::runtime_error("Request params must be either a JS object or undefined");
+      throw std::runtime_error("Request params must be a JS object, undefined or null");
     }
 
     request_data_t *request_data = new request_data_t;
