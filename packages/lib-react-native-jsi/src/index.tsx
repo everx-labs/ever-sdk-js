@@ -38,6 +38,7 @@ export function libReactNativeJsi(): Promise<BinaryLibraryWithParams> {
 }
 
 function replaceBigInts(value: any): any {
+  // original JS BigInt
   if (typeof value === 'bigint') {
     if (value < Number.MAX_SAFE_INTEGER && value > Number.MIN_SAFE_INTEGER) {
       return Number(value);
@@ -46,6 +47,12 @@ function replaceBigInts(value: any): any {
     }
   }
 
+  // BigInt polyfill on Android
+  if (typeof value === 'object' && value.toJSON !== undefined) {
+    return value.toJSON();
+  }
+
+  // nested object or array
   if (typeof value === 'object' && value !== null) {
     const result = Array.isArray(value) ? [] : {};
     for (const key in value) {
