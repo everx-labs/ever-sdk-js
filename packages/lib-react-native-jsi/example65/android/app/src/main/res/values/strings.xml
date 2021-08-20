@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">example65</string>
+    <string name="blob_provider_authority">com.example65.blobs</string>
+</resources>
