@@ -31,6 +31,23 @@ export function libWeb() {
         }
     }
 
+    async function replaceBlobsWithArrayBuffers(value) {
+        if (value instanceof Blob) {
+            return await value.arrayBuffer();
+        }
+        if (typeof value === "bigint") {
+            // TODO: handle BigInt
+        }
+        if (typeof value === "object" && value !== null) {
+            const result = Array.isArray(value) ? [] : {};
+            for (const key in value) {
+                result[key] = await replaceBlobsWithArrayBuffers(value[key]);
+            }
+            return result;
+        }
+        return value;
+    }
+
     const workerBlob = new Blob(
         [workerScript],
         { type: 'application/javascript' }
@@ -45,7 +62,7 @@ export function libWeb() {
 
     let responseHandler = null;
     const library = {
-        setResponseHandler: (handler) => {
+        setResponseParamsHandler: (handler) => {
             responseHandler = handler;
         },
         createContext: (configJson) => {
@@ -71,13 +88,13 @@ export function libWeb() {
                 context,
             })
         },
-        sendRequest: (context, requestId, functionName, functionParamsJson) => {
+        sendRequestParams: async (context, requestId, functionName, functionParams) => {
             worker.postMessage({
                 type: 'request',
                 context,
                 requestId,
                 functionName,
-                functionParamsJson
+                functionParams: await replaceBlobsWithArrayBuffers(functionParams),
             })
         }
     };
@@ -106,11 +123,7 @@ export function libWeb() {
             break;
         case 'response':
             if (responseHandler) {
-                let paramsJson = message.paramsJson;
-                if (paramsJson.charCodeAt(0) === 0xFEFF) {
-                    paramsJson = paramsJson.substr(1);
-                }
-                responseHandler(message.requestId, paramsJson, message.responseType, message.finished);
+                responseHandler(message.requestId, message.params, message.responseType, message.finished);
             }
             break;
         }

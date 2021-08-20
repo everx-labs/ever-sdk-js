@@ -1,10 +1,10 @@
 //---
 
-function core_response_handler(request_id, params_json, response_type, finished) {
+function core_response_handler(request_id, params, response_type, finished) {
     postMessage({
         type: 'response',
         requestId: request_id,
-        paramsJson: params_json,
+        params,
         responseType: response_type,
         finished,
     });
@@ -39,7 +39,7 @@ self.onmessage = (e) => {
         core_request(
             message.context,
             message.functionName,
-            message.functionParamsJson,
+            message.functionParams,
             message.requestId,
         );
         break;

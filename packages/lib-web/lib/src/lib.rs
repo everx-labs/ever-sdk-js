@@ -14,6 +14,9 @@
 use ton_client::{create_context, destroy_context, request};
 use wasm_bindgen::prelude::*;
 
+mod conv;
+use conv::{parse, stringify};
+
 #[wasm_bindgen]
 pub fn core_create_context(config_json: String) -> String {
     create_context(config_json)
@@ -26,20 +29,22 @@ pub fn core_destroy_context(context: u32) {
 
 #[wasm_bindgen(js_namespace = tonclient)]
 extern "C" {
-    fn core_response_handler(
-        request_id: u32,
-        params_json: String,
-        response_type: u32,
-        finished: bool,
-    );
+    fn core_response_handler(request_id: u32, params: JsValue, response_type: u32, finished: bool);
 }
 
 fn response_handler(request_id: u32, params_json: String, response_type: u32, finished: bool) {
-    core_response_handler(request_id, params_json, response_type, finished);
+    // TODO: ignore BOM
+    // if (paramsJson.charCodeAt(0) === 0xFEFF) {
+    //     paramsJson = paramsJson.substr(1);
+    // }
+    let return_blob = ((request_id == 4) || (request_id == 5)); // TODO: use return_blob flag from request
+    let params = parse(&params_json[..], return_blob);
+    core_response_handler(request_id, params, response_type, finished);
 }
 
 #[wasm_bindgen]
-pub fn core_request(context: u32, function_name: String, params_json: String, request_id: u32) {
+pub fn core_request(context: u32, function_name: String, params: JsValue, request_id: u32) {
+    let params_json = stringify(params);
     request(
         context,
         function_name,
