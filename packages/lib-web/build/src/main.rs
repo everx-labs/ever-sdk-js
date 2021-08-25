@@ -31,6 +31,9 @@ fn fix_wrapper_script(wrapper: String) -> String {
                 },\n        \
                 free: function(ptr) {\n            \
                     wasm.__wbindgen_free(ptr);\n        \
+                },\n        \
+                now: function() {\n            \
+                    return new Date().getTime();\n        \
                 },\n    \
             };"
         ),
