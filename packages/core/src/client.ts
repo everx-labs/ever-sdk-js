@@ -175,8 +175,8 @@ export class TonClient {
                         break;
                 }
             }
-        } catch (e) {
-            err.message = e;
+        } catch (e: any) {
+            err.message = (e as { message?: string }).message ?? `${e}`;
         }
         return err;
     }

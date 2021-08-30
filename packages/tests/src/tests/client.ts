@@ -116,7 +116,7 @@ test("client: Should suggest helper functions if applicable", async () => {
             },
         });
         expect("This line should not be reached").toHaveLength(0);
-    } catch (err) {
+    } catch (err: any) {
         expect(err.message.startsWith("Consider using one of the helper methods (signerNone, signerExternal, signerKeys, signerSigningBox) for the \"signer\" parameter"))
             .toBeTruthy();
     }
@@ -131,7 +131,7 @@ test("client: Should suggest helper functions if applicable", async () => {
             },
         });
         expect("This line should not be reached").toHaveLength(0);
-    } catch (err) {
+    } catch (err: any) {
         expect(err.message.startsWith("Consider using one of the helper methods (abiContract, abiJson, abiHandle, abiSerialized) for the \"abi\" parameter"))
             .toBeTruthy();
     }

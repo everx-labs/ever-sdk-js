@@ -110,7 +110,7 @@ test.each(ABIVersions)("Run aborted transaction (ABI v%i)", async (abiVersion) =
                 signer: walletAccount.signer,
             }
         });
-    } catch (error) {
+    } catch (error: any) {
         expect(error.code).toEqual(TvmErrorCode.ContractExecutionError);
         expect(error.data.phase).toEqual("computeVm");
         expect(error.data.transaction_id).toBeTruthy();
@@ -130,7 +130,7 @@ test.each(ABIVersions)("Run aborted transaction (ABI v%i)", async (abiVersion) =
                 signer: walletAccount.signer,
             }
         });
-    } catch (error) {
+    } catch (error: any) {
         expect(error.code).toEqual(AbiErrorCode.EncodeRunMessageFailed);
     }
 });
