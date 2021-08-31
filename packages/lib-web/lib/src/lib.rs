@@ -14,6 +14,16 @@
 use ton_client::{create_context, destroy_context, request};
 use wasm_bindgen::prelude::*;
 
+#[macro_use]
+extern crate lazy_static;
+
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+lazy_static! {
+    static ref HASHMAP: Mutex<HashMap<u32, bool>> = Mutex::new(HashMap::new());
+}
+
 mod conv;
 use conv::{parse, stringify};
 
@@ -37,14 +47,17 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
     // if (paramsJson.charCodeAt(0) === 0xFEFF) {
     //     paramsJson = paramsJson.substr(1);
     // }
-    let return_blob = ((request_id == 4) || (request_id == 5)); // TODO: use return_blob flag from request
-    let params = parse(&params_json[..], return_blob);
+    let hashmap = HASHMAP.lock().unwrap();
+    let return_blob = hashmap.get(&request_id).unwrap();
+    let params = parse(&params_json[..], *return_blob);
     core_response_handler(request_id, params, response_type, finished);
 }
 
 #[wasm_bindgen]
 pub fn core_request(context: u32, function_name: String, params: JsValue, request_id: u32) {
-    let params_json = stringify(params);
+    let (params_json, return_blob) = stringify(params);
+    let mut hashmap = HASHMAP.lock().unwrap();
+    hashmap.insert(request_id, return_blob);
     request(
         context,
         function_name,

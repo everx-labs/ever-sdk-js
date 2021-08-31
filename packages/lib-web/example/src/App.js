@@ -16,12 +16,15 @@ function App() {
       "base64"
     ).toString("hex");
 
-    // const decrypted = (
+    // console.time("generate_random_bytes");
+    // const original = (
     //   await client.crypto.generate_random_bytes({
     //     length: 100000000, // 100 MB
     //     response_binary_type: "blob",
     //   })
     // ).bytes;
+    // console.timeEnd("generate_random_bytes");
+    // console.log(original);
 
     console.time("fetch");
     const url =

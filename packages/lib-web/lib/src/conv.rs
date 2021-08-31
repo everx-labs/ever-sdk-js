@@ -92,7 +92,6 @@ fn replace_placeholder_with_blob(root: &JsValue, path: &[String], bytes: &[u8]) 
     }
 }
 
-#[wasm_bindgen]
 pub fn parse(s: &str, return_blob: bool) -> JsValue {
     let mut value = json_str_to_serde_value(s);
     let blobs = if return_blob {
@@ -170,15 +169,14 @@ fn determine_return_blob(obj: &JsValue, blobs: &Blobs) -> bool {
     }
 }
 
-#[wasm_bindgen]
-pub fn stringify(obj: JsValue) -> String {
+pub fn stringify(obj: JsValue) -> (String, bool) {
     if obj.is_undefined() || obj.is_null() {
-        return "".into();
+        return ("".into(), false);
     }
     let blobs = replace_array_buffers_with_placeholders(&obj);
     let return_blob = determine_return_blob(&obj, &blobs);
     let mut value = js_to_serde_value(obj);
     replace_placeholders_with_strings(&mut value, &blobs);
     let string = serde_value_to_json_string(&value);
-    string
+    (string, return_blob)
 }
