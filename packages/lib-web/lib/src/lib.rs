@@ -47,10 +47,13 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
     // if (paramsJson.charCodeAt(0) === 0xFEFF) {
     //     paramsJson = paramsJson.substr(1);
     // }
-    let hashmap = HASHMAP.lock().unwrap();
-    let return_blob = hashmap.get(&request_id).unwrap();
-    let params = parse(&params_json[..], *return_blob);
-    core_response_handler(request_id, params, response_type, finished);
+    let mut hashmap = HASHMAP.lock().unwrap();
+    let return_blob = *hashmap.get(&request_id).unwrap();
+    if finished {
+        hashmap.remove(&request_id);
+    }
+    let params = parse(&params_json[..], return_blob);
+    unsafe { core_response_handler(request_id, params, response_type, finished) };
 }
 
 #[wasm_bindgen]
