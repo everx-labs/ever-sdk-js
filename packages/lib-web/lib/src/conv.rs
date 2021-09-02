@@ -38,10 +38,7 @@ fn make_blob(bytes: &[u8]) -> Blob {
 }
 
 fn read_array_buffer(ab: &JsValue) -> Vec<u8> {
-    let ta = Uint8Array::new(ab);
-    let mut bytes: Vec<u8> = vec![0; ta.length() as usize];
-    ta.copy_to(&mut bytes);
-    bytes
+    Uint8Array::new(ab).to_vec()
 }
 
 fn replace_strings_with_placeholders(value: &mut Value) -> Blobs {
