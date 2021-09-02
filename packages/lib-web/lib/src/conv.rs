@@ -31,9 +31,7 @@ fn serde_value_to_json_string(value: &Value) -> String {
 }
 
 fn make_blob(bytes: &[u8]) -> Blob {
-    let ab = ArrayBuffer::new(bytes.len() as u32);
-    let ta = Uint8Array::new(&ab);
-    ta.copy_from(bytes);
+    let ta = unsafe { Uint8Array::view(bytes) };
     let arr = Array::new_with_length(1);
     arr.set(0, JsValue::from(ta));
     Blob::new_with_u8_array_sequence(&arr).unwrap()
