@@ -31,23 +31,6 @@ export function libWeb() {
         }
     }
 
-    async function replaceBlobsWithArrayBuffers(value) {
-        if (value instanceof Blob) {
-            return await value.arrayBuffer();
-        }
-        if (typeof value === "bigint") {
-            // TODO: handle BigInt
-        }
-        if (typeof value === "object" && value !== null) {
-            const result = Array.isArray(value) ? [] : {};
-            for (const key in value) {
-                result[key] = await replaceBlobsWithArrayBuffers(value[key]);
-            }
-            return result;
-        }
-        return value;
-    }
-
     const workerBlob = new Blob(
         [workerScript],
         { type: 'application/javascript' }
@@ -88,13 +71,13 @@ export function libWeb() {
                 context,
             })
         },
-        sendRequestParams: async (context, requestId, functionName, functionParams) => {
+        sendRequestParams: (context, requestId, functionName, functionParams) => {
             worker.postMessage({
                 type: 'request',
                 context,
                 requestId,
                 functionName,
-                functionParams: await replaceBlobsWithArrayBuffers(functionParams),
+                functionParams
             })
         }
     };

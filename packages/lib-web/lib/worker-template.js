@@ -10,6 +10,23 @@ function core_response_handler(request_id, params, response_type, finished) {
     });
 }
 
+async function replaceBlobsWithArrayBuffers(value) {
+    if (value instanceof Blob) {
+        return await value.arrayBuffer();
+    }
+    if (typeof value === "bigint") {
+        // TODO: handle BigInt
+    }
+    if (typeof value === "object" && value !== null) {
+        const result = Array.isArray(value) ? [] : {};
+        for (const key in value) {
+            result[key] = await replaceBlobsWithArrayBuffers(value[key]);
+        }
+        return result;
+    }
+    return value;
+}
+
 self.onmessage = (e) => {
     const message = e.data;
     switch (message.type) {
@@ -36,12 +53,14 @@ self.onmessage = (e) => {
         break;
 
     case 'request':
-        core_request(
-            message.context,
-            message.functionName,
-            message.functionParams,
-            message.requestId,
-        );
+        (async () => {
+            core_request(
+                message.context,
+                message.functionName,
+                await replaceBlobsWithArrayBuffers(message.functionParams),
+                message.requestId,
+            );
+        })();
         break;
     }
 };
