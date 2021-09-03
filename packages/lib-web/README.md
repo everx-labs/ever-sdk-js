@@ -5,7 +5,7 @@ To build WASM you need `clang v8`. Use this workaround if you encounter a proble
 ```
 docker pull tonlabs/build-tonclient-wasm
 ```
-Change current location to `ton-client-js` project. It is important because next command will use your current location to mount volume with source code inside docker container with build environment.
+Change your current location to `ton-client-js` project. It is important because the next command will use this location to mount the volume with source code inside the docker container with build environment.
 ```
 cd ton-client-js
 ```
