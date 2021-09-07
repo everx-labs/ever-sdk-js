@@ -172,6 +172,42 @@ public class MainApplication extends Application implements ReactApplication {
       };
 ```
 
+If you wish to use lib-react-native-jsi and [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated) simultaneously, you need to initialize all JSI libraries in `getJSIModules` method of a custom `JSIModulePackage` instance:
+
+```diff
++import com.facebook.react.bridge.JavaScriptContextHolder;
++import com.facebook.react.bridge.JSIModuleSpec;
++import com.facebook.react.bridge.JSIModulePackage;
++import com.facebook.react.bridge.ReactApplicationContext;
++import com.swmansion.reanimated.ReanimatedJSIModulePackage;
++import com.tonlabs.tonclientjsi.TonClientJSIModulePackage;
++import java.util.Arrays;
+
+public class MainApplication extends Application implements ReactApplication {
+
+  private final ReactNativeHost mReactNativeHost =
+      new ReactNativeHost(this) {
+        ...
+
+        @Override
+        protected String getJSMainModuleName() {
+          return "index";
+        }
+
++        @Override
++        protected JSIModulePackage getJSIModulePackage() {
++          return new JSIModulePackage() {
++            @Override
++            public List<JSIModuleSpec> getJSIModules(final ReactApplicationContext reactApplicationContext, final JavaScriptContextHolder jsContext) {
++              new ReanimatedJSIModulePackage().getJSIModules(reactApplicationContext, jsContext);
++              new TonClientJSIModulePackage().getJSIModules(reactApplicationContext, jsContext);
++              return Arrays.<JSIModuleSpec>asList();
++            }
++          };
++        }
+      };
+```
+
 `android/app/src/main/AndroidManifest.xml`
 
 ```diff
