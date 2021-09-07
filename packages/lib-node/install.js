@@ -20,6 +20,7 @@ const zlib = require('zlib');
 const path = require('path');
 const os = require('os');
 const platform = os.platform();
+const arch = os.arch();
 
 const binariesSource =
   process.env.TON_CLIENT_BIN_SRC || 'https://binaries.tonlabs.io';
@@ -108,7 +109,7 @@ async function dl(dstPath, src) {
 
 async function main() {
     const binariesTargetPath = resolveBinariesTargetPath();
-    await dl(path.join(binariesTargetPath, `tonclient.node`), `tonclient_${binariesVersion}_nodejs_addon_${platform}`);
+    await dl(path.join(binariesTargetPath, `tonclient.node`), `tonclient_${binariesVersion}_nodejs_addon_${arch}-${platform}`);
 }
 
 (async () => {
