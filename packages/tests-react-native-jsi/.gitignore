@@ -59,7 +59,6 @@ buck-out/
 /ios/Pods/
 /yarn.lock
 /ios/Podfile.lock
-/android/gradle/wrapper/
 /suite/_/assets.js
 /suite/_/giver.js
 /suite/_/init-tests.js
