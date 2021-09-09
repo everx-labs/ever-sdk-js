@@ -9,7 +9,7 @@
 
 #ifdef __OBJC__ // when compiled as Objective-C++
 #import <React/RCTBlobManager.h>
-#else // when compiled as C++
+#else  // when compiled as C++
 typedef struct objc_object RCTBlobManager;
 #endif // __OBJC__
 
@@ -24,8 +24,8 @@ namespace tonlabs
   class BlobManager
   {
   public:
-    Blob store(std::string base64encoded); // converts base64-encoded std::string to binary, stores it as blob and returns blobId, offset and size
-                                           // on Android this method must be called from a thread attached to JVM
+    Blob store(const std::string &base64encoded); // converts base64-encoded std::string to binary, stores it as blob and returns blobId, offset and size
+                                                  // on Android this method must be called from a thread attached to JVM
 
     std::string resolve(Blob blob); // returns base64-encoded data resolved from provided blobId, offset and size
                                     // on Android this method must be called from a thread attached to JVM

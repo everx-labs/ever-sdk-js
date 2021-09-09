@@ -28,7 +28,6 @@ add_library(${PACKAGE_NAME}
   ../cpp/Blob.h
   ../cpp/BlobManager.cpp
   ../cpp/BlobManager.h
-  ../cpp/base64.cpp
   ../cpp/base64.h
   ../cpp/NativeModules.cpp
   ../cpp/NativeModules.h
