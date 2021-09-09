@@ -253,9 +253,10 @@ TON Labs SDK Binaries Store.
 
 Binary              | Target           | Major | Download links
 ------------------- | ---------------- | ----- | --------------
-Node.js AddOn       | Win32            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_win32.gz)
-&nbsp;              | macOS            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_darwin.gz)
-&nbsp;              | Linux            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_linux.gz)
+Node.js AddOn       | Win32            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x86-win32.gz)
+&nbsp;              | macOS x86_64     | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x86-darwin.gz)
+&nbsp;              | macOS aarch64    | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_arm64-darwin.gz)
+&nbsp;              | Linux            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x86-linux.gz)
 React Native Module | Android x86_64   | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_x86_64-linux-android.gz)
 &nbsp;              | Android i686     | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_i686-linux-android.gz)
 &nbsp;              | Android armv7    | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_armv7-linux-android.gz)
