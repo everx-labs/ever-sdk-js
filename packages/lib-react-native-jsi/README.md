@@ -12,6 +12,7 @@ JSI-based implementation of a bridge to mobile React Native platform including s
 - [Interface](#interface)
 - [Blob support](#blob-support)
 - [Development](#development)
+- [Testing](#testing)
 
 # Installation
 
@@ -366,11 +367,46 @@ yarn add react-native@0.64.0
 yarn add react-native@0.65.0-rc.3
 ```
 
-For testing purposes, first pack the library into an archive and then install the package with the following commands:
+# Testing
+
+For testing purposes, use `tests-lib-react-native-jsi` tests runner.
+
+First pack the dependent libraries into `*.tgz` archives:
 
 ```sh
-cd lib-react-native-jsi
+cd packages/core
+npm i
+npx tsc
 npm pack
+
+cd ../tests
+npm i
+npx tsc
+npm pack
+
+cd ../lib-react-native-jsi
+yarn install
+npm pack
+```
+
+Then, install the dependencies from `*.tgz` archives:
+
+```sh
 cd ../tests-react-native-jsi
-yarn add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.21.0.tgz
+npm add ile:../core/tonclient-core-1.21.4.tgz
+npm add file:../tests/tonclient-tests-1.21.4.tgz
+npm add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.21.4.tgz
+npm i
+cd ios
+pod install
+cd ..
+```
+
+> **Note:** Please update the version in the filenames appropriately.
+
+Finally, you can launch the tests runner with the following commands:
+
+```sh
+node run ios
+node run android
 ```
