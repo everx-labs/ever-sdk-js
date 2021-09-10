@@ -9,9 +9,9 @@
 
 namespace tonlabs
 {
-  Blob BlobManager::store(std::string base64encoded)
+  Blob BlobManager::store(const std::string &base64encoded)
   {
-    std::string base64decoded = base64_decode(base64encoded);
+    std::string base64decoded = b64decode(base64encoded);
     int offset = 0;
     int size = base64decoded.length();
 
@@ -36,15 +36,15 @@ namespace tonlabs
     {
       throw std::runtime_error("Argument is not a direct buffer.");
     }
-    unsigned char const *data = buffer->getDirectBytes();
+    const void *data = buffer->getDirectBytes();
     size_t length = buffer->getDirectSize();
 #elif __APPLE__
     NSString *blobIdNSString = [NSString stringWithUTF8String:blob.blobId.c_str()];
     NSData *dataNSData = [this->reactBlobManager_ resolve:blobIdNSString offset:blob.offset size:blob.size];
-    unsigned char const *data = (unsigned char const *)dataNSData.bytes;
+    const void *data = dataNSData.bytes;
     size_t length = dataNSData.length;
 #endif
 
-    return base64_encode(data, length);
+    return b64encode(data, length);
   }
 }

@@ -71,13 +71,9 @@ PODS:
     - FlipperKit/Core
     - FlipperKit/FlipperKitNetworkPlugin
   - fmt (6.2.1)
-  - Folly (2016.09.26.00):
-    - boost-for-react-native
-    - DoubleConversion
-    - glog
   - glog (0.3.5)
-  - lib-react-native-jsi (1.21.0):
-    - Folly
+  - lib-react-native-jsi (1.21.4):
+    - RCT-Folly
     - React-callinvoker
     - React-Core
     - React-jsiexecutor
@@ -415,7 +411,6 @@ SPEC REPOS:
     - Flipper-RSocket
     - FlipperKit
     - fmt
-    - Folly
     - libevent
     - OpenSSL-Universal
     - YogaKit
@@ -496,9 +491,8 @@ SPEC CHECKSUMS:
   Flipper-RSocket: d9d9ade67cbecf6ac10730304bf5607266dd2541
   FlipperKit: aec2d931adeee48a07bab1ea8bcc8a6bb87dfce4
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
-  Folly: 211775e49d8da0ca658aebc8eab89d642935755c
   glog: 5337263514dd6f09803962437687240c5dc39aa4
-  lib-react-native-jsi: 078506db0a5a641acbcac248671d260e9e0d9366
+  lib-react-native-jsi: ea9598caef8aa7444b9ffc5156d6df931250b05a
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: 1aa4f6a6ee7256b83db99ec1ccdaa80d10f9af9b
   RCT-Folly: 0dd9e1eb86348ecab5ba76f910b56f4b5fef3c46
