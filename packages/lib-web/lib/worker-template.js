@@ -15,7 +15,11 @@ async function replaceBlobsWithArrayBuffers(value) {
         return await value.arrayBuffer();
     }
     if (typeof value === "bigint") {
-        // TODO: handle BigInt
+        if (value < Number.MAX_SAFE_INTEGER && value > Number.MIN_SAFE_INTEGER) {
+            return Number(value);
+        } else {
+            return value.toString();
+        }
     }
     if (typeof value === "object" && value !== null) {
         const result = Array.isArray(value) ? [] : {};
