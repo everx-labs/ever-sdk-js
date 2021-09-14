@@ -150,6 +150,7 @@ fn determine_return_blob(obj: &JsValue, blobs: &Blobs) -> bool {
     // If `response_binary_type` request param is set to 'blob'
     // or there is any blob in the request params and `response_binary_type` is not set,
     // then all strings in the response params will be converted from base64 to raw binary JS Blobs
+    // NOTE: This behaviour is to be changed later once TON SDK core uses binary type in the response params.
     let default = !blobs.is_empty();
     match unsafe { Reflect::get(&obj, &"response_binary_type".into()) } {
         Ok(value) => match value.as_string() {
