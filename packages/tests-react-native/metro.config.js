@@ -4,32 +4,32 @@
  *
  * @format
  */
-const path = require('path');
+const path = require("path");
 const extraNodeModules = {};
 const watchFolders = [];
 
 for (const name of [
-    'path',
-    'fs',
-    'util',
-    'module',
-    'stream',
-    'constants',
+    "path",
+    "fs",
+    "util",
+    "module",
+    "stream",
+    "constants",
 ]) {
-    extraNodeModules[name] = path.resolve(__dirname, 'node-mock', name);
+    extraNodeModules[name] = path.resolve(__dirname, "node-mock", name);
 }
 
 
 for (const name of [
-    '@tonclient/core',
-    '@tonclient/lib-react-native',
-    '@tonclient/tests',
-    'react-native',
-    '@babel/runtime',
-    'buffer',
-    'assert'
+    "@tonclient/core",
+    "@tonclient/lib-react-native",
+    "@tonclient/tests",
+    "react-native",
+    "@babel/runtime",
+    "buffer",
+    "assert",
 ]) {
-    const resolvedPath = path.resolve(__dirname, 'node_modules', name);
+    const resolvedPath = path.resolve(__dirname, "node_modules", name);
     extraNodeModules[name] = resolvedPath;
     watchFolders.push(resolvedPath);
 }
@@ -43,10 +43,11 @@ module.exports = {
                 inlineRequires: false,
             },
         }),
+        babelTransformerPath: require.resolve("./test-transformer")
     },
     resolver: {
-        sourceExts: ['js', 'json', 'ts', 'tsx', 'jsx'],
-        extraNodeModules
+        sourceExts: ["js", "json", "ts", "tsx", "jsx"],
+        extraNodeModules,
     },
     watchFolders,
     // serializer: {

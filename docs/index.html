@@ -72,6 +72,7 @@
 					<li><a href="#useful-links">Useful links</a></li>
 					<li><a href="#library-distribution">Library distribution</a></li>
 					<li><a href="#installation">Installation</a><ul>
+							<li><a href="#prerequisites">Prerequisites</a></li>
 							<li><a href="#install-core-package">Install core package</a></li>
 							<li><a href="#install-bridge-package-depends-on-target-js-platform">Install bridge package (depends on target JS platform)</a><ul>
 									<li><a href="#nodejs">NodeJs</a></li>
@@ -103,7 +104,7 @@
 					<li><a href="https://tonlabs.github.io/ton-client-js/">Types and Methods (API Reference)</a></li>
 					<li><a href="https://github.com/tonlabs/appkit-js">AppKit</a> - JS package built on top of <a href="https://www.npmjs.com/package/@tonclient/core">@tonclient/core</a> package which purpose is to simplify writing applications on Free TON. It helps to implement most common use-cases with less coding. </li>
 					<li><a href="https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk">SDK guides</a> - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on Free TON.</li>
-					<li><a href="https://github.com/tonlabs/sdk-samples">SDK Samples</a> - a good place to get to practice with SDK asap:)</li>
+					<li><a href="https://github.com/tonlabs/sdk-samples">SDK Samples</a> - a good place to get to practice with SDK examples asap:)</li>
 				</ul>
 				<a href="#library-distribution" id="library-distribution" style="color: inherit; text-decoration: none;">
 					<h1>Library distribution</h1>
@@ -119,6 +120,13 @@
 				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
 					<h1>Installation</h1>
 				</a>
+				<a href="#prerequisites" id="prerequisites" style="color: inherit; text-decoration: none;">
+					<h2>Prerequisites</h2>
+				</a>
+				<ul>
+					<li>Node.js 14 LTS  </li>
+				</ul>
+				<p><em>Package probably works OK on other Node.js versions, but we use 14 version in our testing pipelines so we quarantee its stable work only on 14 version.</em></p>
 				<a href="#install-core-package" id="install-core-package" style="color: inherit; text-decoration: none;">
 					<h2>Install core package</h2>
 				</a>
@@ -199,7 +207,7 @@
 				<p>You can pass a configuration object in <code>TonClient</code> constructor:</p>
 				<pre><code class="language-ts"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">TonClient</span><span style="color: #000000">({</span>
 <span style="color: #000000">    </span><span style="color: #001080">network:</span><span style="color: #000000"> { </span>
-<span style="color: #000000">        </span><span style="color: #001080">server_address:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;net.ton.dev&#039;</span><span style="color: #000000"> </span>
+<span style="color: #000000">        </span><span style="color: #001080">endpoints:</span><span style="color: #000000"> [</span><span style="color: #A31515">&#039;net.ton.dev&#039;</span><span style="color: #000000">]</span>
 <span style="color: #000000">    } </span>
 <span style="color: #000000">});</span>
 </code></pre>
@@ -379,6 +387,9 @@
 						<a href="enums/BocErrorCode.html" class="tsd-kind-icon">Boc<wbr>Error<wbr>Code</a>
 					</li>
 					<li class=" tsd-kind-enum">
+						<a href="enums/CipherMode.html" class="tsd-kind-icon">Cipher<wbr>Mode</a>
+					</li>
+					<li class=" tsd-kind-enum">
 						<a href="enums/ClientErrorCode.html" class="tsd-kind-icon">Client<wbr>Error<wbr>Code</a>
 					</li>
 					<li class=" tsd-kind-enum">
@@ -475,6 +486,12 @@
 						<a href="modules.html#AddressStringFormat" class="tsd-kind-icon">Address<wbr>String<wbr>Format</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#AesInfo" class="tsd-kind-icon">Aes<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#AesParams" class="tsd-kind-icon">Aes<wbr>Params</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
 						<a href="modules.html#AppRequestResult" class="tsd-kind-icon">App<wbr>Request<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
@@ -521,6 +538,9 @@
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="modules.html#DeploySet" class="tsd-kind-icon">Deploy<wbr>Set</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#EncryptionAlgorithm" class="tsd-kind-icon">Encryption<wbr>Algorithm</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="modules.html#EncryptionBoxHandle" class="tsd-kind-icon">Encryption<wbr>Box<wbr>Handle</a>
@@ -605,6 +625,9 @@
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="modules.html#ParamsOfCreateBlockIterator" class="tsd-kind-icon">Params<wbr>OfCreate<wbr>Block<wbr>Iterator</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#ParamsOfCreateEncryptionBox" class="tsd-kind-icon">Params<wbr>OfCreate<wbr>Encryption<wbr>Box</a>
 					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="modules.html#ParamsOfCreateTransactionIterator" class="tsd-kind-icon">Params<wbr>OfCreate<wbr>Transaction<wbr>Iterator</a>
@@ -1127,6 +1150,9 @@
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="modules.html#debotActivityTransaction" class="tsd-kind-icon">debot<wbr>Activity<wbr>Transaction</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="modules.html#encryptionAlgorithmAES" class="tsd-kind-icon">encryption<wbr>AlgorithmAES</a>
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="modules.html#messageSourceEncoded" class="tsd-kind-icon">message<wbr>Source<wbr>Encoded</a>

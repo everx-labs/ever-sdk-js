@@ -71,11 +71,13 @@ impl Build {
         Self {
             version,
             #[cfg(target_os = "linux")]
-            platform: "linux".into(),
-            #[cfg(target_os = "macos")]
-            platform: "darwin".into(),
+            platform: "x64-linux".into(),
+            #[cfg(all(target_os = "macos", not(target_arch="aarch64")))]
+            platform: "x64-darwin".into(),
+            #[cfg(all(target_os = "macos", target_arch="aarch64"))]
+            platform: "arm64-darwin".into(),
             #[cfg(target_os = "windows")]
-            platform: "win32".into(),
+            platform: "x64-win32".into(),
             package_dir,
             lib_dir,
             target_dir,

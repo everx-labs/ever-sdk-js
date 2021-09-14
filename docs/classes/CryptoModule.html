@@ -101,6 +101,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="CryptoModule.html#chacha20" class="tsd-kind-icon">chacha20</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="CryptoModule.html#convert_public_key_to_ton_safe_format" class="tsd-kind-icon">convert_<wbr>public_<wbr>key_<wbr>to_<wbr>ton_<wbr>safe_<wbr>format</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="CryptoModule.html#create_encryption_box" class="tsd-kind-icon">create_<wbr>encryption_<wbr>box</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="CryptoModule.html#encryption_box_decrypt" class="tsd-kind-icon">encryption_<wbr>box_<wbr>decrypt</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="CryptoModule.html#encryption_box_encrypt" class="tsd-kind-icon">encryption_<wbr>box_<wbr>encrypt</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="CryptoModule.html#encryption_box_get_info" class="tsd-kind-icon">encryption_<wbr>box_<wbr>get_<wbr>info</a></li>
@@ -159,7 +160,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1474">modules.ts:1474</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1536">modules.ts:1536</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -181,7 +182,7 @@
 					<div class="tsd-signature tsd-kind-icon">client<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">IClient</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1472">modules.ts:1472</a></li>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1534">modules.ts:1534</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -198,7 +199,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1856">modules.ts:1856</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1918">modules.ts:1918</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -227,7 +228,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1533">modules.ts:1533</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1595">modules.ts:1595</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -247,6 +248,35 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="create_encryption_box" class="tsd-anchor"></a>
+					<h3>create_<wbr>encryption_<wbr>box</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">create_<wbr>encryption_<wbr>box<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><a href="../modules.html#ParamsOfCreateEncryptionBox" class="tsd-signature-type" data-tsd-kind="Type alias">ParamsOfCreateEncryptionBox</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules.html#RegisteredEncryptionBox" class="tsd-signature-type" data-tsd-kind="Type alias">RegisteredEncryptionBox</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L2044">modules.ts:2044</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Creates encryption box with specified algorithm</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>params: <a href="../modules.html#ParamsOfCreateEncryptionBox" class="tsd-signature-type" data-tsd-kind="Type alias">ParamsOfCreateEncryptionBox</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../modules.html#RegisteredEncryptionBox" class="tsd-signature-type" data-tsd-kind="Type alias">RegisteredEncryptionBox</a><span class="tsd-signature-symbol">&gt;</span></h4>
+							<p>RegisteredEncryptionBox</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="encryption_box_decrypt" class="tsd-anchor"></a>
 					<h3>encryption_<wbr>box_<wbr>decrypt</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -256,13 +286,19 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1964">modules.ts:1964</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L2034">modules.ts:2034</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Decrypts data using given encryption box</p>
+									<p>Decrypts data using given encryption box Note.</p>
 								</div>
+								<dl class="tsd-comment-tags">
+									<dt>remarks</dt>
+									<dd><p>Block cipher algorithms pad data to cipher block size so encrypted data can be longer then original data. Client should store the original data size after encryption and use it after
+										decryption to retrieve the original data from decrypted data.</p>
+									</dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -285,13 +321,19 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1954">modules.ts:1954</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L2020">modules.ts:2020</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Encrypts data using given encryption box</p>
+									<p>Encrypts data using given encryption box Note.</p>
 								</div>
+								<dl class="tsd-comment-tags">
+									<dt>remarks</dt>
+									<dd><p>Block cipher algorithms pad data to cipher block size so encrypted data can be longer then original data. Client should store the original data size after encryption and use it after
+										decryption to retrieve the original data from decrypted data.</p>
+									</dd>
+								</dl>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -314,7 +356,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1944">modules.ts:1944</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L2006">modules.ts:2006</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -343,7 +385,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1489">modules.ts:1489</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1551">modules.ts:1551</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -379,7 +421,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1523">modules.ts:1523</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1585">modules.ts:1585</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -408,7 +450,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1541">modules.ts:1541</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1603">modules.ts:1603</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -431,7 +473,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1880">modules.ts:1880</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1942">modules.ts:1942</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -460,7 +502,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1816">modules.ts:1816</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1878">modules.ts:1878</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -489,7 +531,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1826">modules.ts:1826</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1888">modules.ts:1888</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -518,7 +560,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1846">modules.ts:1846</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1908">modules.ts:1908</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -547,7 +589,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1836">modules.ts:1836</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1898">modules.ts:1898</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -576,7 +618,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1806">modules.ts:1806</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1868">modules.ts:1868</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -605,7 +647,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1796">modules.ts:1796</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1858">modules.ts:1858</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -640,7 +682,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1768">modules.ts:1768</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1830">modules.ts:1830</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -669,7 +711,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1758">modules.ts:1758</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1820">modules.ts:1820</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -703,7 +745,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1782">modules.ts:1782</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1844">modules.ts:1844</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -738,7 +780,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1745">modules.ts:1745</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1807">modules.ts:1807</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -767,7 +809,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1503">modules.ts:1503</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1565">modules.ts:1565</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -802,7 +844,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1705">modules.ts:1705</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1767">modules.ts:1767</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -837,7 +879,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1681">modules.ts:1681</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1743">modules.ts:1743</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -860,7 +902,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1691">modules.ts:1691</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1753">modules.ts:1753</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -889,7 +931,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1715">modules.ts:1715</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1777">modules.ts:1777</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -918,7 +960,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1725">modules.ts:1725</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1787">modules.ts:1787</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -947,7 +989,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1735">modules.ts:1735</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1797">modules.ts:1797</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -976,7 +1018,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1633">modules.ts:1633</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1695">modules.ts:1695</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1005,7 +1047,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1663">modules.ts:1663</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1725">modules.ts:1725</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1040,7 +1082,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1673">modules.ts:1673</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1735">modules.ts:1735</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1069,7 +1111,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1623">modules.ts:1623</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1685">modules.ts:1685</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1105,7 +1147,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1649">modules.ts:1649</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1711">modules.ts:1711</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1141,7 +1183,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1918">modules.ts:1918</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1980">modules.ts:1980</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1170,7 +1212,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1864">modules.ts:1864</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1926">modules.ts:1926</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1199,7 +1241,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1934">modules.ts:1934</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1996">modules.ts:1996</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1227,7 +1269,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1910">modules.ts:1910</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1972">modules.ts:1972</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1255,7 +1297,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1608">modules.ts:1608</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1670">modules.ts:1670</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1312,7 +1354,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1571">modules.ts:1571</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1633">modules.ts:1633</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1341,7 +1383,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1581">modules.ts:1581</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1643">modules.ts:1643</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1370,7 +1412,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1551">modules.ts:1551</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1613">modules.ts:1613</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1399,7 +1441,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1890">modules.ts:1890</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1952">modules.ts:1952</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1428,7 +1470,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1900">modules.ts:1900</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1962">modules.ts:1962</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1457,7 +1499,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1513">modules.ts:1513</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1575">modules.ts:1575</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1486,7 +1528,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7505b5b/packages/core/src/modules.ts#L1561">modules.ts:1561</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/9711f13/packages/core/src/modules.ts#L1623">modules.ts:1623</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1533,6 +1575,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="CryptoModule.html#convert_public_key_to_ton_safe_format" class="tsd-kind-icon">convert_<wbr>public_<wbr>key_<wbr>to_<wbr>ton_<wbr>safe_<wbr>format</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="CryptoModule.html#create_encryption_box" class="tsd-kind-icon">create_<wbr>encryption_<wbr>box</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="CryptoModule.html#encryption_box_decrypt" class="tsd-kind-icon">encryption_<wbr>box_<wbr>decrypt</a>

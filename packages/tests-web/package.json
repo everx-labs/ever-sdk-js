@@ -1,11 +1,11 @@
 {
 	"name": "@tonclient/tests-web",
-	"version": "1.20.1",
+	"version": "1.21.4",
 	"private": true,
 	"description": "TON Client WASM module tests runner",
 	"scripts": {
 		"npm install": "npm install",
-		"web": "webpack-dev-server -d --config webpack.config.js --progress --colors --host 127.0.0.1",
+		"web": "webpack-dev-server -d --config webpack.config.js --progress --colors --host 0.0.0.0",
 		"web:bundle": "webpack -p --config webpack.config.js --progress --colors --display-error-details"
 	},
 	"keywords": [
