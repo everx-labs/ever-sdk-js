@@ -429,7 +429,7 @@ Then, install the dependencies from `*.tgz` archives:
 
 ```sh
 cd ../tests-react-native-jsi
-npm add ile:../core/tonclient-core-1.21.4.tgz
+npm add file:../core/tonclient-core-1.21.4.tgz
 npm add file:../tests/tonclient-tests-1.21.4.tgz
 npm add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.21.4.tgz
 npm i
