@@ -175,19 +175,25 @@ napi_value setResponseHandler(napi_env env, napi_callback_info info)
     size_t argc = 1;
     napi_value args[1];
     CHECK(napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+
     if (argc > 0) {
-        CHECK(napi_create_threadsafe_function(
-                env,
-                args[0],// napi_value func,
-                nullptr, // napi_value async_resource,
-                js_string(env, "TON Client response handler"), // napi_value async_resource_name,
-                0, // size_t max_queue_size,
-                1, // size_t initial_thread_count,
-                nullptr, // void* thread_finalize_data,
-                nullptr, // napi_finalize thread_finalize_cb,
-                nullptr, // void* context,
-                response_handler_func_call, // napi_threadsafe_function_call_js call_js_cb,
-                &response_handler_func)); // napi_threadsafe_function* result);
+        napi_valuetype arg_type;
+        CHECK(napi_typeof(env, args[0], &arg_type));
+        if (arg_type == napi_function || arg_type == napi_object || arg_type == napi_external) {
+            CHECK(napi_create_threadsafe_function(
+                    env,
+                    args[0],// napi_value func,
+                    nullptr, // napi_value async_resource,
+                    js_string(env,
+                              "TON Client response handler"), // napi_value async_resource_name,
+                    0, // size_t max_queue_size,
+                    1, // size_t initial_thread_count,
+                    nullptr, // void* thread_finalize_data,
+                    nullptr, // napi_finalize thread_finalize_cb,
+                    nullptr, // void* context,
+                    response_handler_func_call, // napi_threadsafe_function_call_js call_js_cb,
+                    &response_handler_func)); // napi_threadsafe_function* result);
+        }
     }
     return js_undefined(env);
 }

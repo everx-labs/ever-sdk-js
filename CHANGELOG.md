@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - `abi.encode_message` and `processing.process_message` created invalid deploy message in case of
 `Signer::None` was used, and contract could not be deployed.
+- lib-node's bridge crashed on `client.close`.
 
 ## [1.21.4] – 2021-09-08
 
