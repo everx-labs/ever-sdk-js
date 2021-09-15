@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/tests",
-	"version": "1.21.4",
+	"version": "1.21.5",
 	"private": true,
 	"description": "TON Client Tests",
 	"main": "dist/index.js",
