@@ -3466,7 +3466,7 @@ export class BocModule {
     }
 
     /**
-     * Encodes BOC from builder operations.
+     * Encodes bag of cells (BOC) with builder operations. This method provides the same functionality as Solidity TvmBuilder. Resulting BOC of this method can be passed into Solidity and C++ contracts as TvmCell type
      * 
      * @param {ParamsOfEncodeBoc} params
      * @returns ResultOfEncodeBoc
