@@ -88,6 +88,10 @@ fn replace_placeholder_with_blob(root: &JsValue, path: &[String], bytes: &[u8]) 
 }
 
 pub fn parse(s: &str, return_blob: bool) -> JsValue {
+    if s.is_empty() {
+        return js_sys::Object::new().into();
+    }
+
     let mut value = json_str_to_serde_value(s);
     let blobs = if return_blob {
         replace_strings_with_placeholders(&mut value)
