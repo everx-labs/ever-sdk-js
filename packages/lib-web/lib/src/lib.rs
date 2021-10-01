@@ -21,7 +21,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 lazy_static! {
-    static ref HASHMAP: Mutex<HashMap<u32, bool>> = Mutex::new(HashMap::new());
+    static ref HASHMAP: Mutex<HashMap<u32, bool>> = Mutex::new(HashMap::new()); // request_id -> return_blob (for active requests only)
 }
 
 mod conv;
