@@ -2062,7 +2062,8 @@ export enum AbiErrorCode {
     InvalidSigner = 310,
     InvalidAbi = 311,
     InvalidFunctionId = 312,
-    InvalidData = 313
+    InvalidData = 313,
+    EncodeInitialDataFailed = 314
 }
 
 export type Abi = {
@@ -2896,6 +2897,77 @@ export type ResultOfDecodeData = {
     data: any
 }
 
+export type ParamsOfUpdateInitialData = {
+
+    /**
+     * Contract ABI
+     */
+    abi?: Abi,
+
+    /**
+     * Data BOC or BOC handle
+     */
+    data: string,
+
+    /**
+     * List of initial values for contract's public variables.
+     * 
+     * @remarks
+     * `abi` parameter should be provided to set initial data
+     */
+    initial_data?: any,
+
+    /**
+     * Initial account owner's public key to set into account data
+     */
+    initial_pubkey?: string,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfUpdateInitialData = {
+
+    /**
+     * Updated data BOC or BOC handle
+     */
+    data: string
+}
+
+export type ParamsOfDecodeInitialData = {
+
+    /**
+     * Contract ABI.
+     * 
+     * @remarks
+     * Initial data is decoded if this parameter is provided
+     */
+    abi?: Abi,
+
+    /**
+     * Data BOC or BOC handle
+     */
+    data: string
+}
+
+export type ResultOfDecodeInitialData = {
+
+    /**
+     * List of initial values of contract's public variables.
+     * 
+     * @remarks
+     * Initial data is decoded if `abi` input parameter is provided
+     */
+    initial_data?: any,
+
+    /**
+     * Initial account owner's public key
+     */
+    initial_pubkey: string
+}
+
 /**
  * Provides message encoding and decoding according to the ABI specification.
  */
@@ -3050,6 +3122,32 @@ export class AbiModule {
     decode_account_data(params: ParamsOfDecodeAccountData): Promise<ResultOfDecodeData> {
         return this.client.request('abi.decode_account_data', params);
     }
+
+    /**
+     * Updates account data with initial values for contract's public variables and owner's public key. This operation is applicable only to pre-deployment contract data.
+     * 
+     * @remarks
+     * Deployed contract data doesn't contain this data section
+     * 
+     * @param {ParamsOfUpdateInitialData} params
+     * @returns ResultOfUpdateInitialData
+     */
+    update_initial_data(params: ParamsOfUpdateInitialData): Promise<ResultOfUpdateInitialData> {
+        return this.client.request('abi.update_initial_data', params);
+    }
+
+    /**
+     * Decodes initial values for contract's public variables and owner's public key from account data This operation is applicable only to pre-deployment contract data.
+     * 
+     * @remarks
+     * Deployed contract data doesn't contain this data section
+     * 
+     * @param {ParamsOfDecodeInitialData} params
+     * @returns ResultOfDecodeInitialData
+     */
+    decode_initial_data(params: ParamsOfDecodeInitialData): Promise<ResultOfDecodeInitialData> {
+        return this.client.request('abi.decode_initial_data', params);
+    }
 }
 
 // boc module
@@ -3157,7 +3255,7 @@ export type ResultOfGetBocHash = {
 export type ParamsOfGetCodeFromTvc = {
 
     /**
-     * Contract TVC image encoded as base64
+     * Contract TVC image or image BOC handle
      */
     tvc: string
 }
@@ -3327,6 +3425,182 @@ export type ResultOfEncodeBoc = {
     boc: string
 }
 
+export type ParamsOfGetCodeSalt = {
+
+    /**
+     * Contract code BOC encoded as base64 or code BOC handle
+     */
+    code: string,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfGetCodeSalt = {
+
+    /**
+     * Contract code salt if present.
+     * 
+     * @remarks
+     * BOC encoded as base64 or BOC handle
+     */
+    salt?: string
+}
+
+export type ParamsOfSetCodeSalt = {
+
+    /**
+     * Contract code BOC encoded as base64 or code BOC handle
+     */
+    code: string,
+
+    /**
+     * Code salt to set.
+     * 
+     * @remarks
+     * BOC encoded as base64 or BOC handle
+     */
+    salt: string,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfSetCodeSalt = {
+
+    /**
+     * Contract code with salt set.
+     * 
+     * @remarks
+     * BOC encoded as base64 or BOC handle
+     */
+    code: string
+}
+
+export type ParamsOfDecodeTvc = {
+
+    /**
+     * Contract TVC image BOC encoded as base64 or BOC handle
+     */
+    tvc: string,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfDecodeTvc = {
+
+    /**
+     * Contract code BOC encoded as base64 or BOC handle
+     */
+    code?: string,
+
+    /**
+     * Contract data BOC encoded as base64 or BOC handle
+     */
+    data?: string,
+
+    /**
+     * Contract library BOC encoded as base64 or BOC handle
+     */
+    library?: string,
+
+    /**
+     * `special.tick` field.
+     * 
+     * @remarks
+     * Specifies the contract ability to handle tick transactions
+     */
+    tick?: boolean,
+
+    /**
+     * `special.tock` field.
+     * 
+     * @remarks
+     * Specifies the contract ability to handle tock transactions
+     */
+    tock?: boolean,
+
+    /**
+     * Is present and non-zero only in instances of large smart contracts
+     */
+    split_depth?: number
+}
+
+export type ParamsOfEncodeTvc = {
+
+    /**
+     * Contract code BOC encoded as base64 or BOC handle
+     */
+    code?: string,
+
+    /**
+     * Contract data BOC encoded as base64 or BOC handle
+     */
+    data?: string,
+
+    /**
+     * Contract library BOC encoded as base64 or BOC handle
+     */
+    library?: string,
+
+    /**
+     * `special.tick` field.
+     * 
+     * @remarks
+     * Specifies the contract ability to handle tick transactions
+     */
+    tick?: boolean,
+
+    /**
+     * `special.tock` field.
+     * 
+     * @remarks
+     * Specifies the contract ability to handle tock transactions
+     */
+    tock?: boolean,
+
+    /**
+     * Is present and non-zero only in instances of large smart contracts
+     */
+    split_depth?: number,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfEncodeTvc = {
+
+    /**
+     * Contract TVC image BOC encoded as base64 or BOC handle
+     */
+    tvc: string
+}
+
+export type ParamsOfGetCompilerVersion = {
+
+    /**
+     * Contract code BOC encoded as base64 or code BOC handle
+     */
+    code: string
+}
+
+export type ResultOfGetCompilerVersion = {
+
+    /**
+     * Compiler version from contract code
+     */
+    version?: string
+}
+
 /**
  * BOC manipulation module.
  */
@@ -3473,6 +3747,56 @@ export class BocModule {
      */
     encode_boc(params: ParamsOfEncodeBoc): Promise<ResultOfEncodeBoc> {
         return this.client.request('boc.encode_boc', params);
+    }
+
+    /**
+     * Returns contract code salt if present.
+     * 
+     * @param {ParamsOfGetCodeSalt} params
+     * @returns ResultOfGetCodeSalt
+     */
+    get_code_salt(params: ParamsOfGetCodeSalt): Promise<ResultOfGetCodeSalt> {
+        return this.client.request('boc.get_code_salt', params);
+    }
+
+    /**
+     * Sets new salt to contract code.
+     * 
+     * @param {ParamsOfSetCodeSalt} params
+     * @returns ResultOfSetCodeSalt
+     */
+    set_code_salt(params: ParamsOfSetCodeSalt): Promise<ResultOfSetCodeSalt> {
+        return this.client.request('boc.set_code_salt', params);
+    }
+
+    /**
+     * Sets new salt to contract code.
+     * 
+     * @param {ParamsOfDecodeTvc} params
+     * @returns ResultOfDecodeTvc
+     */
+    decode_tvc(params: ParamsOfDecodeTvc): Promise<ResultOfDecodeTvc> {
+        return this.client.request('boc.decode_tvc', params);
+    }
+
+    /**
+     * Sets new salt to contract code.
+     * 
+     * @param {ParamsOfEncodeTvc} params
+     * @returns ResultOfEncodeTvc
+     */
+    encode_tvc(params: ParamsOfEncodeTvc): Promise<ResultOfEncodeTvc> {
+        return this.client.request('boc.encode_tvc', params);
+    }
+
+    /**
+     * Returns contract code salt if present.
+     * 
+     * @param {ParamsOfGetCompilerVersion} params
+     * @returns ResultOfGetCompilerVersion
+     */
+    get_compiler_version(params: ParamsOfGetCompilerVersion): Promise<ResultOfGetCompilerVersion> {
+        return this.client.request('boc.get_compiler_version', params);
     }
 }
 
