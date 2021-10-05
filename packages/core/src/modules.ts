@@ -2062,7 +2062,8 @@ export enum AbiErrorCode {
     InvalidSigner = 310,
     InvalidAbi = 311,
     InvalidFunctionId = 312,
-    InvalidData = 313
+    InvalidData = 313,
+    EncodeInitialDataFailed = 314
 }
 
 export type Abi = {
@@ -2896,6 +2897,77 @@ export type ResultOfDecodeData = {
     data: any
 }
 
+export type ParamsOfUpdateInitialData = {
+
+    /**
+     * Contract ABI
+     */
+    abi?: Abi,
+
+    /**
+     * Data BOC or BOC handle
+     */
+    data: string,
+
+    /**
+     * List of initial values for contract's static variables.
+     * 
+     * @remarks
+     * `abi` parameter should be provided to set initial data
+     */
+    initial_data?: any,
+
+    /**
+     * Initial account owner's public key to set into account data
+     */
+    initial_pubkey?: string,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfUpdateInitialData = {
+
+    /**
+     * Updated data BOC or BOC handle
+     */
+    data: string
+}
+
+export type ParamsOfDecodeInitialData = {
+
+    /**
+     * Contract ABI.
+     * 
+     * @remarks
+     * Initial data is decoded if this parameter is provided
+     */
+    abi?: Abi,
+
+    /**
+     * Data BOC or BOC handle
+     */
+    data: string
+}
+
+export type ResultOfDecodeInitialData = {
+
+    /**
+     * List of initial values of contract's public variables.
+     * 
+     * @remarks
+     * Initial data is decoded if `abi` input parameter is provided
+     */
+    initial_data?: any,
+
+    /**
+     * Initial account owner's public key
+     */
+    initial_pubkey: string
+}
+
 /**
  * Provides message encoding and decoding according to the ABI specification.
  */
@@ -3050,6 +3122,26 @@ export class AbiModule {
     decode_account_data(params: ParamsOfDecodeAccountData): Promise<ResultOfDecodeData> {
         return this.client.request('abi.decode_account_data', params);
     }
+
+    /**
+     * Updates initial account data with initial values for the contract's static variables and owner's public key. This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
+     * 
+     * @param {ParamsOfUpdateInitialData} params
+     * @returns ResultOfUpdateInitialData
+     */
+    update_initial_data(params: ParamsOfUpdateInitialData): Promise<ResultOfUpdateInitialData> {
+        return this.client.request('abi.update_initial_data', params);
+    }
+
+    /**
+     * Decodes initial values of a contract's static variables and owner's public key from account initial data This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
+     * 
+     * @param {ParamsOfDecodeInitialData} params
+     * @returns ResultOfDecodeInitialData
+     */
+    decode_initial_data(params: ParamsOfDecodeInitialData): Promise<ResultOfDecodeInitialData> {
+        return this.client.request('abi.decode_initial_data', params);
+    }
 }
 
 // boc module
@@ -3157,7 +3249,7 @@ export type ResultOfGetBocHash = {
 export type ParamsOfGetCodeFromTvc = {
 
     /**
-     * Contract TVC image encoded as base64
+     * Contract TVC image or image BOC handle
      */
     tvc: string
 }
@@ -3327,6 +3419,182 @@ export type ResultOfEncodeBoc = {
     boc: string
 }
 
+export type ParamsOfGetCodeSalt = {
+
+    /**
+     * Contract code BOC encoded as base64 or code BOC handle
+     */
+    code: string,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfGetCodeSalt = {
+
+    /**
+     * Contract code salt if present.
+     * 
+     * @remarks
+     * BOC encoded as base64 or BOC handle
+     */
+    salt?: string
+}
+
+export type ParamsOfSetCodeSalt = {
+
+    /**
+     * Contract code BOC encoded as base64 or code BOC handle
+     */
+    code: string,
+
+    /**
+     * Code salt to set.
+     * 
+     * @remarks
+     * BOC encoded as base64 or BOC handle
+     */
+    salt: string,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfSetCodeSalt = {
+
+    /**
+     * Contract code with salt set.
+     * 
+     * @remarks
+     * BOC encoded as base64 or BOC handle
+     */
+    code: string
+}
+
+export type ParamsOfDecodeTvc = {
+
+    /**
+     * Contract TVC image BOC encoded as base64 or BOC handle
+     */
+    tvc: string,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfDecodeTvc = {
+
+    /**
+     * Contract code BOC encoded as base64 or BOC handle
+     */
+    code?: string,
+
+    /**
+     * Contract data BOC encoded as base64 or BOC handle
+     */
+    data?: string,
+
+    /**
+     * Contract library BOC encoded as base64 or BOC handle
+     */
+    library?: string,
+
+    /**
+     * `special.tick` field.
+     * 
+     * @remarks
+     * Specifies the contract ability to handle tick transactions
+     */
+    tick?: boolean,
+
+    /**
+     * `special.tock` field.
+     * 
+     * @remarks
+     * Specifies the contract ability to handle tock transactions
+     */
+    tock?: boolean,
+
+    /**
+     * Is present and non-zero only in instances of large smart contracts
+     */
+    split_depth?: number
+}
+
+export type ParamsOfEncodeTvc = {
+
+    /**
+     * Contract code BOC encoded as base64 or BOC handle
+     */
+    code?: string,
+
+    /**
+     * Contract data BOC encoded as base64 or BOC handle
+     */
+    data?: string,
+
+    /**
+     * Contract library BOC encoded as base64 or BOC handle
+     */
+    library?: string,
+
+    /**
+     * `special.tick` field.
+     * 
+     * @remarks
+     * Specifies the contract ability to handle tick transactions
+     */
+    tick?: boolean,
+
+    /**
+     * `special.tock` field.
+     * 
+     * @remarks
+     * Specifies the contract ability to handle tock transactions
+     */
+    tock?: boolean,
+
+    /**
+     * Is present and non-zero only in instances of large smart contracts
+     */
+    split_depth?: number,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfEncodeTvc = {
+
+    /**
+     * Contract TVC image BOC encoded as base64 or BOC handle of boc_cache parameter was specified
+     */
+    tvc: string
+}
+
+export type ParamsOfGetCompilerVersion = {
+
+    /**
+     * Contract code BOC encoded as base64 or code BOC handle
+     */
+    code: string
+}
+
+export type ResultOfGetCompilerVersion = {
+
+    /**
+     * Compiler version, for example 'sol 0.49.0'
+     */
+    version?: string
+}
+
 /**
  * BOC manipulation module.
  */
@@ -3473,6 +3741,59 @@ export class BocModule {
      */
     encode_boc(params: ParamsOfEncodeBoc): Promise<ResultOfEncodeBoc> {
         return this.client.request('boc.encode_boc', params);
+    }
+
+    /**
+     * Returns the contract code's salt if it is present.
+     * 
+     * @param {ParamsOfGetCodeSalt} params
+     * @returns ResultOfGetCodeSalt
+     */
+    get_code_salt(params: ParamsOfGetCodeSalt): Promise<ResultOfGetCodeSalt> {
+        return this.client.request('boc.get_code_salt', params);
+    }
+
+    /**
+     * Sets new salt to contract code.
+     * 
+     * @remarks
+     * Returns the new contract code with salt.
+     * 
+     * @param {ParamsOfSetCodeSalt} params
+     * @returns ResultOfSetCodeSalt
+     */
+    set_code_salt(params: ParamsOfSetCodeSalt): Promise<ResultOfSetCodeSalt> {
+        return this.client.request('boc.set_code_salt', params);
+    }
+
+    /**
+     * Decodes tvc into code, data, libraries and special options.
+     * 
+     * @param {ParamsOfDecodeTvc} params
+     * @returns ResultOfDecodeTvc
+     */
+    decode_tvc(params: ParamsOfDecodeTvc): Promise<ResultOfDecodeTvc> {
+        return this.client.request('boc.decode_tvc', params);
+    }
+
+    /**
+     * Encodes tvc from code, data, libraries ans special options (see input params)
+     * 
+     * @param {ParamsOfEncodeTvc} params
+     * @returns ResultOfEncodeTvc
+     */
+    encode_tvc(params: ParamsOfEncodeTvc): Promise<ResultOfEncodeTvc> {
+        return this.client.request('boc.encode_tvc', params);
+    }
+
+    /**
+     * Returns the compiler version used to compile the code.
+     * 
+     * @param {ParamsOfGetCompilerVersion} params
+     * @returns ResultOfGetCompilerVersion
+     */
+    get_compiler_version(params: ParamsOfGetCompilerVersion): Promise<ResultOfGetCompilerVersion> {
+        return this.client.request('boc.get_compiler_version', params);
     }
 }
 
@@ -5441,23 +5762,40 @@ export class NetModule {
     }
 
     /**
-     * Returns transactions tree for specific message.
+     * Returns a tree of transactions triggered by a specific message.
      * 
      * @remarks
-     * Performs recursive retrieval of the transactions tree produced by the specific message:
+     * Performs recursive retrieval of a transactions tree produced by a specific message:
      * in_msg -> dst_transaction -> out_messages -> dst_transaction -> ...
+     * If the chain of transactions execution is in progress while the function is running,
+     * it will wait for the next transactions to appear until the full tree or more than 50 transactions
+     * are received.
      * 
-     * All retrieved messages and transactions will be included
+     * All the retrieved messages and transactions are included
      * into `result.messages` and `result.transactions` respectively.
      * 
-     * The retrieval process will stop when the retrieved transaction count is more than 50.
+     * Function reads transactions layer by layer, by pages of 20 transactions.
      * 
-     * It is guaranteed that each message in `result.messages` has the corresponding transaction
+     * The retrieval prosess goes like this:
+     * Let's assume we have an infinite chain of transactions and each transaction generates 5 messages.
+     * 1. Retrieve 1st message (input parameter) and corresponding transaction - put it into result.
+     * It is the first level of the tree of transactions - its root.
+     * Retrieve 5 out message ids from the transaction for next steps.
+     * 2. Retrieve 5 messages and corresponding transactions on the 2nd layer. Put them into result.
+     * Retrieve 5*5 out message ids from these transactions for next steps
+     * 3. Retrieve 20 (size of the page) messages and transactions (3rd layer) and 20*5=100 message ids (4th layer).
+     * 4. Retrieve the last 5 messages and 5 transactions on the 3rd layer + 15 messages and transactions (of 100) from the 4th layer
+     * + 25 message ids of the 4th layer + 75 message ids of the 5th layer.
+     * 5. Retrieve 20 more messages and 20 more transactions of the 4th layer + 100 more message ids of the 5th layer.
+     * 6. Now we have 1+5+20+20+20 = 66 transactions, which is more than 50. Function exits with the tree of
+     * 1m->1t->5m->5t->25m->25t->35m->35t. If we see any message ids in the last transactions out_msgs, which don't have
+     * corresponding messages in the function result, it means that the full tree was not received and we need to continue iteration.
+     * 
+     * To summarize, it is guaranteed that each message in `result.messages` has the corresponding transaction
      * in the `result.transactions`.
-     * 
-     * But there are no guaranties that all messages from transactions `out_msgs` are
+     * But there is no guarantee that all messages from transactions `out_msgs` are
      * presented in `result.messages`.
-     * So the application have to continue retrieval for missing messages if it requires.
+     * So the application has to continue retrieval for missing messages if it requires.
      * 
      * @param {ParamsOfQueryTransactionTree} params
      * @returns ResultOfQueryTransactionTree
