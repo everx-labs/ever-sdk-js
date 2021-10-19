@@ -6,6 +6,8 @@ use web_sys::Blob;
 
 extern crate base64;
 
+use crate::RequestOptions;
+
 type Path = Vec<String>;
 type Blobs = Vec<(Path, Vec<u8>)>;
 
@@ -41,22 +43,32 @@ fn read_array_buffer(ab: &JsValue) -> Vec<u8> {
     Uint8Array::new(ab).to_vec()
 }
 
-fn replace_strings_with_placeholders(value: &mut Value) -> Blobs {
+fn replace_strings_with_placeholders(value: &mut Value, function_name: &String) -> Blobs {
     let mut blobs: Blobs = vec![];
-    replace_strings_with_placeholders_recursive(value, &vec![], &mut blobs);
+    replace_strings_with_placeholders_recursive(value, function_name, &vec![], &mut blobs);
     blobs
 }
 
-fn replace_strings_with_placeholders_recursive(value: &mut Value, path: &Path, blobs: &mut Blobs) {
+fn is_field_binary(function_name: &String, path: &Path) -> bool {
+    // TODO: load response params types from API specification
+    !(function_name == "crypto.sign" && path.join(".") == "signature")
+}
+
+fn replace_strings_with_placeholders_recursive(
+    value: &mut Value,
+    function_name: &String,
+    path: &Path,
+    blobs: &mut Blobs,
+) {
     match value {
         Value::Object(obj) => {
             for (key, value) in obj.iter_mut() {
                 let mut newpath = path.clone();
                 newpath.push(key.clone());
-                replace_strings_with_placeholders_recursive(value, &newpath, blobs)
+                replace_strings_with_placeholders_recursive(value, function_name, &newpath, blobs)
             }
         }
-        Value::String(s) => {
+        Value::String(s) if is_field_binary(function_name, path) => {
             let bytes = base64::decode(s).unwrap();
             blobs.push((path.clone(), bytes));
             *value = Value::Null
@@ -87,14 +99,14 @@ fn replace_placeholder_with_blob(root: &JsValue, path: &[String], bytes: &[u8]) 
     }
 }
 
-pub fn parse(s: &str, return_blob: bool) -> JsValue {
+pub fn parse(s: &str, request_options: &RequestOptions) -> JsValue {
     if s.is_empty() {
         return Object::new().into();
     }
 
     let mut value = json_str_to_serde_value(s);
-    let blobs = if return_blob {
-        replace_strings_with_placeholders(&mut value)
+    let blobs = if request_options.return_blob {
+        replace_strings_with_placeholders(&mut value, &request_options.function_name)
     } else {
         vec![]
     };

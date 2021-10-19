@@ -20,7 +20,8 @@ extern crate lazy_static;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-struct RequestOptions {
+pub struct RequestOptions {
+    function_name: String,
     return_blob: bool,
 }
 
@@ -51,20 +52,26 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
     // if (paramsJson.charCodeAt(0) === 0xFEFF) {
     //     paramsJson = paramsJson.substr(1);
     // }
-    let mut request_options = REQUEST_OPTIONS.lock().unwrap();
-    let return_blob = request_options.get(&request_id).unwrap().return_blob;
+    let mut hashmap = REQUEST_OPTIONS.lock().unwrap();
+    let request_options = hashmap.get(&request_id).unwrap();
+    let params = parse(&params_json[..], request_options);
     if finished {
-        request_options.remove(&request_id);
+        REQUEST_OPTIONS.lock().unwrap().remove(&request_id).unwrap();
     }
-    let params = parse(&params_json[..], return_blob);
     unsafe { core_response_handler(request_id, params, response_type, finished) };
 }
 
 #[wasm_bindgen]
 pub fn core_request(context: u32, function_name: String, params: JsValue, request_id: u32) {
     let (params_json, return_blob) = stringify(params);
-    let mut request_options = REQUEST_OPTIONS.lock().unwrap();
-    request_options.insert(request_id, RequestOptions { return_blob });
+    let request_options = RequestOptions {
+        function_name: function_name.clone(),
+        return_blob,
+    };
+    REQUEST_OPTIONS
+        .lock()
+        .unwrap()
+        .insert(request_id, request_options);
     request(
         context,
         function_name,
