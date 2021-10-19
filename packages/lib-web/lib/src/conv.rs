@@ -89,7 +89,7 @@ fn replace_placeholder_with_blob(root: &JsValue, path: &[String], bytes: &[u8]) 
 
 pub fn parse(s: &str, return_blob: bool) -> JsValue {
     if s.is_empty() {
-        return js_sys::Object::new().into();
+        return Object::new().into();
     }
 
     let mut value = json_str_to_serde_value(s);
@@ -121,7 +121,7 @@ fn replace_array_buffers_with_placeholders_recursive(
         blobs.push((path.clone(), bytes));
     } else if jsvalue.is_object() {
         let obj = Object::from(jsvalue.clone());
-        let keys: js_sys::Array = Object::keys(&obj);
+        let keys = Object::keys(&obj);
         for key in keys.to_vec() {
             let child = unsafe { Reflect::get(&obj, &key) }.unwrap();
             let mut newpath = path.clone();
@@ -173,6 +173,7 @@ pub fn stringify(obj: JsValue) -> (String, bool) {
     if obj.is_undefined() || obj.is_null() {
         return ("".into(), false);
     }
+
     let blobs = replace_array_buffers_with_placeholders(&obj);
     let return_blob = determine_return_blob(&obj, &blobs);
     let mut value = js_to_serde_value(obj);
