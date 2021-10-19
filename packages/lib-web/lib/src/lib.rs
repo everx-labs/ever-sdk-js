@@ -20,8 +20,12 @@ extern crate lazy_static;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
+struct RequestOptions {
+    return_blob: bool,
+}
+
 lazy_static! {
-    static ref HASHMAP: Mutex<HashMap<u32, bool>> = Mutex::new(HashMap::new()); // request_id -> return_blob (for active requests only)
+    static ref REQUEST_OPTIONS: Mutex<HashMap<u32, RequestOptions>> = Mutex::new(HashMap::new()); // only active requests
 }
 
 mod conv;
@@ -47,10 +51,10 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
     // if (paramsJson.charCodeAt(0) === 0xFEFF) {
     //     paramsJson = paramsJson.substr(1);
     // }
-    let mut hashmap = HASHMAP.lock().unwrap();
-    let return_blob = *hashmap.get(&request_id).unwrap();
+    let mut request_options = REQUEST_OPTIONS.lock().unwrap();
+    let return_blob = request_options.get(&request_id).unwrap().return_blob;
     if finished {
-        hashmap.remove(&request_id);
+        request_options.remove(&request_id);
     }
     let params = parse(&params_json[..], return_blob);
     unsafe { core_response_handler(request_id, params, response_type, finished) };
@@ -59,8 +63,8 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
 #[wasm_bindgen]
 pub fn core_request(context: u32, function_name: String, params: JsValue, request_id: u32) {
     let (params_json, return_blob) = stringify(params);
-    let mut hashmap = HASHMAP.lock().unwrap();
-    hashmap.insert(request_id, return_blob);
+    let mut request_options = REQUEST_OPTIONS.lock().unwrap();
+    request_options.insert(request_id, RequestOptions { return_blob });
     request(
         context,
         function_name,
