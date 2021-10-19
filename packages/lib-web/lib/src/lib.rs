@@ -56,7 +56,7 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
     let request_options = hashmap.get(&request_id).unwrap();
     let params = parse(&params_json[..], request_options);
     if finished {
-        REQUEST_OPTIONS.lock().unwrap().remove(&request_id).unwrap();
+        hashmap.remove(&request_id).unwrap();
     }
     unsafe { core_response_handler(request_id, params, response_type, finished) };
 }
