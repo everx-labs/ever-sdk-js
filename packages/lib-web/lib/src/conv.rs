@@ -49,11 +49,6 @@ fn replace_strings_with_placeholders(value: &mut Value, function_name: &String) 
     blobs
 }
 
-fn is_field_binary(function_name: &String, path: &Path) -> bool {
-    // TODO: load response params types from API specification
-    !(function_name == "crypto.sign" && path.join(".") == "signature")
-}
-
 fn replace_strings_with_placeholders_recursive(
     value: &mut Value,
     function_name: &String,
@@ -75,6 +70,11 @@ fn replace_strings_with_placeholders_recursive(
         }
         _ => (),
     }
+}
+
+fn is_field_binary(function_name: &String, path: &Path) -> bool {
+    // TODO: load response params types from API specification
+    !(function_name == "crypto.sign" && path.join(".") == "signature")
 }
 
 fn replace_placeholders_with_blobs(root: &JsValue, blobs: &Blobs) {
