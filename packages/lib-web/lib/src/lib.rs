@@ -54,7 +54,7 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
     // }
     let mut hashmap = REQUEST_OPTIONS.lock().unwrap();
     let request_options = hashmap.get(&request_id).unwrap();
-    let params = parse(&params_json[..], request_options);
+    let params = parse(&params_json[..], request_options).unwrap();
     if finished {
         hashmap.remove(&request_id).unwrap();
     }
@@ -62,8 +62,13 @@ fn response_handler(request_id: u32, params_json: String, response_type: u32, fi
 }
 
 #[wasm_bindgen]
-pub fn core_request(context: u32, function_name: String, params: JsValue, request_id: u32) {
-    let (params_json, return_blob) = stringify(params);
+pub fn core_request(
+    context: u32,
+    function_name: String,
+    params: JsValue,
+    request_id: u32,
+) -> Result<(), JsValue> {
+    let (params_json, return_blob) = stringify(params)?;
     let request_options = RequestOptions {
         function_name: function_name.clone(),
         return_blob,
@@ -79,4 +84,5 @@ pub fn core_request(context: u32, function_name: String, params: JsValue, reques
         request_id,
         response_handler,
     );
+    Ok(())
 }
