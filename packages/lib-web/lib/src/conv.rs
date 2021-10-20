@@ -2,7 +2,6 @@ use js_sys::Error;
 use js_sys::{Array, ArrayBuffer, Object, Reflect, Uint8Array};
 use serde::ser::Serialize;
 use serde_json::Value;
-use std::result::Result;
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Blob;
 
