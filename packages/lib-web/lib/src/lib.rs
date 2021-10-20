@@ -11,26 +11,25 @@
 * limitations under the License.
 */
 
+use std::collections::HashMap;
+use std::sync::Mutex;
 use ton_client::{create_context, destroy_context, request};
 use wasm_bindgen::prelude::*;
 
+mod conv;
+use conv::{parse, stringify};
+
 #[macro_use]
 extern crate lazy_static;
-
-use std::collections::HashMap;
-use std::sync::Mutex;
-
-pub struct RequestOptions {
-    function_name: String,
-    return_blob: bool,
-}
 
 lazy_static! {
     static ref REQUEST_OPTIONS: Mutex<HashMap<u32, RequestOptions>> = Mutex::new(HashMap::new()); // only active requests
 }
 
-mod conv;
-use conv::{parse, stringify};
+pub struct RequestOptions {
+    function_name: String,
+    return_blob: bool,
+}
 
 #[wasm_bindgen]
 pub fn core_create_context(config_json: String) -> String {
@@ -73,10 +72,12 @@ pub fn core_request(
         function_name: function_name.clone(),
         return_blob,
     };
-    REQUEST_OPTIONS
-        .lock()
-        .unwrap()
-        .insert(request_id, request_options);
+    {
+        REQUEST_OPTIONS
+            .lock()
+            .unwrap()
+            .insert(request_id, request_options);
+    }
     request(
         context,
         function_name,
