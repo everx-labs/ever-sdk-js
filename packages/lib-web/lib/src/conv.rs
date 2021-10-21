@@ -19,6 +19,8 @@ fn js_to_serde_value(obj: JsValue) -> Result<Value, Error> {
 
 #[inline(always)]
 fn serde_to_js_value(value: &Value) -> Result<JsValue, Error> {
+    // NOTE: Currently serde_wasm_bindgen always converts `serde_json::Null` into `JsValue::UNDEFINED`.
+    // Because of that, we need to replace `undefined` with `null` in `worker-template.js`.
     let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
     value
         .serialize(&serializer)
