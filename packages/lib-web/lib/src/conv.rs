@@ -118,6 +118,7 @@ fn replace_placeholder_with_blob(
 
 pub fn parse(s: &str, request_options: &RequestOptions) -> Result<JsValue, Error> {
     if s.is_empty() {
+        // Empty string is not a valid JSON document, so it would cause a parse error.
         return Ok(Object::new().into());
     }
 
