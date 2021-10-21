@@ -1,10 +1,27 @@
 //---
 
+function replaceUndefinedWithNulls(value) {
+    if (value === undefined) {
+        return null;
+    }
+    if (value instanceof Blob) {
+        return value;
+    }
+    if (typeof value === "object" && value !== null) {
+        const result = Array.isArray(value) ? [] : {};
+        for (const key in value) {
+            result[key] = replaceUndefinedWithNulls(value[key]);
+        }
+        return result;
+    }
+    return value;
+};
+
 function core_response_handler(request_id, params, response_type, finished) {
     postMessage({
         type: 'response',
         requestId: request_id,
-        params,
+        params: replaceUndefinedWithNulls(params),
         responseType: response_type,
         finished,
     });
