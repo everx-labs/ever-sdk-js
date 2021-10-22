@@ -3233,7 +3233,7 @@ export type ResultOfGetBlockchainConfig = {
 export type ParamsOfGetBocHash = {
 
     /**
-     * BOC encoded as base64
+     * BOC encoded as base64 or BOC handle
      */
     boc: string
 }
@@ -3244,6 +3244,22 @@ export type ResultOfGetBocHash = {
      * BOC root hash encoded with hex
      */
     hash: string
+}
+
+export type ParamsOfGetBocDepth = {
+
+    /**
+     * BOC encoded as base64 or BOC handle
+     */
+    boc: string
+}
+
+export type ResultOfGetBocDepth = {
+
+    /**
+     * BOC root cell depth
+     */
+    depth: number
 }
 
 export type ParamsOfGetCodeFromTvc = {
@@ -3496,9 +3512,29 @@ export type ResultOfDecodeTvc = {
     code?: string,
 
     /**
+     * Contract code hash
+     */
+    code_hash?: string,
+
+    /**
+     * Contract code depth
+     */
+    code_depth?: number,
+
+    /**
      * Contract data BOC encoded as base64 or BOC handle
      */
     data?: string,
+
+    /**
+     * Contract data hash
+     */
+    data_hash?: string,
+
+    /**
+     * Contract data depth
+     */
+    data_depth?: number,
 
     /**
      * Contract library BOC encoded as base64 or BOC handle
@@ -3524,7 +3560,12 @@ export type ResultOfDecodeTvc = {
     /**
      * Is present and non-zero only in instances of large smart contracts
      */
-    split_depth?: number
+    split_depth?: number,
+
+    /**
+     * Compiler version, for example 'sol 0.49.0'
+     */
+    compiler_version?: string
 }
 
 export type ParamsOfEncodeTvc = {
@@ -3688,6 +3729,16 @@ export class BocModule {
      */
     get_boc_hash(params: ParamsOfGetBocHash): Promise<ResultOfGetBocHash> {
         return this.client.request('boc.get_boc_hash', params);
+    }
+
+    /**
+     * Calculates BOC depth
+     * 
+     * @param {ParamsOfGetBocDepth} params
+     * @returns ResultOfGetBocDepth
+     */
+    get_boc_depth(params: ParamsOfGetBocDepth): Promise<ResultOfGetBocDepth> {
+        return this.client.request('boc.get_boc_depth', params);
     }
 
     /**
