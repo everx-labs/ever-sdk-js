@@ -49,7 +49,8 @@ export enum ClientErrorCode {
     UnexpectedCallbackResponse = 31,
     CanNotParseNumber = 32,
     InternalError = 33,
-    InvalidHandle = 34
+    InvalidHandle = 34,
+    LocalStorageError = 35
 }
 
 export type ClientError = {
@@ -83,7 +84,20 @@ export type ClientConfig = {
 
     /**
      */
-    boc?: BocConfig
+    boc?: BocConfig,
+
+    /**
+     * For file based storage is a folder name where SDK will store its data. For browser based is a browser async storage key prefix. Default (recommended) value is "~/.tonclient" for native environments and ".tonclient" for web-browser.
+     */
+    local_storage_path?: string,
+
+    /**
+     * Cache proofs in the local storage.
+     * 
+     * @remarks
+     * Default is `true`.
+     */
+    cache_proofs?: boolean
 }
 
 export type NetworkConfig = {
@@ -178,7 +192,7 @@ export type NetworkConfig = {
     latency_detection_interval?: number,
 
     /**
-     * Maximum value for the endpoint's blockchain data syncronization latency (time-lag). Library periodically checks the current endpoint for blockchain data syncronization latency. If the latency (time-lag) is less then `NetworkConfig.max_latency` then library selects another endpoint.
+     * Maximum value for the endpoint's blockchain data syncronization latency (time-lag). Library periodically checks the current endpoint for blockchain data synchronization latency. If the latency (time-lag) is less then `NetworkConfig.max_latency` then library selects another endpoint.
      * 
      * @remarks
      * Must be specified in milliseconds. Default is 60000 (1 min).
@@ -6645,6 +6659,49 @@ export class DebotModule {
      */
     remove(params: ParamsOfRemove): Promise<void> {
         return this.client.request('debot.remove', params);
+    }
+}
+
+// proofs module
+
+
+export enum ProofsErrorCode {
+    InvalidData = 901,
+    ProofCheckFailed = 902,
+    InternalError = 903,
+    DataDiffersFromProven = 904
+}
+
+export type ParamsOfProofBlockData = {
+
+    /**
+     * Single block's data as queried from DApp server, without modifications. The required field is `id` or top-level `boc`, others are optional.
+     */
+    block: any
+}
+
+/**
+ * [UNSTABLE](UNSTABLE.md) Module for proving queried data.
+ */
+export class ProofsModule {
+    client: IClient;
+
+    constructor(client: IClient) {
+        this.client = client;
+    }
+
+    /**
+     * Proves that block's data queried from DApp server can be trusted. Automatically checks block proofs and compares given data with the proven. If block's BOC is not provided, it will be queried from DApp (in this case it is required to provide `id` of block in the JSON). If `cache_proofs` in config is set to `true` (default), downloaded proofs and masterchain BOCs are saved into the persistent local storage (e.g.
+     * 
+     * @remarks
+     * file system for native environments or browser's local storage for the web); otherwise all data are cached only in memory in current
+     * client's context and will be lost after destruction of the client.
+     * 
+     * @param {ParamsOfProofBlockData} params
+     * @returns 
+     */
+    proof_block_data(params: ParamsOfProofBlockData): Promise<void> {
+        return this.client.request('proofs.proof_block_data', params);
     }
 }
 
