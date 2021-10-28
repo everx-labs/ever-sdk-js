@@ -12,6 +12,7 @@ JSI-based implementation of a bridge to mobile React Native platform including s
 - [Interface](#interface)
 - [Blob support](#blob-support)
 - [Development](#development)
+- [Testing](#testing)
 
 # Installation
 
@@ -168,6 +169,42 @@ public class MainApplication extends Application implements ReactApplication {
 +        @Override
 +        protected JSIModulePackage getJSIModulePackage() {
 +          return new TonClientJSIModulePackage();
++        }
+      };
+```
+
+If you wish to use lib-react-native-jsi and [react-native-reanimated](https://github.com/software-mansion/react-native-reanimated) simultaneously, you need to initialize all JSI libraries in `getJSIModules` method of a custom `JSIModulePackage` instance:
+
+```diff
++import com.facebook.react.bridge.JavaScriptContextHolder;
++import com.facebook.react.bridge.JSIModuleSpec;
++import com.facebook.react.bridge.JSIModulePackage;
++import com.facebook.react.bridge.ReactApplicationContext;
++import com.swmansion.reanimated.ReanimatedJSIModulePackage;
++import com.tonlabs.tonclientjsi.TonClientJSIModulePackage;
++import java.util.Arrays;
+
+public class MainApplication extends Application implements ReactApplication {
+
+  private final ReactNativeHost mReactNativeHost =
+      new ReactNativeHost(this) {
+        ...
+
+        @Override
+        protected String getJSMainModuleName() {
+          return "index";
+        }
+
++        @Override
++        protected JSIModulePackage getJSIModulePackage() {
++          return new JSIModulePackage() {
++            @Override
++            public List<JSIModuleSpec> getJSIModules(final ReactApplicationContext reactApplicationContext, final JavaScriptContextHolder jsContext) {
++              new ReanimatedJSIModulePackage().getJSIModules(reactApplicationContext, jsContext);
++              new TonClientJSIModulePackage().getJSIModules(reactApplicationContext, jsContext);
++              return Arrays.<JSIModuleSpec>asList();
++            }
++          };
 +        }
       };
 ```
@@ -366,11 +403,46 @@ yarn add react-native@0.64.0
 yarn add react-native@0.65.0-rc.3
 ```
 
-For testing purposes, first pack the library into an archive and then install the package with the following commands:
+# Testing
+
+For testing purposes, use `tests-lib-react-native-jsi` tests runner.
+
+First pack the dependent libraries into `*.tgz` archives:
 
 ```sh
-cd lib-react-native-jsi
+cd packages/core
+npm i
+npx tsc
 npm pack
+
+cd ../tests
+npm i
+npx tsc
+npm pack
+
+cd ../lib-react-native-jsi
+yarn install
+npm pack
+```
+
+Then, install the dependencies from `*.tgz` archives:
+
+```sh
 cd ../tests-react-native-jsi
-yarn add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.21.0.tgz
+npm add file:../core/tonclient-core-1.21.4.tgz
+npm add file:../tests/tonclient-tests-1.21.4.tgz
+npm add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.21.4.tgz
+npm i
+cd ios
+pod install
+cd ..
+```
+
+> **Note:** Please update the version in the filenames appropriately.
+
+Finally, you can launch the tests runner with the following commands:
+
+```sh
+node run ios
+node run android
 ```

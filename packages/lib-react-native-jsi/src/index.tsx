@@ -48,7 +48,7 @@ function replaceBigInts(value: any): any {
   }
 
   // BigInt polyfill on Android
-  if (typeof value === 'object' && value.toJSON !== undefined) {
+  if (typeof value === 'object' && value !== null && value.toJSON != null) {
     return value.toJSON();
   }
 

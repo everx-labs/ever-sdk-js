@@ -20,6 +20,7 @@ import {
     CryptoModule,
     NetModule,
     ProcessingModule,
+    ProofsModule,
     TvmModule,
     UtilsModule,
 } from "./modules";
@@ -62,6 +63,7 @@ export class TonClient {
     readonly utils: UtilsModule;
     readonly net: NetModule;
     readonly tvm: TvmModule;
+    readonly proofs: ProofsModule;
     private readonly config: ClientConfig;
     private context: number | null = null;
 
@@ -75,6 +77,7 @@ export class TonClient {
         this.utils = new UtilsModule(this);
         this.net = new NetModule(this);
         this.tvm = new TvmModule(this);
+        this.proofs = new ProofsModule(this);
     }
 
     static useBinaryLibrary(loader: () => Promise<BinaryLibrary>) {
