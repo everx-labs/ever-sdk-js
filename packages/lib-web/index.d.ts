@@ -15,10 +15,10 @@
  */
 
 interface BinaryLibrary {
-    setResponseHandler(
+    setResponseParamsHandler(
         handler?: (
             requestId: number,
-            paramsJson: string,
+            params: any,
             responseType: number,
             finished: boolean,
         ) => void,
@@ -28,11 +28,11 @@ interface BinaryLibrary {
 
     destroyContext(context: number): void,
 
-    sendRequest(
+    sendRequestParams(
         context: number,
         requestId: number,
         functionName: string,
-        functionParamsJson: string,
+        functionParams: any,
     ): void,
 }
 

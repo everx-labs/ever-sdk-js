@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.25.0] – 2021-10-28
+
+### New
+
+- Added JS Blob support in lib-web
+
 ## [1.24.0] – 2021-10-18
 
 ### New
