@@ -253,13 +253,13 @@ TON Labs SDK Binaries Store.
 
 Binary              | Target           | Major | Download links
 ------------------- | ---------------- | ----- | --------------
-Node.js AddOn       | Win32            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x86-win32.gz)
-&nbsp;              | macOS x86_64     | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x86-darwin.gz)
+Node.js AddOn       | Win32            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x64-win32.gz)
+&nbsp;              | macOS x86_64     | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x64-darwin.gz)
 &nbsp;              | macOS aarch64    | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_arm64-darwin.gz)
-&nbsp;              | Linux            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x86-linux.gz)
+&nbsp;              | Linux            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x64-linux.gz)
 React Native Module | Android x86_64   | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_x86_64-linux-android.gz)
 &nbsp;              | Android i686     | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_i686-linux-android.gz)
-&nbsp;              | Android armv7    | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_armv7-linux-android.gz)
+&nbsp;              | Android armv7    | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_armv7-linux-androideabi.gz)
 &nbsp;              | Android aarch64  | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_aarch64-linux-android.gz)
 &nbsp;              | iOS              | 1     | [`libtonclient.a`](https://binaries.tonlabs.io/tonclient_1_react_native_ios.gz)
 WASM Module         | Browser          | 1     | [`tonclient.wasm`](https://binaries.tonlabs.io/tonclient_1_wasm.gz), [`index.js`](https://binaries.tonlabs.io/tonclient_1_wasm_js.gz)
