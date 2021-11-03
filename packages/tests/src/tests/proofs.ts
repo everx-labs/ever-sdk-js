@@ -41,3 +41,26 @@ test("proofs: proof_block_data", async () => {
         block: block,
     });
 });
+
+test("proofs: proof_transaction_data", async () => {
+    const client = new TonClient({
+        network: {
+            server_address: 'main.ton.dev',
+        },
+    })
+
+    const transaction = (await client.net.query_collection({
+        collection: "transactions",
+        result: "id block_id boc action {total_action_fees total_fwd_fees} balance_delta(format:DEC)",
+        filter: {
+            id: {
+                eq: "0c7e395e8eb14c173d2dde7189200f28787a05df1fa188b19224f6e19a439dc6",
+            },
+        },
+        limit: 1,
+    })).result[0];
+
+    await client.proofs.proof_transaction_data({
+        transaction: transaction,
+    });
+});
