@@ -1,13 +1,51 @@
 //---
 
-function core_response_handler(request_id, params_json, response_type, finished) {
+function replaceUndefinedWithNulls(value) {
+    if (value === undefined) {
+        return null;
+    }
+    if (value instanceof Blob) {
+        return value;
+    }
+    if (typeof value === "object" && value !== null) {
+        const result = Array.isArray(value) ? [] : {};
+        for (const key in value) {
+            result[key] = replaceUndefinedWithNulls(value[key]);
+        }
+        return result;
+    }
+    return value;
+};
+
+function core_response_handler(request_id, params, response_type, finished) {
     postMessage({
         type: 'response',
         requestId: request_id,
-        paramsJson: params_json,
+        params: replaceUndefinedWithNulls(params),
         responseType: response_type,
         finished,
     });
+}
+
+async function replaceBlobsWithArrayBuffers(value) {
+    if (value instanceof Blob) {
+        return await value.arrayBuffer();
+    }
+    if (typeof value === "bigint") {
+        if (value < Number.MAX_SAFE_INTEGER && value > Number.MIN_SAFE_INTEGER) {
+            return Number(value);
+        } else {
+            return value.toString();
+        }
+    }
+    if (typeof value === "object" && value !== null) {
+        const result = Array.isArray(value) ? [] : {};
+        for (const key in value) {
+            result[key] = await replaceBlobsWithArrayBuffers(value[key]);
+        }
+        return result;
+    }
+    return value;
 }
 
 self.onmessage = (e) => {
@@ -36,12 +74,14 @@ self.onmessage = (e) => {
         break;
 
     case 'request':
-        core_request(
-            message.context,
-            message.functionName,
-            message.functionParamsJson,
-            message.requestId,
-        );
+        (async () => {
+            core_request(
+                message.context,
+                message.functionName,
+                await replaceBlobsWithArrayBuffers(message.functionParams),
+                message.requestId,
+            );
+        })();
         break;
     }
 };

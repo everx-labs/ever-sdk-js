@@ -1,0 +1,22 @@
+body {
+  padding: 1rem;
+}
+
+p {
+  height: 1rem;
+}
+
+button {
+  margin-right: 1rem;
+}
+
+hr {
+  border-width: 1px 0 0 0;
+  border-color: lightgray;
+}
+
+.image {
+  width: 80px;
+  height: 80px;
+  margin-top: 1rem;
+}

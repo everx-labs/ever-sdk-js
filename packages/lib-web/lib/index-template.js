@@ -45,7 +45,7 @@ export function libWeb() {
 
     let responseHandler = null;
     const library = {
-        setResponseHandler: (handler) => {
+        setResponseParamsHandler: (handler) => {
             responseHandler = handler;
         },
         createContext: (configJson) => {
@@ -71,13 +71,13 @@ export function libWeb() {
                 context,
             })
         },
-        sendRequest: (context, requestId, functionName, functionParamsJson) => {
+        sendRequestParams: (context, requestId, functionName, functionParams) => {
             worker.postMessage({
                 type: 'request',
                 context,
                 requestId,
                 functionName,
-                functionParamsJson
+                functionParams
             })
         }
     };
@@ -106,11 +106,7 @@ export function libWeb() {
             break;
         case 'response':
             if (responseHandler) {
-                let paramsJson = message.paramsJson;
-                if (paramsJson.charCodeAt(0) === 0xFEFF) {
-                    paramsJson = paramsJson.substr(1);
-                }
-                responseHandler(message.requestId, paramsJson, message.responseType, message.finished);
+                responseHandler(message.requestId, message.params, message.responseType, message.finished);
             }
             break;
         }
