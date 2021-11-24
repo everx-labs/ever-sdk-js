@@ -64,3 +64,26 @@ test("proofs: proof_transaction_data", async () => {
         transaction: transaction,
     });
 });
+
+test("proofs: proof_message_data", async () => {
+    const client = new TonClient({
+        network: {
+            server_address: 'main.ton.dev',
+        },
+    })
+
+    const message = (await client.net.query_collection({
+        collection: "messages",
+        result: "id boc body code_hash value",
+        filter: {
+            id: {
+                eq: "420cefa19e4daf01ebe5db21c1ece04eee8bb457ca76680385c70b652596887f",
+            },
+        },
+        limit: 1,
+    })).result[0];
+
+    await client.proofs.proof_message_data({
+        message: message,
+    });
+});
