@@ -6135,7 +6135,8 @@ export enum DebotErrorCode {
     DebotInvalidMsg = 809,
     DebotExternalCallFailed = 810,
     DebotBrowserCallbackFailed = 811,
-    DebotOperationRejected = 812
+    DebotOperationRejected = 812,
+    DebotNoCode = 813
 }
 
 export type DebotHandle = number
@@ -6240,7 +6241,12 @@ export type DebotInfo = {
     /**
      * Vector with IDs of DInterfaces used by DeBot.
      */
-    interfaces: string[]
+    interfaces: string[],
+
+    /**
+     * ABI version ("x.y") supported by DeBot
+     */
+    dabiVersion: string
 }
 
 export type DebotActivity = {

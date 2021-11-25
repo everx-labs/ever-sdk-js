@@ -100,6 +100,7 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="ProofsModule.html#proof_block_data" class="tsd-kind-icon">proof_<wbr>block_<wbr>data</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="ProofsModule.html#proof_message_data" class="tsd-kind-icon">proof_<wbr>message_<wbr>data</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="ProofsModule.html#proof_transaction_data" class="tsd-kind-icon">proof_<wbr>transaction_<wbr>data</a></li>
 							</ul>
 						</section>
@@ -118,7 +119,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/92834b3/packages/core/src/modules.ts#L6810">modules.ts:6810</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7af4914/packages/core/src/modules.ts#L6824">modules.ts:6824</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -140,7 +141,7 @@
 					<div class="tsd-signature tsd-kind-icon">client<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">IClient</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/92834b3/packages/core/src/modules.ts#L6808">modules.ts:6808</a></li>
+							<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7af4914/packages/core/src/modules.ts#L6822">modules.ts:6822</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -157,7 +158,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/92834b3/packages/core/src/modules.ts#L6877">modules.ts:6877</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7af4914/packages/core/src/modules.ts#L6891">modules.ts:6891</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -224,6 +225,50 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="proof_message_data" class="tsd-anchor"></a>
+					<h3>proof_<wbr>message_<wbr>data</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">proof_<wbr>message_<wbr>data<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><a href="../modules.html#ParamsOfProofMessageData" class="tsd-signature-type" data-tsd-kind="Type alias">ParamsOfProofMessageData</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7af4914/packages/core/src/modules.ts#L6945">modules.ts:6945</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Proves that a given message&#39;s data, which is queried from TONOS API, can be trusted.</p>
+								</div>
+								<dl class="tsd-comment-tags">
+									<dt>remarks</dt>
+									<dd><p>This function first proves the corresponding transaction, ensures that the proven transaction
+											refers to the given message and compares given data with the proven.
+											If the given data differs from the proven, the exception will be thrown.
+											The input parameter is a single message&#39;s JSON object (see params description),
+											which was queried from TONOS API using functions such as <code>net.query</code>, <code>net.query_collection</code>
+										or <code>net.wait_for_collection</code>.</p>
+										<p>If message&#39;s BOC and/or non-null <code>src_transaction.id</code> or <code>dst_transaction.id</code> are not provided
+										in the JSON, they will be queried from TONOS API.</p>
+										<p>Please note, that joins (like <code>block</code>, <code>dst_account</code>, <code>dst_transaction</code>, <code>src_account</code>,
+											<code>src_transaction</code>, etc. in <code>Message</code> entity) are separated entities and not supported,
+										so function will throw an exception in a case if JSON being checked has such entities in it.</p>
+										<p>For more information about proofs checking, see description of <code>proof_block_data</code> function.</p>
+									</dd>
+								</dl>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>params: <a href="../modules.html#ParamsOfProofMessageData" class="tsd-signature-type" data-tsd-kind="Type alias">ParamsOfProofMessageData</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="proof_transaction_data" class="tsd-anchor"></a>
 					<h3>proof_<wbr>transaction_<wbr>data</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -233,7 +278,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/92834b3/packages/core/src/modules.ts#L6909">modules.ts:6909</a></li>
+									<li>Defined in <a href="https://github.com/tonlabs/ton-client-js/blob/7af4914/packages/core/src/modules.ts#L6918">modules.ts:6918</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -242,21 +287,17 @@
 								</div>
 								<dl class="tsd-comment-tags">
 									<dt>remarks</dt>
-									<dd><p>This function requests the corresponding block, checks block proofs, ensures that given transaction
-											exists in the proven block and compares given data with the proven.
+									<dd><p>This function requests the corresponding block, checks block proofs, ensures that given
+											transaction exists in the proven block and compares given data with the proven.
 											If the given data differs from the proven, the exception will be thrown.
 											The input parameter is a single transaction&#39;s JSON object (see params description),
 											which was queried from TONOS API using functions such as <code>net.query</code>, <code>net.query_collection</code>
 										or <code>net.wait_for_collection</code>.</p>
 										<p>If transaction&#39;s BOC and/or <code>block_id</code> are not provided in the JSON, they will be queried from
-										TONOS API (in this case it is required to provide at least <code>id</code> of transaction).</p>
+										TONOS API.</p>
 										<p>Please note, that joins (like <code>account</code>, <code>in_message</code>, <code>out_messages</code>, etc. in <code>Transaction</code>
 											entity) are separated entities and not supported, so function will throw an exception in a case
 										if JSON being checked has such entities in it.</p>
-										<p>If <code>cache_in_local_storage</code> in config is set to <code>true</code> (default), downloaded proofs and
-											master-chain BOCs are saved into the persistent local storage (e.g. file system for native
-											environments or browser&#39;s IndexedDB for the web); otherwise all the data is cached only in
-										memory in current client&#39;s context and will be lost after destruction of the client.</p>
 										<p>For more information about proofs checking, see description of <code>proof_block_data</code> function.</p>
 									</dd>
 								</dl>
@@ -296,6 +337,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="ProofsModule.html#proof_block_data" class="tsd-kind-icon">proof_<wbr>block_<wbr>data</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="ProofsModule.html#proof_message_data" class="tsd-kind-icon">proof_<wbr>message_<wbr>data</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="ProofsModule.html#proof_transaction_data" class="tsd-kind-icon">proof_<wbr>transaction_<wbr>data</a>
