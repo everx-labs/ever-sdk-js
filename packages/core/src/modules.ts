@@ -6135,7 +6135,8 @@ export enum DebotErrorCode {
     DebotInvalidMsg = 809,
     DebotExternalCallFailed = 810,
     DebotBrowserCallbackFailed = 811,
-    DebotOperationRejected = 812
+    DebotOperationRejected = 812,
+    DebotNoCode = 813
 }
 
 export type DebotHandle = number
@@ -6240,7 +6241,12 @@ export type DebotInfo = {
     /**
      * Vector with IDs of DInterfaces used by DeBot.
      */
-    interfaces: string[]
+    interfaces: string[],
+
+    /**
+     * ABI version ("x.y") supported by DeBot
+     */
+    dabiVersion: string
 }
 
 export type DebotActivity = {
@@ -6801,6 +6807,14 @@ export type ParamsOfProofTransactionData = {
     transaction: any
 }
 
+export type ParamsOfProofMessageData = {
+
+    /**
+     * Single message's data as queried from DApp server, without modifications. The required fields are `id` and/or top-level `boc`, others are optional. In order to reduce network requests count, it is recommended to provide at least `boc` of message and non-null `src_transaction.id` or `dst_transaction.id`.
+     */
+    message: any
+}
+
 /**
  * [UNSTABLE](UNSTABLE.md) Module for proving data, retrieved from TONOS API.
  */
@@ -6882,24 +6896,19 @@ export class ProofsModule {
      * Proves that a given transaction's data, which is queried from TONOS API, can be trusted.
      * 
      * @remarks
-     * This function requests the corresponding block, checks block proofs, ensures that given transaction
-     * exists in the proven block and compares given data with the proven.
+     * This function requests the corresponding block, checks block proofs, ensures that given
+     * transaction exists in the proven block and compares given data with the proven.
      * If the given data differs from the proven, the exception will be thrown.
      * The input parameter is a single transaction's JSON object (see params description),
      * which was queried from TONOS API using functions such as `net.query`, `net.query_collection`
      * or `net.wait_for_collection`.
      * 
      * If transaction's BOC and/or `block_id` are not provided in the JSON, they will be queried from
-     * TONOS API (in this case it is required to provide at least `id` of transaction).
+     * TONOS API.
      * 
      * Please note, that joins (like `account`, `in_message`, `out_messages`, etc. in `Transaction`
      * entity) are separated entities and not supported, so function will throw an exception in a case
      * if JSON being checked has such entities in it.
-     * 
-     * If `cache_in_local_storage` in config is set to `true` (default), downloaded proofs and
-     * master-chain BOCs are saved into the persistent local storage (e.g. file system for native
-     * environments or browser's IndexedDB for the web); otherwise all the data is cached only in
-     * memory in current client's context and will be lost after destruction of the client.
      * 
      * For more information about proofs checking, see description of `proof_block_data` function.
      * 
@@ -6908,6 +6917,33 @@ export class ProofsModule {
      */
     proof_transaction_data(params: ParamsOfProofTransactionData): Promise<void> {
         return this.client.request('proofs.proof_transaction_data', params);
+    }
+
+    /**
+     * Proves that a given message's data, which is queried from TONOS API, can be trusted.
+     * 
+     * @remarks
+     * This function first proves the corresponding transaction, ensures that the proven transaction
+     * refers to the given message and compares given data with the proven.
+     * If the given data differs from the proven, the exception will be thrown.
+     * The input parameter is a single message's JSON object (see params description),
+     * which was queried from TONOS API using functions such as `net.query`, `net.query_collection`
+     * or `net.wait_for_collection`.
+     * 
+     * If message's BOC and/or non-null `src_transaction.id` or `dst_transaction.id` are not provided
+     * in the JSON, they will be queried from TONOS API.
+     * 
+     * Please note, that joins (like `block`, `dst_account`, `dst_transaction`, `src_account`,
+     * `src_transaction`, etc. in `Message` entity) are separated entities and not supported,
+     * so function will throw an exception in a case if JSON being checked has such entities in it.
+     * 
+     * For more information about proofs checking, see description of `proof_block_data` function.
+     * 
+     * @param {ParamsOfProofMessageData} params
+     * @returns 
+     */
+    proof_message_data(params: ParamsOfProofMessageData): Promise<void> {
+        return this.client.request('proofs.proof_message_data', params);
     }
 }
 
