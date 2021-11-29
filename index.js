@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 TON DEV SOLUTIONS LTD.
+ * Copyright 2018-2020 TON DEV SOLUTIONS LTD.
  */
 
 const { TONClient } = require('./dist/TONClient');
