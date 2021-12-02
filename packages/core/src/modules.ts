@@ -2960,6 +2960,40 @@ export type ResultOfUpdateInitialData = {
     data: string
 }
 
+export type ParamsOfEncodeInitialData = {
+
+    /**
+     * Contract ABI
+     */
+    abi?: Abi,
+
+    /**
+     * List of initial values for contract's static variables.
+     * 
+     * @remarks
+     * `abi` parameter should be provided to set initial data
+     */
+    initial_data?: any,
+
+    /**
+     * Initial account owner's public key to set into account data
+     */
+    initial_pubkey?: string,
+
+    /**
+     * Cache type to put the result. The BOC itself returned if no cache type provided.
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfEncodeInitialData = {
+
+    /**
+     * Updated data BOC or BOC handle
+     */
+    data: string
+}
+
 export type ParamsOfDecodeInitialData = {
 
     /**
@@ -3180,6 +3214,19 @@ export class AbiModule {
      */
     update_initial_data(params: ParamsOfUpdateInitialData): Promise<ResultOfUpdateInitialData> {
         return this.client.request('abi.update_initial_data', params);
+    }
+
+    /**
+     * Encodes initial account data with initial values for the contract's static variables and owner's public key into a data BOC that can be passed to `encode_tvc` function afterwards.
+     * 
+     * @remarks
+     * This function is analogue of `tvm.buildDataInit` function in Solidity.
+     * 
+     * @param {ParamsOfEncodeInitialData} params
+     * @returns ResultOfEncodeInitialData
+     */
+    encode_initial_data(params: ParamsOfEncodeInitialData): Promise<ResultOfEncodeInitialData> {
+        return this.client.request('abi.encode_initial_data', params);
     }
 
     /**
