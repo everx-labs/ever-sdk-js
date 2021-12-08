@@ -28,7 +28,7 @@ lazy_static = "1.4.0"
 # just to fix building of rand for WASM: 
 getrandom = { version = "0.2.2", default-features = false, features = ["js"] }
 
-ton_client = { git = "https://github.com/tonlabs/TON-SDK.git", default-features = false, features = ["wasm"] }
+ton_client = { git = "https://github.com/tonlabs/TON-SDK.git", tag = "1.27.1", default-features = false, features = ["wasm"] }
 #ton_client = { path = "../../../../TON-SDK/ton_client/client", default-features = false, features = ["wasm"] }
 
 [dependencies.web-sys]

@@ -267,4 +267,4 @@ WASM Module         | Browser          | 1     | [`tonclient.wasm`](https://bina
 _Downloaded archive is gzipped file_
 
 ---
-Copyright 2018-2020 TON DEV SOLUTIONS LTD.
+Copyright 2018-2020 TON Labs LTD.

@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/tests",
-	"version": "1.27.0",
+	"version": "1.27.1",
 	"private": true,
 	"description": "TON Client Tests",
 	"main": "dist/index.js",
@@ -15,7 +15,7 @@
 		"TONOS",
 		"SDK"
 	],
-	"author": "TON DEV SOLUTIONS LTD.",
+	"author": "TON Labs LTD.",
 	"license": "Apache-2.0",
 	"licenses": [
 		{

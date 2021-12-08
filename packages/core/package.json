@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/core",
-	"version": "1.27.0",
+	"version": "1.27.1",
 	"description": "TON Client for Java Script",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -21,7 +21,7 @@
 		"TONOS",
 		"SDK"
 	],
-	"author": "TON DEV SOLUTIONS LTD.",
+	"author": "TON Labs LTD.",
 	"license": "Apache-2.0",
 	"licenses": [
 		{
