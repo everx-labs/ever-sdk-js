@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/tests-node",
-	"version": "1.27.0",
+	"version": "1.27.1",
 	"private": true,
 	"description": "TON Client Tests runner on NodeJs",
 	"main": "index.js",
@@ -8,7 +8,7 @@
 		"type": "git",
 		"url": "https://github.com/tonlabs/ton-client-js.git"
 	},
-	"author": "TON DEV SOLUTIONS LTD.",
+	"author": "TON Labs LTD.",
 	"license": "Apache-2.0",
 	"licenses": [
 		{

@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/lib-node",
-	"version": "1.27.0",
+	"version": "1.27.1",
 	"description": "TON Client NodeJs AddOn",
 	"repository": {
 		"type": "git",
@@ -19,7 +19,7 @@
 		"TONOS",
 		"SDK"
 	],
-	"author": "TON DEV SOLUTIONS LTD.",
+	"author": "TON Labs LTD.",
 	"license": "Apache-2.0",
 	"licenses": [
 		{

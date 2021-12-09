@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/tests-web",
-	"version": "1.27.0",
+	"version": "1.27.1",
 	"private": true,
 	"description": "TON Client WASM module tests runner",
 	"scripts": {
@@ -15,7 +15,7 @@
 		"TONOS",
 		"SDK"
 	],
-	"author": "TON DEV SOLUTIONS LTD.",
+	"author": "TON Labs LTD.",
 	"license": "SEE LICENSE IN LICENSE",
 	"repository": {
 		"type": "git",
