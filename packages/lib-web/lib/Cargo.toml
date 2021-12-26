@@ -1,45 +1,28 @@
 [package]
-name = "ton_client_wasm_module"
-version = "1.2.0"
-edition = "2018"
-description = "TON Client WASM binding"
-license = "Apache-2.0"
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt =  ['-Os']
-
-[profile.release]
-lto = true
-opt-level = 's'
-
-[lib]
-name = "tonclient"
-crate-type = ["staticlib", "cdylib"]
+description = 'TON Client WASM binding'
+edition = '2018'
+license = 'Apache-2.0'
+name = 'ton_client_wasm_module'
+version = '1.2.0'
+metadata = { wasm-pack = { profile = { release = { wasm-opt = [ '-Os' ] } } } }
 
 [dependencies]
-js-sys = "0.3.50"
-wasm-bindgen = "0.2.73"
-serde-wasm-bindgen = "0.3.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.41"
-base64 = "0.13.0"
-lazy_static = "1.4.0"
-# We need to build getrandom with fature "js" even though we don't use it by ourselves,
-# just to fix building of rand for WASM: 
-getrandom = { version = "0.2.2", default-features = false, features = ["js"] }
+base64 = '0.13.0'
+js-sys = '0.3.50'
+lazy_static = '1.4.0'
+serde-wasm-bindgen = '0.3.0'
+serde_json = '1.0.41'
+wasm-bindgen = '0.2.73'
+clear_on_drop = { features = [ 'no_cc' ], version = '0.2' }
+getrandom = { default-features = false, features = [ 'js' ], version = '0.2.2' }
+serde = { features = [ 'derive' ], version = '1.0' }
+ton_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/tonlabs/TON-SDK.git', tag = '1.28.0' }
+web-sys = { features = [ 'Blob' ], version = '0.3.22' }
 
-ton_client = { git = "https://github.com/tonlabs/TON-SDK.git", tag = "1.27.1", default-features = false, features = ["wasm"] }
-#ton_client = { path = "../../../../TON-SDK/ton_client/client", default-features = false, features = ["wasm"] }
+[lib]
+crate-type = [ 'staticlib', 'cdylib' ]
+name = 'tonclient'
 
-[dependencies.web-sys]
-version = "0.3.22"
-features = ["Blob"]
-
-# The recrypt Ed25519 library that we use (https://github.com/dalek-cryptography/ed25519-dalek) depends on this clear_on_drop
-# crate (https://github.com/cesarb/clear_on_drop). That crate, by default, implements code via C to clear memory. That doesn't
-# work in WASM. However, they have a feature to turn off requiring C which we're enabling here. This allows our WASM bindings to enable
-# this feature without having to change the default for our recrypt-rust crate.
-[dependencies.clear_on_drop]
-version = "0.2" #This version should match the version that the ed25519-dalek crate depends on.
-features = ["no_cc"]
+[profile]
+release = { lto = true, opt-level = 's' }
 
