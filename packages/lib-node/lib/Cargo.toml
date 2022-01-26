@@ -1,16 +1,17 @@
 [package]
-name = "ton_client_node_addon"
-version = "1.2.0"
-authors = ["TON Labs"]
-license = "Apache-2.0"
-
-[lib]
-name = "tonclient"
-crate-type = ["staticlib"]
+authors = [ 'TON Labs' ]
+license = 'Apache-2.0'
+name = 'ton_client_node_addon'
+version = '1.2.0'
 
 [dependencies]
-libc = "0.2"
-ton_client = { git = "https://github.com/tonlabs/TON-SDK.git", tag = "1.27.1" }
+libc = '0.2'
+ton_client = { git = 'https://github.com/tonlabs/TON-SDK.git', tag = '1.28.0' }
 
-[profile.release]
-lto = true
+[lib]
+crate-type = [ 'staticlib' ]
+name = 'tonclient'
+
+[profile]
+release = { lto = true }
+
