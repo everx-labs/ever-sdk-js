@@ -56,7 +56,8 @@ def CMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=${getNdkBuildFullPath()}/../b
 buildscript {
   repositories {
     google()
-    jcenter()
+    maven { url 'https://maven.google.com' }
+    mavenCentral()
   }
 
   dependencies {
@@ -83,7 +84,7 @@ android {
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   buildToolsVersion getExtOrDefault('buildToolsVersion')
   defaultConfig {
-    minSdkVersion 16
+    minSdkVersion 21
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
@@ -344,9 +345,9 @@ tasks.whenTaskAdded { task ->
 }
 
 repositories {
-  mavenCentral()
-  jcenter()
   google()
+  maven { url 'https://maven.google.com' }
+  mavenCentral()
 
   def found = false
   def defaultDir = null
