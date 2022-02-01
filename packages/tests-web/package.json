@@ -19,7 +19,7 @@
 	"license": "SEE LICENSE IN LICENSE",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/tonlabs/ton-client-web-js.git"
+		"url": "https://github.com/tonlabs/ever-sdk-js.git"
 	},
 	"homepage": "https://docs.ton.dev/",
 	"dependencies": {

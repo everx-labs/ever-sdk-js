@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/tonlabs/ton-client-js.git"
+		"url": "https://github.com/tonlabs/ever-sdk-js.git"
 	},
 	"scripts": {
 		"postinstall": "node install.js"

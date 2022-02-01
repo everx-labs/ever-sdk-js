@@ -6,7 +6,7 @@
 	"main": "index.js",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/tonlabs/ton-client-js.git"
+		"url": "https://github.com/tonlabs/ever-sdk-js.git"
 	},
 	"author": "TON Labs LTD.",
 	"license": "Apache-2.0",
