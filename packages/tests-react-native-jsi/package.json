@@ -1,6 +1,6 @@
 {
   "name": "@tonclient/tests-react-native-jsi",
-  "version": "1.28.0",
+  "version": "1.28.1",
   "private": true,
   "main": "index.js",
   "browser": true,
@@ -20,14 +20,14 @@
     "assert": "^2.0.0",
     "buffer": "^6.0.2",
     "react": "16.13.1",
-    "react-native": "0.63.3"
+    "react-native": "0.67.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
     "@babel/runtime": "^7.12.5",
     "@react-native-community/eslint-config": "^2.0.0",
-    "@types/react": "^16.9.56",
-    "@types/react-native": "^0.63.35",
+    "@types/react": "^16",
+    "@types/react-native": "^0",
     "eslint": "^7.13.0",
     "find-process": "^1.4.4",
     "metro-react-native-babel-preset": "^0.64.0"

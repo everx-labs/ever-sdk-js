@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.28.1] – 2022-02-01
+
+### Fixed
+- Support breaking changes in `ton-labs-block-json` v0.7.1
+- Updated endpoints for `main.ton.dev` alias.
+- Migrate from jcenter() to mavenCentral()
+
 ## [1.28.0] – 2021-12-24
 
 ### New

@@ -146,7 +146,7 @@ android {
 ```diff
 # Version of flipper SDK to use with React Native
 -FLIPPER_VERSION=0.75.1
-+FLIPPER_VERSION=0.78.0
++FLIPPER_VERSION=0.93.0
 ```
 
 `android/app/src/main/java/.../MainApplication.java`
@@ -400,7 +400,7 @@ Please remember to set appropriate version of React Native in `lib-react-native-
 cd lib-react-native-jsi
 yarn add react-native@0.63.4
 yarn add react-native@0.64.0
-yarn add react-native@0.65.0-rc.3
+yarn add react-native@0.65.1
 ```
 
 # Testing
@@ -429,9 +429,9 @@ Then, install the dependencies from `*.tgz` archives:
 
 ```sh
 cd ../tests-react-native-jsi
-npm add file:../core/tonclient-core-1.21.4.tgz
-npm add file:../tests/tonclient-tests-1.21.4.tgz
-npm add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.21.4.tgz
+npm add file:../core/tonclient-core-1.28.1.tgz
+npm add file:../tests/tonclient-tests-1.28.1.tgz
+npm add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.28.1.tgz
 npm i
 cd ios
 pod install
