@@ -3051,6 +3051,35 @@ export type ResultOfDecodeBoc = {
     data: any
 }
 
+export type ParamsOfAbiEncodeBoc = {
+
+    /**
+     * Parameters to encode into BOC
+     */
+    params: AbiParam[],
+
+    /**
+     * Parameters and values as a JSON structure
+     */
+    data: any,
+
+    /**
+     * Cache type to put the result.
+     * 
+     * @remarks
+     * The BOC itself returned if no cache type provided
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfAbiEncodeBoc = {
+
+    /**
+     * BOC encoded as base64
+     */
+    boc: string
+}
+
 /**
  * Provides message encoding and decoding according to the ABI specification.
  */
@@ -3264,6 +3293,16 @@ export class AbiModule {
      */
     decode_boc(params: ParamsOfDecodeBoc): Promise<ResultOfDecodeBoc> {
         return this.client.request('abi.decode_boc', params);
+    }
+
+    /**
+     * Encodes given parameters in JSON into a BOC using param types from ABI.
+     * 
+     * @param {ParamsOfAbiEncodeBoc} params
+     * @returns ResultOfAbiEncodeBoc
+     */
+    encode_boc(params: ParamsOfAbiEncodeBoc): Promise<ResultOfAbiEncodeBoc> {
+        return this.client.request('abi.encode_boc', params);
     }
 }
 
@@ -3496,7 +3535,7 @@ export type BuilderOp = {
     type: 'Cell'
 
     /**
-     * Nested cell builder
+     * Nested cell builder.
      */
     builder: BuilderOp[]
 } | {
@@ -3506,6 +3545,13 @@ export type BuilderOp = {
      * Nested cell BOC encoded with `base64` or BOC cache key.
      */
     boc: string
+} | {
+    type: 'Address'
+
+    /**
+     * Address in a common `workchain:account` or base64 format.
+     */
+    address: string
 }
 
 export function builderOpInteger(size: number, value: any): BuilderOp {
@@ -3534,6 +3580,13 @@ export function builderOpCellBoc(boc: string): BuilderOp {
     return {
         type: 'CellBoc',
         boc,
+    };
+}
+
+export function builderOpAddress(address: string): BuilderOp {
+    return {
+        type: 'Address',
+        address,
     };
 }
 
@@ -3908,7 +3961,7 @@ export class BocModule {
     }
 
     /**
-     * Encodes bag of cells (BOC) with builder operations. This method provides the same functionality as Solidity TvmBuilder. Resulting BOC of this method can be passed into Solidity and C++ contracts as TvmCell type
+     * Encodes bag of cells (BOC) with builder operations. This method provides the same functionality as Solidity TvmBuilder. Resulting BOC of this method can be passed into Solidity and C++ contracts as TvmCell type.
      * 
      * @param {ParamsOfEncodeBoc} params
      * @returns ResultOfEncodeBoc

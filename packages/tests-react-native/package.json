@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/tests-react-native",
-	"version": "1.28.1",
+	"version": "1.29.0",
 	"private": true,
 	"main": "index.js",
 	"browser": true,
