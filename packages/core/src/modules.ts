@@ -3796,6 +3796,50 @@ export type ResultOfEncodeTvc = {
     tvc: string
 }
 
+export type ParamsOfEncodeExternalInMessage = {
+
+    /**
+     * Source address.
+     */
+    src?: string,
+
+    /**
+     * Destination address.
+     */
+    dst: string,
+
+    /**
+     * Bag of cells with state init (used in deploy messages).
+     */
+    init?: string,
+
+    /**
+     * Bag of cells with the message body encoded as base64.
+     */
+    body?: string,
+
+    /**
+     * Cache type to put the result.
+     * 
+     * @remarks
+     * The BOC itself returned if no cache type provided
+     */
+    boc_cache?: BocCacheType
+}
+
+export type ResultOfEncodeExternalInMessage = {
+
+    /**
+     * Message BOC encoded with `base64`.
+     */
+    message: string,
+
+    /**
+     * Message id.
+     */
+    message_id: string
+}
+
 export type ParamsOfGetCompilerVersion = {
 
     /**
@@ -4011,6 +4055,19 @@ export class BocModule {
      */
     encode_tvc(params: ParamsOfEncodeTvc): Promise<ResultOfEncodeTvc> {
         return this.client.request('boc.encode_tvc', params);
+    }
+
+    /**
+     * Encodes a message
+     * 
+     * @remarks
+     * Allows to encode any external inbound message.
+     * 
+     * @param {ParamsOfEncodeExternalInMessage} params
+     * @returns ResultOfEncodeExternalInMessage
+     */
+    encode_external_in_message(params: ParamsOfEncodeExternalInMessage): Promise<ResultOfEncodeExternalInMessage> {
+        return this.client.request('boc.encode_external_in_message', params);
     }
 
     /**
@@ -5446,6 +5503,22 @@ export type ParamsOfSubscribeCollection = {
     result: string
 }
 
+export type ParamsOfSubscribe = {
+
+    /**
+     * GraphQL subscription text.
+     */
+    subscription: string,
+
+    /**
+     * Variables used in subscription.
+     * 
+     * @remarks
+     * Must be a map with named values that can be used in query.
+     */
+    variables?: any
+}
+
 export type ParamsOfFindLastShardBlock = {
 
     /**
@@ -5870,7 +5943,7 @@ export class NetModule {
     }
 
     /**
-     * Creates a subscription
+     * Creates a collection subscription
      * 
      * @remarks
      * Triggers for each insert/update of data that satisfies
@@ -5919,6 +5992,52 @@ export class NetModule {
      */
     subscribe_collection(params: ParamsOfSubscribeCollection, responseHandler?: ResponseHandler): Promise<ResultOfSubscribeCollection> {
         return this.client.request('net.subscribe_collection', params, responseHandler);
+    }
+
+    /**
+     * Creates a subscription
+     * 
+     * @remarks
+     * The subscription is a persistent communication channel between
+     * client and Everscale Network.
+     * 
+     * ### Important Notes on Subscriptions
+     * 
+     * Unfortunately sometimes the connection with the network brakes down.
+     * In this situation the library attempts to reconnect to the network.
+     * This reconnection sequence can take significant time.
+     * All of this time the client is disconnected from the network.
+     * 
+     * Bad news is that all changes that happened while
+     * the client was disconnected are lost.
+     * 
+     * Good news is that the client report errors to the callback when
+     * it loses and resumes connection.
+     * 
+     * So, if the lost changes are important to the application then
+     * the application must handle these error reports.
+     * 
+     * Library reports errors with `responseType` == 101
+     * and the error object passed via `params`.
+     * 
+     * When the library has successfully reconnected
+     * the application receives callback with
+     * `responseType` == 101 and `params.code` == 614 (NetworkModuleResumed).
+     * 
+     * Application can use several ways to handle this situation:
+     * - If application monitors changes for the single
+     * object (for example specific account):  application
+     * can perform a query for this object and handle actual data as a
+     * regular data from the subscription.
+     * - If application monitors sequence of some objects
+     * (for example transactions of the specific account): application must
+     * refresh all cached (or visible to user) lists where this sequences presents.
+     * 
+     * @param {ParamsOfSubscribe} params
+     * @returns ResultOfSubscribeCollection
+     */
+    subscribe(params: ParamsOfSubscribe, responseHandler?: ResponseHandler): Promise<ResultOfSubscribeCollection> {
+        return this.client.request('net.subscribe', params, responseHandler);
     }
 
     /**
