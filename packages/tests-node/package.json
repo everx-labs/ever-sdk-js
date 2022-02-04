@@ -1,6 +1,6 @@
 {
 	"name": "@tonclient/tests-node",
-	"version": "1.28.1",
+	"version": "1.29.0",
 	"private": true,
 	"description": "TON Client Tests runner on NodeJs",
 	"main": "index.js",
