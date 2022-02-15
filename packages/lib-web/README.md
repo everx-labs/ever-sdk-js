@@ -21,8 +21,8 @@ docker exec -ti build-tonclient-wasm "build-tonclient-wasm.sh"
 After successful build process, binaries will be located here
 ```
 ever-sdk-js/packages/lib-web/index.js
-ever-sdk-js/packages/lib-web/tonclient.wasm
+ever-sdk-js/packages/lib-web/eversdk.wasm
 Compressed
-ever-sdk-js/packages/lib-web/publish/tonclient_1_20_wasm.gz
-ever-sdk-js/packages/lib-web/publish/tonclient_1_20_wasm_js.gz
+ever-sdk-js/packages/lib-web/publish/eversdk_1_31_wasm.gz
+ever-sdk-js/packages/lib-web/publish/eversdk_1_31_wasm_js.gz
 ```

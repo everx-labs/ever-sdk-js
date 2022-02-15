@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.30.1] – 2022-02-16
+
+### New
+- Rebranding to eversdk
+
 ## [1.30.0] – 2022-02-04
 
 ### New

@@ -79,7 +79,7 @@ npm i --save @tonclient/lib-node
 ```shell script
 npm i --save @tonclient/lib-web
 ```
-**Important!** Each time you run `npm install` the new version of the `tonclient.wasm` and `index.js` is downloaded. So you have to always update the `tonclient.wasm` inside your web package before publishing (starting local web server, creating web bundle etc.). If you use Webpack the best way is to use CopyPlugin.
+**Important!** Each time you run `npm install` the new version of the `eversdk.wasm` and `index.js` is downloaded. So you have to always update the `eversdk.wasm` inside your web package before publishing (starting local web server, creating web bundle etc.). If you use Webpack the best way is to use CopyPlugin.
 
 ### React Native
 ```shell script
@@ -114,7 +114,7 @@ import {libWeb} from "@tonclient/lib-web";
 TonClient.useBinaryLibrary(libWeb);
 ```
 
-By default the library loads wasm module from relative URL `/tonclient.wasm`.
+By default the library loads wasm module from relative URL `/eversdk.wasm`.
 
 You can specify alternative URL if you want to place (or rename) wasm module.
 ```ts
@@ -123,7 +123,7 @@ import {libWeb, libWebSetup} from "@tonclient/lib-web";
 
 // Application initialization
 libWebSetup({
-    binaryURL: "/assets/tonclient_1_2_3.wasm",
+    binaryURL: "/assets/eversdk_1_30_1.wasm",
 });
 
 TonClient.useBinaryLibrary(libWeb);
@@ -253,16 +253,16 @@ TON Labs SDK Binaries Store.
 
 Binary              | Target           | Major | Download links
 ------------------- | ---------------- | ----- | --------------
-Node.js AddOn       | Win32            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x64-win32.gz)
-&nbsp;              | macOS x86_64     | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x64-darwin.gz)
-&nbsp;              | macOS aarch64    | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_arm64-darwin.gz)
-&nbsp;              | Linux            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x64-linux.gz)
-React Native Module | Android x86_64   | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_x86_64-linux-android.gz)
-&nbsp;              | Android i686     | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_i686-linux-android.gz)
-&nbsp;              | Android armv7    | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_armv7-linux-androideabi.gz)
-&nbsp;              | Android aarch64  | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_aarch64-linux-android.gz)
-&nbsp;              | iOS              | 1     | [`libtonclient.a`](https://binaries.tonlabs.io/tonclient_1_react_native_ios.gz)
-WASM Module         | Browser          | 1     | [`tonclient.wasm`](https://binaries.tonlabs.io/tonclient_1_wasm.gz), [`index.js`](https://binaries.tonlabs.io/tonclient_1_wasm_js.gz)
+Node.js AddOn       | Win32            | 1     | [`eversdk.node`](https://binaries.tonlabs.io/eversdk_1_nodejs_addon_x64-win32.gz)
+&nbsp;              | macOS x86_64     | 1     | [`eversdk.node`](https://binaries.tonlabs.io/eversdk_1_nodejs_addon_x64-darwin.gz)
+&nbsp;              | macOS aarch64    | 1     | [`eversdk.node`](https://binaries.tonlabs.io/eversdk_1_nodejs_addon_arm64-darwin.gz)
+&nbsp;              | Linux            | 1     | [`eversdk.node`](https://binaries.tonlabs.io/eversdk_1_nodejs_addon_x64-linux.gz)
+React Native Module | Android x86_64   | 1     | [`libeversdk.so`](https://binaries.tonlabs.io/eversdk_1_react_native_x86_64-linux-android.gz)
+&nbsp;              | Android i686     | 1     | [`libeversdk.so`](https://binaries.tonlabs.io/eversdk_1_react_native_i686-linux-android.gz)
+&nbsp;              | Android armv7    | 1     | [`libeversdk.so`](https://binaries.tonlabs.io/eversdk_1_react_native_armv7-linux-androideabi.gz)
+&nbsp;              | Android aarch64  | 1     | [`libeversdk.so`](https://binaries.tonlabs.io/eversdk_1_react_native_aarch64-linux-android.gz)
+&nbsp;              | iOS              | 1     | [`libeversdk.a`](https://binaries.tonlabs.io/eversdk_1_react_native_ios.gz)
+WASM Module         | Browser          | 1     | [`eversdk.wasm`](https://binaries.tonlabs.io/eversdk_1_wasm.gz), [`index.js`](https://binaries.tonlabs.io/eversdk_1_wasm_js.gz)
 
 _Downloaded archive is gzipped file_
 

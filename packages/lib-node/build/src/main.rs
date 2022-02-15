@@ -19,9 +19,9 @@ fn main() {
     assert!(exec("cargo", &["build", "--release"]).success());
 
     #[cfg(target_os = "windows")]
-    let (lib, gyp, gyp_args) = ("tonclient.lib", "cmd", ["/c", "node-gyp", "rebuild"]);
+    let (lib, gyp, gyp_args) = ("eversdk.lib", "cmd", ["/c", "node-gyp", "rebuild"]);
     #[cfg(not(target_os = "windows"))]
-    let (lib, gyp, gyp_args) = ("libtonclient.a", "npm", ["run", "build"]);
+    let (lib, gyp, gyp_args) = ("libeversdk.a", "npm", ["run", "build"]);
 
     builder.add_package_file(
         &format!("lib/{}", lib),
@@ -31,8 +31,8 @@ fn main() {
     assert!(exec(gyp, &gyp_args).success());
 
     builder.add_package_file(
-        "tonclient.node",
-        builder.package_dir.join("lib/build/Release/tonclient.node"),
+        "eversdk.node",
+        builder.package_dir.join("lib/build/Release/eversdk.node"),
     );
-    builder.publish_package_file("tonclient.node", "tonclient_{v}_nodejs_addon_{p}");
+    builder.publish_package_file("eversdk.node", "eversdk_{v}_nodejs_addon_{p}");
 }

@@ -1,5 +1,5 @@
 [package]
-name = 'ton_client_node_build'
+name = 'ever_sdk_node_build'
 version = '1.2.0'
 description = 'TON Client Build Tool'
 license = 'Apache-2.0'

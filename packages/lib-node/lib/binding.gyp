@@ -11,12 +11,12 @@
   },
   'targets': [
     {
-      'target_name': 'tonclient',
+      'target_name': 'eversdk',
       'sources': ['binding.cc'],
       'conditions': [
         ['OS == "win"', {
           'libraries': [
-            '../tonclient.lib',
+            '../eversdk.lib',
             'advapi32.lib',
             'ws2_32.lib',
             'userenv.lib',
@@ -27,7 +27,7 @@
           ],
         }, {
           'libraries': [
-            '../libtonclient.a',
+            '../libeversdk.a',
             '-Wl,-rpath,./addon/'
           ],
         }],

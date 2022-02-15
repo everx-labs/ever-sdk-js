@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.platform     = :ios, "7.0"
   s.source       = { :git => "https://github.com/tonlabs/ever-sdk-js.git", :tag => "master" }
   s.source_files = "ios/**/*.{h,m,mm}"
-  s.ios.vendored_library = "ios/libtonclient.a"
+  s.ios.vendored_library = "ios/libeversdk.a"
 
   s.requires_arc = true
   s.dependency "React"

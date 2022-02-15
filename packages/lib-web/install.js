@@ -114,8 +114,8 @@ async function dl(dstPath, src) {
 
 async function main() {
     const binariesTargetPath = resolveBinariesTargetPath();
-    await dl(path.join(binariesTargetPath, `index.js`), `tonclient_${binariesVersion}_wasm_js`);
-    await dl(path.join(binariesTargetPath, `tonclient.wasm`), `tonclient_${binariesVersion}_wasm`);
+    await dl(path.join(binariesTargetPath, `index.js`), `eversdk_${binariesVersion}_wasm_js`);
+    await dl(path.join(binariesTargetPath, `eversdk.wasm`), `eversdk_${binariesVersion}_wasm`);
 }
 
 (async () => {

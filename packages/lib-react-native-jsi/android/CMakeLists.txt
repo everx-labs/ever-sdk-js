@@ -75,5 +75,5 @@ target_link_libraries(${PACKAGE_NAME}
   fbjni::fbjni
   ${FOLLY_JSON_LIB}
   ${GLOG_LIB}
-  ${PROJECT_SOURCE_DIR}/src/main/jniLibs/${CMAKE_ANDROID_ARCH_ABI}/libtonclient.so
+  ${PROJECT_SOURCE_DIR}/src/main/jniLibs/${CMAKE_ANDROID_ARCH_ABI}/libeversdk.so
 )

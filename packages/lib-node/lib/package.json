@@ -1,5 +1,5 @@
 {
-	"name": "ton-client-node-js",
+	"name": "ever-sdk-node-js",
 	"version": "0.11.2",
 	"description": "TON Client Library for Node.Js",
 	"scripts": {
