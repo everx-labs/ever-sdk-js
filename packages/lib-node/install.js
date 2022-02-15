@@ -15,7 +15,8 @@
  */
 
 const fs = require('fs');
-const http = require('https');
+const http = require('http');
+const https = require('https');
 const zlib = require('zlib');
 const path = require('path');
 const os = require('os');
@@ -31,56 +32,61 @@ const binariesHomePath = path.resolve(os.homedir(), '.tonlabs', 'binaries', bina
 
 function downloadAndGunzip(dest, url) {
     return new Promise((resolve, reject) => {
-        const request = http.get(url, response => {
-            if (response.statusCode !== 200) {
-                reject({
-                    message: `Download from ${url} failed with ${response.statusCode}: ${response.statusMessage}`,
+        let file = fs.createWriteStream(dest, { flags: 'w' });
+        let opened = false;
+        const failed = (err) => {
+            if (file) {
+                file.close();
+                file = null;
+
+                fs.unlink(dest, () => {
                 });
-                return;
+                reject(err);
             }
-            let file = fs.createWriteStream(dest, { flags: 'w' });
-            let opened = false;
-            const failed = (err) => {
-                if (file) {
-                    file.close();
-                    file = null;
+        };
 
-                    fs.unlink(dest, () => {
-                    });
-                    reject(err);
-                }
-            };
-
-            const unzip = zlib.createGunzip();
-            unzip.pipe(file);
-
-
-            response.pipe(unzip);
-
-
-            request.on('error', err => {
-                failed(err);
-            });
-
-            file.on('finish', () => {
-                if (opened && file) {
-                    resolve();
-                }
-            });
-
-            file.on('open', () => {
-                opened = true;
-            });
-
-            file.on('error', err => {
-                if (err.code === 'EEXIST') {
-                    file.close();
-                    reject('File already exists');
-                } else {
-                    failed(err);
-                }
-            });
+        file.on('finish', () => {
+            if (opened && file) {
+                resolve();
+            }
         });
+
+        file.on('open', () => {
+            opened = true;
+        });
+
+        file.on('error', err => {
+            if (err.code === 'EEXIST') {
+                file.close();
+                reject('File already exists');
+            } else {
+                failed(err);
+            }
+        });
+
+        const unzip = zlib.createGunzip();
+        unzip.pipe(file);
+        const protocol = url.split(':')[0].toLowerCase();
+        if (protocol === 'http' || protocol === 'https') {
+            let net = http;
+            if (protocol === 'https') {
+                net = https;
+            }
+            const request = net.get(url, response => {
+                if (response.statusCode !== 200) {
+                    failed({
+                        message: `Download from ${url} failed with ${response.statusCode}: ${response.statusMessage}`,
+                    });
+                    return;
+                }
+                response.pipe(unzip);
+                request.on('error', err => {
+                    failed(err);
+                });
+
+            });
+        }
+
     });
 
 }
@@ -109,7 +115,7 @@ async function dl(dstPath, src) {
 
 async function main() {
     const binariesTargetPath = resolveBinariesTargetPath();
-    await dl(path.join(binariesTargetPath, `tonclient.node`), `tonclient_${binariesVersion}_nodejs_addon_${arch}-${platform}`);
+    await dl(path.join(binariesTargetPath, `eversdk.node`), `eversdk_${binariesVersion}_nodejs_addon_${arch}-${platform}`);
 }
 
 (async () => {

@@ -60,10 +60,10 @@ fn main() {
     exec("cargo", &["install", "wasm-pack", "--version", "0.9.1"]);
     assert!(exec("wasm-pack", &["build", "--release", "--target", "web"]).success());
     let pkg = lib_dir.join("pkg");
-    builder.add_package_file("tonclient.wasm", pkg.join("tonclient_bg.wasm"));
+    builder.add_package_file("eversdk.wasm", pkg.join("eversdk_bg.wasm"));
     let worker = format!(
         "{}\n{}",
-        fix_wrapper_script(builder.read_lib_file("pkg/tonclient.js")),
+        fix_wrapper_script(builder.read_lib_file("pkg/eversdk.js")),
         builder.read_lib_template("worker-template.js")
     );
 
@@ -74,6 +74,6 @@ fn main() {
     );
 
     builder.write_package_file("index.js", &index);
-    builder.publish_package_file("tonclient.wasm", "tonclient_{v}_wasm");
-    builder.publish_package_file("index.js", "tonclient_{v}_wasm_js");
+    builder.publish_package_file("eversdk.wasm", "eversdk_{v}_wasm");
+    builder.publish_package_file("index.js", "eversdk_{v}_wasm_js");
 }

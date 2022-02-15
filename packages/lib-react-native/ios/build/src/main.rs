@@ -15,7 +15,7 @@
 use ton_client_build::{check_targets, exec, Build};
 
 const TARGETS: &[&str] = &["x86_64-apple-ios", "aarch64-apple-ios"];
-const LIB: &str = "libtonclient.a";
+const LIB: &str = "libeversdk.a";
 fn main() {
     let builder = Build::new();
     check_targets(TARGETS);
@@ -45,5 +45,5 @@ fn main() {
         "lipo",
         &args.iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
     ).success());
-    builder.publish_package_file(LIB, "tonclient_{v}_react_native_ios");
+    builder.publish_package_file(LIB, "eversdk_{v}_react_native_ios");
 }

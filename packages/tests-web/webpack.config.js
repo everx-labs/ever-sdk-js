@@ -19,7 +19,7 @@ module.exports = {
     plugins: [
         new CopyWebpackPlugin({
             patterns: [
-                { from: './node_modules/@tonclient/lib-web/tonclient.wasm' },
+                { from: './node_modules/@tonclient/lib-web/eversdk.wasm' },
             ],
         }),
         new webpack.LoaderOptionsPlugin({

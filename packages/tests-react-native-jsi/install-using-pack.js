@@ -72,9 +72,9 @@ try {
     fs.unlinkSync(path.resolve(__dirname, `${tar}`));
   }
   for (const arch of ["arm64-v8a", "armeabi-v7a", "x86", "x86_64"]) {
-    copyBinary(["android", "src", "main", "jniLibs", arch, "libtonclient.so"]);
+    copyBinary(["android", "src", "main", "jniLibs", arch, "libeversdk.so"]);
   }
-  copyBinary(["ios", "libtonclient.a"]);
+  copyBinary(["ios", "libeversdk.a"]);
 } catch (error) {
   console.error(error.message);
 } finally {

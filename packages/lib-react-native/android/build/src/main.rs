@@ -45,7 +45,7 @@ const ARCHS: [Arch; 4] = [
     },
 ];
 
-const LIB: &str = "libtonclient.so";
+const LIB: &str = "libeversdk.so";
 const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r17c-darwin-x86_64.zip";
 
 fn main() {
@@ -81,7 +81,7 @@ fn main() {
             );
             builder.publish_package_file(
                 &format!("src/main/jniLibs/{}/{}", arch.jni, LIB),
-                &format!("tonclient_{{v}}_react_native_{}", arch.target),
+                &format!("eversdk_{{v}}_react_native_{}", arch.target),
             );
         } else {
             println!(
