@@ -15,7 +15,7 @@
 import { runner } from '../runner';
 import { test, expect } from '../jest';
 import { contracts } from '../contracts';
-import { signerKeys } from '@tonclient/core';
+import { signerKeys } from '@eversdk/core';
 
 test("Test versions compatibility", async () => {
     const client = runner.getClient().client;
@@ -136,4 +136,3 @@ test("client: Should suggest helper functions if applicable", async () => {
             .toBeTruthy();
     }
 });
-

@@ -17,7 +17,7 @@ JSI-based implementation of a bridge to mobile React Native platform including s
 # Installation
 
 ```sh
-yarn add @tonclient/lib-react-native-jsi
+yarn add @eversdk/lib-react-native-jsi
 ```
 
 ## iOS
@@ -237,7 +237,7 @@ public class MainApplication extends Application implements ReactApplication {
 `index.tsx`
 
 ```ts
-import { TonClient } from '@tonclient/core';
+import { TonClient } from '@eversdk/core';
 import { libReactNativeJsi } from 'lib-react-native-jsi';
 
 // Application initialization

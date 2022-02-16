@@ -18,7 +18,7 @@ import {
     AppEncryptionBox,
     EncryptionBoxHandle,
     EncryptionBoxInfo,
-} from "@tonclient/core";
+} from "@eversdk/core";
 import { expect, test } from "../jest";
 
 import { runner } from "../runner";

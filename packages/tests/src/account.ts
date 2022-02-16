@@ -1,11 +1,11 @@
-import {TonClient} from "@tonclient/core";
+import {TonClient} from "@eversdk/core";
 import {
     Abi, accountForExecutorAccount,
     ParamsOfEncodeMessage,
     ResultOfProcessMessage,
     ResultOfRunExecutor,
     Signer,
-} from "@tonclient/core";
+} from "@eversdk/core";
 
 export type AccountDeployParams = {
     tvc: string, initFunctionName?: string,

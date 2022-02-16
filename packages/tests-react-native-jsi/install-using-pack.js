@@ -47,7 +47,7 @@ function copyBinary(relPath) {
     const dstPath = path.resolve(
       __dirname,
       "node_modules",
-      "@tonclient",
+      "@eversdk",
       "lib-react-native-jsi",
       ...relPath
     );

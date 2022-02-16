@@ -35,7 +35,7 @@ function pack(names) {
 function copyBinary(relPath) {
     const srcPath = path.resolve(__dirname, '..', 'lib-react-native', ...relPath);
     if (fs.existsSync(srcPath)) {
-        const dstPath = path.resolve(__dirname, 'node_modules', '@tonclient', 'lib-react-native', ...relPath);
+        const dstPath = path.resolve(__dirname, 'node_modules', '@eversdk', 'lib-react-native', ...relPath);
         fs.mkdirSync(path.dirname(dstPath), { recursive: true })
         fs.copyFileSync(srcPath, dstPath);
         process.stdout.write(`Copy ${srcPath}\n`);

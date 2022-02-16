@@ -1,7 +1,7 @@
 import entry from './entry';
-import { TonClient } from '@tonclient/core';
-import {libWeb} from '@tonclient/lib-web';
-import { TestsRunner } from "@tonclient/tests";
+import { TonClient } from '@eversdk/core';
+import {libWeb} from '@eversdk/lib-web';
+import { TestsRunner } from "@eversdk/tests";
 
 entry();
 

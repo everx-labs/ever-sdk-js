@@ -21,9 +21,9 @@
  
  
  for (const name of [
-     "@tonclient/core",
-     "@tonclient/lib-react-native-jsi",
-     "@tonclient/tests",
+     "@eversdk/core",
+     "@eversdk/lib-react-native-jsi",
+     "@eversdk/tests",
      "react-native",
      "@babel/runtime",
      "buffer",

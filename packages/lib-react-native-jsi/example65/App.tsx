@@ -12,7 +12,7 @@ import * as React from 'react';
 
 import {Button, Image, StyleSheet, Text, View} from 'react-native';
 
-import {TonClient} from '@tonclient/core';
+import {TonClient} from '@eversdk/core';
 import buffer from 'buffer';
 
 const Buffer = global.Buffer ?? buffer.Buffer;

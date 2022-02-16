@@ -17,7 +17,7 @@
 import { test } from "../jest";
 import { 
     TonClient,
-} from "@tonclient/core";
+} from "@eversdk/core";
 
 test("proofs: proof_block_data", async () => {
     const client = new TonClient({

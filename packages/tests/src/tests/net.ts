@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { AggregationFn, SortDirection } from "@tonclient/core";
+import { AggregationFn, SortDirection } from "@eversdk/core";
 
 import { ABIVersions, runner } from "../runner";
 import { expect, jest, test } from "../jest";

@@ -1,5 +1,5 @@
 {
-	"name": "@tonclient/tests-web",
+	"name": "@eversdk/tests-web",
 	"version": "1.30.0",
 	"lockfileVersion": 1,
 	"requires": true,
@@ -51,7 +51,7 @@
 				}
 			}
 		},
-		"@tonclient/core": {
+		"@eversdk/core": {
 			"version": "file:../core",
 			"dependencies": {
 				"typescript": {
@@ -61,15 +61,15 @@
 				}
 			}
 		},
-		"@tonclient/lib-web": {
+		"@eversdk/lib-web": {
 			"version": "file:../lib-web"
 		},
-		"@tonclient/tests": {
+		"@eversdk/tests": {
 			"version": "file:../tests",
 			"requires": {
 				"@babel/core": "^7.8.4",
 				"@babel/runtime": "^7.8.4",
-				"@tonclient/core": "file:../core",
+				"@eversdk/core": "file:../core",
 				"big-integer": "^1.6.48",
 				"expect": "^26.6.2",
 				"jest-circus": "22.1.4",
@@ -333,7 +333,7 @@
 						}
 					}
 				},
-				"@tonclient/core": {
+				"@eversdk/core": {
 					"version": "file:../core",
 					"dependencies": {
 						"typescript": {

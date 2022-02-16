@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import {TonClient} from "@tonclient/core";
-import {libWeb} from "@tonclient/lib-web";
+import {TonClient} from "@eversdk/core";
+import {libWeb} from "@eversdk/lib-web";
 
 ReactDOM.render(
   <React.StrictMode>
