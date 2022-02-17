@@ -118,16 +118,16 @@ async function dl(dstPath, src) {
 
 async function main() {
     const binariesTargetPath = resolveBinariesTargetPath();
-    await dl(path.join(binariesTargetPath, 'android', 'src', 'main', 'jniLibs', 'arm64-v8a', 'libtonclient.so'),
-        `tonclient_${binariesVersion}_react_native_aarch64-linux-android`);
-    await dl(path.join(binariesTargetPath, 'android', 'src', 'main', 'jniLibs', 'armeabi-v7a', 'libtonclient.so'),
-        `tonclient_${binariesVersion}_react_native_armv7-linux-androideabi`);
-    await dl(path.join(binariesTargetPath, 'android', 'src', 'main', 'jniLibs', 'x86', 'libtonclient.so'),
-        `tonclient_${binariesVersion}_react_native_i686-linux-android`);
-    await dl(path.join(binariesTargetPath, 'android', 'src', 'main', 'jniLibs', 'x86_64', 'libtonclient.so'),
-        `tonclient_${binariesVersion}_react_native_x86_64-linux-android`);
-    await dl(path.join(binariesTargetPath, `ios`, `libtonclient.a`),
-        `tonclient_${binariesVersion}_react_native_ios`);
+    await dl(path.join(binariesTargetPath, 'android', 'src', 'main', 'jniLibs', 'arm64-v8a', 'libeversdk.so'),
+        `eversdk_${binariesVersion}_react_native_aarch64-linux-android`);
+    await dl(path.join(binariesTargetPath, 'android', 'src', 'main', 'jniLibs', 'armeabi-v7a', 'libeversdk.so'),
+        `eversdk_${binariesVersion}_react_native_armv7-linux-androideabi`);
+    await dl(path.join(binariesTargetPath, 'android', 'src', 'main', 'jniLibs', 'x86', 'libeversdk.so'),
+        `eversdk_${binariesVersion}_react_native_i686-linux-android`);
+    await dl(path.join(binariesTargetPath, 'android', 'src', 'main', 'jniLibs', 'x86_64', 'libeversdk.so'),
+        `eversdk_${binariesVersion}_react_native_x86_64-linux-android`);
+    await dl(path.join(binariesTargetPath, `ios`, `libeversdk.a`),
+        `eversdk_${binariesVersion}_react_native_ios`);
 }
 
 (async () => {

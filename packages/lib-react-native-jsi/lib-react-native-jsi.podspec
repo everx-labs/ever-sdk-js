@@ -27,11 +27,11 @@ Pod::Spec.new do |s|
   s.authors      = package["author"]
 
   s.platforms    = { :ios => "10.0" }
-  s.source       = { :git => "https://github.com/tonlabs/ton-client-js.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/tonlabs/ever-sdk-js.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm}", "cpp/**/*.{h,cpp}"
   s.exclude_files = "cpp/BlobManager.cpp" # compiled as Objective-C++ from ios/BlobManager.mm
-  s.ios.vendored_library = "ios/libtonclient.a"
+  s.ios.vendored_library = "ios/libeversdk.a"
 
   s.pod_target_xcconfig = {
     :GCC_PREPROCESSOR_DEFINITIONS => "HAVE_FULLFSYNC=1",

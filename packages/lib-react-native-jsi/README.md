@@ -17,7 +17,7 @@ JSI-based implementation of a bridge to mobile React Native platform including s
 # Installation
 
 ```sh
-yarn add @tonclient/lib-react-native-jsi
+yarn add @eversdk/lib-react-native-jsi
 ```
 
 ## iOS
@@ -237,7 +237,7 @@ public class MainApplication extends Application implements ReactApplication {
 `index.tsx`
 
 ```ts
-import { TonClient } from '@tonclient/core';
+import { TonClient } from '@eversdk/core';
 import { libReactNativeJsi } from 'lib-react-native-jsi';
 
 // Application initialization
@@ -429,9 +429,9 @@ Then, install the dependencies from `*.tgz` archives:
 
 ```sh
 cd ../tests-react-native-jsi
-npm add file:../core/tonclient-core-1.28.1.tgz
-npm add file:../tests/tonclient-tests-1.28.1.tgz
-npm add file:../lib-react-native-jsi/tonclient-lib-react-native-jsi-1.28.1.tgz
+npm add file:../core/eversdk-core-1.30.1.tgz
+npm add file:../tests/eversdk-tests-1.30.1.tgz
+npm add file:../lib-react-native-jsi/eversdk-lib-react-native-jsi-1.30.1.tgz
 npm i
 cd ios
 pod install

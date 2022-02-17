@@ -43,8 +43,8 @@ type LibWebOptions = {
      */
     debugLog?: (message: any) => void,
     /**
-     * URL to `tonclient.wasm` module.
-     * Default is "/tonclient.wasm"
+     * URL to `eversdk.wasm` module.
+     * Default is "/eversdk.wasm"
      */
     binaryURL?: string,
     /**

@@ -12,8 +12,8 @@
  *
  */
 import entry from "./entry";
-import { TonClient } from "@tonclient/core";
-import { libReactNativeJsi } from "@tonclient/lib-react-native-jsi";
+import { TonClient } from "@eversdk/core";
+import { libReactNativeJsi } from "@eversdk/lib-react-native-jsi";
 import { AppRegistry } from "react-native";
 import App from "./App";
 

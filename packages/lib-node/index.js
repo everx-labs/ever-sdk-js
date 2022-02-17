@@ -22,14 +22,14 @@ function getHomeAddonPath() {
     const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require('./package.json').version).split(
         '.')[0];
     const binariesHomePath = path.resolve(os.homedir(), '.tonlabs', 'binaries', binariesVersion);
-    return path.resolve(binariesHomePath, 'tonclient.node');
+    return path.resolve(binariesHomePath, 'eversdk.node');
 }
 
 function loadAddon() {
     try {
-        return require('./tonclient.node');
+        return require('./eversdk.node');
     } catch (error) {
-        if (fs.existsSync(path.resolve(__dirname, 'tonclient.node'))) {
+        if (fs.existsSync(path.resolve(__dirname, 'eversdk.node'))) {
             throw error;
         }
     }

@@ -1,13 +1,13 @@
-# Building ton-client-js WASM inside docker
+# Building ever-sdk-js WASM inside docker
 To build WASM you need `clang v8`. Use this workaround if you encounter a problem when building wasm binaries on your platform (MacOSX or Windows). 
 
 ## Pulling build image
 ```
 docker pull tonlabs/build-tonclient-wasm
 ```
-Change your current location to `ton-client-js` project. It is important because the next command will use this location to mount the volume with source code inside the docker container with build environment.
+Change your current location to `ever-sdk-js` project. It is important because the next command will use this location to mount the volume with source code inside the docker container with build environment.
 ```
-cd ton-client-js
+cd ever-sdk-js
 ```
 Run build container in background. First attempt will take a long time.
 ```
@@ -20,9 +20,9 @@ docker exec -ti build-tonclient-wasm "build-tonclient-wasm.sh"
 ## Location of binaries
 After successful build process, binaries will be located here
 ```
-ton-client-js/packages/lib-web/index.js
-ton-client-js/packages/lib-web/tonclient.wasm
+ever-sdk-js/packages/lib-web/index.js
+ever-sdk-js/packages/lib-web/eversdk.wasm
 Compressed
-ton-client-js/packages/lib-web/publish/tonclient_1_20_wasm.gz
-ton-client-js/packages/lib-web/publish/tonclient_1_20_wasm_js.gz
+ever-sdk-js/packages/lib-web/publish/eversdk_1_31_wasm.gz
+ever-sdk-js/packages/lib-web/publish/eversdk_1_31_wasm_js.gz
 ```

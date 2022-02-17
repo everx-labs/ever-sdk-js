@@ -19,7 +19,7 @@ import {
     Signer,
     signerKeys,
     TonClient,
-} from "@tonclient/core";
+} from "@eversdk/core";
 
 import {
     DefaultGiverContract,

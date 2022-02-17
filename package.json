@@ -1,5 +1,5 @@
 {
-	"name": "ton-client-monorepo",
+	"name": "ever-sdk-js-monorepo",
 	"private": true,
 	"license": "Apache-2.0",
 	"licenses": [
@@ -10,7 +10,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/tonlabs/ton-client-js.git"
+		"url": "https://github.com/tonlabs/ever-sdk-js.git"
 	},
 	"scripts": {
 		"clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/ ./packages/*/tsconfig*tsbuildinfo",

@@ -24,7 +24,7 @@ import {
     signerKeys,
     TonClient,
     TvmErrorCode,
-} from "@tonclient/core";
+} from "@eversdk/core";
 
 import { Account } from "../account";
 import { ContractPackage, contracts } from "../contracts";

@@ -2,7 +2,7 @@ package tonlabs.tonclient;
 
 public class TonClientJsonInterface {
     static {
-        System.loadLibrary("tonclient");
+        System.loadLibrary("eversdk");
     }
 
     public interface IResponseHandler {

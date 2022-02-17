@@ -1,6 +1,6 @@
 {
-  "name": "@tonclient/lib-react-native-jsi",
-  "version": "1.30.0",
+  "name": "@eversdk/lib-react-native-jsi",
+  "version": "1.30.1",
   "description": "TON Client React Native JSI Module",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -24,7 +24,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/tonlabs/ton-client-js"
+    "url": "https://github.com/tonlabs/ever-sdk-js.git"
   },
   "scripts": {
     "postinstall": "node install.js",
@@ -54,7 +54,7 @@
   ],
   "homepage": "https://docs.ton.dev/",
   "bugs": {
-    "url": "https://github.com/tonlabs/ton-client-js/issues"
+    "url": "https://github.com/tonlabs/ever-sdk-js/issues"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

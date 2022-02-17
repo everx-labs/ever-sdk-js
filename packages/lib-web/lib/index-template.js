@@ -117,7 +117,7 @@ export function libWeb() {
     };
 
     const loadModule = async () => {
-        const fetched = fetch((options && options.binaryURL) || '/tonclient.wasm');
+        const fetched = fetch((options && options.binaryURL) || '/eversdk.wasm');
         if (WebAssembly.compileStreaming) {
             debugLog('compileStreaming binary');
             return await WebAssembly.compileStreaming(fetched);

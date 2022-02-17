@@ -1645,10 +1645,10 @@
   dependencies:
     "@babel/runtime" "^7.12.5"
 
-"@tonclient/core@file:../core":
+"@eversdk/core@file:../core":
   version "1.20.1"
 
-"@tonclient/lib-web@file:../lib-web":
+"@eversdk/lib-web@file:../lib-web":
   version "1.20.1"
 
 "@types/anymatch@*":

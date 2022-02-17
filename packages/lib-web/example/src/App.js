@@ -2,7 +2,7 @@ import "./App.css";
 
 import * as React from "react";
 
-import { TonClient } from "@tonclient/core";
+import { TonClient } from "@eversdk/core";
 
 const client = new TonClient();
 

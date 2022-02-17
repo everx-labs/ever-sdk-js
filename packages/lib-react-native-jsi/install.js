@@ -126,9 +126,9 @@ async function main() {
       'main',
       'jniLibs',
       'arm64-v8a',
-      'libtonclient.so'
+      'libeversdk.so'
     ),
-    `tonclient_${binariesVersion}_react_native_aarch64-linux-android`
+    `eversdk_${binariesVersion}_react_native_aarch64-linux-android`
   );
   await dl(
     path.join(
@@ -138,9 +138,9 @@ async function main() {
       'main',
       'jniLibs',
       'armeabi-v7a',
-      'libtonclient.so'
+      'libeversdk.so'
     ),
-    `tonclient_${binariesVersion}_react_native_armv7-linux-androideabi`
+    `eversdk_${binariesVersion}_react_native_armv7-linux-androideabi`
   );
   await dl(
     path.join(
@@ -150,9 +150,9 @@ async function main() {
       'main',
       'jniLibs',
       'x86',
-      'libtonclient.so'
+      'libeversdk.so'
     ),
-    `tonclient_${binariesVersion}_react_native_i686-linux-android`
+    `eversdk_${binariesVersion}_react_native_i686-linux-android`
   );
   await dl(
     path.join(
@@ -162,13 +162,13 @@ async function main() {
       'main',
       'jniLibs',
       'x86_64',
-      'libtonclient.so'
+      'libeversdk.so'
     ),
-    `tonclient_${binariesVersion}_react_native_x86_64-linux-android`
+    `eversdk_${binariesVersion}_react_native_x86_64-linux-android`
   );
   await dl(
-    path.join(binariesTargetPath, `ios`, `libtonclient.a`),
-    `tonclient_${binariesVersion}_react_native_ios`
+    path.join(binariesTargetPath, `ios`, `libeversdk.a`),
+    `eversdk_${binariesVersion}_react_native_ios`
   );
 }
 

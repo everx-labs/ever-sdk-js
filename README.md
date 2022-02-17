@@ -1,6 +1,6 @@
-<p align="center"><a href="https://github.com/tonlabs/ton-client-js/"><img src="media/ton-sdk-blue.png" height="60"/></a></p> 
-<h1 align="center">JavaScript TON OS SDK</h1>
-<p align="center">Client Library built on the TON OS API</p>
+<p align="center"><a href="https://github.com/tonlabs/ever-sdk-js/"><img src="media/ton-sdk-blue.png" height="60"/></a></p> 
+<h1 align="center">JavaScript Ever OS SDK</h1>
+<p align="center">Client Library built on the Ever OS API</p>
 <p align="center">for Web, Node.js and React Native platforms</p>
 
 **Have a question? Get quick help in our channel:**
@@ -34,20 +34,20 @@
 # Useful links
 - [Quick Start](https://docs.ton.dev/86757ecb2/p/33b76d-quick-start)
   
-- [Types and Methods (API Reference)](https://tonlabs.github.io/ton-client-js/)
+- [Types and Methods (API Reference)](https://tonlabs.github.io/ever-sdk-js/)
   
-- [AppKit](https://github.com/tonlabs/appkit-js) - JS package built on top of [@tonclient/core](https://www.npmjs.com/package/@tonclient/core) package which purpose is to simplify writing applications on Free TON. It helps to implement most common use-cases with less coding. 
+- [AppKit](https://github.com/tonlabs/appkit-js) - JS package built on top of [@eversdk/core](https://www.npmjs.com/package/@eversdk/core) package which purpose is to simplify writing applications on EverScale. It helps to implement most common use-cases with less coding. 
   
-- [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on Free TON.
+- [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on EverScale.
   
 - [SDK Samples](https://github.com/tonlabs/sdk-samples) - a good place to get to practice with SDK examples asap:)
 
 # Library distribution
 This SDK is distributed via npm packages:
-- [@tonclient/core](https://www.npmjs.com/package/@tonclient/core) – common binding independent from JavaScript platform you use.
-- [@tonclient/lib-node](https://www.npmjs.com/package/@tonclient/lib-node) – bridge to NodeJs including NodeJs binary addon.
-- [@tonclient/lib-web](https://www.npmjs.com/package/@tonclient/lib-web) – bridge to browser including WASM module.
-- [@tonclient/lib-react-native](https://www.npmjs.com/package/@tonclient/lib-react-native) – bridge to mobile react-native platform including static libraries for iOS and Android.
+- [@eversdk/core](https://www.npmjs.com/package/@eversdk/core) – common binding independent from JavaScript platform you use.
+- [@eversdk/lib-node](https://www.npmjs.com/package/@eversdk/lib-node) – bridge to NodeJs including NodeJs binary addon.
+- [@eversdk/lib-web](https://www.npmjs.com/package/@eversdk/lib-web) – bridge to browser including WASM module.
+- [@eversdk/lib-react-native](https://www.npmjs.com/package/@eversdk/lib-react-native) – bridge to mobile react-native platform including static libraries for iOS and Android.
 
 You can find their source code in this repository.
  
@@ -62,7 +62,7 @@ You can find their source code in this repository.
 ## Install core package
 
 ```shell script
-npm i --save @tonclient/core
+npm i --save @eversdk/core
 ```
 
 ## Install bridge package (depends on target JS platform)
@@ -72,18 +72,18 @@ If you want to rebuild binary from sources see [build binaries](#build binaries)
 
 ### NodeJs
 ```shell script
-npm i --save @tonclient/lib-node
+npm i --save @eversdk/lib-node
 ```
 
 ### Web
 ```shell script
-npm i --save @tonclient/lib-web
+npm i --save @eversdk/lib-web
 ```
-**Important!** Each time you run `npm install` the new version of the `tonclient.wasm` and `index.js` is downloaded. So you have to always update the `tonclient.wasm` inside your web package before publishing (starting local web server, creating web bundle etc.). If you use Webpack the best way is to use CopyPlugin.
+**Important!** Each time you run `npm install` the new version of the `eversdk.wasm` and `index.js` is downloaded. So you have to always update the `eversdk.wasm` inside your web package before publishing (starting local web server, creating web bundle etc.). If you use Webpack the best way is to use CopyPlugin.
 
 ### React Native
 ```shell script
-npm i --save @tonclient/lib-react-native
+npm i --save @eversdk/lib-react-native
 ```
 
 
@@ -96,8 +96,8 @@ You need to attach the chosen binary module to the `TonClient` class.
 
 NodeJs:
 ```ts
-const {TonClient} = require("@tonclient/core");
-const {libNode} = require("@tonclient/lib-node");
+const {TonClient} = require("@eversdk/core");
+const {libNode} = require("@eversdk/lib-node");
 
 // Application initialization
 
@@ -106,24 +106,24 @@ TonClient.useBinaryLibrary(libNode)
   
 Web:
 ```ts
-import {TonClient} from "@tonclient/core";
-import {libWeb} from "@tonclient/lib-web";
+import {TonClient} from "@eversdk/core";
+import {libWeb} from "@eversdk/lib-web";
 
 // Application initialization
 
 TonClient.useBinaryLibrary(libWeb);
 ```
 
-By default the library loads wasm module from relative URL `/tonclient.wasm`.
+By default the library loads wasm module from relative URL `/eversdk.wasm`.
 
 You can specify alternative URL if you want to place (or rename) wasm module.
 ```ts
-import {TonClient} from "@tonclient/core";
-import {libWeb, libWebSetup} from "@tonclient/lib-web";
+import {TonClient} from "@eversdk/core";
+import {libWeb, libWebSetup} from "@eversdk/lib-web";
 
 // Application initialization
 libWebSetup({
-    binaryURL: "/assets/tonclient_1_2_3.wasm",
+    binaryURL: "/assets/eversdk_1_30_1.wasm",
 });
 
 TonClient.useBinaryLibrary(libWeb);
@@ -131,8 +131,8 @@ TonClient.useBinaryLibrary(libWeb);
 
 React Native:
 ```ts
-import {TonClient} from "@tonclient/core";
-import {libReactNative} from "@tonclient/lib-react-native";
+import {TonClient} from "@eversdk/core";
+import {libReactNative} from "@eversdk/lib-react-native";
 
 // Application initialization
 
@@ -172,7 +172,7 @@ You can build binaries from sources.
 
 If you install a bridge package from the `npmjs` you can build it with the following commands (e.g. for nodejs):
 ```shell script
-cd node_modules/@tonclient/lib-node/build
+cd node_modules/@eversdk/lib-node/build
 cargo run
 ```
 
@@ -253,16 +253,16 @@ TON Labs SDK Binaries Store.
 
 Binary              | Target           | Major | Download links
 ------------------- | ---------------- | ----- | --------------
-Node.js AddOn       | Win32            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x64-win32.gz)
-&nbsp;              | macOS x86_64     | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x64-darwin.gz)
-&nbsp;              | macOS aarch64    | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_arm64-darwin.gz)
-&nbsp;              | Linux            | 1     | [`tonclient.node`](https://binaries.tonlabs.io/tonclient_1_nodejs_addon_x64-linux.gz)
-React Native Module | Android x86_64   | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_x86_64-linux-android.gz)
-&nbsp;              | Android i686     | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_i686-linux-android.gz)
-&nbsp;              | Android armv7    | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_armv7-linux-androideabi.gz)
-&nbsp;              | Android aarch64  | 1     | [`libtonclient.so`](https://binaries.tonlabs.io/tonclient_1_react_native_aarch64-linux-android.gz)
-&nbsp;              | iOS              | 1     | [`libtonclient.a`](https://binaries.tonlabs.io/tonclient_1_react_native_ios.gz)
-WASM Module         | Browser          | 1     | [`tonclient.wasm`](https://binaries.tonlabs.io/tonclient_1_wasm.gz), [`index.js`](https://binaries.tonlabs.io/tonclient_1_wasm_js.gz)
+Node.js AddOn       | Win32            | 1     | [`eversdk.node`](https://binaries.tonlabs.io/eversdk_1_nodejs_addon_x64-win32.gz)
+&nbsp;              | macOS x86_64     | 1     | [`eversdk.node`](https://binaries.tonlabs.io/eversdk_1_nodejs_addon_x64-darwin.gz)
+&nbsp;              | macOS aarch64    | 1     | [`eversdk.node`](https://binaries.tonlabs.io/eversdk_1_nodejs_addon_arm64-darwin.gz)
+&nbsp;              | Linux            | 1     | [`eversdk.node`](https://binaries.tonlabs.io/eversdk_1_nodejs_addon_x64-linux.gz)
+React Native Module | Android x86_64   | 1     | [`libeversdk.so`](https://binaries.tonlabs.io/eversdk_1_react_native_x86_64-linux-android.gz)
+&nbsp;              | Android i686     | 1     | [`libeversdk.so`](https://binaries.tonlabs.io/eversdk_1_react_native_i686-linux-android.gz)
+&nbsp;              | Android armv7    | 1     | [`libeversdk.so`](https://binaries.tonlabs.io/eversdk_1_react_native_armv7-linux-androideabi.gz)
+&nbsp;              | Android aarch64  | 1     | [`libeversdk.so`](https://binaries.tonlabs.io/eversdk_1_react_native_aarch64-linux-android.gz)
+&nbsp;              | iOS              | 1     | [`libeversdk.a`](https://binaries.tonlabs.io/eversdk_1_react_native_ios.gz)
+WASM Module         | Browser          | 1     | [`eversdk.wasm`](https://binaries.tonlabs.io/eversdk_1_wasm.gz), [`index.js`](https://binaries.tonlabs.io/eversdk_1_wasm_js.gz)
 
 _Downloaded archive is gzipped file_
 

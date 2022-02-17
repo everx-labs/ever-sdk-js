@@ -20,7 +20,7 @@ import {
     addressStringFormatAccountId,
     addressStringFormatBase64,
     addressStringFormatHex
-} from "@tonclient/core";
+} from "@eversdk/core";
 
 test("utils: convert_address", async () => {
     const {

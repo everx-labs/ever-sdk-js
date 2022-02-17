@@ -23,7 +23,7 @@ import {
     ParamsOfEncodeMessage,
     Signer,
     signerSigningBox,
-} from "@tonclient/core";
+} from "@eversdk/core";
 
 test("abi: encode_message", async () => {
     // arrange

@@ -1,10 +1,10 @@
-import { TonClient } from "@tonclient/core";
+import { TonClient } from "@eversdk/core";
 import React, { Component } from 'react';
 import {
     View,
     Text, Button,
 } from 'react-native';
-import { TestsRunner } from "@tonclient/tests";
+import { TestsRunner } from "@eversdk/tests";
 
 class App extends Component {
     async componentDidMount() {

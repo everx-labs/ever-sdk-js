@@ -1,10 +1,10 @@
-const {TonClient} = require('@tonclient/core');
-const {libNode} = require('@tonclient/lib-node');
+const {TonClient} = require('@eversdk/core');
+const {libNode} = require('@eversdk/lib-node');
 const {
     TestsLogger,
     TestsRunner,
     zeroRunningState,
-} = require('@tonclient/tests');
+} = require('@eversdk/tests');
 
 TestsRunner.setTimeout = setTimeout;
 TestsRunner.log = console.log;

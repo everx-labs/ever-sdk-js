@@ -18,7 +18,7 @@ import {
     KeyPair,
     signerKeys,
     TonClient,
-} from "@tonclient/core";
+} from "@eversdk/core";
 import {ContractPackage} from "./contracts";
 
 function getEnv(name: string): any {

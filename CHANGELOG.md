@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.30.1] – 2022-02-16
+
+### Changed
+- **Rebranding**:
+    - rename repository name from 'ton-client-js' to 'ever-sdk-js'
+    - rename binary binding filenames from 'tonclient_' to 'eversdk_'
+    - rename npm scope name from '@tonclient' to '@eversdk'
+        @tonclient/core             -> @eversdk/core
+        @tonclient/lib-node         -> @eversdk/lib-node
+        @tonclient/lib-web          -> @eversdk/lib-web
+        @tonclient/lib-react-native -> @eversdk/lib-react-native
+
 ## [1.30.0] – 2022-02-04
 
 ### New
