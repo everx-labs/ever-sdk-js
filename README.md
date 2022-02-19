@@ -32,13 +32,13 @@
 
 
 # Useful links
-- [Quick Start](https://docs.ton.dev/86757ecb2/p/33b76d-quick-start)
+- [Quick Start](https://tonlabs.gitbook.io/ton-sdk/quick_start)
   
 - [Types and Methods (API Reference)](https://tonlabs.github.io/ever-sdk-js/)
   
 - [AppKit](https://github.com/tonlabs/appkit-js) - JS package built on top of [@eversdk/core](https://www.npmjs.com/package/@eversdk/core) package which purpose is to simplify writing applications on EverScale. It helps to implement most common use-cases with less coding. 
   
-- [SDK guides](https://docs.ton.dev/86757ecb2/p/783f9d-about-sdk) - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on EverScale.
+- [SDK guides](https://tonlabs.gitbook.io/ton-sdk/guides/installation/add_sdk_to_your_app) - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on EverScale.
   
 - [SDK Samples](https://github.com/tonlabs/sdk-samples) - a good place to get to practice with SDK examples asap:)
 
