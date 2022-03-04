@@ -129,7 +129,7 @@ libWebSetup({
 TonClient.useBinaryLibrary(libWeb);
 ```
 
-React Native:
+React Native (iOS/Android):
 ```ts
 import {TonClient} from "@eversdk/core";
 import {libReactNative} from "@eversdk/lib-react-native";
@@ -138,7 +138,13 @@ import {libReactNative} from "@eversdk/lib-react-native";
 
 TonClient.useBinaryLibrary(libReactNative);
 ```
-  
+
+React Native (Web):
+
+If you use React Native in Web, work the same way as described in Web section (see above). 
+
+
+
 # Use library
 
 All library functions are incorporated into `TonClient` class. Each client module is represented as a 
