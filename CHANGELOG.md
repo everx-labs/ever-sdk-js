@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.30.2] – 2022-03-14
+
+### Fixed
+- Update JSI client podspec for react-native greater than 0.66
+
 ## [1.30.1] – 2022-02-16
 
 ### Changed
