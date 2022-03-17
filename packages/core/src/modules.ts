@@ -1107,6 +1107,7 @@ export type ParamsOfNaclBoxOpen = {
     encrypted: string,
 
     /**
+     * Nonce
      */
     nonce: string,
 
