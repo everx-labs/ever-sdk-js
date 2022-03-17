@@ -466,3 +466,97 @@ test("Signing", async () => {
         send_events: false,
     });
 });
+
+test("initCodeHash", async () => {
+    // contracts from sol2tvm/tests3/net_test_suite3.py/test27
+    // https://github.com/tonlabs/sol2tvm/pull/1424
+    const {
+        abi,
+        boc,
+        processing,
+        tvm,
+    } = runner.getClient();
+
+    const abiModule = abi;
+    const abiVersion = 2;
+    const account = await runner.getAccount(contracts.InitCodeHashOld, abiVersion);
+    const actualCodeHash = `0x${(await boc.decode_tvc({ tvc: contracts.InitCodeHashOld[abiVersion].tvc })).code_hash}`;
+    await runner.deploy(account);
+
+    await run(
+        account,
+        abiContract(contracts.InitCodeHashOld[abiVersion].abi),
+        "fix_baga",
+        {
+            newCode: (await boc.get_code_from_tvc({ tvc: contracts.InitCodeHash[abiVersion].tvc })).code
+        }
+    );
+    const externalResult = await run(
+        account,
+        abiContract(contracts.InitCodeHash[abiVersion].abi),
+        "f"
+    );
+    const executorResult = await run_executor(account, abiContract(contracts.InitCodeHash[abiVersion].abi), "f");
+    const localResult = await run_tvm(account, abiContract(contracts.InitCodeHash[abiVersion].abi), "f");
+
+    account.dropCachedData();
+
+    expect(localResult.decoded?.output?.value0).toEqual(actualCodeHash);
+    expect(executorResult.decoded?.output?.value0).toEqual(actualCodeHash);
+    expect(externalResult.decoded?.output?.value0).toEqual(actualCodeHash);
+
+    // end of test, start of local functions
+
+    async function run_executor(account: Account, abi: Abi, function_name: string) {
+        const encodeResult = await abiModule.encode_message({
+            abi,
+            address: await account.getAddress(),
+            call_set: {
+                function_name,
+            },
+            signer: account.signer,
+        });
+
+        return await tvm.run_executor({
+            account: {
+                type: "Account",
+                boc: await account.boc(),
+            },
+            abi,
+            message: encodeResult.message,
+            return_updated_account: false,
+        });
+    }
+
+    async function run_tvm(account: Account, abi: Abi, function_name: string) {
+        const encodeResult = await abiModule.encode_message({
+            abi,
+            address: await account.getAddress(),
+            call_set: {
+                function_name,
+            },
+            signer: account.signer,
+        });
+
+        return await tvm.run_tvm({
+            abi,
+            account: await account.boc(),
+            message: encodeResult.message,
+        })
+    }
+
+    async function run(account: Account, abi: Abi, function_name: string, input?: any): Promise<ResultOfProcessMessage> {
+        return await processing.process_message({
+            message_encode_params: {
+                abi: abi,
+                signer: account.signer,
+                address: await account.getAddress(),
+                call_set: {
+                    function_name,
+                    input,
+                },
+            },
+            send_events: false,
+        });
+    }
+});
