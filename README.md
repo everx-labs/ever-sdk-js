@@ -5,7 +5,7 @@
 
 **Have a question? Get quick help in our channel:**
 
-[![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ton_sdk) 
+[![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ever_sdk) 
 
 # Table of Content
 - [Table of Content](#table-of-content)
