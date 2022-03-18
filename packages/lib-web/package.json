@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/lib-web",
-	"version": "1.30.2",
+	"version": "1.31.0",
 	"description": "TON Client WASM module for browsers",
 	"main": "index.js",
 	"repository": {

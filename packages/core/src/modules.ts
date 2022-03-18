@@ -454,7 +454,11 @@ export enum CryptoErrorCode {
     CannotCreateCipher = 126,
     EncryptDataError = 127,
     DecryptDataError = 128,
-    IvRequired = 129
+    IvRequired = 129,
+    CryptoBoxNotRegistered = 130,
+    InvalidCryptoBoxType = 131,
+    CryptoBoxSecretSerializationError = 132,
+    CryptoBoxSecretDeserializationError = 133
 }
 
 export type SigningBoxHandle = number
@@ -486,11 +490,38 @@ export type EncryptionBoxInfo = {
 
 export type EncryptionAlgorithm = ({
     type: 'AES'
-} & AesParams)
+} & AesParamsEB) | ({
+    type: 'ChaCha20'
+} & ChaCha20ParamsEB) | ({
+    type: 'NaclBox'
+} & NaclBoxParamsEB) | ({
+    type: 'NaclSecretBox'
+} & NaclSecretBoxParamsEB)
 
-export function encryptionAlgorithmAES(params: AesParams): EncryptionAlgorithm {
+export function encryptionAlgorithmAES(params: AesParamsEB): EncryptionAlgorithm {
     return {
         type: 'AES',
+        ...params,
+    };
+}
+
+export function encryptionAlgorithmChaCha20(params: ChaCha20ParamsEB): EncryptionAlgorithm {
+    return {
+        type: 'ChaCha20',
+        ...params,
+    };
+}
+
+export function encryptionAlgorithmNaclBox(params: NaclBoxParamsEB): EncryptionAlgorithm {
+    return {
+        type: 'NaclBox',
+        ...params,
+    };
+}
+
+export function encryptionAlgorithmNaclSecretBox(params: NaclSecretBoxParamsEB): EncryptionAlgorithm {
+    return {
+        type: 'NaclSecretBox',
         ...params,
     };
 }
@@ -503,7 +534,7 @@ export enum CipherMode {
     OFB = "OFB"
 }
 
-export type AesParams = {
+export type AesParamsEB = {
 
     /**
      */
@@ -527,6 +558,191 @@ export type AesInfo = {
     /**
      */
     iv?: string
+}
+
+export type ChaCha20ParamsEB = {
+
+    /**
+     * 256-bit key.
+     * 
+     * @remarks
+     * Must be encoded with `hex`.
+     */
+    key: string,
+
+    /**
+     * 96-bit nonce.
+     * 
+     * @remarks
+     * Must be encoded with `hex`.
+     */
+    nonce: string
+}
+
+export type NaclBoxParamsEB = {
+
+    /**
+     * 256-bit key.
+     * 
+     * @remarks
+     * Must be encoded with `hex`.
+     */
+    their_public: string,
+
+    /**
+     * 256-bit key.
+     * 
+     * @remarks
+     * Must be encoded with `hex`.
+     */
+    secret: string,
+
+    /**
+     * 96-bit nonce.
+     * 
+     * @remarks
+     * Must be encoded with `hex`.
+     */
+    nonce: string
+}
+
+export type NaclSecretBoxParamsEB = {
+
+    /**
+     * Secret key - unprefixed 0-padded to 64 symbols hex string
+     */
+    key: string,
+
+    /**
+     * Nonce in `hex`
+     */
+    nonce: string
+}
+
+export type CryptoBoxSecret = {
+    type: 'RandomSeedPhrase'
+
+    /**
+     */
+    dictionary: number,
+
+    /**
+     */
+    wordcount: number
+} | {
+    type: 'PredefinedSeedPhrase'
+
+    /**
+     */
+    phrase: string,
+
+    /**
+     */
+    dictionary: number,
+
+    /**
+     */
+    wordcount: number
+} | {
+    type: 'EncryptedSecret'
+
+    /**
+     * It is an object, containing encrypted seed phrase or private key (now we support only seed phrase).
+     */
+    encrypted_secret: string
+}
+
+export function cryptoBoxSecretRandomSeedPhrase(dictionary: number, wordcount: number): CryptoBoxSecret {
+    return {
+        type: 'RandomSeedPhrase',
+        dictionary,
+        wordcount,
+    };
+}
+
+export function cryptoBoxSecretPredefinedSeedPhrase(phrase: string, dictionary: number, wordcount: number): CryptoBoxSecret {
+    return {
+        type: 'PredefinedSeedPhrase',
+        phrase,
+        dictionary,
+        wordcount,
+    };
+}
+
+export function cryptoBoxSecretEncryptedSecret(encrypted_secret: string): CryptoBoxSecret {
+    return {
+        type: 'EncryptedSecret',
+        encrypted_secret,
+    };
+}
+
+export type CryptoBoxHandle = number
+
+export type BoxEncryptionAlgorithm = ({
+    type: 'ChaCha20'
+} & ChaCha20ParamsCB) | ({
+    type: 'NaclBox'
+} & NaclBoxParamsCB) | ({
+    type: 'NaclSecretBox'
+} & NaclSecretBoxParamsCB)
+
+export function boxEncryptionAlgorithmChaCha20(params: ChaCha20ParamsCB): BoxEncryptionAlgorithm {
+    return {
+        type: 'ChaCha20',
+        ...params,
+    };
+}
+
+export function boxEncryptionAlgorithmNaclBox(params: NaclBoxParamsCB): BoxEncryptionAlgorithm {
+    return {
+        type: 'NaclBox',
+        ...params,
+    };
+}
+
+export function boxEncryptionAlgorithmNaclSecretBox(params: NaclSecretBoxParamsCB): BoxEncryptionAlgorithm {
+    return {
+        type: 'NaclSecretBox',
+        ...params,
+    };
+}
+
+export type ChaCha20ParamsCB = {
+
+    /**
+     * 96-bit nonce.
+     * 
+     * @remarks
+     * Must be encoded with `hex`.
+     */
+    nonce: string
+}
+
+export type NaclBoxParamsCB = {
+
+    /**
+     * 256-bit key.
+     * 
+     * @remarks
+     * Must be encoded with `hex`.
+     */
+    their_public: string,
+
+    /**
+     * 96-bit nonce.
+     * 
+     * @remarks
+     * Must be encoded with `hex`.
+     */
+    nonce: string
+}
+
+export type NaclSecretBoxParamsCB = {
+
+    /**
+     * Nonce in `hex`
+     */
+    nonce: string
 }
 
 export type ParamsOfFactorize = {
@@ -891,6 +1107,7 @@ export type ParamsOfNaclBoxOpen = {
     encrypted: string,
 
     /**
+     * Nonce
      */
     nonce: string,
 
@@ -950,7 +1167,7 @@ export type ParamsOfNaclSecretBoxOpen = {
     nonce: string,
 
     /**
-     * Public key - unprefixed 0-padded to 64 symbols hex string
+     * Secret key - unprefixed 0-padded to 64 symbols hex string
      */
     key: string
 }
@@ -1213,12 +1430,151 @@ export type ResultOfChaCha20 = {
     data: string
 }
 
+export type ParamsOfCreateCryptoBox = {
+
+    /**
+     * Salt used for secret encryption. For example, a mobile device can use device ID as salt.
+     */
+    secret_encryption_salt: string,
+
+    /**
+     * Cryptobox secret
+     */
+    secret: CryptoBoxSecret
+}
+
+export type RegisteredCryptoBox = {
+
+    /**
+     */
+    handle: CryptoBoxHandle
+}
+
+export type ParamsOfAppPasswordProvider = {
+    type: 'GetPassword'
+
+    /**
+     * Temporary library pubkey, that is used on application side for password encryption, along with application temporary private key and nonce. Used for password decryption on library side.
+     */
+    encryption_public_key: string
+}
+
+export function paramsOfAppPasswordProviderGetPassword(encryption_public_key: string): ParamsOfAppPasswordProvider {
+    return {
+        type: 'GetPassword',
+        encryption_public_key,
+    };
+}
+
+export type ResultOfAppPasswordProvider = {
+    type: 'GetPassword'
+
+    /**
+     * Password, encrypted and encoded to base64. Crypto box uses this password to decrypt its secret (seed phrase).
+     */
+    encrypted_password: string,
+
+    /**
+     * Hex encoded public key of a temporary key pair, used for password encryption on application side.
+     * 
+     * @remarks
+     * Used together with `encryption_public_key` to decode `encrypted_password`.
+     */
+    app_encryption_pubkey: string
+}
+
+export function resultOfAppPasswordProviderGetPassword(encrypted_password: string, app_encryption_pubkey: string): ResultOfAppPasswordProvider {
+    return {
+        type: 'GetPassword',
+        encrypted_password,
+        app_encryption_pubkey,
+    };
+}
+
+export type ResultOfGetCryptoBoxInfo = {
+
+    /**
+     * Secret (seed phrase) encrypted with salt and password.
+     */
+    encrypted_secret: string
+}
+
+export type ResultOfGetCryptoBoxSeedPhrase = {
+
+    /**
+     */
+    phrase: string,
+
+    /**
+     */
+    dictionary: number,
+
+    /**
+     */
+    wordcount: number
+}
+
+export type ParamsOfGetSigningBoxFromCryptoBox = {
+
+    /**
+     * Crypto Box Handle.
+     */
+    handle: number,
+
+    /**
+     * HD key derivation path.
+     * 
+     * @remarks
+     * By default, Everscale HD path is used.
+     */
+    hdpath?: string,
+
+    /**
+     * Store derived secret for this lifetime (in ms). The timer starts after each signing box operation. Secrets will be deleted immediately after each signing box operation, if this value is not set.
+     */
+    secret_lifetime?: number
+}
+
 export type RegisteredSigningBox = {
 
     /**
      * Handle of the signing box.
      */
     handle: SigningBoxHandle
+}
+
+export type ParamsOfGetEncryptionBoxFromCryptoBox = {
+
+    /**
+     * Crypto Box Handle.
+     */
+    handle: number,
+
+    /**
+     * HD key derivation path.
+     * 
+     * @remarks
+     * By default, Everscale HD path is used.
+     */
+    hdpath?: string,
+
+    /**
+     * Encryption algorithm.
+     */
+    algorithm: BoxEncryptionAlgorithm,
+
+    /**
+     * Store derived secret for encryption algorithm for this lifetime (in ms). The timer starts after each encryption box operation. Secrets will be deleted (overwritten with zeroes) after each encryption operation, if this value is not set.
+     */
+    secret_lifetime?: number
+}
+
+export type RegisteredEncryptionBox = {
+
+    /**
+     * Handle of the encryption box.
+     */
+    handle: EncryptionBoxHandle
 }
 
 export type ParamsOfAppSigningBox = {
@@ -1311,14 +1667,6 @@ export type ResultOfSigningBoxSign = {
      * Encoded with `hex`.
      */
     signature: string
-}
-
-export type RegisteredEncryptionBox = {
-
-    /**
-     * Handle of the encryption box
-     */
-    handle: EncryptionBoxHandle
 }
 
 export type ParamsOfAppEncryptionBox = {
@@ -1471,6 +1819,33 @@ export type ParamsOfCreateEncryptionBox = {
     algorithm: EncryptionAlgorithm
 }
 
+type ParamsOfAppPasswordProviderGetPassword = {
+    encryption_public_key: string
+}
+
+type ResultOfAppPasswordProviderGetPassword = {
+    encrypted_password: string,
+    app_encryption_pubkey: string
+}
+
+export interface AppPasswordProvider {
+    get_password(params: ParamsOfAppPasswordProviderGetPassword): Promise<ResultOfAppPasswordProviderGetPassword>,
+}
+
+async function dispatchAppPasswordProvider(obj: AppPasswordProvider, params: ParamsOfAppPasswordProvider, app_request_id: number | null, client: IClient) {
+    try {
+        let result = {};
+        switch (params.type) {
+            case 'GetPassword':
+                result = await obj.get_password(params);
+                break;
+        }
+        client.resolve_app_request(app_request_id, { type: params.type, ...result });
+    }
+    catch (error) {
+        client.reject_app_request(app_request_id, error);
+    }
+}
 type ResultOfAppSigningBoxGetPublicKey = {
     public_key: string
 }
@@ -1941,6 +2316,103 @@ export class CryptoModule {
      */
     chacha20(params: ParamsOfChaCha20): Promise<ResultOfChaCha20> {
         return this.client.request('crypto.chacha20', params);
+    }
+
+    /**
+     * Creates a Crypto Box instance.
+     * 
+     * @remarks
+     * Crypto Box is a root crypto object, that encapsulates some secret (seed phrase usually)
+     * in encrypted form and acts as a factory for all crypto primitives used in SDK:
+     * keys for signing and encryption, derived from this secret.
+     * 
+     * Crypto Box encrypts original Seed Phrase with salt and password that is retrieved
+     * from `password_provider` callback, implemented on Application side.
+     * 
+     * When used, decrypted secret shows up in core library's memory for a very short period
+     * of time and then is immediately overwritten with zeroes.
+     * 
+     * @param {ParamsOfCreateCryptoBox} params
+     * @returns RegisteredCryptoBox
+     */
+    create_crypto_box(params: ParamsOfCreateCryptoBox, obj: AppPasswordProvider): Promise<RegisteredCryptoBox> {
+        return this.client.request('crypto.create_crypto_box', params, (params: any, responseType: number) => {
+            if (responseType === 3) {
+                dispatchAppPasswordProvider(obj, params.request_data, params.app_request_id, this.client);
+            } else if (responseType === 4) {
+                dispatchAppPasswordProvider(obj, params, null, this.client);
+            }
+        });
+    }
+
+    /**
+     * Removes Crypto Box. Clears all secret data.
+     * 
+     * @param {RegisteredCryptoBox} params
+     * @returns 
+     */
+    remove_crypto_box(params: RegisteredCryptoBox): Promise<void> {
+        return this.client.request('crypto.remove_crypto_box', params);
+    }
+
+    /**
+     * Get Crypto Box Info. Used to get `encrypted_secret` that should be used for all the cryptobox initializations except the first one.
+     * 
+     * @param {RegisteredCryptoBox} params
+     * @returns ResultOfGetCryptoBoxInfo
+     */
+    get_crypto_box_info(params: RegisteredCryptoBox): Promise<ResultOfGetCryptoBoxInfo> {
+        return this.client.request('crypto.get_crypto_box_info', params);
+    }
+
+    /**
+     * Get Crypto Box Seed Phrase.
+     * 
+     * @remarks
+     * Attention! Store this data in your application for a very short period of time and overwrite it with zeroes ASAP.
+     * 
+     * @param {RegisteredCryptoBox} params
+     * @returns ResultOfGetCryptoBoxSeedPhrase
+     */
+    get_crypto_box_seed_phrase(params: RegisteredCryptoBox): Promise<ResultOfGetCryptoBoxSeedPhrase> {
+        return this.client.request('crypto.get_crypto_box_seed_phrase', params);
+    }
+
+    /**
+     * Get handle of Signing Box derived from Crypto Box.
+     * 
+     * @param {ParamsOfGetSigningBoxFromCryptoBox} params
+     * @returns RegisteredSigningBox
+     */
+    get_signing_box_from_crypto_box(params: ParamsOfGetSigningBoxFromCryptoBox): Promise<RegisteredSigningBox> {
+        return this.client.request('crypto.get_signing_box_from_crypto_box', params);
+    }
+
+    /**
+     * Gets Encryption Box from Crypto Box.
+     * 
+     * @remarks
+     * Derives encryption keypair from cryptobox secret and hdpath and
+     * stores it in cache for `secret_lifetime`
+     * or until explicitly cleared by `clear_crypto_box_secret_cache` method.
+     * If `secret_lifetime` is not specified - overwrites encryption secret with zeroes immediately after
+     * encryption operation.
+     * 
+     * @param {ParamsOfGetEncryptionBoxFromCryptoBox} params
+     * @returns RegisteredEncryptionBox
+     */
+    get_encryption_box_from_crypto_box(params: ParamsOfGetEncryptionBoxFromCryptoBox): Promise<RegisteredEncryptionBox> {
+        return this.client.request('crypto.get_encryption_box_from_crypto_box', params);
+    }
+
+    /**
+     * Removes cached secrets (overwrites with zeroes) from all signing and encryption boxes, derived from crypto box.
+     * 
+     * @param {RegisteredCryptoBox} params
+     * @returns 
+     */
+    clear_crypto_box_secret_cache(params: RegisteredCryptoBox): Promise<void> {
+        return this.client.request('crypto.clear_crypto_box_secret_cache', params);
     }
 
     /**
@@ -7091,8 +7563,11 @@ export class ProofsModule {
      * The trusted block is the authority root, as well, as the zero-state. Each trusted block is the
      * `id` (e.g. `root_hash`) of the already proven key-block. There can be plenty of trusted
      * blocks, so there can be a lot of authority roots. The hashes of trusted blocks for MainNet
-     * and DevNet are hardcoded in SDK in a separated binary file (trusted_key_blocks.bin) and can
-     * be updated for each release.
+     * and DevNet are hardcoded in SDK in a separated binary file (trusted_key_blocks.bin) and is
+     * being updated for each release by using `update_trusted_blocks` utility.
+     * 
+     * See [update_trusted_blocks](../../../tools/update_trusted_blocks) directory for more info.
+     * 
      * In future SDK releases, one will also be able to provide their hashes of trusted blocks for
      * other networks, besides for MainNet and DevNet.
      * By using trusted key-blocks, in order to prove any block, we can prove chain of key-blocks to
