@@ -207,12 +207,26 @@ export type NetworkConfig = {
     query_timeout?: number,
 
     /**
+     * Queries protocol.
+     * 
+     * @remarks
+     * `HTTP` or `WS`. 
+     * Default is `HTTP`.
+     */
+    queries_protocol?: NetworkQueriesProtocol,
+
+    /**
      * Access key to GraphQL API.
      * 
      * @remarks
      * At the moment is not used in production.
      */
     access_key?: string
+}
+
+export enum NetworkQueriesProtocol {
+    HTTP = "HTTP",
+    WS = "WS"
 }
 
 export type CryptoConfig = {
