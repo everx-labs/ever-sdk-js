@@ -143,7 +143,7 @@ fn check_ndk(builder: &Build, the_archs: &[&Arch]) {
     std::env::set_current_dir(&ndk_dir).unwrap();
     for &arch in the_archs {
         assert!(exec(
-            "python",
+            "python3",
             &[
                 path_str(&maker),
                 "--arch",
