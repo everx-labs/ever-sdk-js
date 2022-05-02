@@ -9,7 +9,8 @@
 		"url": "https://github.com/tonlabs/ever-sdk-js.git"
 	},
 	"scripts": {
-		"prepublishOnly": "npm i && tsc"
+		"prepublishOnly": "npm i && tsc",
+		"build": "tsc"
 	},
 	"publishConfig": {
 		"access": "public"
