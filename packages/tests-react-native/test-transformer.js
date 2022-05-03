@@ -16,20 +16,21 @@ function getIp() {
 
 module.exports.transform = function (src, filename, options) {
     if (typeof src === "object") {
-        // handle RN >= 0.46
         ({ src, filename, options } = src);
+    } else {
+        console.error(filename);
     }
 
     if (filename.endsWith("entry.js")) {
         console.log("Transforming " + filename);
         const endpoint = process.env.TON_NETWORK_ADDRESS || `http://${getIp()}`;
+        console.log("Endpoint " + endpoint);
         src = src.replace("http://localhost", endpoint);
-        return upstreamTransformer.transform({
-            src,
-            filename: filename,
-            options,
-        });
-    } else {
-        return upstreamTransformer.transform({ src, filename, options });
     }
+    if (filename.endsWith("tests/proofs.js") && options.platform === 'android') {
+        console.log("Transforming " + filename);
+        console.log("Skip proof tests");
+        src = src.replace(/jest_1\.test/g, "jest_1.test.skip");
+    }
+    return upstreamTransformer.transform({ src, filename, options });
 };

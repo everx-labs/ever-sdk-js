@@ -56,12 +56,6 @@ start(async () => {
     TestsRunner.setTimeout = setTimeout;
     TestsRunner.exit = process.exit;
 
-    const port = 8081;
-    const listeners = await findProcess("port", port, true);
-    if (listeners.length > 0) {
-        console.log(`The process [${listeners[0].cmd}] is listening on the port ${port}. Kill it.`);
-        process.kill(listeners[0].pid);
-    }
     let runTarget = '';
     process.argv.forEach((arg) => {
         if (arg.toLowerCase() === 'ios') {
@@ -70,11 +64,17 @@ start(async () => {
             runTarget = 'run-android';
         }
     });
+    const port = ({'run-ios': 8081, 'run-android': 8082})[runTarget];
+    const listeners = await findProcess("port", port, true);
+    if (listeners.length > 0) {
+        console.log(`The process [${listeners[0].cmd}] is listening on the port ${port}. Kill it.`);
+        process.kill(listeners[0].pid);
+    }
     if (runTarget === '') {
         console.log('Run target missing. Use: node run-suite ios | android.');
         process.exit(1);
     }
     const logger = new TestsLogger();
-    start(() => run('npx', ['react-native', 'start', '--reset-cache'], logger));
-    await run('npx', ['react-native', runTarget], null);
+    start(() => run('npx', ['react-native', 'start', '--reset-cache', '--port', port], logger));
+    await run('npx', ['react-native', runTarget, '--port', port], null);
 });

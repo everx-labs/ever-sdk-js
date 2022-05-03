@@ -99,7 +99,7 @@ export type ClientConfig = {
 export type NetworkConfig = {
 
     /**
-     * DApp Server public address. For instance, for `net.ton.dev/graphql` GraphQL endpoint the server address will be net.ton.dev
+     * **This field is deprecated, but left for backward-compatibility.** DApp Server public address.
      */
     server_address?: string,
 
@@ -107,7 +107,8 @@ export type NetworkConfig = {
      * List of DApp Server addresses.
      * 
      * @remarks
-     * Any correct URL format can be specified, including IP addresses This parameter is prevailing over `server_address`.
+     * Any correct URL format can be specified, including IP addresses. This parameter is prevailing over `server_address`.
+     * Check the full list of [supported network endpoints](../ton-os-api/networks.md).
      */
     endpoints?: string[],
 
@@ -171,7 +172,7 @@ export type NetworkConfig = {
      * Maximum number of randomly chosen endpoints the library uses to broadcast a message.
      * 
      * @remarks
-     * Default is 2.
+     * Default is 1.
      */
     sending_endpoint_count?: number,
 
@@ -214,6 +215,26 @@ export type NetworkConfig = {
      * Default is `HTTP`.
      */
     queries_protocol?: NetworkQueriesProtocol,
+
+    /**
+     * UNSTABLE.
+     * 
+     * @remarks
+     * First REMP status awaiting timeout. If no status recieved during the timeout than fallback transaction scenario is activated.
+     * 
+     * Must be specified in milliseconds. Default is 1000 (1 sec).
+     */
+    first_remp_status_timeout?: number,
+
+    /**
+     * UNSTABLE.
+     * 
+     * @remarks
+     * Subsequent REMP status awaiting timeout. If no status recieved during the timeout than fallback transaction scenario is activated.
+     * 
+     * Must be specified in milliseconds. Default is 5000 (5 sec).
+     */
+    next_remp_status_timeout?: number,
 
     /**
      * Access key to GraphQL API.
@@ -472,7 +493,8 @@ export enum CryptoErrorCode {
     CryptoBoxNotRegistered = 130,
     InvalidCryptoBoxType = 131,
     CryptoBoxSecretSerializationError = 132,
-    CryptoBoxSecretDeserializationError = 133
+    CryptoBoxSecretDeserializationError = 133,
+    InvalidNonceSize = 134
 }
 
 export type SigningBoxHandle = number
@@ -3298,7 +3320,12 @@ export type ParamsOfDecodeMessage = {
     /**
      * Message BOC
      */
-    message: string
+    message: string,
+
+    /**
+     * Flag allowing partial BOC decoding when ABI doesn't describe the full body BOC. Controls decoder behaviour when after decoding all described in ABI params there are some data left in BOC: `true` - return decoded values `false` - return error of incomplete BOC deserialization (default)
+     */
+    allow_partial?: boolean
 }
 
 export type DecodedMessageBody = {
@@ -3339,7 +3366,12 @@ export type ParamsOfDecodeMessageBody = {
     /**
      * True if the body belongs to the internal message.
      */
-    is_internal: boolean
+    is_internal: boolean,
+
+    /**
+     * Flag allowing partial BOC decoding when ABI doesn't describe the full body BOC. Controls decoder behaviour when after decoding all described in ABI params there are some data left in BOC: `true` - return decoded values `false` - return error of incomplete BOC deserialization (default)
+     */
+    allow_partial?: boolean
 }
 
 export type ParamsOfEncodeAccount = {
@@ -3396,7 +3428,12 @@ export type ParamsOfDecodeAccountData = {
     /**
      * Data BOC or BOC handle
      */
-    data: string
+    data: string,
+
+    /**
+     * Flag allowing partial BOC decoding when ABI doesn't describe the full body BOC. Controls decoder behaviour when after decoding all described in ABI params there are some data left in BOC: `true` - return decoded values `false` - return error of incomplete BOC deserialization (default)
+     */
+    allow_partial?: boolean
 }
 
 export type ResultOfDecodeAccountData = {
@@ -3493,7 +3530,12 @@ export type ParamsOfDecodeInitialData = {
     /**
      * Data BOC or BOC handle
      */
-    data: string
+    data: string,
+
+    /**
+     * Flag allowing partial BOC decoding when ABI doesn't describe the full body BOC. Controls decoder behaviour when after decoding all described in ABI params there are some data left in BOC: `true` - return decoded values `false` - return error of incomplete BOC deserialization (default)
+     */
+    allow_partial?: boolean
 }
 
 export type ResultOfDecodeInitialData = {
@@ -4583,7 +4625,10 @@ export enum ProcessingErrorCode {
     CanNotCheckBlockShard = 510,
     BlockNotFound = 511,
     InvalidData = 512,
-    ExternalSignerMustNotBeUsed = 513
+    ExternalSignerMustNotBeUsed = 513,
+    MessageRejected = 514,
+    InvalidRempStatus = 515,
+    NextRempStatusTimeout = 516
 }
 
 export type ProcessingEvent = {
@@ -4686,6 +4731,68 @@ export type ProcessingEvent = {
     /**
      */
     error: ClientError
+} | {
+    type: 'RempSentToValidators'
+
+    /**
+     */
+    message_id: string,
+
+    /**
+     */
+    timestamp: bigint,
+
+    /**
+     */
+    json: any
+} | {
+    type: 'RempIncludedIntoBlock'
+
+    /**
+     */
+    message_id: string,
+
+    /**
+     */
+    timestamp: bigint,
+
+    /**
+     */
+    json: any
+} | {
+    type: 'RempIncludedIntoAcceptedBlock'
+
+    /**
+     */
+    message_id: string,
+
+    /**
+     */
+    timestamp: bigint,
+
+    /**
+     */
+    json: any
+} | {
+    type: 'RempOther'
+
+    /**
+     */
+    message_id: string,
+
+    /**
+     */
+    timestamp: bigint,
+
+    /**
+     */
+    json: any
+} | {
+    type: 'RempError'
+
+    /**
+     */
+    error: ClientError
 }
 
 export function processingEventWillFetchFirstBlock(): ProcessingEvent {
@@ -4753,6 +4860,49 @@ export function processingEventMessageExpired(message_id: string, message: strin
         type: 'MessageExpired',
         message_id,
         message,
+        error,
+    };
+}
+
+export function processingEventRempSentToValidators(message_id: string, timestamp: bigint, json: any): ProcessingEvent {
+    return {
+        type: 'RempSentToValidators',
+        message_id,
+        timestamp,
+        json,
+    };
+}
+
+export function processingEventRempIncludedIntoBlock(message_id: string, timestamp: bigint, json: any): ProcessingEvent {
+    return {
+        type: 'RempIncludedIntoBlock',
+        message_id,
+        timestamp,
+        json,
+    };
+}
+
+export function processingEventRempIncludedIntoAcceptedBlock(message_id: string, timestamp: bigint, json: any): ProcessingEvent {
+    return {
+        type: 'RempIncludedIntoAcceptedBlock',
+        message_id,
+        timestamp,
+        json,
+    };
+}
+
+export function processingEventRempOther(message_id: string, timestamp: bigint, json: any): ProcessingEvent {
+    return {
+        type: 'RempOther',
+        message_id,
+        timestamp,
+        json,
+    };
+}
+
+export function processingEventRempError(error: ClientError): ProcessingEvent {
+    return {
+        type: 'RempError',
         error,
     };
 }
@@ -6583,8 +6733,8 @@ export class NetModule {
      * 
      * @remarks
      * *Attention* this query retrieves data from 'Counterparties' service which is not supported in
-     * the opensource version of DApp Server (and will not be supported) as well as in TON OS SE (will be supported in SE in future),
-     * but is always accessible via [TON OS Devnet/Mainnet Clouds](https://docs.ton.dev/86757ecb2/p/85c869-networks)
+     * the opensource version of DApp Server (and will not be supported) as well as in Evernode SE (will be supported in SE in future),
+     * but is always accessible via [EVER OS Clouds](../ton-os-api/networks.md)
      * 
      * @param {ParamsOfQueryCounterparties} params
      * @returns ResultOfQueryCollection
@@ -7572,7 +7722,7 @@ export class ProofsModule {
      * a trusted validator set. So we need to check all key-blocks' proofs, started from the zero-state
      * and until the block, which we want to prove. But it can take a lot of time and traffic to
      * download and prove all key-blocks on a client. For solving this, special trusted blocks are used
-     * in TON-SDK.
+     * in Ever-SDK.
      * 
      * The trusted block is the authority root, as well, as the zero-state. Each trusted block is the
      * `id` (e.g. `root_hash`) of the already proven key-block. There can be plenty of trusted

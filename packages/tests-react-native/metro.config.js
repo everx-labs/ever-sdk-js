@@ -9,12 +9,13 @@ const extraNodeModules = {};
 const watchFolders = [];
 
 for (const name of [
-    "path",
-    "fs",
-    "util",
-    "module",
-    "stream",
     "constants",
+    "fs",
+    "module",
+    "path",
+    // "process", this mock will be generated inside ./entry.js
+    "stream",
+    "util",
 ]) {
     extraNodeModules[name] = path.resolve(__dirname, "node-mock", name);
 }
@@ -34,25 +35,19 @@ for (const name of [
     watchFolders.push(resolvedPath);
 }
 
-
 module.exports = {
-    transformer: {
-        getTransformOptions: async () => ({
-            transform: {
-                experimentalImportSupport: false,
-                inlineRequires: false,
-            },
-        }),
-        babelTransformerPath: require.resolve("./test-transformer")
-    },
-    resolver: {
-        sourceExts: ["js", "json", "ts", "tsx", "jsx"],
-        extraNodeModules,
-    },
-    watchFolders,
-    // serializer: {
-    //     getModulesRunBeforeMainModule: () => {
-    //         return [path.resolve(__dirname, 'entry.js')];
-    //     }
-    // }
+  transformer: {
+    getTransformOptions: async () => ({
+      transform: {
+        experimentalImportSupport: true,
+        inlineRequires: true,
+      },
+    }),
+    babelTransformerPath: require.resolve("./test-transformer")
+  },
+  resolver: {
+    sourceExts: ["js", "json", "ts", "tsx", "jsx"],
+    extraNodeModules,
+  },
+  watchFolders,
 };

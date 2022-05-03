@@ -28,6 +28,7 @@ build/
 .gradle
 local.properties
 *.iml
+*.hprof
 
 # node.js
 #
@@ -41,34 +42,8 @@ buck-out/
 *.keystore
 !debug.keystore
 
-# fastlane
-#
-# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
-# screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/
-
-*/fastlane/report.xml
-*/fastlane/Preview.html
-*/fastlane/screenshots
-
 # Bundle artifact
 *.jsbundle
 
 # CocoaPods
 /ios/Pods/
-/yarn.lock
-/ios/Podfile.lock
-/android/gradle/wrapper/
-/suite/_/assets.js
-/suite/_/giver.js
-/suite/_/init-tests.js
-/suite/aggregations.js
-/suite/auth.js
-/suite/client.js
-/suite/contracts.js
-/suite/crypto.js
-/suite/deploy-ex.js
-/suite/queries.js
-/suite/run-local.js
-/suite/test-error-messages.js

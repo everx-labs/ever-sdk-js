@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/tests-react-native",
-	"version": "1.32.0",
+	"version": "1.33.0",
 	"private": true,
 	"main": "index.js",
 	"browser": true,
@@ -8,28 +8,24 @@
 		"android": "react-native run-android",
 		"ios": "react-native run-ios",
 		"start": "react-native start",
-		"test": "jest",
-		"lint": "eslint .",
-		"npm install": "npm install",
-		"prepare tests": "node prepare-suite.js"
 	},
-	"dependencies": {
-		"@eversdk/core": "file:../core",
-		"@eversdk/lib-react-native": "file:../lib-react-native",
-		"@eversdk/tests": "file:../tests",
-		"assert": "^2.0.0",
-		"buffer": "^6.0.2",
-		"react": "16.13.1",
-		"react-native": "0.67.2"
-	},
-	"devDependencies": {
-		"@babel/core": "^7.12.3",
-		"@babel/runtime": "^7.12.5",
-		"@react-native-community/eslint-config": "^2.0.0",
-		"@types/react": "^16",
-		"@types/react-native": "^0",
-		"eslint": "^7.13.0",
-		"find-process": "^1.4.4",
-		"metro-react-native-babel-preset": "^0.64.0"
-	}
+  "dependencies": {
+    "@eversdk/core": "file:../core",
+    "@eversdk/lib-react-native": "file:../lib-react-native",
+    "@eversdk/tests": "file:../tests",
+    "assert": "^2.0.0",
+    "buffer": "^6.0.2",
+    "react-native": "0.67.3",
+    "react": "17.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.15.0",
+    "@babel/runtime": "^7.15.0",
+    "@types/react-native": "0.67.3",
+    "@types/react": "17.0.21",
+    "metro-react-native-babel-preset": "^0.66.2",
+    "metro-react-native-babel-transformer": "^0.66.2",
+    "find-process": "1.4.4",
+    "typescript": "4.6.2"
+  }
 }

@@ -55,7 +55,7 @@ if (global.process.env === undefined) {
     global.process.env = {};
 }
 
-global.process.env.TON_NETWORK_ADDRESS = "http://localhost";
+global.process.env.TON_NETWORK_ADDRESS = "http://localhost";  // this address will be modified inside ./test-transformer.js
 
 export default function () {
 }
