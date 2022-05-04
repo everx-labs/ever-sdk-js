@@ -5,29 +5,34 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      # Disable version updates for npm dependencies
     open-pull-requests-limit: 0
+
   - package-ecosystem: "npm"
     directory: "/packages/core"
     schedule:
       interval: "weekly"
+    target-branch: "dev"
 
   - package-ecosystem: "npm"
     directory: "/packages/lib-node"
     schedule:
       interval: "weekly"
+    target-branch: "dev"
 
   - package-ecosystem: "npm"
     directory: "/packages/lib-web"
     schedule:
       interval: "weekly"
+    target-branch: "dev"
 
   - package-ecosystem: "npm"
     directory: "/packages/lib-react-native"
     schedule:
       interval: "weekly"
+    target-branch: "dev"
 
   - package-ecosystem: "npm"
     directory: "/packages/lib-react-native-jsi"
     schedule:
       interval: "weekly"
+    target-branch: "dev"
