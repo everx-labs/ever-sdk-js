@@ -1,6 +1,6 @@
 {
   "name": "@eversdk/tests",
-  "version": "1.33.0",
+  "version": "1.33.1",
   "private": true,
   "description": "TON Client Tests",
   "main": "dist/index.js",
@@ -12,9 +12,9 @@
     "type": "git",
     "url": "https://github.com/tonlabs/ever-sdk-js.git"
   },
-	"scripts": {
-		"build": "tsc"
-	},
+  "scripts": {
+    "build": "tsc"
+  },
   "keywords": [
     "TON",
     "Client",

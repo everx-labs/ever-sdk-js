@@ -1,6 +1,6 @@
 {
   "name": "@eversdk/lib-react-native-jsi",
-  "version": "1.33.0",
+  "version": "1.33.1",
   "description": "TON Client React Native JSI Module",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -60,15 +60,15 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "@react-native-community/eslint-config": "^2.0.0",
+    "@react-native-community/eslint-config": "^3.0.1",
     "@release-it/conventional-changelog": "^2.0.0",
-    "@types/jest": "^26.0.0",
+    "@types/jest": "^27.5.0",
     "@types/react": "^16.9.19",
     "@types/react-native": "0.63.25",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-prettier": "^3.1.3",
-    "husky": "^4.2.5",
+    "husky": "^7.0.4",
     "jest": "^26.0.1",
     "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
