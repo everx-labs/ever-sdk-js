@@ -55,39 +55,23 @@ export enum ClientErrorCode {
 
 export type ClientError = {
 
-    /**
-     */
     code: number,
 
-    /**
-     */
     message: string,
 
-    /**
-     */
     data: any
 }
 
 export type ClientConfig = {
 
-    /**
-     */
     network?: NetworkConfig,
 
-    /**
-     */
     crypto?: CryptoConfig,
 
-    /**
-     */
     abi?: AbiConfig,
 
-    /**
-     */
     boc?: BocConfig,
 
-    /**
-     */
     proofs?: ProofsConfig,
 
     /**
@@ -245,11 +229,17 @@ export type NetworkConfig = {
     access_key?: string
 }
 
+/**
+ * Network protocol used to perform GraphQL queries.
+ */
 export enum NetworkQueriesProtocol {
     HTTP = "HTTP",
     WS = "WS"
 }
 
+/**
+ * Crypto config.
+ */
 export type CryptoConfig = {
 
     /**
@@ -343,21 +333,46 @@ export type ParamsOfAppRequest = {
     request_data: any
 }
 
-export type AppRequestResult = {
-    type: 'Error'
+/**
+ * Error occurred during request processing
+ */
+export type AppRequestResultErrorVariant = {
 
     /**
      * Error description
      */
     text: string
-} | {
-    type: 'Ok'
+}
+
+/**
+ * Request processed successfully
+ */
+export type AppRequestResultOkVariant = {
 
     /**
      * Request processing result
      */
     result: any
 }
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Error`
+ * 
+ * Error occurred during request processing
+ * 
+ * ### `Ok`
+ * 
+ * Request processed successfully
+ */
+export type AppRequestResult = ({
+    type: 'Error'
+} & AppRequestResultErrorVariant) | ({
+    type: 'Ok'
+} & AppRequestResultOkVariant)
 
 export function appRequestResultError(text: string): AppRequestResult {
     return {
@@ -375,8 +390,6 @@ export function appRequestResultOk(result: any): AppRequestResult {
 
 export type ResultOfGetApiReference = {
 
-    /**
-     */
     api: any
 }
 
@@ -501,6 +514,9 @@ export type SigningBoxHandle = number
 
 export type EncryptionBoxHandle = number
 
+/**
+ * Encryption box information.
+ */
 export type EncryptionBoxInfo = {
 
     /**
@@ -524,6 +540,23 @@ export type EncryptionBoxInfo = {
     public?: any
 }
 
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `AES`
+ * 
+ * 
+ * ### `ChaCha20`
+ * 
+ * 
+ * ### `NaclBox`
+ * 
+ * 
+ * ### `NaclSecretBox`
+ * 
+ */
 export type EncryptionAlgorithm = ({
     type: 'AES'
 } & AesParamsEB) | ({
@@ -572,27 +605,17 @@ export enum CipherMode {
 
 export type AesParamsEB = {
 
-    /**
-     */
     mode: CipherMode,
 
-    /**
-     */
     key: string,
 
-    /**
-     */
     iv?: string
 }
 
 export type AesInfo = {
 
-    /**
-     */
     mode: CipherMode,
 
-    /**
-     */
     iv?: string
 }
 
@@ -655,38 +678,84 @@ export type NaclSecretBoxParamsEB = {
     nonce: string
 }
 
-export type CryptoBoxSecret = {
-    type: 'RandomSeedPhrase'
+/**
+ * Creates Crypto Box from a random seed phrase. This option can be used if a developer doesn't want the seed phrase to leave the core library's memory, where it is stored encrypted.
+ * 
+ * @remarks
+ * This type should be used upon the first wallet initialization, all further initializations
+ * should use `EncryptedSecret` type instead.
+ * 
+ * Get `encrypted_secret` with `get_crypto_box_info` function and store it on your side.
+ */
+export type CryptoBoxSecretRandomSeedPhraseVariant = {
 
-    /**
-     */
     dictionary: number,
 
-    /**
-     */
     wordcount: number
-} | {
-    type: 'PredefinedSeedPhrase'
+}
 
-    /**
-     */
+/**
+ * Restores crypto box instance from an existing seed phrase. This type should be used when Crypto Box is initialized from a seed phrase, entered by a user.
+ * 
+ * @remarks
+ * This type should be used only upon the first wallet initialization, all further
+ * initializations should use `EncryptedSecret` type instead.
+ * 
+ * Get `encrypted_secret` with `get_crypto_box_info` function and store it on your side.
+ */
+export type CryptoBoxSecretPredefinedSeedPhraseVariant = {
+
     phrase: string,
 
-    /**
-     */
     dictionary: number,
 
-    /**
-     */
     wordcount: number
-} | {
-    type: 'EncryptedSecret'
+}
+
+/**
+ * Use this type for wallet reinitializations, when you already have `encrypted_secret` on hands. To get `encrypted_secret`, use `get_crypto_box_info` function after you initialized your crypto box for the first time.
+ * 
+ * @remarks
+ * It is an object, containing seed phrase or private key, encrypted with
+ * `secret_encryption_salt` and password from `password_provider`.
+ * 
+ * Note that if you want to change salt or password provider, then you need to reinitialize
+ * the wallet with `PredefinedSeedPhrase`, then get `EncryptedSecret` via `get_crypto_box_info`,
+ * store it somewhere, and only after that initialize the wallet with `EncryptedSecret` type.
+ */
+export type CryptoBoxSecretEncryptedSecretVariant = {
 
     /**
      * It is an object, containing encrypted seed phrase or private key (now we support only seed phrase).
      */
     encrypted_secret: string
 }
+
+/**
+ * Crypto Box Secret.
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `RandomSeedPhrase`
+ * 
+ * Creates Crypto Box from a random seed phrase. This option can be used if a developer doesn't want the seed phrase to leave the core library's memory, where it is stored encrypted.
+ * 
+ * ### `PredefinedSeedPhrase`
+ * 
+ * Restores crypto box instance from an existing seed phrase. This type should be used when Crypto Box is initialized from a seed phrase, entered by a user.
+ * 
+ * ### `EncryptedSecret`
+ * 
+ * Use this type for wallet reinitializations, when you already have `encrypted_secret` on hands. To get `encrypted_secret`, use `get_crypto_box_info` function after you initialized your crypto box for the first time.
+ */
+export type CryptoBoxSecret = ({
+    type: 'RandomSeedPhrase'
+} & CryptoBoxSecretRandomSeedPhraseVariant) | ({
+    type: 'PredefinedSeedPhrase'
+} & CryptoBoxSecretPredefinedSeedPhraseVariant) | ({
+    type: 'EncryptedSecret'
+} & CryptoBoxSecretEncryptedSecretVariant)
 
 export function cryptoBoxSecretRandomSeedPhrase(dictionary: number, wordcount: number): CryptoBoxSecret {
     return {
@@ -714,6 +783,20 @@ export function cryptoBoxSecretEncryptedSecret(encrypted_secret: string): Crypto
 
 export type CryptoBoxHandle = number
 
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `ChaCha20`
+ * 
+ * 
+ * ### `NaclBox`
+ * 
+ * 
+ * ### `NaclSecretBox`
+ * 
+ */
 export type BoxEncryptionAlgorithm = ({
     type: 'ChaCha20'
 } & ChaCha20ParamsCB) | ({
@@ -1481,19 +1564,39 @@ export type ParamsOfCreateCryptoBox = {
 
 export type RegisteredCryptoBox = {
 
-    /**
-     */
     handle: CryptoBoxHandle
 }
 
-export type ParamsOfAppPasswordProvider = {
-    type: 'GetPassword'
+export type ParamsOfAppPasswordProviderGetPasswordVariant = {
 
     /**
      * Temporary library pubkey, that is used on application side for password encryption, along with application temporary private key and nonce. Used for password decryption on library side.
      */
     encryption_public_key: string
 }
+
+/**
+ * Interface that provides a callback that returns an encrypted password, used for cryptobox secret encryption
+ * 
+ * @remarks
+ * To secure the password while passing it from application to the library,
+ * the library generates a temporary key pair, passes the pubkey
+ * to the passwordProvider, decrypts the received password with private key,
+ * and deletes the key pair right away.
+ * 
+ * Application should generate a temporary nacl_box_keypair
+ * and encrypt the password with naclbox function using nacl_box_keypair.secret
+ * and encryption_public_key keys + nonce = 24-byte prefix of encryption_public_key.
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `GetPassword`
+ * 
+ */
+export type ParamsOfAppPasswordProvider = ({
+    type: 'GetPassword'
+} & ParamsOfAppPasswordProviderGetPasswordVariant)
 
 export function paramsOfAppPasswordProviderGetPassword(encryption_public_key: string): ParamsOfAppPasswordProvider {
     return {
@@ -1502,8 +1605,7 @@ export function paramsOfAppPasswordProviderGetPassword(encryption_public_key: st
     };
 }
 
-export type ResultOfAppPasswordProvider = {
-    type: 'GetPassword'
+export type ResultOfAppPasswordProviderGetPasswordVariant = {
 
     /**
      * Password, encrypted and encoded to base64. Crypto box uses this password to decrypt its secret (seed phrase).
@@ -1518,6 +1620,18 @@ export type ResultOfAppPasswordProvider = {
      */
     app_encryption_pubkey: string
 }
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `GetPassword`
+ * 
+ */
+export type ResultOfAppPasswordProvider = ({
+    type: 'GetPassword'
+} & ResultOfAppPasswordProviderGetPasswordVariant)
 
 export function resultOfAppPasswordProviderGetPassword(encrypted_password: string, app_encryption_pubkey: string): ResultOfAppPasswordProvider {
     return {
@@ -1537,16 +1651,10 @@ export type ResultOfGetCryptoBoxInfo = {
 
 export type ResultOfGetCryptoBoxSeedPhrase = {
 
-    /**
-     */
     phrase: string,
 
-    /**
-     */
     dictionary: number,
 
-    /**
-     */
     wordcount: number
 }
 
@@ -1613,16 +1721,43 @@ export type RegisteredEncryptionBox = {
     handle: EncryptionBoxHandle
 }
 
-export type ParamsOfAppSigningBox = {
-    type: 'GetPublicKey'
-} | {
-    type: 'Sign'
+/**
+ * Get signing box public key
+ */
+export type ParamsOfAppSigningBoxGetPublicKeyVariant = {
+
+}
+
+/**
+ * Sign data
+ */
+export type ParamsOfAppSigningBoxSignVariant = {
 
     /**
      * Data to sign encoded as base64
      */
     unsigned: string
 }
+
+/**
+ * Signing box callbacks.
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `GetPublicKey`
+ * 
+ * Get signing box public key
+ * 
+ * ### `Sign`
+ * 
+ * Sign data
+ */
+export type ParamsOfAppSigningBox = ({
+    type: 'GetPublicKey'
+} & ParamsOfAppSigningBoxGetPublicKeyVariant) | ({
+    type: 'Sign'
+} & ParamsOfAppSigningBoxSignVariant)
 
 export function paramsOfAppSigningBoxGetPublicKey(): ParamsOfAppSigningBox {
     return {
@@ -1637,21 +1772,47 @@ export function paramsOfAppSigningBoxSign(unsigned: string): ParamsOfAppSigningB
     };
 }
 
-export type ResultOfAppSigningBox = {
-    type: 'GetPublicKey'
+/**
+ * Result of getting public key
+ */
+export type ResultOfAppSigningBoxGetPublicKeyVariant = {
 
     /**
      * Signing box public key
      */
     public_key: string
-} | {
-    type: 'Sign'
+}
+
+/**
+ * Result of signing data
+ */
+export type ResultOfAppSigningBoxSignVariant = {
 
     /**
      * Data signature encoded as hex
      */
     signature: string
 }
+
+/**
+ * Returning values from signing box callbacks.
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `GetPublicKey`
+ * 
+ * Result of getting public key
+ * 
+ * ### `Sign`
+ * 
+ * Result of signing data
+ */
+export type ResultOfAppSigningBox = ({
+    type: 'GetPublicKey'
+} & ResultOfAppSigningBoxGetPublicKeyVariant) | ({
+    type: 'Sign'
+} & ResultOfAppSigningBoxSignVariant)
 
 export function resultOfAppSigningBoxGetPublicKey(public_key: string): ResultOfAppSigningBox {
     return {
@@ -1705,23 +1866,60 @@ export type ResultOfSigningBoxSign = {
     signature: string
 }
 
-export type ParamsOfAppEncryptionBox = {
-    type: 'GetInfo'
-} | {
-    type: 'Encrypt'
+/**
+ * Get encryption box info
+ */
+export type ParamsOfAppEncryptionBoxGetInfoVariant = {
 
-    /**
-     * Data, encoded in Base64
-     */
-    data: string
-} | {
-    type: 'Decrypt'
+}
+
+/**
+ * Encrypt data
+ */
+export type ParamsOfAppEncryptionBoxEncryptVariant = {
 
     /**
      * Data, encoded in Base64
      */
     data: string
 }
+
+/**
+ * Decrypt data
+ */
+export type ParamsOfAppEncryptionBoxDecryptVariant = {
+
+    /**
+     * Data, encoded in Base64
+     */
+    data: string
+}
+
+/**
+ * Interface for data encryption/decryption
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `GetInfo`
+ * 
+ * Get encryption box info
+ * 
+ * ### `Encrypt`
+ * 
+ * Encrypt data
+ * 
+ * ### `Decrypt`
+ * 
+ * Decrypt data
+ */
+export type ParamsOfAppEncryptionBox = ({
+    type: 'GetInfo'
+} & ParamsOfAppEncryptionBoxGetInfoVariant) | ({
+    type: 'Encrypt'
+} & ParamsOfAppEncryptionBoxEncryptVariant) | ({
+    type: 'Decrypt'
+} & ParamsOfAppEncryptionBoxDecryptVariant)
 
 export function paramsOfAppEncryptionBoxGetInfo(): ParamsOfAppEncryptionBox {
     return {
@@ -1743,27 +1941,61 @@ export function paramsOfAppEncryptionBoxDecrypt(data: string): ParamsOfAppEncryp
     };
 }
 
-export type ResultOfAppEncryptionBox = {
-    type: 'GetInfo'
+/**
+ * Result of getting encryption box info
+ */
+export type ResultOfAppEncryptionBoxGetInfoVariant = {
 
-    /**
-     */
     info: EncryptionBoxInfo
-} | {
-    type: 'Encrypt'
+}
+
+/**
+ * Result of encrypting data
+ */
+export type ResultOfAppEncryptionBoxEncryptVariant = {
 
     /**
      * Encrypted data, encoded in Base64
      */
     data: string
-} | {
-    type: 'Decrypt'
+}
+
+/**
+ * Result of decrypting data
+ */
+export type ResultOfAppEncryptionBoxDecryptVariant = {
 
     /**
      * Decrypted data, encoded in Base64
      */
     data: string
 }
+
+/**
+ * Returning values from signing box callbacks.
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `GetInfo`
+ * 
+ * Result of getting encryption box info
+ * 
+ * ### `Encrypt`
+ * 
+ * Result of encrypting data
+ * 
+ * ### `Decrypt`
+ * 
+ * Result of decrypting data
+ */
+export type ResultOfAppEncryptionBox = ({
+    type: 'GetInfo'
+} & ResultOfAppEncryptionBoxGetInfoVariant) | ({
+    type: 'Encrypt'
+} & ResultOfAppEncryptionBoxEncryptVariant) | ({
+    type: 'Decrypt'
+} & ResultOfAppEncryptionBoxDecryptVariant)
 
 export function resultOfAppEncryptionBoxGetInfo(info: EncryptionBoxInfo): ResultOfAppEncryptionBox {
     return {
@@ -1855,17 +2087,8 @@ export type ParamsOfCreateEncryptionBox = {
     algorithm: EncryptionAlgorithm
 }
 
-type ParamsOfAppPasswordProviderGetPassword = {
-    encryption_public_key: string
-}
-
-type ResultOfAppPasswordProviderGetPassword = {
-    encrypted_password: string,
-    app_encryption_pubkey: string
-}
-
 export interface AppPasswordProvider {
-    get_password(params: ParamsOfAppPasswordProviderGetPassword): Promise<ResultOfAppPasswordProviderGetPassword>,
+    get_password(params: ParamsOfAppPasswordProviderGetPasswordVariant): Promise<ResultOfAppPasswordProviderGetPasswordVariant>,
 }
 
 async function dispatchAppPasswordProvider(obj: AppPasswordProvider, params: ParamsOfAppPasswordProvider, app_request_id: number | null, client: IClient) {
@@ -1882,21 +2105,9 @@ async function dispatchAppPasswordProvider(obj: AppPasswordProvider, params: Par
         client.reject_app_request(app_request_id, error);
     }
 }
-type ResultOfAppSigningBoxGetPublicKey = {
-    public_key: string
-}
-
-type ParamsOfAppSigningBoxSign = {
-    unsigned: string
-}
-
-type ResultOfAppSigningBoxSign = {
-    signature: string
-}
-
 export interface AppSigningBox {
-    get_public_key(): Promise<ResultOfAppSigningBoxGetPublicKey>,
-    sign(params: ParamsOfAppSigningBoxSign): Promise<ResultOfAppSigningBoxSign>,
+    get_public_key(): Promise<ResultOfAppSigningBoxGetPublicKeyVariant>,
+    sign(params: ParamsOfAppSigningBoxSignVariant): Promise<ResultOfAppSigningBoxSignVariant>,
 }
 
 async function dispatchAppSigningBox(obj: AppSigningBox, params: ParamsOfAppSigningBox, app_request_id: number | null, client: IClient) {
@@ -1916,30 +2127,10 @@ async function dispatchAppSigningBox(obj: AppSigningBox, params: ParamsOfAppSign
         client.reject_app_request(app_request_id, error);
     }
 }
-type ResultOfAppEncryptionBoxGetInfo = {
-    info: EncryptionBoxInfo
-}
-
-type ParamsOfAppEncryptionBoxEncrypt = {
-    data: string
-}
-
-type ResultOfAppEncryptionBoxEncrypt = {
-    data: string
-}
-
-type ParamsOfAppEncryptionBoxDecrypt = {
-    data: string
-}
-
-type ResultOfAppEncryptionBoxDecrypt = {
-    data: string
-}
-
 export interface AppEncryptionBox {
-    get_info(): Promise<ResultOfAppEncryptionBoxGetInfo>,
-    encrypt(params: ParamsOfAppEncryptionBoxEncrypt): Promise<ResultOfAppEncryptionBoxEncrypt>,
-    decrypt(params: ParamsOfAppEncryptionBoxDecrypt): Promise<ResultOfAppEncryptionBoxDecrypt>,
+    get_info(): Promise<ResultOfAppEncryptionBoxGetInfoVariant>,
+    encrypt(params: ParamsOfAppEncryptionBoxEncryptVariant): Promise<ResultOfAppEncryptionBoxEncryptVariant>,
+    decrypt(params: ParamsOfAppEncryptionBoxDecryptVariant): Promise<ResultOfAppEncryptionBoxDecryptVariant>,
 }
 
 async function dispatchAppEncryptionBox(obj: AppEncryptionBox, params: ParamsOfAppEncryptionBox, app_request_id: number | null, client: IClient) {
@@ -2598,31 +2789,52 @@ export enum AbiErrorCode {
     EncodeInitialDataFailed = 314
 }
 
-export type Abi = {
-    type: 'Contract'
+export type AbiContractVariant = {
 
-    /**
-     */
-    value: AbiContract
-} | {
-    type: 'Json'
-
-    /**
-     */
-    value: string
-} | {
-    type: 'Handle'
-
-    /**
-     */
-    value: AbiHandle
-} | {
-    type: 'Serialized'
-
-    /**
-     */
     value: AbiContract
 }
+
+export type AbiJsonVariant = {
+
+    value: string
+}
+
+export type AbiHandleVariant = {
+
+    value: AbiHandle
+}
+
+export type AbiSerializedVariant = {
+
+    value: AbiContract
+}
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Contract`
+ * 
+ * 
+ * ### `Json`
+ * 
+ * 
+ * ### `Handle`
+ * 
+ * 
+ * ### `Serialized`
+ * 
+ */
+export type Abi = ({
+    type: 'Contract'
+} & AbiContractVariant) | ({
+    type: 'Json'
+} & AbiJsonVariant) | ({
+    type: 'Handle'
+} & AbiHandleVariant) | ({
+    type: 'Serialized'
+} & AbiSerializedVariant)
 
 export function abiContract(value: AbiContract): Abi {
     return {
@@ -2654,6 +2866,16 @@ export function abiSerialized(value: AbiContract): Abi {
 
 export type AbiHandle = number
 
+/**
+ * The ABI function header.
+ * 
+ * @remarks
+ * Includes several hidden function parameters that contract
+ * uses for security, message delivery monitoring and replay protection reasons.
+ * 
+ * The actual set of header fields depends on the contract's ABI.
+ * If a contract's ABI does not include some headers, then they are not filled.
+ */
 export type FunctionHeader = {
 
     /**
@@ -2733,27 +2955,70 @@ export type DeploySet = {
     initial_pubkey?: string
 }
 
-export type Signer = {
-    type: 'None'
-} | {
-    type: 'External'
+/**
+ * No keys are provided.
+ * 
+ * @remarks
+ * Creates an unsigned message.
+ */
+export type SignerNoneVariant = {
 
-    /**
-     */
+}
+
+/**
+ * Only public key is provided in unprefixed hex string format to generate unsigned message and `data_to_sign` which can be signed later.
+ */
+export type SignerExternalVariant = {
+
     public_key: string
-} | {
-    type: 'Keys'
+}
 
-    /**
-     */
+/**
+ * Key pair is provided for signing
+ */
+export type SignerKeysVariant = {
+
     keys: KeyPair
-} | {
-    type: 'SigningBox'
+}
 
-    /**
-     */
+/**
+ * Signing Box interface is provided for signing, allows Dapps to sign messages using external APIs, such as HSM, cold wallet, etc.
+ */
+export type SignerSigningBoxVariant = {
+
     handle: SigningBoxHandle
 }
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `None`
+ * 
+ * No keys are provided.
+ * 
+ * ### `External`
+ * 
+ * Only public key is provided in unprefixed hex string format to generate unsigned message and `data_to_sign` which can be signed later.
+ * 
+ * ### `Keys`
+ * 
+ * Key pair is provided for signing
+ * 
+ * ### `SigningBox`
+ * 
+ * Signing Box interface is provided for signing, allows Dapps to sign messages using external APIs, such as HSM, cold wallet, etc.
+ */
+export type Signer = ({
+    type: 'None'
+} & SignerNoneVariant) | ({
+    type: 'External'
+} & SignerExternalVariant) | ({
+    type: 'Keys'
+} & SignerKeysVariant) | ({
+    type: 'SigningBox'
+} & SignerSigningBoxVariant)
 
 export function signerNone(): Signer {
     return {
@@ -2789,14 +3054,18 @@ export enum MessageBodyType {
     Event = "Event"
 }
 
-export type StateInitSource = {
-    type: 'Message'
+/**
+ * Deploy message.
+ */
+export type StateInitSourceMessageVariant = {
 
-    /**
-     */
     source: MessageSource
-} | {
-    type: 'StateInit'
+}
+
+/**
+ * State init data.
+ */
+export type StateInitSourceStateInitVariant = {
 
     /**
      * Code BOC.
@@ -2821,21 +3090,47 @@ export type StateInitSource = {
      * Encoded in `base64`.
      */
     library?: string
-} | {
-    type: 'Tvc'
+}
 
-    /**
-     */
+/**
+ * Content of the TVC file.
+ * 
+ * @remarks
+ * Encoded in `base64`.
+ */
+export type StateInitSourceTvcVariant = {
+
     tvc: string,
 
-    /**
-     */
     public_key?: string,
 
-    /**
-     */
     init_params?: StateInitParams
 }
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Message`
+ * 
+ * Deploy message.
+ * 
+ * ### `StateInit`
+ * 
+ * State init data.
+ * 
+ * ### `Tvc`
+ * 
+ * Content of the TVC file.
+ */
+export type StateInitSource = ({
+    type: 'Message'
+} & StateInitSourceMessageVariant) | ({
+    type: 'StateInit'
+} & StateInitSourceStateInitVariant) | ({
+    type: 'Tvc'
+} & StateInitSourceTvcVariant)
 
 export function stateInitSourceMessage(source: MessageSource): StateInitSource {
     return {
@@ -2864,26 +3159,32 @@ export function stateInitSourceTvc(tvc: string, public_key?: string, init_params
 
 export type StateInitParams = {
 
-    /**
-     */
     abi: Abi,
 
-    /**
-     */
     value: any
 }
 
-export type MessageSource = {
-    type: 'Encoded'
+export type MessageSourceEncodedVariant = {
 
-    /**
-     */
     message: string,
 
-    /**
-     */
     abi?: Abi
-} | ({
+}
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Encoded`
+ * 
+ * 
+ * ### `EncodingParams`
+ * 
+ */
+export type MessageSource = ({
+    type: 'Encoded'
+} & MessageSourceEncodedVariant) | ({
     type: 'EncodingParams'
 } & ParamsOfEncodeMessage)
 
@@ -2904,104 +3205,60 @@ export function messageSourceEncodingParams(params: ParamsOfEncodeMessage): Mess
 
 export type AbiParam = {
 
-    /**
-     */
     name: string,
 
-    /**
-     */
     type: string,
 
-    /**
-     */
     components?: AbiParam[]
 }
 
 export type AbiEvent = {
 
-    /**
-     */
     name: string,
 
-    /**
-     */
     inputs: AbiParam[],
 
-    /**
-     */
     id?: string | null
 }
 
 export type AbiData = {
 
-    /**
-     */
     key: number,
 
-    /**
-     */
     name: string,
 
-    /**
-     */
     type: string,
 
-    /**
-     */
     components?: AbiParam[]
 }
 
 export type AbiFunction = {
 
-    /**
-     */
     name: string,
 
-    /**
-     */
     inputs: AbiParam[],
 
-    /**
-     */
     outputs: AbiParam[],
 
-    /**
-     */
     id?: string | null
 }
 
 export type AbiContract = {
 
-    /**
-     */
     'ABI version'?: number,
 
-    /**
-     */
     abi_version?: number,
 
-    /**
-     */
     version?: string | null,
 
-    /**
-     */
     header?: string[],
 
-    /**
-     */
     functions?: AbiFunction[],
 
-    /**
-     */
     events?: AbiEvent[],
 
-    /**
-     */
     data?: AbiData[],
 
-    /**
-     */
     fields?: AbiParam[]
 }
 
@@ -3101,8 +3358,6 @@ export type ParamsOfAttachSignatureToMessageBody = {
 
 export type ResultOfAttachSignatureToMessageBody = {
 
-    /**
-     */
     body: string
 }
 
@@ -3566,8 +3821,6 @@ export type ParamsOfDecodeBoc = {
      */
     boc: string,
 
-    /**
-     */
     allow_partial: boolean
 }
 
@@ -3837,15 +4090,42 @@ export class AbiModule {
 // boc module
 
 
-export type BocCacheType = {
-    type: 'Pinned'
+/**
+ * Pin the BOC with `pin` name.
+ * 
+ * @remarks
+ * Such BOC will not be removed from cache until it is unpinned
+ */
+export type BocCacheTypePinnedVariant = {
 
-    /**
-     */
     pin: string
-} | {
-    type: 'Unpinned'
 }
+
+/**
+ *  
+ */
+export type BocCacheTypeUnpinnedVariant = {
+
+}
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Pinned`
+ * 
+ * Pin the BOC with `pin` name.
+ * 
+ * ### `Unpinned`
+ * 
+ *  
+ */
+export type BocCacheType = ({
+    type: 'Pinned'
+} & BocCacheTypePinnedVariant) | ({
+    type: 'Unpinned'
+} & BocCacheTypeUnpinnedVariant)
 
 export function bocCacheTypePinned(pin: string): BocCacheType {
     return {
@@ -4021,8 +4301,10 @@ export type ParamsOfBocCacheUnpin = {
     boc_ref?: string
 }
 
-export type BuilderOp = {
-    type: 'Integer'
+/**
+ * Append integer to cell data.
+ */
+export type BuilderOpIntegerVariant = {
 
     /**
      * Bit size of the value.
@@ -4038,8 +4320,12 @@ export type BuilderOp = {
      *   e.g `0x123`, `0X123`, `-0x123`.
      */
     value: any
-} | {
-    type: 'BitString'
+}
+
+/**
+ * Append bit string to cell data.
+ */
+export type BuilderOpBitStringVariant = {
 
     /**
      * Bit string content using bitstring notation. See `TON VM specification` 1.0.
@@ -4059,28 +4345,78 @@ export type BuilderOp = {
      * `n00101101100`, `N00101101100`
      */
     value: string
-} | {
-    type: 'Cell'
+}
+
+/**
+ * Append ref to nested cells.
+ */
+export type BuilderOpCellVariant = {
 
     /**
      * Nested cell builder.
      */
     builder: BuilderOp[]
-} | {
-    type: 'CellBoc'
+}
+
+/**
+ * Append ref to nested cell.
+ */
+export type BuilderOpCellBocVariant = {
 
     /**
      * Nested cell BOC encoded with `base64` or BOC cache key.
      */
     boc: string
-} | {
-    type: 'Address'
+}
+
+/**
+ * Address.
+ */
+export type BuilderOpAddressVariant = {
 
     /**
      * Address in a common `workchain:account` or base64 format.
      */
     address: string
 }
+
+/**
+ * Cell builder operation.
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Integer`
+ * 
+ * Append integer to cell data.
+ * 
+ * ### `BitString`
+ * 
+ * Append bit string to cell data.
+ * 
+ * ### `Cell`
+ * 
+ * Append ref to nested cells.
+ * 
+ * ### `CellBoc`
+ * 
+ * Append ref to nested cell.
+ * 
+ * ### `Address`
+ * 
+ * Address.
+ */
+export type BuilderOp = ({
+    type: 'Integer'
+} & BuilderOpIntegerVariant) | ({
+    type: 'BitString'
+} & BuilderOpBitStringVariant) | ({
+    type: 'Cell'
+} & BuilderOpCellVariant) | ({
+    type: 'CellBoc'
+} & BuilderOpCellBocVariant) | ({
+    type: 'Address'
+} & BuilderOpAddressVariant)
 
 export function builderOpInteger(size: number, value: any): BuilderOp {
     return {
@@ -4631,169 +4967,281 @@ export enum ProcessingErrorCode {
     NextRempStatusTimeout = 516
 }
 
-export type ProcessingEvent = {
-    type: 'WillFetchFirstBlock'
-} | {
-    type: 'FetchFirstBlockFailed'
+/**
+ * Notifies the application that the account's current shard block will be fetched from the network. This step is performed before the message sending so that sdk knows starting from which block it will search for the transaction.
+ * 
+ * @remarks
+ * Fetched block will be used later in waiting phase.
+ */
+export type ProcessingEventWillFetchFirstBlockVariant = {
 
-    /**
-     */
-    error: ClientError
-} | {
-    type: 'WillSend'
+}
 
-    /**
-     */
-    shard_block_id: string,
+/**
+ * Notifies the app that the client has failed to fetch the account's current shard block.
+ * 
+ * @remarks
+ * This may happen due to the network issues. Receiving this event means that message processing will not proceed -
+ * message was not sent, and Developer can try to run `process_message` again,
+ * in the hope that the connection is restored.
+ */
+export type ProcessingEventFetchFirstBlockFailedVariant = {
 
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    message: string
-} | {
-    type: 'DidSend'
-
-    /**
-     */
-    shard_block_id: string,
-
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    message: string
-} | {
-    type: 'SendFailed'
-
-    /**
-     */
-    shard_block_id: string,
-
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    message: string,
-
-    /**
-     */
-    error: ClientError
-} | {
-    type: 'WillFetchNextBlock'
-
-    /**
-     */
-    shard_block_id: string,
-
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    message: string
-} | {
-    type: 'FetchNextBlockFailed'
-
-    /**
-     */
-    shard_block_id: string,
-
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    message: string,
-
-    /**
-     */
-    error: ClientError
-} | {
-    type: 'MessageExpired'
-
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    message: string,
-
-    /**
-     */
-    error: ClientError
-} | {
-    type: 'RempSentToValidators'
-
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    timestamp: bigint,
-
-    /**
-     */
-    json: any
-} | {
-    type: 'RempIncludedIntoBlock'
-
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    timestamp: bigint,
-
-    /**
-     */
-    json: any
-} | {
-    type: 'RempIncludedIntoAcceptedBlock'
-
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    timestamp: bigint,
-
-    /**
-     */
-    json: any
-} | {
-    type: 'RempOther'
-
-    /**
-     */
-    message_id: string,
-
-    /**
-     */
-    timestamp: bigint,
-
-    /**
-     */
-    json: any
-} | {
-    type: 'RempError'
-
-    /**
-     */
     error: ClientError
 }
+
+/**
+ * Notifies the app that the message will be sent to the network. This event means that the account's current shard block was successfully fetched and the message was successfully created (`abi.encode_message` function was executed successfully).
+ */
+export type ProcessingEventWillSendVariant = {
+
+    shard_block_id: string,
+
+    message_id: string,
+
+    message: string
+}
+
+/**
+ * Notifies the app that the message was sent to the network, i.e `processing.send_message` was successfuly executed. Now, the message is in the blockchain. If Application exits at this phase, Developer needs to proceed with processing after the application is restored with `wait_for_transaction` function, passing shard_block_id and message from this event.
+ * 
+ * @remarks
+ * Do not forget to specify abi of your contract as well, it is crucial for proccessing. See `processing.wait_for_transaction` documentation.
+ */
+export type ProcessingEventDidSendVariant = {
+
+    shard_block_id: string,
+
+    message_id: string,
+
+    message: string
+}
+
+/**
+ * Notifies the app that the sending operation was failed with network error.
+ * 
+ * @remarks
+ * Nevertheless the processing will be continued at the waiting
+ * phase because the message possibly has been delivered to the
+ * node.
+ * If Application exits at this phase, Developer needs to proceed with processing
+ * after the application is restored with `wait_for_transaction` function, passing
+ * shard_block_id and message from this event. Do not forget to specify abi of your contract
+ * as well, it is crucial for proccessing. See `processing.wait_for_transaction` documentation.
+ */
+export type ProcessingEventSendFailedVariant = {
+
+    shard_block_id: string,
+
+    message_id: string,
+
+    message: string,
+
+    error: ClientError
+}
+
+/**
+ * Notifies the app that the next shard block will be fetched from the network.
+ * 
+ * @remarks
+ * Event can occurs more than one time due to block walking
+ * procedure.
+ * If Application exits at this phase, Developer needs to proceed with processing
+ * after the application is restored with `wait_for_transaction` function, passing
+ * shard_block_id and message from this event. Do not forget to specify abi of your contract
+ * as well, it is crucial for proccessing. See `processing.wait_for_transaction` documentation.
+ */
+export type ProcessingEventWillFetchNextBlockVariant = {
+
+    shard_block_id: string,
+
+    message_id: string,
+
+    message: string
+}
+
+/**
+ * Notifies the app that the next block can't be fetched.
+ * 
+ * @remarks
+ * If no block was fetched within `NetworkConfig.wait_for_timeout` then processing stops.
+ * This may happen when the shard stops, or there are other network issues.
+ * In this case Developer should resume message processing with `wait_for_transaction`, passing shard_block_id,
+ * message and contract abi to it. Note that passing ABI is crucial, because it will influence the processing strategy.
+ * 
+ * Another way to tune this is to specify long timeout in `NetworkConfig.wait_for_timeout`
+ */
+export type ProcessingEventFetchNextBlockFailedVariant = {
+
+    shard_block_id: string,
+
+    message_id: string,
+
+    message: string,
+
+    error: ClientError
+}
+
+/**
+ * Notifies the app that the message was not executed within expire timeout on-chain and will never be because it is already expired. The expiration timeout can be configured with `AbiConfig` parameters.
+ * 
+ * @remarks
+ * This event occurs only for the contracts which ABI includes "expire" header.
+ * 
+ * If Application specifies `NetworkConfig.message_retries_count` > 0, then `process_message`
+ * will perform retries: will create a new message and send it again and repeat it untill it reaches
+ * the maximum retries count or receives a successful result.  All the processing
+ * events will be repeated.
+ */
+export type ProcessingEventMessageExpiredVariant = {
+
+    message_id: string,
+
+    message: string,
+
+    error: ClientError
+}
+
+/**
+ * Notifies the app that the message has been delivered to the thread's validators
+ */
+export type ProcessingEventRempSentToValidatorsVariant = {
+
+    message_id: string,
+
+    timestamp: bigint,
+
+    json: any
+}
+
+/**
+ * Notifies the app that the message has been successfully included into a block candidate by the thread's collator
+ */
+export type ProcessingEventRempIncludedIntoBlockVariant = {
+
+    message_id: string,
+
+    timestamp: bigint,
+
+    json: any
+}
+
+/**
+ * Notifies the app that the block candicate with the message has been accepted by the thread's validators
+ */
+export type ProcessingEventRempIncludedIntoAcceptedBlockVariant = {
+
+    message_id: string,
+
+    timestamp: bigint,
+
+    json: any
+}
+
+/**
+ * Notifies the app about some other minor REMP statuses occurring during message processing
+ */
+export type ProcessingEventRempOtherVariant = {
+
+    message_id: string,
+
+    timestamp: bigint,
+
+    json: any
+}
+
+/**
+ * Notifies the app about any problem that has occured in REMP processing - in this case library switches to the fallback transaction awaiting scenario (sequential block reading).
+ */
+export type ProcessingEventRempErrorVariant = {
+
+    error: ClientError
+}
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `WillFetchFirstBlock`
+ * 
+ * Notifies the application that the account's current shard block will be fetched from the network. This step is performed before the message sending so that sdk knows starting from which block it will search for the transaction.
+ * 
+ * ### `FetchFirstBlockFailed`
+ * 
+ * Notifies the app that the client has failed to fetch the account's current shard block.
+ * 
+ * ### `WillSend`
+ * 
+ * Notifies the app that the message will be sent to the network. This event means that the account's current shard block was successfully fetched and the message was successfully created (`abi.encode_message` function was executed successfully).
+ * 
+ * ### `DidSend`
+ * 
+ * Notifies the app that the message was sent to the network, i.e `processing.send_message` was successfuly executed. Now, the message is in the blockchain. If Application exits at this phase, Developer needs to proceed with processing after the application is restored with `wait_for_transaction` function, passing shard_block_id and message from this event.
+ * 
+ * ### `SendFailed`
+ * 
+ * Notifies the app that the sending operation was failed with network error.
+ * 
+ * ### `WillFetchNextBlock`
+ * 
+ * Notifies the app that the next shard block will be fetched from the network.
+ * 
+ * ### `FetchNextBlockFailed`
+ * 
+ * Notifies the app that the next block can't be fetched.
+ * 
+ * ### `MessageExpired`
+ * 
+ * Notifies the app that the message was not executed within expire timeout on-chain and will never be because it is already expired. The expiration timeout can be configured with `AbiConfig` parameters.
+ * 
+ * ### `RempSentToValidators`
+ * 
+ * Notifies the app that the message has been delivered to the thread's validators
+ * 
+ * ### `RempIncludedIntoBlock`
+ * 
+ * Notifies the app that the message has been successfully included into a block candidate by the thread's collator
+ * 
+ * ### `RempIncludedIntoAcceptedBlock`
+ * 
+ * Notifies the app that the block candicate with the message has been accepted by the thread's validators
+ * 
+ * ### `RempOther`
+ * 
+ * Notifies the app about some other minor REMP statuses occurring during message processing
+ * 
+ * ### `RempError`
+ * 
+ * Notifies the app about any problem that has occured in REMP processing - in this case library switches to the fallback transaction awaiting scenario (sequential block reading).
+ */
+export type ProcessingEvent = ({
+    type: 'WillFetchFirstBlock'
+} & ProcessingEventWillFetchFirstBlockVariant) | ({
+    type: 'FetchFirstBlockFailed'
+} & ProcessingEventFetchFirstBlockFailedVariant) | ({
+    type: 'WillSend'
+} & ProcessingEventWillSendVariant) | ({
+    type: 'DidSend'
+} & ProcessingEventDidSendVariant) | ({
+    type: 'SendFailed'
+} & ProcessingEventSendFailedVariant) | ({
+    type: 'WillFetchNextBlock'
+} & ProcessingEventWillFetchNextBlockVariant) | ({
+    type: 'FetchNextBlockFailed'
+} & ProcessingEventFetchNextBlockFailedVariant) | ({
+    type: 'MessageExpired'
+} & ProcessingEventMessageExpiredVariant) | ({
+    type: 'RempSentToValidators'
+} & ProcessingEventRempSentToValidatorsVariant) | ({
+    type: 'RempIncludedIntoBlock'
+} & ProcessingEventRempIncludedIntoBlockVariant) | ({
+    type: 'RempIncludedIntoAcceptedBlock'
+} & ProcessingEventRempIncludedIntoAcceptedBlockVariant) | ({
+    type: 'RempOther'
+} & ProcessingEventRempOtherVariant) | ({
+    type: 'RempError'
+} & ProcessingEventRempErrorVariant)
 
 export function processingEventWillFetchFirstBlock(): ProcessingEvent {
     return {
@@ -5160,25 +5608,44 @@ export class ProcessingModule {
 // utils module
 
 
-export type AddressStringFormat = {
-    type: 'AccountId'
-} | {
-    type: 'Hex'
-} | {
-    type: 'Base64'
+export type AddressStringFormatAccountIdVariant = {
 
-    /**
-     */
+}
+
+export type AddressStringFormatHexVariant = {
+
+}
+
+export type AddressStringFormatBase64Variant = {
+
     url: boolean,
 
-    /**
-     */
     test: boolean,
 
-    /**
-     */
     bounce: boolean
 }
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `AccountId`
+ * 
+ * 
+ * ### `Hex`
+ * 
+ * 
+ * ### `Base64`
+ * 
+ */
+export type AddressStringFormat = ({
+    type: 'AccountId'
+} & AddressStringFormatAccountIdVariant) | ({
+    type: 'Hex'
+} & AddressStringFormatHexVariant) | ({
+    type: 'Base64'
+} & AddressStringFormatBase64Variant)
 
 export function addressStringFormatAccountId(): AddressStringFormat {
     return {
@@ -5246,19 +5713,13 @@ export type ResultOfGetAddressType = {
 
 export type ParamsOfCalcStorageFee = {
 
-    /**
-     */
     account: string,
 
-    /**
-     */
     period: number
 }
 
 export type ResultOfCalcStorageFee = {
 
-    /**
-     */
     fee: string
 }
 
@@ -5425,12 +5886,24 @@ export type ExecutionOptions = {
     transaction_lt?: bigint
 }
 
-export type AccountForExecutor = {
-    type: 'None'
-} | {
-    type: 'Uninit'
-} | {
-    type: 'Account'
+/**
+ * Non-existing account to run a creation internal message. Should be used with `skip_transaction_check = true` if the message has no deploy data since transactions on the uninitialized account are always aborted
+ */
+export type AccountForExecutorNoneVariant = {
+
+}
+
+/**
+ * Emulate uninitialized account to run deploy message
+ */
+export type AccountForExecutorUninitVariant = {
+
+}
+
+/**
+ * Account state to run message
+ */
+export type AccountForExecutorAccountVariant = {
 
     /**
      * Account BOC.
@@ -5448,6 +5921,31 @@ export type AccountForExecutor = {
      */
     unlimited_balance?: boolean
 }
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `None`
+ * 
+ * Non-existing account to run a creation internal message. Should be used with `skip_transaction_check = true` if the message has no deploy data since transactions on the uninitialized account are always aborted
+ * 
+ * ### `Uninit`
+ * 
+ * Emulate uninitialized account to run deploy message
+ * 
+ * ### `Account`
+ * 
+ * Account state to run message
+ */
+export type AccountForExecutor = ({
+    type: 'None'
+} & AccountForExecutorNoneVariant) | ({
+    type: 'Uninit'
+} & AccountForExecutorUninitVariant) | ({
+    type: 'Account'
+} & AccountForExecutorAccountVariant)
 
 export function accountForExecutorNone(): AccountForExecutor {
     return {
@@ -5471,28 +5969,16 @@ export function accountForExecutorAccount(boc: string, unlimited_balance?: boole
 
 export type TransactionFees = {
 
-    /**
-     */
     in_msg_fwd_fee: bigint,
 
-    /**
-     */
     storage_fee: bigint,
 
-    /**
-     */
     gas_fee: bigint,
 
-    /**
-     */
     out_msgs_fwd_fee: bigint,
 
-    /**
-     */
     total_account_fees: bigint,
 
-    /**
-     */
     total_output: bigint
 }
 
@@ -5693,8 +6179,6 @@ export type ResultOfRunGet = {
     output: any
 }
 
-/**
- */
 export class TvmModule {
     client: IClient;
 
@@ -5806,12 +6290,8 @@ export enum NetErrorCode {
 
 export type OrderBy = {
 
-    /**
-     */
     path: string,
 
-    /**
-     */
     direction: SortDirection
 }
 
@@ -5820,6 +6300,23 @@ export enum SortDirection {
     DESC = "DESC"
 }
 
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `QueryCollection`
+ * 
+ * 
+ * ### `WaitForCollection`
+ * 
+ * 
+ * ### `AggregateCollection`
+ * 
+ * 
+ * ### `QueryCounterparties`
+ * 
+ */
 export type ParamsOfQueryOperation = ({
     type: 'QueryCollection'
 } & ParamsOfQueryCollection) | ({
@@ -6994,8 +7491,14 @@ export enum DebotErrorCode {
     DebotNoCode = 813
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Handle of registered in SDK debot
+ */
 export type DebotHandle = number
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Describes a debot action in a Debot Context.
+ */
 export type DebotAction = {
 
     /**
@@ -7041,6 +7544,9 @@ export type DebotAction = {
     misc: string
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Describes DeBot metadata.
+ */
 export type DebotInfo = {
 
     /**
@@ -7104,8 +7610,10 @@ export type DebotInfo = {
     dabiVersion: string
 }
 
-export type DebotActivity = {
-    type: 'Transaction'
+/**
+ * DeBot wants to create new transaction in blockchain.
+ */
+export type DebotActivityTransactionVariant = {
 
     /**
      * External inbound message BOC.
@@ -7143,6 +7651,20 @@ export type DebotActivity = {
     signing_box_handle: number
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Describes the operation that the DeBot wants to perform.
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Transaction`
+ * 
+ * DeBot wants to create new transaction in blockchain.
+ */
+export type DebotActivity = ({
+    type: 'Transaction'
+} & DebotActivityTransactionVariant)
+
 export function debotActivityTransaction(msg: string, dst: string, out: Spending[], fee: bigint, setcode: boolean, signkey: string, signing_box_handle: number): DebotActivity {
     return {
         type: 'Transaction',
@@ -7156,6 +7678,9 @@ export function debotActivityTransaction(msg: string, dst: string, out: Spending
     };
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Describes how much funds will be debited from the target  contract balance as a result of the transaction.
+ */
 export type Spending = {
 
     /**
@@ -7169,6 +7694,9 @@ export type Spending = {
     dst: string
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Parameters to init DeBot.
+ */
 export type ParamsOfInit = {
 
     /**
@@ -7177,6 +7705,9 @@ export type ParamsOfInit = {
     address: string
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Structure for storing debot handle returned from `init` function.
+ */
 export type RegisteredDebot = {
 
     /**
@@ -7195,40 +7726,71 @@ export type RegisteredDebot = {
     info: DebotInfo
 }
 
-export type ParamsOfAppDebotBrowser = {
-    type: 'Log'
+/**
+ * Print message to user.
+ */
+export type ParamsOfAppDebotBrowserLogVariant = {
 
     /**
      * A string that must be printed to user.
      */
     msg: string
-} | {
-    type: 'Switch'
+}
+
+/**
+ * Switch debot to another context (menu).
+ */
+export type ParamsOfAppDebotBrowserSwitchVariant = {
 
     /**
      * Debot context ID to which debot is switched.
      */
     context_id: number
-} | {
-    type: 'SwitchCompleted'
-} | {
-    type: 'ShowAction'
+}
+
+/**
+ * Notify browser that all context actions are shown.
+ */
+export type ParamsOfAppDebotBrowserSwitchCompletedVariant = {
+
+}
+
+/**
+ * Show action to the user. Called after `switch` for each action in context.
+ */
+export type ParamsOfAppDebotBrowserShowActionVariant = {
 
     /**
      * Debot action that must be shown to user as menu item. At least `description` property must be shown from [DebotAction] structure.
      */
     action: DebotAction
-} | {
-    type: 'Input'
+}
+
+/**
+ * Request user input.
+ */
+export type ParamsOfAppDebotBrowserInputVariant = {
 
     /**
      * A prompt string that must be printed to user before input request.
      */
     prompt: string
-} | {
-    type: 'GetSigningBox'
-} | {
-    type: 'InvokeDebot'
+}
+
+/**
+ * Get signing box to sign data.
+ * 
+ * @remarks
+ * Signing box returned is owned and disposed by debot engine
+ */
+export type ParamsOfAppDebotBrowserGetSigningBoxVariant = {
+
+}
+
+/**
+ * Execute action of another debot.
+ */
+export type ParamsOfAppDebotBrowserInvokeDebotVariant = {
 
     /**
      * Address of debot in blockchain.
@@ -7239,8 +7801,12 @@ export type ParamsOfAppDebotBrowser = {
      * Debot action to execute.
      */
     action: DebotAction
-} | {
-    type: 'Send'
+}
+
+/**
+ * Used by Debot to call DInterface implemented by Debot Browser.
+ */
+export type ParamsOfAppDebotBrowserSendVariant = {
 
     /**
      * Internal message to DInterface address.
@@ -7249,14 +7815,83 @@ export type ParamsOfAppDebotBrowser = {
      * Message body contains interface function and parameters.
      */
     message: string
-} | {
-    type: 'Approve'
+}
+
+/**
+ * Requests permission from DeBot Browser to execute DeBot operation.
+ */
+export type ParamsOfAppDebotBrowserApproveVariant = {
 
     /**
      * DeBot activity details.
      */
     activity: DebotActivity
 }
+
+/**
+ * [UNSTABLE](UNSTABLE.md) Debot Browser callbacks
+ * 
+ * @remarks
+ * Called by debot engine to communicate with debot browser.
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Log`
+ * 
+ * Print message to user.
+ * 
+ * ### `Switch`
+ * 
+ * Switch debot to another context (menu).
+ * 
+ * ### `SwitchCompleted`
+ * 
+ * Notify browser that all context actions are shown.
+ * 
+ * ### `ShowAction`
+ * 
+ * Show action to the user. Called after `switch` for each action in context.
+ * 
+ * ### `Input`
+ * 
+ * Request user input.
+ * 
+ * ### `GetSigningBox`
+ * 
+ * Get signing box to sign data.
+ * 
+ * ### `InvokeDebot`
+ * 
+ * Execute action of another debot.
+ * 
+ * ### `Send`
+ * 
+ * Used by Debot to call DInterface implemented by Debot Browser.
+ * 
+ * ### `Approve`
+ * 
+ * Requests permission from DeBot Browser to execute DeBot operation.
+ */
+export type ParamsOfAppDebotBrowser = ({
+    type: 'Log'
+} & ParamsOfAppDebotBrowserLogVariant) | ({
+    type: 'Switch'
+} & ParamsOfAppDebotBrowserSwitchVariant) | ({
+    type: 'SwitchCompleted'
+} & ParamsOfAppDebotBrowserSwitchCompletedVariant) | ({
+    type: 'ShowAction'
+} & ParamsOfAppDebotBrowserShowActionVariant) | ({
+    type: 'Input'
+} & ParamsOfAppDebotBrowserInputVariant) | ({
+    type: 'GetSigningBox'
+} & ParamsOfAppDebotBrowserGetSigningBoxVariant) | ({
+    type: 'InvokeDebot'
+} & ParamsOfAppDebotBrowserInvokeDebotVariant) | ({
+    type: 'Send'
+} & ParamsOfAppDebotBrowserSendVariant) | ({
+    type: 'Approve'
+} & ParamsOfAppDebotBrowserApproveVariant)
 
 export function paramsOfAppDebotBrowserLog(msg: string): ParamsOfAppDebotBrowser {
     return {
@@ -7320,15 +7955,21 @@ export function paramsOfAppDebotBrowserApprove(activity: DebotActivity): ParamsO
     };
 }
 
-export type ResultOfAppDebotBrowser = {
-    type: 'Input'
+/**
+ * Result of user input.
+ */
+export type ResultOfAppDebotBrowserInputVariant = {
 
     /**
      * String entered by user.
      */
     value: string
-} | {
-    type: 'GetSigningBox'
+}
+
+/**
+ * Result of getting signing box.
+ */
+export type ResultOfAppDebotBrowserGetSigningBoxVariant = {
 
     /**
      * Signing box for signing data requested by debot engine.
@@ -7337,16 +7978,57 @@ export type ResultOfAppDebotBrowser = {
      * Signing box is owned and disposed by debot engine
      */
     signing_box: SigningBoxHandle
-} | {
-    type: 'InvokeDebot'
-} | {
-    type: 'Approve'
+}
+
+/**
+ * Result of debot invoking.
+ */
+export type ResultOfAppDebotBrowserInvokeDebotVariant = {
+
+}
+
+/**
+ * Result of `approve` callback.
+ */
+export type ResultOfAppDebotBrowserApproveVariant = {
 
     /**
      * Indicates whether the DeBot is allowed to perform the specified operation.
      */
     approved: boolean
 }
+
+/**
+ * [UNSTABLE](UNSTABLE.md) Returning values from Debot Browser callbacks.
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Input`
+ * 
+ * Result of user input.
+ * 
+ * ### `GetSigningBox`
+ * 
+ * Result of getting signing box.
+ * 
+ * ### `InvokeDebot`
+ * 
+ * Result of debot invoking.
+ * 
+ * ### `Approve`
+ * 
+ * Result of `approve` callback.
+ */
+export type ResultOfAppDebotBrowser = ({
+    type: 'Input'
+} & ResultOfAppDebotBrowserInputVariant) | ({
+    type: 'GetSigningBox'
+} & ResultOfAppDebotBrowserGetSigningBoxVariant) | ({
+    type: 'InvokeDebot'
+} & ResultOfAppDebotBrowserInvokeDebotVariant) | ({
+    type: 'Approve'
+} & ResultOfAppDebotBrowserApproveVariant)
 
 export function resultOfAppDebotBrowserInput(value: string): ResultOfAppDebotBrowser {
     return {
@@ -7375,6 +8057,9 @@ export function resultOfAppDebotBrowserApprove(approved: boolean): ResultOfAppDe
     };
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Parameters to start DeBot. DeBot must be already initialized with init() function.
+ */
 export type ParamsOfStart = {
 
     /**
@@ -7383,6 +8068,9 @@ export type ParamsOfStart = {
     debot_handle: DebotHandle
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Parameters to fetch DeBot metadata.
+ */
 export type ParamsOfFetch = {
 
     /**
@@ -7391,6 +8079,9 @@ export type ParamsOfFetch = {
     address: string
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md)
+ */
 export type ResultOfFetch = {
 
     /**
@@ -7399,6 +8090,9 @@ export type ResultOfFetch = {
     info: DebotInfo
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Parameters for executing debot action.
+ */
 export type ParamsOfExecute = {
 
     /**
@@ -7412,6 +8106,9 @@ export type ParamsOfExecute = {
     action: DebotAction
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md) Parameters of `send` function.
+ */
 export type ParamsOfSend = {
 
     /**
@@ -7425,6 +8122,9 @@ export type ParamsOfSend = {
     message: string
 }
 
+/**
+ * [UNSTABLE](UNSTABLE.md)
+ */
 export type ParamsOfRemove = {
 
     /**
@@ -7433,57 +8133,16 @@ export type ParamsOfRemove = {
     debot_handle: DebotHandle
 }
 
-type ParamsOfAppDebotBrowserLog = {
-    msg: string
-}
-
-type ParamsOfAppDebotBrowserSwitch = {
-    context_id: number
-}
-
-type ParamsOfAppDebotBrowserShowAction = {
-    action: DebotAction
-}
-
-type ParamsOfAppDebotBrowserInput = {
-    prompt: string
-}
-
-type ResultOfAppDebotBrowserInput = {
-    value: string
-}
-
-type ResultOfAppDebotBrowserGetSigningBox = {
-    signing_box: SigningBoxHandle
-}
-
-type ParamsOfAppDebotBrowserInvokeDebot = {
-    debot_addr: string,
-    action: DebotAction
-}
-
-type ParamsOfAppDebotBrowserSend = {
-    message: string
-}
-
-type ParamsOfAppDebotBrowserApprove = {
-    activity: DebotActivity
-}
-
-type ResultOfAppDebotBrowserApprove = {
-    approved: boolean
-}
-
 export interface AppDebotBrowser {
-    log(params: ParamsOfAppDebotBrowserLog): void,
-    switch(params: ParamsOfAppDebotBrowserSwitch): void,
+    log(params: ParamsOfAppDebotBrowserLogVariant): void,
+    switch(params: ParamsOfAppDebotBrowserSwitchVariant): void,
     switch_completed(): void,
-    show_action(params: ParamsOfAppDebotBrowserShowAction): void,
-    input(params: ParamsOfAppDebotBrowserInput): Promise<ResultOfAppDebotBrowserInput>,
-    get_signing_box(): Promise<ResultOfAppDebotBrowserGetSigningBox>,
-    invoke_debot(params: ParamsOfAppDebotBrowserInvokeDebot): Promise<void>,
-    send(params: ParamsOfAppDebotBrowserSend): void,
-    approve(params: ParamsOfAppDebotBrowserApprove): Promise<ResultOfAppDebotBrowserApprove>,
+    show_action(params: ParamsOfAppDebotBrowserShowActionVariant): void,
+    input(params: ParamsOfAppDebotBrowserInputVariant): Promise<ResultOfAppDebotBrowserInputVariant>,
+    get_signing_box(): Promise<ResultOfAppDebotBrowserGetSigningBoxVariant>,
+    invoke_debot(params: ParamsOfAppDebotBrowserInvokeDebotVariant): Promise<void>,
+    send(params: ParamsOfAppDebotBrowserSendVariant): void,
+    approve(params: ParamsOfAppDebotBrowserApproveVariant): Promise<ResultOfAppDebotBrowserApproveVariant>,
 }
 
 async function dispatchAppDebotBrowser(obj: AppDebotBrowser, params: ParamsOfAppDebotBrowser, app_request_id: number | null, client: IClient) {
