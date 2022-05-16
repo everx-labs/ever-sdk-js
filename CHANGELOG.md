@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ### New
 
 - binding-gen: enum of types produces own type for each enum variant.
+- lib-web: large numbers in transaction fees are rounded now (was error).
+- core: if an application calls in parallel first client core functions 
+  then core creates more than one internal context per single TonClient
+  instance.  As a side effect of this is that a nodejs process hasn't
+  finished even if a `client.close` had called.
 
 ## [1.33.1] – 2022-05-10
 
