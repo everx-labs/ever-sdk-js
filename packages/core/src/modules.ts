@@ -454,6 +454,14 @@ export class ClientModule {
     }
 
     /**
+     * Returns Core Library API reference
+     * @returns ClientConfig
+     */
+    config(): Promise<ClientConfig> {
+        return this.client.request('client.config');
+    }
+
+    /**
      * Returns detailed information about this build.
      * @returns ResultOfBuildInfo
      */
@@ -5969,17 +5977,64 @@ export function accountForExecutorAccount(boc: string, unlimited_balance?: boole
 
 export type TransactionFees = {
 
+    /**
+     * Deprecated.
+     * 
+     * @remarks
+     * Left for backward compatibility. Does not participate in account transaction fees calculation.
+     */
     in_msg_fwd_fee: bigint,
 
+    /**
+     * Fee for account storage
+     */
     storage_fee: bigint,
 
+    /**
+     * Fee for processing
+     */
     gas_fee: bigint,
 
+    /**
+     * Deprecated.
+     * 
+     * @remarks
+     * Contains the same data as total_fwd_fees field. Deprecated because of its confusing name, that is not the same with GraphQL API Transaction type's field.
+     */
     out_msgs_fwd_fee: bigint,
 
+    /**
+     * Deprecated.
+     * 
+     * @remarks
+     * This is the field that is named as `total_fees` in GraphQL API Transaction type. `total_account_fees` name is misleading, because it does not mean account fees, instead it means
+     * validators total fees received for the transaction execution. It does not include some forward fees that account
+     * actually pays now, but validators will receive later during value delivery to another account (not even in the receiving
+     * transaction).
+     * Because of all of this, this field is not interesting for those who wants to understand
+     * the real account fees, this is why it is deprecated and left for backward compatibility.
+     */
     total_account_fees: bigint,
 
-    total_output: bigint
+    /**
+     * Deprecated because it means total value sent in the transaction, which does not relate to any fees.
+     */
+    total_output: bigint,
+
+    /**
+     * Fee for inbound external message import.
+     */
+    ext_in_msg_fee: bigint,
+
+    /**
+     * Total fees the account pays for message forwarding
+     */
+    total_fwd_fees: bigint,
+
+    /**
+     * Total account fees for the transaction execution. Compounds of storage_fee + gas_fee + ext_in_msg_fee + total_fwd_fees
+     */
+    account_fees: bigint
 }
 
 export type ParamsOfRunExecutor = {
