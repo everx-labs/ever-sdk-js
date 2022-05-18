@@ -12,12 +12,12 @@ All notable changes to this project will be documented in this file.
   - `account_fees`  - total fees the account pays for the transaction  
 
 - `main` and `dev` endpoints aliases for Evernode Cloud Mainnet and Devnet endpoints  
-- binding-gen: enum of types produces own type for each enum variant.
-- lib-web: large numbers in transaction fees are rounded now (was error).
-- core: if an application calls in parallel first client core functions 
+- binding-gen: enum of types produces its own type for each enum variant.
+- lib-web: large numbers in transaction fees are rounded now (previously they caused errors).
+- core: if an application calls first client core functions in parallel 
   then core creates more than one internal context per single TonClient
-  instance.  As a side effect of this is that a nodejs process hasn't
-  finished even if a `client.close` had called.
+  instance.  As a side effect of this is that a Nodejs process didn't
+  finish even when `client.close` was called.
 
 ## [1.33.1] – 2022-05-10
 
