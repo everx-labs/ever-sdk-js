@@ -65,7 +65,9 @@ export class TonClient {
     readonly tvm: TvmModule;
     readonly proofs: ProofsModule;
     private readonly config: ClientConfig;
-    private context: number | null = null;
+    private context: number | undefined = undefined;
+    private contextCreation: ContextPromise[] | undefined = undefined;
+    private contextError: Error | undefined = undefined;
 
     constructor(config?: ClientConfig) {
         this.config = config ?? {};
@@ -110,21 +112,28 @@ export class TonClient {
 
     close() {
         const context = this.context;
-        if (context !== null) {
-            this.context = null;
+        if (context !== undefined) {
+            this.context = undefined;
             getBridge().destroyContext(context);
         }
     }
 
-    async resolveError(functionName: string, params: any, err: TonClientError): Promise<TonClientError> {
+    async resolveError(
+        functionName: string,
+        params: any,
+        err: TonClientError,
+    ): Promise<TonClientError> {
         if (err.code !== 23 || !(err.data?.suggest_use_helper_for)) {
             return err;
         }
         try {
             const [modName, funcName] = functionName.split(".");
             const api = (await this.client.get_api_reference()).api;
-            
-            const allTypesArray = api.modules.reduce((accumulator: any, element: any) => accumulator.concat(element.types), []);
+
+            const allTypesArray = api.modules.reduce((
+                accumulator: any,
+                element: any,
+            ) => accumulator.concat(element.types), []);
             const allTypesDict: { [name: string]: any } = {};
             allTypesArray.forEach((element: any) => allTypesDict[element.name] = element);
 
@@ -142,40 +151,49 @@ export class TonClient {
 
             function walkParameters(valueTypeInfo: any, value: any, path: string) {
                 switch (valueTypeInfo.type) {
-                    case "Array":
-                        if (Array.isArray(value)) {
-                            value.forEach(v => walkParameters(valueTypeInfo.array_item, v, `${path}[i]`));
-                        }
-                        break;
-                    case "Struct":
-                        valueTypeInfo.struct_fields.forEach((sf: any) => walkParameters(sf, value[sf.name], path ? `${path}.${sf.name}` : sf.name));
-                        break;
-                    case "Optional":
-                        if (value) {
-                            walkParameters(valueTypeInfo.optional_inner, value, path);
-                        }
-                        break;
-                    case "Ref":
-                        if (valueTypeInfo.ref_name != "Value" &&
-                            valueTypeInfo.ref_name != "API" &&
-                            valueTypeInfo.ref_name != "AbiParam") {
+                case "Array":
+                    if (Array.isArray(value)) {
+                        value.forEach(v => walkParameters(
+                            valueTypeInfo.array_item,
+                            v,
+                            `${path}[i]`,
+                        ));
+                    }
+                    break;
+                case "Struct":
+                    valueTypeInfo.struct_fields.forEach((sf: any) => walkParameters(
+                        sf,
+                        value[sf.name],
+                        path ? `${path}.${sf.name}` : sf.name,
+                    ));
+                    break;
+                case "Optional":
+                    if (value) {
+                        walkParameters(valueTypeInfo.optional_inner, value, path);
+                    }
+                    break;
+                case "Ref":
+                    if (valueTypeInfo.ref_name != "Value" &&
+                        valueTypeInfo.ref_name != "API" &&
+                        valueTypeInfo.ref_name != "AbiParam") {
 
-                            walkParameters(allTypesDict[valueTypeInfo.ref_name], value, path);
-                        }
-                        break;
-                    case "EnumOfTypes":
-                        if (valueTypeInfo.enum_types.some((et: any) => et.name == value.type)) {
-                            return;
-                        }
+                        walkParameters(allTypesDict[valueTypeInfo.ref_name], value, path);
+                    }
+                    break;
+                case "EnumOfTypes":
+                    if (valueTypeInfo.enum_types.some((et: any) => et.name == value.type)) {
+                        return;
+                    }
 
-                        let parameterName = valueTypeInfo.name.toLowerCase();
-                        let helperFunctions: string[] = [];
-                        valueTypeInfo.enum_types.forEach((et: any) => helperFunctions.push(parameterName + et.name));
+                    let parameterName = valueTypeInfo.name.toLowerCase();
+                    let helperFunctions: string[] = [];
+                    valueTypeInfo.enum_types.forEach((et: any) => helperFunctions.push(parameterName + et.name));
 
-                        err.message = `Consider using one of the helper methods (${helperFunctions.join(", ")}) for the \"${path}\" parameter\n` + err.message;
-                        break;
-                    default:
-                        break;
+                    err.message = `Consider using one of the helper methods (${helperFunctions.join(
+                        ", ")}) for the \"${path}\" parameter\n` + err.message;
+                    break;
+                default:
+                    break;
                 }
             }
         } catch (e: any) {
@@ -184,21 +202,44 @@ export class TonClient {
         return err;
     }
 
+    private contextRequired(): Promise<number> {
+        if (this.context !== undefined) {
+            return Promise.resolve(this.context);
+        }
+        if (this.contextError !== undefined) {
+            return Promise.reject(this.contextError);
+        }
+        if (this.contextCreation === undefined) {
+            this.contextCreation = [];
+            getBridge().createContext(this.config).then((context) => {
+                const creation = this.contextCreation;
+                this.contextCreation = undefined;
+                this.context = context;
+                creation?.forEach(x => x.resolve(context));
+            }, (reason) => {
+                const creation = this.contextCreation;
+                this.contextCreation = undefined;
+                this.contextError = reason ?? undefined;
+                creation?.forEach(x => x.reject(reason));
+            });
+        }
+        return new Promise<number>((resolve, reject) => {
+            this.contextCreation?.push({
+                resolve,
+                reject,
+            });
+        });
+    }
+
     async request(
         functionName: string,
         functionParams: any,
         responseHandler?: ResponseHandler,
     ): Promise<any> {
-        let context: number;
-        if (this.context !== null) {
-            context = this.context;
-        } else {
-            context = await getBridge().createContext(this.config);
-            this.context = context;
-        }
-        
+        const context = this.context ?? await this.contextRequired();
         return getBridge()
-            .request(context, functionName, functionParams, responseHandler ?? (() => {}))
+            .request(context, functionName, functionParams, responseHandler ?? (() => {
+            }))
             .catch(async (reason) => {
                 throw await this.resolveError(functionName, functionParams, reason);
             });
@@ -229,6 +270,12 @@ export class TonClient {
     }
 }
 
+type ContextPromise = {
+    resolve: (context: number) => void,
+    reject: (error?: Error) => void,
+}
+
+
 // Converts value to hex
 function toHex(value: any, bits: number): string {
     let hex: string;
@@ -236,7 +283,7 @@ function toHex(value: any, bits: number): string {
         hex = value.toString(16);
     } else if (typeof value === "string") {
         if (value.startsWith("0x")) {
-            hex = value.substr(2);
+            hex = value.substring(2);
         } else {
             hex = decToHex(value);
         }
@@ -245,7 +292,7 @@ function toHex(value: any, bits: number): string {
     }
     let len = bits / 4;
     while (hex.length > len && hex.startsWith("0")) {
-        hex = hex.substr(1);
+        hex = hex.substring(1);
     }
     return hex.padStart(len, "0");
 }
