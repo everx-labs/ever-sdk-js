@@ -34,6 +34,10 @@ if (global.process.stdout === undefined) {
         isTTY: false,
     };
 }
+if (global.process.cwd === undefined) {
+    global.process.cwd = () => {};
+}
+
 
 export default function() {
 }
