@@ -17,22 +17,21 @@ name = 'eversdk'
 crate-type = [ 'staticlib', 'cdylib' ]
 
 [dependencies]
-js-sys = '0.3.50'
-wasm-bindgen = '0.2.73'
-serde-wasm-bindgen = '0.3.0'
+js-sys = '0.3.57'
+wasm-bindgen = '0.2.80'
+serde-wasm-bindgen = '0.4.3'
 serde = { features = [ 'derive' ], version = '1.0' }
-serde_json = '1.0.41'
+serde_json = '1.0.81'
 base64 = '0.13.0'
 lazy_static = '1.4.0'
 # We need to build getrandom with fature "js" even though we don't use it by ourselves,
-# just to fix building of rand for WASM: 
+# just to fix building of rand for WASM:
 getrandom = { default-features = false, features = [ 'js' ], version = '0.2.2' }
 
-ton_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/tonlabs/TON-SDK.git', tag = '1.33.1' }
-#ton_client = { path = "../../../../TON-SDK/ton_client/client", default-features = false, features = ["wasm"] }
+ton_client = { default-features = false, features = [ 'wasm-base' ], git = 'https://github.com/tonlabs/TON-SDK.git', tag = '1.34.0' }
 
 [dependencies.web-sys]
-version = '0.3.22'
+version = '0.3.57'
 features = [ 'Blob' ]
 
 # The recrypt Ed25519 library that we use (https://github.com/dalek-cryptography/ed25519-dalek) depends on this clear_on_drop

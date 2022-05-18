@@ -1,13 +1,14 @@
 use js_sys::Error;
 use js_sys::{Array, ArrayBuffer, Object, Reflect, Uint8Array};
-use serde::ser::Serialize;
 use serde_json::Value;
 use wasm_bindgen::{prelude::*, JsCast};
 use web_sys::Blob;
 
 extern crate base64;
 
+use crate::ser::Serializer;
 use crate::RequestOptions;
+use serde::ser::Serialize;
 
 type Path = Vec<String>;
 type Blobs = Vec<(Path, Vec<u8>)>;
@@ -21,7 +22,7 @@ fn js_to_serde_value(obj: JsValue) -> Result<Value, Error> {
 fn serde_to_js_value(value: &Value) -> Result<JsValue, Error> {
     // NOTE: Currently serde_wasm_bindgen always converts `serde_json::Null` into `JsValue::UNDEFINED`.
     // Because of that, we need to replace `undefined` with `null` in `worker-template.js`.
-    let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
+    let serializer = Serializer::json_compatible();
     value
         .serialize(&serializer)
         .map_err(|err| Error::new(&err.to_string()[..]))
@@ -41,7 +42,7 @@ fn make_blob(bytes: &[u8]) -> Result<Blob, Error> {
     let ta = unsafe { Uint8Array::view(bytes) };
     let arr = Array::new_with_length(1);
     arr.set(0, JsValue::from(ta));
-    Blob::new_with_u8_array_sequence(&arr).map_err(|err| Error::new("Cannot make blob"))
+    Blob::new_with_u8_array_sequence(&arr).map_err(|_| Error::new("Cannot make blob"))
 }
 
 fn read_array_buffer(ab: &JsValue) -> Vec<u8> {
@@ -102,14 +103,14 @@ fn replace_placeholder_with_blob(
         [head] => {
             let key = head.into();
             let blob = make_blob(bytes)?;
-            match unsafe { Reflect::set(&root, &key, &blob) } {
+            match Reflect::set(&root, &key, &blob) {
                 Ok(true) => Ok(()),
                 _ => Err(Error::new("Cannot set object property")),
             }
         }
         [head, ..] => {
             let key = head.into();
-            let child = unsafe { Reflect::get(&root, &key) }?;
+            let child = Reflect::get(&root, &key)?;
             replace_placeholder_with_blob(&child, &path[1..], bytes)
         }
         [] => Err(Error::new("Empty path")),
@@ -153,7 +154,7 @@ fn replace_array_buffers_with_placeholders_recursive(
         let obj = Object::from(jsvalue.clone());
         let keys = Object::keys(&obj);
         for key in keys.to_vec() {
-            let child = unsafe { Reflect::get(&obj, &key) }?;
+            let child = Reflect::get(&obj, &key)?;
             let mut newpath = path.clone();
             newpath.push(
                 key.as_string()
@@ -200,7 +201,7 @@ fn determine_return_blob(obj: &JsValue, blobs: &Blobs) -> bool {
     // then all strings in the response params will be converted from base64 to raw binary JS Blobs
     // NOTE: This behaviour is to be changed later once TON SDK core uses binary type in the response params.
     let default = !blobs.is_empty();
-    match unsafe { Reflect::get(&obj, &"response_binary_type".into()) } {
+    match Reflect::get(&obj, &"response_binary_type".into()) {
         Ok(value) => match value.as_string() {
             Some(string) => match string.as_str() {
                 "blob" => true,

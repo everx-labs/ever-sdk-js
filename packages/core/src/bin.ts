@@ -90,7 +90,12 @@ class BinaryLibraryAdapter implements BinaryLibraryWithParams {
     constructor(private library: BinaryLibrary) {
     }
 
-    setResponseParamsHandler(handler?: (requestId: number, params: any, responseType: number, finished: boolean) => void) {
+    setResponseParamsHandler(handler?: (
+        requestId: number,
+        params: any,
+        responseType: number,
+        finished: boolean,
+    ) => void) {
         if (handler === undefined) {
             this.library.setResponseHandler(undefined);
         } else {
@@ -103,12 +108,18 @@ class BinaryLibraryAdapter implements BinaryLibraryWithParams {
                     requestId,
                     paramsJson !== "" ? JSON.parse(paramsJson) : undefined,
                     responseType,
-                    finished),
+                    finished,
+                ),
             );
         }
     }
 
-    sendRequestParams(context: number, requestId: number, functionName: string, functionParams: any) {
+    sendRequestParams(
+        context: number,
+        requestId: number,
+        functionName: string,
+        functionParams: any,
+    ) {
         const paramsJson = (functionParams === undefined) || (functionParams === null)
             ? ""
             : JSON.stringify(functionParams, (_, value) =>
@@ -140,19 +151,19 @@ export class CommonBinaryBridge implements BinaryBridge {
 
     constructor(loader: () => Promise<BinaryLibrary | BinaryLibraryWithParams>) {
         this.loading = [];
-        loader().then((library: BinaryLibrary | BinaryLibraryWithParams, error?: Error) => {
+        loader().then((library: BinaryLibrary | BinaryLibraryWithParams) => {
             const saveLoading = this.loading;
             this.loading = undefined;
-            if (library) {
-                let libraryWithParams = "setResponseParamsHandler" in library
-                    ? library
-                    : new BinaryLibraryAdapter(library);
-                this.library = libraryWithParams;
-                saveLoading?.forEach(x => x.resolve(libraryWithParams));
-            } else {
-                this.loadError = error ?? undefined;
-                saveLoading?.forEach(x => x.reject(error));
-            }
+            let libraryWithParams = "setResponseParamsHandler" in library
+                ? library
+                : new BinaryLibraryAdapter(library);
+            this.library = libraryWithParams;
+            saveLoading?.forEach(x => x.resolve(libraryWithParams));
+        }, (reason) => {
+            const saveLoading = this.loading;
+            this.loading = undefined;
+            this.loadError = reason ?? undefined;
+            saveLoading?.forEach(x => x.reject(reason));
         });
 
     }

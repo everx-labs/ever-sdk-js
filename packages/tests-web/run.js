@@ -101,6 +101,10 @@ async function main() {
         const text = `${msg.text()}\n`;
         logger.logOutput(text);
     });
+    page.on('pageerror', (error) => {
+        const text = `${error.message}\n`;
+        console.error(text);
+    });
     await page.goto('http://localhost:' + WEBPACK_DEV_SERVER_PORT, {});
 }
 
