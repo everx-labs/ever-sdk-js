@@ -18,6 +18,8 @@ use ton_client::{create_context, destroy_context, request};
 use wasm_bindgen::prelude::*;
 
 mod conv;
+mod ser;
+
 use conv::{parse, stringify};
 
 #[macro_use]
