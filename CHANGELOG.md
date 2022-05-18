@@ -1,9 +1,17 @@
 All notable changes to this project will be documented in this file.
 
-## [1.34.0] – 2022-05-15
+## [1.34.0] – 2022-05-18
 
 ### New
 
+- `client.config` function that returns the current client config
+- `run_executor().fees` is extended with these fields:  
+  
+  - `ext_in_msg_fee` - fee for processing external inbound message  
+  - `total_fwd_fees` - total fees of action phase  
+  - `account_fees`  - total fees the account pays for the transaction  
+
+- `main` and `dev` endpoints aliases for Evernode Cloud Mainnet and Devnet endpoints  
 - binding-gen: enum of types produces own type for each enum variant.
 - lib-web: large numbers in transaction fees are rounded now (was error).
 - core: if an application calls in parallel first client core functions 
