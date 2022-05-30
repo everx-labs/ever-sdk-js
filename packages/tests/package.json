@@ -1,6 +1,6 @@
 {
   "name": "@eversdk/tests",
-  "version": "1.34.1",
+  "version": "1.34.2",
   "private": true,
   "description": "TON Client Tests",
   "main": "dist/index.js",
