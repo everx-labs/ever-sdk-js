@@ -63,3 +63,33 @@ test("utils: convert_address", async () => {
     });
     expect(convertedAddress.address).toEqual(hex);
 });
+
+test("utils: compress_zstd zero", async () => {
+    const {
+        utils,
+    } = runner.getClient();
+    
+    const zero = '';
+    const c = await utils.compress_zstd({uncompressed: zero});
+    const d = await utils.decompress_zstd({...c});
+
+    expect(d.decompressed).toEqual(zero);
+});
+
+test("utils: compress_zstd big length", async () => {
+    const {
+        utils,
+    } = runner.getClient();
+    
+    const length = 1024*1024; // 1Mb
+    const randomBytesInBase64 = Buffer.from('foo bar 42'.repeat(length), "utf8").toString("base64");
+
+    const cMin = await utils.compress_zstd({level: 1, uncompressed: randomBytesInBase64});
+    const dMin = await utils.decompress_zstd({...cMin});
+
+    const cMax = await utils.compress_zstd({level: 21, uncompressed: randomBytesInBase64});
+    const dMax = await utils.decompress_zstd({...cMax});
+
+    expect(dMin.decompressed).toEqual(randomBytesInBase64);
+    expect(dMax.decompressed).toEqual(randomBytesInBase64);
+});
