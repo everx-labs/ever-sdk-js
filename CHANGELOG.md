@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - build process
+- compress/decompress zstd for wasm
 
 ## [1.34.1] – 2022-05-26
 
