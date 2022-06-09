@@ -47,7 +47,8 @@ test.skip('(not test) Debug network errors during wait for', async () => {
     console.log('>>>', accounts);
 });
 
-test('Specialized', async () => {
+// These functions was removed from q-server in June 2022
+test.skip('Specialized', async () => {
     const queries = tests.client.queries;
     let count = await queries.getAccountsCount();
     expect(count)
