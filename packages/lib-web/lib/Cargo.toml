@@ -1,6 +1,6 @@
 [package]
 name = 'ever_sdk_wasm_module'
-version = '1.30.1'
+version = '1.35.0'
 edition = '2018'
 description = 'TON Client WASM binding'
 license = 'Apache-2.0'
