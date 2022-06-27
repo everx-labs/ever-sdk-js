@@ -24,6 +24,7 @@
             'Secur32.lib',
             'Crypt32.lib',
             'Bcrypt.lib',
+            'ntdll.lib'
           ],
         }, {
           'libraries': [
