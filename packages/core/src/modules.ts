@@ -2794,7 +2794,8 @@ export enum AbiErrorCode {
     InvalidAbi = 311,
     InvalidFunctionId = 312,
     InvalidData = 313,
-    EncodeInitialDataFailed = 314
+    EncodeInitialDataFailed = 314,
+    InvalidFunctionName = 315
 }
 
 export type AbiContractVariant = {
@@ -3869,6 +3870,32 @@ export type ResultOfAbiEncodeBoc = {
     boc: string
 }
 
+export type ParamsOfCalcFunctionId = {
+
+    /**
+     * Contract ABI.
+     */
+    abi: Abi,
+
+    /**
+     * Contract function name
+     */
+    function_name: string,
+
+    /**
+     * If set to `true` output function ID will be returned which is used in contract response. Default is `false`
+     */
+    output?: boolean
+}
+
+export type ResultOfCalcFunctionId = {
+
+    /**
+     * Contract function ID
+     */
+    function_id: number
+}
+
 /**
  * Provides message encoding and decoding according to the ABI specification.
  */
@@ -4092,6 +4119,16 @@ export class AbiModule {
      */
     encode_boc(params: ParamsOfAbiEncodeBoc): Promise<ResultOfAbiEncodeBoc> {
         return this.client.request('abi.encode_boc', params);
+    }
+
+    /**
+     * Calculates contract function ID by contract ABI
+     * 
+     * @param {ParamsOfCalcFunctionId} params
+     * @returns ResultOfCalcFunctionId
+     */
+    calc_function_id(params: ParamsOfCalcFunctionId): Promise<ResultOfCalcFunctionId> {
+        return this.client.request('abi.calc_function_id', params);
     }
 }
 
@@ -5891,7 +5928,12 @@ export type ExecutionOptions = {
     /**
      * transaction logical time
      */
-    transaction_lt?: bigint
+    transaction_lt?: bigint,
+
+    /**
+     * Overrides standard TVM behaviour. If set to `true` then CHKSIG always will return `true`.
+     */
+    chksig_always_succeed?: boolean
 }
 
 /**

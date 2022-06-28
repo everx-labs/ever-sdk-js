@@ -1,5 +1,14 @@
 All notable changes to this project will be documented in this file.
 
+## [1.35.0] – 2022-06-28
+
+### New
+
+- `chksig_always_succeed` execution option used in params of the `tvm.run_get`, `tvm.run_tvm`
+  and `tvm.run_executor`.
+- `abi.calc_function_id` function
+- `tokio` library is updated to 1.* version
+
 ## [1.34.3] – 2022-06-08
 
 ### New
