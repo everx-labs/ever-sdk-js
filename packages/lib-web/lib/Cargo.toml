@@ -1,6 +1,6 @@
 [package]
 name = 'ever_sdk_wasm_module'
-version = '1.35.0'
+version = '1.35.1'
 edition = '2018'
 description = 'TON Client WASM binding'
 license = 'Apache-2.0'
@@ -28,7 +28,7 @@ lazy_static = '1.4.0'
 # just to fix building of rand for WASM:
 getrandom = { default-features = false, features = [ 'js' ], version = '0.2.2' }
 
-ton_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/tonlabs/TON-SDK.git', tag = '1.35.0' }
+ton_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/tonlabs/TON-SDK.git', tag = '1.35.1' }
 
 [dependencies.web-sys]
 version = '0.3.57'

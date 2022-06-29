@@ -1,6 +1,6 @@
 [package]
 name = 'ever_sdk_react_native_ios'
-version = '1.35.0'
+version = '1.35.1'
 authors = [ 'TON Labs' ]
 license = 'Apache-2.0'
 
@@ -10,7 +10,7 @@ crate-type = [ 'staticlib' ]
 
 [dependencies]
 libc = '0.2'
-ton_client = { git = 'https://github.com/tonlabs/TON-SDK.git', tag = '1.35.0' }
+ton_client = { git = 'https://github.com/tonlabs/TON-SDK.git', tag = '1.35.1' }
 
 [profile.release]
 lto = true
