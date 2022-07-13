@@ -27,12 +27,6 @@ fn fix_wrapper_script(wrapper: String) -> String {
         (
             "imports\\['env'\\]\\s*=\\s*__wbg_star\\d+;",
             "imports['env'] = {\n        \
-                malloc: function(size) {\n            \
-                    return wasm.__wbindgen_malloc(size);\n        \
-                },\n        \
-                free: function(ptr) {\n            \
-                    wasm.__wbindgen_free(ptr);\n        \
-                },\n        \
                 now: function() {\n            \
                     return new Date().getTime();\n        \
                 },\n    \
