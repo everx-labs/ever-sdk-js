@@ -15,7 +15,7 @@ export interface BinaryLibrary extends BinaryLibraryBase {
         handler?: (
             requestId: number,
             paramsJson: string,
-            responseType: number,
+            responseType: ResponseType,
             finished: boolean,
         ) => void,
     ): void,
@@ -33,7 +33,7 @@ export interface BinaryLibraryWithParams extends BinaryLibraryBase {
         handler?: (
             requestId: number,
             params: any,
-            responseType: number,
+            responseType: ResponseType,
             finished: boolean,
         ) => void,
     ): void,
@@ -93,7 +93,7 @@ class BinaryLibraryAdapter implements BinaryLibraryWithParams {
     setResponseParamsHandler(handler?: (
         requestId: number,
         params: any,
-        responseType: number,
+        responseType: ResponseType,
         finished: boolean,
     ) => void) {
         if (handler === undefined) {
@@ -102,7 +102,7 @@ class BinaryLibraryAdapter implements BinaryLibraryWithParams {
             this.library.setResponseHandler((
                     requestId: number,
                     paramsJson: string,
-                    responseType: number,
+                    responseType: ResponseType,
                     finished: boolean,
                 ) => handler(
                     requestId,
@@ -175,7 +175,7 @@ export class CommonBinaryBridge implements BinaryBridge {
                 this.library?.setResponseParamsHandler((
                     requestId: number,
                     params: any,
-                    responseType: number,
+                    responseType: ResponseType,
                     finished: boolean,
                 ) => this.handleLibraryResponse(requestId, params, responseType, finished));
             } else {
@@ -251,7 +251,7 @@ export class CommonBinaryBridge implements BinaryBridge {
     private handleLibraryResponse(
         requestId: number,
         params: any,
-        responseType: number,
+        responseType: ResponseType,
         finished: boolean,
     ) {
         const request = this.requests.get(requestId);

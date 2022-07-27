@@ -1,5 +1,11 @@
 All notable changes to this project will be documented in this file.
 
+## [1.36.2] – 2022-07-18
+
+### Fixed
+
+- `responseType` has changed from `number` to `ResponseType` so it presents in doc with link to ResponseType description. 
+
 ## [1.36.1] – 2022-07-18
 
 ### Improvement
