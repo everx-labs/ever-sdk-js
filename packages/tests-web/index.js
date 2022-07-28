@@ -1,10 +1,12 @@
 import entry from './entry';
 import { TonClient } from '@eversdk/core';
-import {libWeb} from '@eversdk/lib-web';
+import { libWeb, libWebSetup } from "@eversdk/lib-web";
 import { TestsRunner } from "@eversdk/tests";
 
 entry();
-
+libWebSetup({
+    disableSeparateWorker: true
+})
 TonClient.useBinaryLibrary(libWeb);
 
 window.addEventListener('load', () => {

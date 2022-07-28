@@ -1,5 +1,13 @@
 All notable changes to this project will be documented in this file.
 
+## [1.37.0] – 2022-07-18
+
+### New
+
+- `lib-web` option `disableSeparateWorker`. By default, lib web starts a separate worker that will utilize core (wasm). 
+   So main thread never freezes – it is fine for UI. But in some cases (e.g. when worker already exists in application or extension)
+   separate worker is a bad approach. In this case application can suppress this with `libWebSetup({disableSeparateWorker: true})`.
+
 ## [1.36.2] – 2022-07-18
 
 ### Fixed
@@ -10,7 +18,7 @@ All notable changes to this project will be documented in this file.
 
 ### Improvement
 
-- Time synchorization check between device and server improved:  calculation of timediff with server is  moved from batched query to send_message function and therefore now query execution time does not affect this time diff. 
+- Time synchronization check between device and server improved:  calculation of timediff with server is  moved from batched query to send_message function and therefore now query execution time does not affect this time diff. 
 
 
 ## [1.36.0] – 2022-07-01

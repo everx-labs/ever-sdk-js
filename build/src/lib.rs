@@ -12,6 +12,10 @@
  *
  */
 
+mod template;
+#[cfg(test)]
+mod tests;
+
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use serde_json::Value;
@@ -20,6 +24,7 @@ use std::io::Write;
 use std::ops::Add;
 use std::path::PathBuf;
 use std::process::{Command, ExitStatus};
+pub use template::template_replace;
 
 pub struct Build {
     pub version: String,
@@ -72,9 +77,9 @@ impl Build {
             version,
             #[cfg(target_os = "linux")]
             platform: "x64-linux".into(),
-            #[cfg(all(target_os = "macos", not(target_arch="aarch64")))]
+            #[cfg(all(target_os = "macos", not(target_arch = "aarch64")))]
             platform: "x64-darwin".into(),
-            #[cfg(all(target_os = "macos", target_arch="aarch64"))]
+            #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
             platform: "arm64-darwin".into(),
             #[cfg(target_os = "windows")]
             platform: "x64-win32".into(),
@@ -86,14 +91,6 @@ impl Build {
 
     pub fn read_lib_file(&self, path: &str) -> String {
         fs::read_to_string(self.package_dir.join("lib").join(path)).unwrap()
-    }
-
-    pub fn read_lib_template(&self, path: &str) -> String {
-        self.read_lib_file(path)
-            .split("//---")
-            .last()
-            .unwrap()
-            .into()
     }
 
     pub fn add_package_file(&self, name: &str, src: PathBuf) {
@@ -120,7 +117,10 @@ impl Build {
         let compressed = encoder.finish().unwrap();
         let publish_file_path = publish_dir.join(&name);
         fs::write(&publish_file_path, compressed).unwrap();
-        println!("Publish: {}", &publish_file_path.as_path().display().to_string());
+        println!(
+            "Publish: {}",
+            &publish_file_path.as_path().display().to_string()
+        );
     }
 }
 

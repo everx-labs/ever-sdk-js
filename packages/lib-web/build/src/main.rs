@@ -13,7 +13,7 @@
  */
 
 use regex::Regex;
-use ton_client_build::{exec, Build};
+use ton_client_build::{exec, template_replace, Build};
 
 fn fix_wrapper_script(wrapper: String) -> String {
     let mut wrapper = wrapper;
@@ -21,8 +21,14 @@ fn fix_wrapper_script(wrapper: String) -> String {
         ("\nexport function ", "\nfunction "),
         ("\nexport default init;\n", ""),
         ("export \\{ initSync \\}", ""),
-        ("\n\\s*input\\s*=\\s*new\\s+URL\\('[a-z_]+\\.wasm',\\s*import\\.meta\\.url\\);\n", ""),
-        ("\\s*import\\s*\\*\\s*as\\s+__wbg_star\\d+\\s+from\\s*'env'\\s*;\\s*\r?\n", ""),
+        (
+            "\n\\s*input\\s*=\\s*new\\s+URL\\('[a-z_]+\\.wasm',\\s*import\\.meta\\.url\\);\n",
+            "",
+        ),
+        (
+            "\\s*import\\s*\\*\\s*as\\s+__wbg_star\\d+\\s+from\\s*'env'\\s*;\\s*\r?\n",
+            "",
+        ),
         ("getObject\\(arg0\\) instanceof Window", "true"),
         (
             "imports\\['env'\\]\\s*=\\s*__wbg_star\\d+;",
@@ -30,7 +36,7 @@ fn fix_wrapper_script(wrapper: String) -> String {
                 now: function() {\n            \
                     return new Date().getTime();\n        \
                 },\n    \
-            };"
+            };",
         ),
     ] {
         wrapper = Regex::new(exp).unwrap().replace_all(&wrapper, *rep).into();
@@ -56,17 +62,19 @@ fn main() {
     assert!(exec("wasm-pack", &["build", "--release", "--target", "web"]).success());
     let pkg = lib_dir.join("pkg");
     builder.add_package_file("eversdk.wasm", pkg.join("eversdk_bg.wasm"));
-    let worker = format!(
-        "{}\n{}",
-        fix_wrapper_script(builder.read_lib_file("pkg/eversdk.js")),
-        builder.read_lib_template("worker-template.js")
+    let fixed_wrapper_script = fix_wrapper_script(builder.read_lib_file("pkg/eversdk.js"));
+    let worker = template_replace(
+        &builder.read_lib_file("worker-template.js"),
+        "WRAPPER",
+        &fixed_wrapper_script,
     );
 
-    let index = format!(
-        "const workerScript = {};\n{}",
-        to_string_constant(&worker),
-        builder.read_lib_template("index-template.js"),
+    let index = template_replace(
+        &builder.read_lib_file("index-template.js"),
+        "WORKER",
+        &format!("const workerScript = {};", to_string_constant(&worker)),
     );
+    let index = template_replace(&index, "WRAPPER", &fixed_wrapper_script);
 
     builder.write_package_file("index.js", &index);
     builder.publish_package_file("eversdk.wasm", "eversdk_{v}_wasm");
