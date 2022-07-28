@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
    So main thread never freezes – it is fine for UI. But in some cases (e.g. when worker already exists in application or extension)
    separate worker is a bad approach. In this case application can suppress this with `libWebSetup({disableSeparateWorker: true})`.
 
+### Fixed
+
+- Updated zstd in order to fix building.
+
 ## [1.36.2] – 2022-07-18
 
 ### Fixed
