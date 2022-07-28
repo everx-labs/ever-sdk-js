@@ -1,4 +1,6 @@
-//---
+//****************************************************************** WRAPPER BEGIN
+//---WRAPPER
+//****************************************************************** WRAPPER END
 
 function replaceUndefinedWithNulls(value) {
     if (value === undefined) {
