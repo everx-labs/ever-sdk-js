@@ -121,9 +121,28 @@ You can specify alternative URL if you want to place (or rename) wasm module.
 import {TonClient} from "@eversdk/core";
 import {libWeb, libWebSetup} from "@eversdk/lib-web";
 
-// Application initialization
+// Setup alternative URL for WASM module.
 libWebSetup({
     binaryURL: "/assets/eversdk_1_30_1.wasm",
+});
+
+TonClient.useBinaryLibrary(libWeb);
+```
+
+By default, lib web starts a separate worker that will utilize core (wasm).
+
+So main thread never freezes – it is fine for UI. But in some cases (e.g. when worker already exists in application or extension)
+separate worker is a bad approach.
+
+In this case application can suppress separate worker with:
+
+```ts
+import {TonClient} from "@eversdk/core";
+import {libWeb, libWebSetup} from "@eversdk/lib-web";
+
+// Disable separate worker
+libWebSetup({
+    disableSeparateWorker: true,
 });
 
 TonClient.useBinaryLibrary(libWeb);
