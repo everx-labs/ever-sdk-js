@@ -1,9 +1,11 @@
 All notable changes to this project will be documented in this file.
 
-## [1.37.0] – 2022-07-18
+## [1.37.0] – 2022-07-28
 
 ### New
 
+- client sends `config.network.access_key` as `Authorization: Basic ...` or `Authorization: Bearer ...` header. 
+- client accepts endpoints with `/graphql` suffixes specified in config.
 - `lib-web` option `disableSeparateWorker`. By default, lib web starts a separate worker that will utilize core (wasm). 
    So main thread never freezes – it is fine for UI. But in some cases (e.g. when worker already exists in application or extension)
    separate worker is a bad approach. In this case application can suppress this with `libWebSetup({disableSeparateWorker: true})`.
