@@ -224,7 +224,7 @@ export type NetworkConfig = {
      * Access key to GraphQL API.
      * 
      * @remarks
-     * At the moment is not used in production.
+     * You can specify here Evercloud project secret ot serialized JWT.
      */
     access_key?: string
 }
@@ -3311,7 +3311,17 @@ export type ParamsOfEncodeMessageBody = {
      * 
      * Default value is 0.
      */
-    processing_try_index?: number
+    processing_try_index?: number,
+
+    /**
+     * Destination address of the message
+     * 
+     * @remarks
+     * Since ABI version 2.3 destination address of external inbound message is used in message
+     * body signature calculation. Should be provided when signed external inbound message body is
+     * created. Otherwise can be omitted.
+     */
+    address?: string
 }
 
 export type ResultOfEncodeMessageBody = {
