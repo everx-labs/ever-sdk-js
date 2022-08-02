@@ -1,10 +1,30 @@
 All notable changes to this project will be documented in this file.
 
+## [1.37.0] – 2022-07-28
+
+### New
+
+- client sends `config.network.access_key` as `Authorization: Basic ...` or `Authorization: Bearer ...` header. 
+- client accepts endpoints with `/graphql` suffixes specified in config.
+- `lib-web` option `disableSeparateWorker`. By default, lib web starts a separate worker that will utilize core (wasm). 
+   So main thread never freezes – it is fine for UI. But in some cases (e.g. when worker already exists in application or extension)
+   separate worker is a bad approach. In this case application can suppress this with `libWebSetup({disableSeparateWorker: true})`.
+
+### Fixed
+
+- Updated zstd in order to fix building.
+
+## [1.36.2] – 2022-07-18
+
+### Fixed
+
+- `responseType` has changed from `number` to `ResponseType` so it presents in doc with link to ResponseType description. 
+
 ## [1.36.1] – 2022-07-18
 
 ### Improvement
 
-- Time synchorization check between device and server improved:  calculation of timediff with server is  moved from batched query to send_message function and therefore now query execution time does not affect this time diff. 
+- Time synchronization check between device and server improved:  calculation of timediff with server is  moved from batched query to send_message function and therefore now query execution time does not affect this time diff. 
 
 
 ## [1.36.0] – 2022-07-01

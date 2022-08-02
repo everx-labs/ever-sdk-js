@@ -51,6 +51,9 @@ type LibWebOptions = {
      * Alternative WASM module loader.
      */
     loadModule?: () => Promise<WebAssembly.Module>,
+
+    /// Run core in single thread mode.
+    disableSeparateWorker?: boolean,
 }
 
 export declare function libWebSetup(libOptions?: LibWebOptions): void;

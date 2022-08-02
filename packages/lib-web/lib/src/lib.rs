@@ -14,8 +14,6 @@
 use js_sys::Error;
 use std::collections::HashMap;
 use std::sync::Mutex;
-use std::os::raw::c_void;
-use std::alloc::{alloc, dealloc, Layout};
 use ton_client::{create_context, destroy_context, request};
 use wasm_bindgen::prelude::*;
 
@@ -29,21 +27,6 @@ extern crate lazy_static;
 
 lazy_static! {
     static ref REQUEST_OPTIONS: Mutex<HashMap<u32, RequestOptions>> = Mutex::new(HashMap::new()); // only active requests
-}
-
-#[no_mangle]
-pub extern "C" fn malloc(size: usize) -> *mut c_void {
-    unsafe {
-        let layout = Layout::from_size_align_unchecked(size, 1);
-        alloc(layout).cast()
-    }
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn free(ptr: *mut c_void) {
-    // layout is not actually used
-    let layout = Layout::from_size_align_unchecked(1, 1);
-    dealloc(ptr.cast(), layout);
 }
 
 #[derive(Clone)]
