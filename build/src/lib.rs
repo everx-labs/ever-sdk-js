@@ -75,8 +75,16 @@ impl Build {
 
         Self {
             version,
-            #[cfg(target_os = "linux")]
+            #[cfg(all(target_os = "linux", not(target_arch = "aarch64"), not(target_arch = "armv7"), not(target_arch = "powerpc64le"), not(target_arch = "s390x")))]
             platform: "x64-linux".into(),
+            #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
+            platform: "arm64-linux".into(),
+            #[cfg(all(target_os = "linux", target_arch = "armv7"))]
+            platform: "arm-linux".into(),
+            #[cfg(all(target_os = "linux", target_arch = "powerpc64le"))]
+            platform: "ppc64-linux".into(),
+            #[cfg(all(target_os = "linux", target_arch = "s390x"))]
+            platform: "s390x-linux".into(),
             #[cfg(all(target_os = "macos", not(target_arch = "aarch64")))]
             platform: "x64-darwin".into(),
             #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
