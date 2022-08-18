@@ -1,12 +1,5 @@
 All notable changes to this project will be documented in this file.
 
-## [1.37.1] – 2022-08-18
-
-### Fixed
-
-- Fixed webpack configuration in `packages/lib-web/example`.
-- Rewrote README.md to clarify the prerequisites for running the test.
-
 ## [1.37.0] – 2022-07-28
 
 ### New
@@ -20,6 +13,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Updated zstd in order to fix building.
+- Fixed webpack configuration in `packages/lib-web/example`.
+- Rewrote README.md to clarify the prerequisites for running lib-web/example.
 
 ## [1.36.2] – 2022-07-18
 
