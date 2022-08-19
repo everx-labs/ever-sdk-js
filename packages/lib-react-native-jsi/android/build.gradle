@@ -11,15 +11,25 @@ if (localPropertiesFile.exists()) {
 }
 def debugNativeLibraries = localProps.getProperty('NATIVE_DEBUG_ON', 'FALSE').toBoolean()
 
-def nodeModulesDir = new File(rootProject.projectDir, '../node_modules')
+static def findNodeModules(baseDir) {
+  def basePath = baseDir.toPath().normalize()
+  // Node's module resolution algorithm searches up to the root directory,
+  // after which the base path will be null
+  while (basePath) {
+    def nodeModulesPath = Paths.get(basePath.toString(), "node_modules")
+    def reactNativePath = Paths.get(nodeModulesPath.toString(), "react-native")
+    if (nodeModulesPath.toFile().exists() && reactNativePath.toFile().exists()) {
+      return nodeModulesPath.toString()
+    }
+    basePath = basePath.getParent()
+  }
+  throw new GradleException("EverSDK: Failed to find node_modules/ path!")
+}
+
+def nodeModulesDir = findNodeModules(rootProject.projectDir)
 def reactProperties = new Properties()
 file("$nodeModulesDir/react-native/ReactAndroid/gradle.properties").withInputStream { reactProperties.load(it) }
-def reactNativeVersion = reactProperties.getProperty('VERSION_NAME')
-
-def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
-def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
-def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
-def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
+def REACT_NATIVE_VERSION = reactProperties.getProperty('VERSION_NAME').split("\\.")[1].toInteger()
 
 // We download various C++ open-source dependencies into downloads.
 // We then copy both the downloaded code and our custom makefiles and headers into third-party-ndk.
@@ -28,8 +38,17 @@ def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
 def downloadsDir = new File("$buildDir/downloads")
 def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")
 
-def reactNative = new File("$projectDir/../node_modules/react-native")
+def reactNative = new File("$nodeModulesDir/react-native")
 def reactNativeThirdParty = new File("$reactNative/ReactAndroid/src/main/jni/third-party")
+
+def BOOST_VERSION = reactProperties.getProperty("BOOST_VERSION")
+def boost_file = new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz")
+def DOUBLE_CONVERSION_VERSION = reactProperties.getProperty("DOUBLE_CONVERSION_VERSION")
+def double_conversion_file = new File(downloadsDir, "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz")
+def FOLLY_VERSION = reactProperties.getProperty("FOLLY_VERSION")
+def folly_file = new File(downloadsDir, "folly-${FOLLY_VERSION}.tar.gz")
+def GLOG_VERSION = reactProperties.getProperty("GLOG_VERSION")
+def glog_file = new File(downloadsDir, "glog-${GLOG_VERSION}.tar.gz")
 
 // You need to have following folders in this directory:
 //   - boost_1_63_0
@@ -50,186 +69,6 @@ def follyReplaceContent = '''
   } while (r == -1 && errno == EINTR);
   return r;
 '''
-
-def CMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=${getNdkBuildFullPath()}/../build/cmake/android.toolchain.cmake"
-
-buildscript {
-  repositories {
-    google()
-    maven { url 'https://maven.google.com' }
-    mavenCentral()
-  }
-
-  dependencies {
-    classpath 'com.android.tools.build:gradle:4.1.3'
-    classpath 'de.undercouch:gradle-download-task:4.0.4'
-  }
-}
-
-apply plugin: 'com.android.library'
-
-def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['TonClientJsi_' + name]
-}
-
-def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['TonClientJsi_' + name]).toInteger()
-}
-
-android {
-  buildFeatures {
-    prefab true
-  }
-
-  compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
-  buildToolsVersion getExtOrDefault('buildToolsVersion')
-  defaultConfig {
-    minSdkVersion 21
-    targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
-    versionCode 1
-    versionName "1.0"
-
-    externalNativeBuild {
-        cmake {
-            cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all"
-            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
-            arguments "-DANDROID_STL=c++_shared",
-                      "-DREACT_NATIVE_VERSION=${reactNativeVersion}",
-                      "-DANDROID_TOOLCHAIN=clang",
-                      "${CMAKE_TOOLCHAIN_FILE}",
-                      "-DBOOST_VERSION=${BOOST_VERSION}",
-                      "-DNODE_MODULES_DIR=${nodeModulesDir}"
-        }
-    }
-
-  }
-
-  externalNativeBuild {
-      cmake {
-          path "CMakeLists.txt"
-      }
-  }
-
-  buildTypes {
-    release {
-      minifyEnabled false
-    }
-  }
-  lintOptions {
-    disable 'GradleCompatible'
-  }
-  configurations {
-    extractHeaders
-    extractSO
-  }
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
-}
-
-task createNativeDepsDirectories {
-    downloadsDir.mkdirs()
-    thirdPartyNdkDir.mkdirs()
-}
-
-task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
-    src("https://github.com/react-native-community/boost-for-react-native/releases/download/v${BOOST_VERSION.replace("_", ".")}-0/boost_${BOOST_VERSION}.tar.gz")
-    onlyIfNewer(true)
-    overwrite(false)
-    dest(new File(downloadsDir, "boost_${BOOST_VERSION}.tar.gz"))
-}
-
-task prepareBoost(dependsOn: boostPath ? [] : [downloadBoost], type: Copy) {
-    from(boostPath ?: tarTree(resources.gzip(downloadBoost.dest)))
-    from("$reactNativeThirdParty/boost/Android.mk")
-    include("Android.mk", "boost_${BOOST_VERSION}/boost/**/*.hpp", "boost/boost/**/*.hpp")
-    includeEmptyDirs = false
-    into("$thirdPartyNdkDir/boost")
-    doLast {
-        file("$thirdPartyNdkDir/boost/boost").renameTo("$thirdPartyNdkDir/boost/boost_${BOOST_VERSION}")
-    }
-}
-
-task downloadDoubleConversion(dependsOn: createNativeDepsDirectories, type: Download) {
-    src("https://github.com/google/double-conversion/archive/v${DOUBLE_CONVERSION_VERSION}.tar.gz")
-    onlyIfNewer(true)
-    overwrite(false)
-    dest(new File(downloadsDir, "double-conversion-${DOUBLE_CONVERSION_VERSION}.tar.gz"))
-}
-
-task prepareDoubleConversion(dependsOn: dependenciesPath ? [] : [downloadDoubleConversion], type: Copy) {
-    from(dependenciesPath ?: tarTree(downloadDoubleConversion.dest))
-    from("$reactNativeThirdParty/double-conversion/Android.mk")
-    include("double-conversion-${DOUBLE_CONVERSION_VERSION}/src/**/*", "Android.mk")
-    filesMatching("*/src/**/*", { fname -> fname.path = "double-conversion/${fname.name}" })
-    includeEmptyDirs = false
-    into("$thirdPartyNdkDir/double-conversion")
-}
-
-task downloadFolly(dependsOn: createNativeDepsDirectories, type: Download) {
-    src("https://github.com/facebook/folly/archive/v${FOLLY_VERSION}.tar.gz")
-    onlyIfNewer(true)
-    overwrite(false)
-    dest(new File(downloadsDir, "folly-${FOLLY_VERSION}.tar.gz"))
-}
-
-task prepareFolly(dependsOn: dependenciesPath ? [] : [downloadFolly], type: Copy) {
-    from(dependenciesPath ?: tarTree(downloadFolly.dest))
-    from("$reactNativeThirdParty/folly/Android.mk")
-    include("folly-${FOLLY_VERSION}/folly/**/*", "Android.mk")
-    eachFile { fname -> fname.path = (fname.path - "folly-${FOLLY_VERSION}/") }
-    // Fixes problem with Folly failing to build on certain systems. See
-    // https://github.com/software-mansion/react-native-reanimated/issues/1024
-    filter { line -> line.replaceAll('return int\\(wrapNoInt\\(open, name, flags, mode\\)\\);', follyReplaceContent) }
-    includeEmptyDirs = false
-    into("$thirdPartyNdkDir/folly")
-}
-
-task downloadGlog(dependsOn: createNativeDepsDirectories, type: Download) {
-    src("https://github.com/google/glog/archive/v${GLOG_VERSION}.tar.gz")
-    onlyIfNewer(true)
-    overwrite(false)
-    dest(new File(downloadsDir, "glog-${GLOG_VERSION}.tar.gz"))
-}
-
-// Prepare glog sources to be compiled, this task will perform steps that normally should've been
-// executed by automake. This way we can avoid dependencies on make/automake
-task prepareGlog(dependsOn: dependenciesPath ? [] : [downloadGlog], type: Copy) {
-    from(dependenciesPath ?: tarTree(downloadGlog.dest))
-    from("$reactNativeThirdParty/glog/")
-    include("glog-${GLOG_VERSION}/src/**/*", "Android.mk", "config.h")
-    includeEmptyDirs = false
-    filesMatching("**/*.h.in") {
-        filter(ReplaceTokens, tokens: [
-                ac_cv_have_unistd_h           : "1",
-                ac_cv_have_stdint_h           : "1",
-                ac_cv_have_systypes_h         : "1",
-                ac_cv_have_inttypes_h         : "1",
-                ac_cv_have_libgflags          : "0",
-                ac_google_start_namespace     : "namespace google {",
-                ac_cv_have_uint16_t           : "1",
-                ac_cv_have_u_int16_t          : "1",
-                ac_cv_have___uint16           : "0",
-                ac_google_end_namespace       : "}",
-                ac_cv_have___builtin_expect   : "1",
-                ac_google_namespace           : "google",
-                ac_cv___attribute___noinline  : "__attribute__ ((noinline))",
-                ac_cv___attribute___noreturn  : "__attribute__ ((noreturn))",
-                ac_cv___attribute___printf_4_5: "__attribute__((__format__ (__printf__, 4, 5)))"
-        ])
-        it.path = (it.name - ".in")
-    }
-    into("$thirdPartyNdkDir/glog")
-
-    doLast {
-        copy {
-            from(fileTree(dir: "$thirdPartyNdkDir/glog", includes: ["stl_logging.h", "logging.h", "raw_logging.h", "vlog_is_on.h", "**/src/glog/log_severity.h"]).files)
-            includeEmptyDirs = false
-            into("$thirdPartyNdkDir/glog/exported/glog")
-        }
-    }
-}
 
 static def getNdkBuildName() {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
@@ -294,6 +133,244 @@ def getNdkBuildFullPath() {
     return ndkBuildFullPath
 }
 
+def CMAKE_TOOLCHAIN_FILE = "-DCMAKE_TOOLCHAIN_FILE=${getNdkBuildFullPath()}/../build/cmake/android.toolchain.cmake"
+
+buildscript {
+  repositories {
+    google()
+    maven { url 'https://maven.google.com' }
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath 'com.android.tools.build:gradle:4.1.3'
+    classpath 'de.undercouch:gradle-download-task:4.0.4'
+  }
+}
+
+apply plugin: 'com.android.library'
+
+def getExtOrDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['TonClientJsi_' + name]
+}
+
+def getExtOrIntegerDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['TonClientJsi_' + name]).toInteger()
+}
+
+def reactNativeArchitectures() {
+    def value = project.getProperties().get("reactNativeArchitectures")
+    return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
+}
+
+def sourceBuild = false
+def defaultDir = null
+def androidSourcesName = 'React Native sources'
+
+if (rootProject.ext.has('reactNativeAndroidRoot')) {
+  defaultDir = rootProject.ext.get('reactNativeAndroidRoot')
+} else if (findProject(':ReactAndroid') != null) {
+  sourceBuild = true
+  defaultDir = project(':ReactAndroid').projectDir
+} else {
+  defaultDir = file("$nodeModulesDir/react-native/android")
+}
+
+if (!defaultDir.exists()) {
+    throw new GradleException(
+      "${project.name}: React Native android directory (node_modules/react-native/android) does not exist! Resolved node_modules to: ${nodeModules}"
+    )
+}
+
+def prebuiltDir = sourceBuild
+    ? "$nodeModulesDir/react-native/ReactAndroid/src/main/jni/prebuilt/lib"
+    : "$nodeModulesDir/react-native/ReactAndroid/src/main/jni/first-party/react/jni"
+
+android {
+  buildFeatures {
+    prefab true
+  }
+
+  compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
+  buildToolsVersion getExtOrDefault('buildToolsVersion')
+  ndkVersion getExtOrDefault('ndkVersion')
+
+  defaultConfig {
+    minSdkVersion 21
+    targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
+    versionCode 1
+    versionName "1.0"
+
+    externalNativeBuild {
+        cmake {
+            cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all"
+            arguments "-DANDROID_STL=c++_shared",
+                      "-DREACT_NATIVE_VERSION=${REACT_NATIVE_VERSION}",
+                      "-DANDROID_TOOLCHAIN=clang",
+                      "${CMAKE_TOOLCHAIN_FILE}",
+                      "-DNODE_MODULES_DIR=${nodeModulesDir}",
+                      "-DPREBUILT_DIR=${prebuiltDir}"
+        }
+    }
+
+    ndk {
+      abiFilters (*reactNativeArchitectures())
+    }
+  }
+
+  externalNativeBuild {
+      cmake {
+          path "CMakeLists.txt"
+      }
+  }
+
+  packagingOptions {
+    excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libreactnativejni.so", "**/libjsi.so", "**/MANIFEST.MF"]
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+    }
+  }
+
+  lintOptions {
+    disable 'GradleCompatible'
+  }
+
+  configurations {
+    extractHeaders
+    extractSO
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+}
+
+task createNativeDepsDirectories {
+  doLast {
+    downloadsDir.mkdirs()
+    thirdPartyNdkDir.mkdirs()
+  }
+}
+
+task downloadBoost(dependsOn: createNativeDepsDirectories, type: Download) {
+  def transformedVersion = BOOST_VERSION.replace("_", ".")
+  def srcUrl = "https://boostorg.jfrog.io/artifactory/main/release/${transformedVersion}/source/boost_${BOOST_VERSION}.tar.gz"
+  if (REACT_NATIVE_VERSION < 69) {
+    srcUrl = "https://github.com/react-native-community/boost-for-react-native/releases/download/v${transformedVersion}-0/boost_${BOOST_VERSION}.tar.gz"
+  }
+  src(srcUrl)
+  onlyIfNewer(true)
+  overwrite(false)
+  dest(boost_file)
+}
+
+task prepareBoost(dependsOn: downloadBoost, type: Copy) {
+  from(tarTree(resources.gzip(downloadBoost.dest)))
+  from("src/main/jni/third-party/boost/Android.mk")
+  include("Android.mk", "boost_${BOOST_VERSION}/boost/**/*.hpp", "boost/boost/**/*.hpp")
+  includeEmptyDirs = false
+  into("$thirdPartyNdkDir") // /boost_X_XX_X
+  doLast {
+    file("$thirdPartyNdkDir/boost_${BOOST_VERSION}").renameTo("$thirdPartyNdkDir/boost")
+  }
+}
+
+task downloadDoubleConversion(dependsOn: createNativeDepsDirectories, type: Download) {
+  src("https://github.com/google/double-conversion/archive/v${DOUBLE_CONVERSION_VERSION}.tar.gz")
+  onlyIfNewer(true)
+  overwrite(false)
+  dest(double_conversion_file)
+}
+
+task prepareDoubleConversion(dependsOn: downloadDoubleConversion, type: Copy) {
+  from(tarTree(downloadDoubleConversion.dest))
+  from("src/main/jni/third-party/double-conversion/Android.mk")
+  include("double-conversion-${DOUBLE_CONVERSION_VERSION}/src/**/*", "Android.mk")
+  filesMatching("*/src/**/*", { fname -> fname.path = "double-conversion/${fname.name}" })
+  includeEmptyDirs = false
+  into("$thirdPartyNdkDir/double-conversion")
+}
+
+task downloadFolly(dependsOn: createNativeDepsDirectories, type: Download) {
+  src("https://github.com/facebook/folly/archive/v${FOLLY_VERSION}.tar.gz")
+  onlyIfNewer(true)
+  overwrite(false)
+  dest(folly_file)
+}
+
+task prepareFolly(dependsOn: downloadFolly, type: Copy) {
+  from(tarTree(downloadFolly.dest))
+  from("src/main/jni/third-party/folly/Android.mk")
+  include("folly-${FOLLY_VERSION}/folly/**/*", "Android.mk")
+  eachFile { fname -> fname.path = (fname.path - "folly-${FOLLY_VERSION}/") }
+  includeEmptyDirs = false
+  into("$thirdPartyNdkDir/folly")
+}
+
+task downloadGlog(dependsOn: createNativeDepsDirectories, type: Download) {
+  src("https://github.com/google/glog/archive/v${GLOG_VERSION}.tar.gz")
+  onlyIfNewer(true)
+  overwrite(false)
+  dest(glog_file)
+}
+
+task prepareGlog(dependsOn: downloadGlog, type: Copy) {
+  from(tarTree(downloadGlog.dest))
+  from("src/main/jni/third-party/glog/")
+  include("glog-${GLOG_VERSION}/src/**/*", "Android.mk", "config.h")
+  includeEmptyDirs = false
+  filesMatching("**/*.h.in") {
+    filter(ReplaceTokens, tokens: [
+            ac_cv_have_unistd_h           : "1",
+            ac_cv_have_stdint_h           : "1",
+            ac_cv_have_systypes_h         : "1",
+            ac_cv_have_inttypes_h         : "1",
+            ac_cv_have_libgflags          : "0",
+            ac_google_start_namespace     : "namespace google {",
+            ac_cv_have_uint16_t           : "1",
+            ac_cv_have_u_int16_t          : "1",
+            ac_cv_have___uint16           : "0",
+            ac_google_end_namespace       : "}",
+            ac_cv_have___builtin_expect   : "1",
+            ac_google_namespace           : "google",
+            ac_cv___attribute___noinline  : "__attribute__ ((noinline))",
+            ac_cv___attribute___noreturn  : "__attribute__ ((noreturn))",
+            ac_cv___attribute___printf_4_5: "__attribute__((__format__ (__printf__, 4, 5)))"
+    ])
+    it.path = (it.name - ".in")
+  }
+  into("$thirdPartyNdkDir/glog")
+
+  doLast {
+    copy {
+      from(fileTree(dir: "$thirdPartyNdkDir/glog", includes: ["stl_logging.h", "logging.h", "raw_logging.h", "vlog_is_on.h", "**/src/glog/log_severity.h"]).files)
+      includeEmptyDirs = false
+      into("$thirdPartyNdkDir/glog/exported/glog")
+    }
+  }
+}
+
+task prepareThirdPartyNdkHeaders {
+  if (!boost_file.exists()) {
+    dependsOn(prepareBoost)
+  }
+  if (!double_conversion_file.exists()) {
+    dependsOn(prepareDoubleConversion)
+  }
+  if (!folly_file.exists()) {
+    dependsOn(prepareFolly)
+  }
+  if (!glog_file.exists()) {
+    dependsOn(prepareGlog)
+  }
+}
+
+prepareThirdPartyNdkHeaders.mustRunAfter createNativeDepsDirectories
+
 task extractAARHeaders {
     doLast {
         configurations.extractHeaders.files.each {
@@ -307,6 +384,7 @@ task extractAARHeaders {
         }
     }
 }
+extractAARHeaders.mustRunAfter prepareThirdPartyNdkHeaders
 
 task extractSOFiles {
     doLast {
@@ -321,109 +399,64 @@ task extractSOFiles {
         }
     }
 }
-
-task downloadNdkBuildDependencies {
-    if (!boostPath) {
-        dependsOn(downloadBoost)
-    }
-    dependsOn(downloadDoubleConversion)
-    dependsOn(downloadFolly)
-    dependsOn(downloadGlog)
-}
-
-task prepareThirdPartyNdkHeaders(dependsOn:[downloadNdkBuildDependencies, prepareBoost, prepareDoubleConversion, prepareFolly, prepareGlog]) {
-}
-
-tasks.whenTaskAdded { task ->
-    if (task.name.contains('externalNativeBuild')) {
-        task.dependsOn(prepareThirdPartyNdkHeaders)
-        extractAARHeaders.dependsOn(prepareThirdPartyNdkHeaders)
-        extractSOFiles.dependsOn(prepareThirdPartyNdkHeaders)
-        task.dependsOn(extractAARHeaders)
-        task.dependsOn(extractSOFiles)
-    }
-}
+extractSOFiles.mustRunAfter extractAARHeaders
 
 repositories {
   google()
   maven { url 'https://maven.google.com' }
   mavenCentral()
 
-  def found = false
-  def defaultDir = null
-  def androidSourcesName = 'React Native sources'
-
-  if (rootProject.ext.has('reactNativeAndroidRoot')) {
-    defaultDir = rootProject.ext.get('reactNativeAndroidRoot')
-  } else {
-    defaultDir = new File(
-            projectDir,
-            '/../../../node_modules/react-native/android'
-    )
-  }
-
-  if (defaultDir.exists()) {
-    maven {
-      url defaultDir.toString()
-      name androidSourcesName
-    }
-
-    logger.info(":${project.name}:reactNativeAndroidRoot ${defaultDir.canonicalPath}")
-    found = true
-  } else {
-    def parentDir = rootProject.projectDir
-
-    1.upto(5, {
-      if (found) return true
-      parentDir = parentDir.parentFile
-
-      def androidSourcesDir = new File(
-              parentDir,
-              'node_modules/react-native'
-      )
-
-      def androidPrebuiltBinaryDir = new File(
-              parentDir,
-              'node_modules/react-native/android'
-      )
-
-      if (androidPrebuiltBinaryDir.exists()) {
-        maven {
-          url androidPrebuiltBinaryDir.toString()
-          name androidSourcesName
-        }
-
-        logger.info(":${project.name}:reactNativeAndroidRoot ${androidPrebuiltBinaryDir.canonicalPath}")
-        found = true
-      } else if (androidSourcesDir.exists()) {
-        maven {
-          url androidSourcesDir.toString()
-          name androidSourcesName
-        }
-
-        logger.info(":${project.name}:reactNativeAndroidRoot ${androidSourcesDir.canonicalPath}")
-        found = true
-      }
-    })
-  }
-
-  if (!found) {
-    throw new GradleException(
-            "${project.name}: unable to locate React Native android sources. " +
-                    "Ensure you have you installed React Native as a dependency in your project and try again."
-    )
+  maven {
+    url defaultDir.toString()
+    name androidSourcesName
   }
 }
 
 dependencies {
   // noinspection GradleDynamicVersion
   api 'com.facebook.react:react-native:+'
-  implementation 'com.facebook.fbjni:fbjni:0.2.2'
+  // noinspection GradleDynamicVersion
+  implementation 'com.facebook.fbjni:fbjni:+'
 
-  extractHeaders("com.facebook.fbjni:fbjni:0.2.2:headers")
-  extractSO("com.facebook.fbjni:fbjni:0.2.2")
+  //noinspection GradleDynamicVersion
+  extractHeaders("com.facebook.fbjni:fbjni:+:headers")
+  //noinspection GradleDynamicVersion
+  extractSO("com.facebook.fbjni:fbjni:+")
 
-  def rnAAR = fileTree("${rootDir}/../node_modules/react-native/android").matching({ it.include "**/**/*.aar" }).singleFile
-  def jscAAR = fileTree("${rootDir}/../node_modules/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
-  extractSO(files(rnAAR, jscAAR))
+  if (!sourceBuild) {
+    def buildType = "debug"
+    tasks.all({ task ->
+      if (task.name == "buildCMakeRelease") {
+        buildType = "release"
+      }
+    })
+    def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
+    if (REACT_NATIVE_VERSION < 69) {
+      rnAarMatcher = "**/**/*.aar"
+    }
+    def rnAAR = fileTree("${nodeModulesDir}/react-native/android").matching({ it.include rnAarMatcher }).singleFile
+    def jscAAR = fileTree("${nodeModulesDir}/jsc-android/dist/org/webkit/android-jsc").matching({ it.include "**/**/*.aar" }).singleFile
+    extractSO(files(rnAAR, jscAAR))
+  }
 }
+
+def nativeBuildDependsOn(dependsOnTask, variant) {
+  def buildTasks = tasks.findAll({ task ->
+      !task.name.contains("Clean") && (task.name.contains("externalNative") || task.name.contains("CMake")) })
+  if (variant != null) {
+    buildTasks = buildTasks.findAll({ task -> task.name.contains(variant) })
+  }
+  buildTasks.forEach { task -> task.dependsOn(dependsOnTask) }
+}
+
+afterEvaluate {
+  if (sourceBuild) {
+    nativeBuildDependsOn(":ReactAndroid:packageReactNdkDebugLibsForBuck", "Debug")
+    nativeBuildDependsOn(":ReactAndroid:packageReactNdkReleaseLibsForBuck", "Rel")
+  } else {
+    nativeBuildDependsOn(extractAARHeaders, null)
+    nativeBuildDependsOn(extractSOFiles, null)
+    nativeBuildDependsOn(prepareThirdPartyNdkHeaders, null)
+  }
+}
+
