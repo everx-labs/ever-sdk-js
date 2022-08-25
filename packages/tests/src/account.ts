@@ -24,6 +24,8 @@ export class Account {
     private readonly deployParams: AccountDeployParams | null;
     private address: string | null;
     private cachedBoc: string | null;
+    private cachedBocLt: string | null;
+    private minExpectedLt: string;
 
     // private cachedParsed: any | null;
 
@@ -44,6 +46,8 @@ export class Account {
             this.deployParams = addressOrDeploy;
         }
         this.cachedBoc = null;
+        this.cachedBocLt = null;
+        this.minExpectedLt = "0x0";
     }
 
     async getAddress(): Promise<string> {
@@ -80,10 +84,12 @@ export class Account {
     async deploy(): Promise<ResultOfProcessMessage> {
         const deployParams = this.getParamsOfDeployMessage();
         this.address = (await this.client.abi.encode_message(deployParams)).address;
-        return await this.client.processing.process_message({
+        const result = await this.client.processing.process_message({
             message_encode_params: deployParams,
             send_events: false,
         });
+        this.setMinExpectedLt(result.transaction["lt"]);
+        return result;
     }
 
     async run(functionName: string, input?: any): Promise<ResultOfProcessMessage> {
@@ -121,6 +127,13 @@ export class Account {
         return result;
     }
 
+    setMinExpectedLt(minExpectedLt: string) {
+        if (this.cachedBocLt && minExpectedLt > this.cachedBocLt) {
+            this.dropCachedData()
+        }
+        this.minExpectedLt = minExpectedLt;
+    }
+
     dropCachedData() {
         this.cachedBoc = null;
     }
@@ -129,12 +142,16 @@ export class Account {
         if (this.cachedBoc) {
             return this.cachedBoc;
         }
-        const boc = (await this.client.net.wait_for_collection({
+        const { boc, lt } = (await this.client.net.wait_for_collection({
             collection: "accounts",
-            filter: {id: {eq: this.address}},
-            result: "boc",
-        })).result.boc;
+            filter: {
+                id: {eq: this.address},
+                last_trans_lt: {ge: this.minExpectedLt},
+            },
+            result: "boc lt",
+        })).result;
         this.cachedBoc = boc;
+        this.cachedBocLt = lt;
         return boc;
     }
 
