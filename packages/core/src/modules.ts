@@ -4149,7 +4149,9 @@ export class AbiModule {
  * Pin the BOC with `pin` name.
  * 
  * @remarks
- * Such BOC will not be removed from cache until it is unpinned
+ * Such BOC will not be removed from cache until it is unpinned BOCs can have several pins and each of the pins has reference counter indicating how many
+ * times the BOC was pinned with the pin. BOC is removed from cache after all references for all
+ * pins are unpinned with `cache_unpin` function calls.
  */
 export type BocCacheTypePinnedVariant = {
 
@@ -4157,7 +4159,10 @@ export type BocCacheTypePinnedVariant = {
 }
 
 /**
- *  
+ * BOC is placed into a common BOC pool with limited size regulated by LRU (least recently used) cache lifecycle.
+ * 
+ * @remarks
+ * BOC resides there until it is replaced with other BOCs if it is not used
  */
 export type BocCacheTypeUnpinnedVariant = {
 
@@ -4174,7 +4179,7 @@ export type BocCacheTypeUnpinnedVariant = {
  * 
  * ### `Unpinned`
  * 
- *  
+ * BOC is placed into a common BOC pool with limited size regulated by LRU (least recently used) cache lifecycle.
  */
 export type BocCacheType = ({
     type: 'Pinned'
@@ -4901,7 +4906,7 @@ export class BocModule {
     }
 
     /**
-     * Save BOC into cache
+     * Save BOC into cache or increase pin counter for existing pinned BOC
      * 
      * @param {ParamsOfBocCacheSet} params
      * @returns ResultOfBocCacheSet
@@ -4911,10 +4916,7 @@ export class BocModule {
     }
 
     /**
-     * Unpin BOCs with specified pin.
-     * 
-     * @remarks
-     * BOCs which don't have another pins will be removed from cache
+     * Unpin BOCs with specified pin defined in the `cache_set`. Decrease pin reference counter for BOCs with specified pin defined in the `cache_set`. BOCs which have only 1 pin and its reference counter become 0 will be removed from cache
      * 
      * @param {ParamsOfBocCacheUnpin} params
      * @returns 
@@ -7243,7 +7245,7 @@ export class NetModule {
      * 
      * ### Important Notes on Subscriptions
      * 
-     * Unfortunately sometimes the connection with the network brakes down.
+     * Unfortunately sometimes the connection with the network breakes down.
      * In this situation the library attempts to reconnect to the network.
      * This reconnection sequence can take significant time.
      * All of this time the client is disconnected from the network.
