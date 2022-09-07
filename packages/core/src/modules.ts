@@ -4149,7 +4149,9 @@ export class AbiModule {
  * Pin the BOC with `pin` name.
  * 
  * @remarks
- * Such BOC will not be removed from cache until it is unpinned
+ * Such BOC will not be removed from cache until it is unpinned BOCs can have several pins and each of the pins has reference counter indicating how many
+ * times the BOC was pinned with the pin. BOC is removed from cache after all references for all
+ * pins are unpinned with `cache_unpin` function calls.
  */
 export type BocCacheTypePinnedVariant = {
 
@@ -4157,7 +4159,10 @@ export type BocCacheTypePinnedVariant = {
 }
 
 /**
- *  
+ * BOC is placed into a common BOC pool with limited size regulated by LRU (least recently used) cache lifecycle.
+ * 
+ * @remarks
+ * BOC resides there until it is replaced with other BOCs if it is not used
  */
 export type BocCacheTypeUnpinnedVariant = {
 
@@ -4174,7 +4179,7 @@ export type BocCacheTypeUnpinnedVariant = {
  * 
  * ### `Unpinned`
  * 
- *  
+ * BOC is placed into a common BOC pool with limited size regulated by LRU (least recently used) cache lifecycle.
  */
 export type BocCacheType = ({
     type: 'Pinned'
@@ -4901,7 +4906,7 @@ export class BocModule {
     }
 
     /**
-     * Save BOC into cache
+     * Save BOC into cache or increase pin counter for existing pinned BOC
      * 
      * @param {ParamsOfBocCacheSet} params
      * @returns ResultOfBocCacheSet
@@ -4911,10 +4916,7 @@ export class BocModule {
     }
 
     /**
-     * Unpin BOCs with specified pin.
-     * 
-     * @remarks
-     * BOCs which don't have another pins will be removed from cache
+     * Unpin BOCs with specified pin defined in the `cache_set`. Decrease pin reference counter for BOCs with specified pin defined in the `cache_set`. BOCs which have only 1 pin and its reference counter become 0 will be removed from cache
      * 
      * @param {ParamsOfBocCacheUnpin} params
      * @returns 
@@ -6033,7 +6035,7 @@ export type TransactionFees = {
      * Deprecated.
      * 
      * @remarks
-     * Left for backward compatibility. Does not participate in account transaction fees calculation.
+     * Contains the same data as ext_in_msg_fee field
      */
     in_msg_fwd_fee: bigint,
 
@@ -6059,12 +6061,7 @@ export type TransactionFees = {
      * Deprecated.
      * 
      * @remarks
-     * This is the field that is named as `total_fees` in GraphQL API Transaction type. `total_account_fees` name is misleading, because it does not mean account fees, instead it means
-     * validators total fees received for the transaction execution. It does not include some forward fees that account
-     * actually pays now, but validators will receive later during value delivery to another account (not even in the receiving
-     * transaction).
-     * Because of all of this, this field is not interesting for those who wants to understand
-     * the real account fees, this is why it is deprecated and left for backward compatibility.
+     * Contains the same data as account_fees field
      */
     total_account_fees: bigint,
 
@@ -7243,7 +7240,7 @@ export class NetModule {
      * 
      * ### Important Notes on Subscriptions
      * 
-     * Unfortunately sometimes the connection with the network brakes down.
+     * Unfortunately sometimes the connection with the network breakes down.
      * In this situation the library attempts to reconnect to the network.
      * This reconnection sequence can take significant time.
      * All of this time the client is disconnected from the network.
