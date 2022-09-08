@@ -142,16 +142,16 @@ export class Account {
         if (this.cachedBoc) {
             return this.cachedBoc;
         }
-        const { boc, lt } = (await this.client.net.wait_for_collection({
+        const { boc, last_trans_lt } = (await this.client.net.wait_for_collection({
             collection: "accounts",
             filter: {
                 id: {eq: this.address},
                 last_trans_lt: {ge: this.minExpectedLt},
             },
-            result: "boc lt",
+            result: "boc last_trans_lt",
         })).result;
         this.cachedBoc = boc;
-        this.cachedBocLt = lt;
+        this.cachedBocLt = last_trans_lt;
         return boc;
     }
 
