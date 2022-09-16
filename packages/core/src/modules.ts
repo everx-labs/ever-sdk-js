@@ -224,7 +224,9 @@ export type NetworkConfig = {
      * Access key to GraphQL API.
      * 
      * @remarks
-     * You can specify here Evercloud project secret ot serialized JWT.
+     * You can specify here Basic Auth secret (Evercloud project secret) in hex string
+     * or serialized JWT in base64 string.
+     * Will be passed on as Authorization: Basic ... or Authorization: Bearer ... header.
      */
     access_key?: string
 }
@@ -548,6 +550,26 @@ export type EncryptionBoxInfo = {
     public?: any
 }
 
+export type EncryptionAlgorithmAESVariant = {
+
+    value: AesParamsEB
+}
+
+export type EncryptionAlgorithmChaCha20Variant = {
+
+    value: ChaCha20ParamsEB
+}
+
+export type EncryptionAlgorithmNaclBoxVariant = {
+
+    value: NaclBoxParamsEB
+}
+
+export type EncryptionAlgorithmNaclSecretBoxVariant = {
+
+    value: NaclSecretBoxParamsEB
+}
+
 /**
  * 
  * Depends on `type` field.
@@ -567,39 +589,39 @@ export type EncryptionBoxInfo = {
  */
 export type EncryptionAlgorithm = ({
     type: 'AES'
-} & AesParamsEB) | ({
+} & EncryptionAlgorithmAESVariant) | ({
     type: 'ChaCha20'
-} & ChaCha20ParamsEB) | ({
+} & EncryptionAlgorithmChaCha20Variant) | ({
     type: 'NaclBox'
-} & NaclBoxParamsEB) | ({
+} & EncryptionAlgorithmNaclBoxVariant) | ({
     type: 'NaclSecretBox'
-} & NaclSecretBoxParamsEB)
+} & EncryptionAlgorithmNaclSecretBoxVariant)
 
-export function encryptionAlgorithmAES(params: AesParamsEB): EncryptionAlgorithm {
+export function encryptionAlgorithmAES(value: AesParamsEB): EncryptionAlgorithm {
     return {
         type: 'AES',
-        ...params,
+        value,
     };
 }
 
-export function encryptionAlgorithmChaCha20(params: ChaCha20ParamsEB): EncryptionAlgorithm {
+export function encryptionAlgorithmChaCha20(value: ChaCha20ParamsEB): EncryptionAlgorithm {
     return {
         type: 'ChaCha20',
-        ...params,
+        value,
     };
 }
 
-export function encryptionAlgorithmNaclBox(params: NaclBoxParamsEB): EncryptionAlgorithm {
+export function encryptionAlgorithmNaclBox(value: NaclBoxParamsEB): EncryptionAlgorithm {
     return {
         type: 'NaclBox',
-        ...params,
+        value,
     };
 }
 
-export function encryptionAlgorithmNaclSecretBox(params: NaclSecretBoxParamsEB): EncryptionAlgorithm {
+export function encryptionAlgorithmNaclSecretBox(value: NaclSecretBoxParamsEB): EncryptionAlgorithm {
     return {
         type: 'NaclSecretBox',
-        ...params,
+        value,
     };
 }
 
@@ -791,6 +813,21 @@ export function cryptoBoxSecretEncryptedSecret(encrypted_secret: string): Crypto
 
 export type CryptoBoxHandle = number
 
+export type BoxEncryptionAlgorithmChaCha20Variant = {
+
+    value: ChaCha20ParamsCB
+}
+
+export type BoxEncryptionAlgorithmNaclBoxVariant = {
+
+    value: NaclBoxParamsCB
+}
+
+export type BoxEncryptionAlgorithmNaclSecretBoxVariant = {
+
+    value: NaclSecretBoxParamsCB
+}
+
 /**
  * 
  * Depends on `type` field.
@@ -807,30 +844,30 @@ export type CryptoBoxHandle = number
  */
 export type BoxEncryptionAlgorithm = ({
     type: 'ChaCha20'
-} & ChaCha20ParamsCB) | ({
+} & BoxEncryptionAlgorithmChaCha20Variant) | ({
     type: 'NaclBox'
-} & NaclBoxParamsCB) | ({
+} & BoxEncryptionAlgorithmNaclBoxVariant) | ({
     type: 'NaclSecretBox'
-} & NaclSecretBoxParamsCB)
+} & BoxEncryptionAlgorithmNaclSecretBoxVariant)
 
-export function boxEncryptionAlgorithmChaCha20(params: ChaCha20ParamsCB): BoxEncryptionAlgorithm {
+export function boxEncryptionAlgorithmChaCha20(value: ChaCha20ParamsCB): BoxEncryptionAlgorithm {
     return {
         type: 'ChaCha20',
-        ...params,
+        value,
     };
 }
 
-export function boxEncryptionAlgorithmNaclBox(params: NaclBoxParamsCB): BoxEncryptionAlgorithm {
+export function boxEncryptionAlgorithmNaclBox(value: NaclBoxParamsCB): BoxEncryptionAlgorithm {
     return {
         type: 'NaclBox',
-        ...params,
+        value,
     };
 }
 
-export function boxEncryptionAlgorithmNaclSecretBox(params: NaclSecretBoxParamsCB): BoxEncryptionAlgorithm {
+export function boxEncryptionAlgorithmNaclSecretBox(value: NaclSecretBoxParamsCB): BoxEncryptionAlgorithm {
     return {
         type: 'NaclSecretBox',
-        ...params,
+        value,
     };
 }
 
