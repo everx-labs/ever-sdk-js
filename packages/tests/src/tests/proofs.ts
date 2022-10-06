@@ -22,7 +22,7 @@ import {
 test("proofs: proof_block_data", async () => {
     const client = new TonClient({
         network: {
-            server_address: 'main.ton.dev',
+            endpoints: [`https://mainnet.evercloud.dev/${process.env.EVERCLOUD_AUTH_PROJECT}/graphql`],
         },
     })
 
@@ -45,7 +45,7 @@ test("proofs: proof_block_data", async () => {
 test("proofs: proof_transaction_data", async () => {
     const client = new TonClient({
         network: {
-            server_address: 'main.ton.dev',
+            endpoints: [`https://mainnet.evercloud.dev/${process.env.EVERCLOUD_AUTH_PROJECT}/graphql`],
         },
     })
 
@@ -68,7 +68,7 @@ test("proofs: proof_transaction_data", async () => {
 test("proofs: proof_message_data", async () => {
     const client = new TonClient({
         network: {
-            server_address: 'main.ton.dev',
+            endpoints: [`https://mainnet.evercloud.dev/${process.env.EVERCLOUD_AUTH_PROJECT}/graphql`],
         },
     })
 
