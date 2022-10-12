@@ -42,7 +42,7 @@ test.each(ABIVersions)("Test hello contract from docs.ton.dev (ABI v%i)", async 
     const helloAccountAddress = await helloAccount.getAddress();
     await runner.deploy(helloAccount);
 
-    await processing.process_message({
+    const { transaction } = await processing.process_message({
         send_events: false,
         message_encode_params: {
             address: helloAccountAddress,
@@ -53,7 +53,7 @@ test.each(ABIVersions)("Test hello contract from docs.ton.dev (ABI v%i)", async 
             signer: helloAccount.signer,
         }
     });
-    helloAccount.dropCachedData();
+    helloAccount.setMinExpectedLt(transaction["lt"]);
 
     const localResult1 = await run_tvm(helloAccount, "sayHello");
     const localResult2 = await run_tvm(helloAccount, "sayHello");
@@ -546,7 +546,7 @@ test("initCodeHash", async () => {
     }
 
     async function run(account: Account, abi: Abi, function_name: string, input?: any): Promise<ResultOfProcessMessage> {
-        return await processing.process_message({
+        const result = await processing.process_message({
             message_encode_params: {
                 abi: abi,
                 signer: account.signer,
@@ -558,5 +558,7 @@ test("initCodeHash", async () => {
             },
             send_events: false,
         });
+        account.setMinExpectedLt(result.transaction["lt"]);
+        return result;
     }
 });

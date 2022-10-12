@@ -169,7 +169,7 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
         .toEqual(subscriptionParams.pubkey);
 
     const pubkey2 = "0x3333333333333333333333333333333333333333333333333333333333333333";
-    await processing.process_message({
+    const { transaction } = await processing.process_message({
         message_encode_params: {
             address: accountAddress,
             abi: subscriptionAccount.abi,
@@ -181,6 +181,7 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
         },
         send_events: false,
     });
+    subscriptionAccount.setMinExpectedLt(transaction["lt"]);
 
     const getSubscriptionMessage2 = await abi.encode_message({
         address: accountAddress,
