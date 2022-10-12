@@ -128,7 +128,7 @@ export class Account {
     }
 
     setMinExpectedLt(minExpectedLt: string) {
-        if (this.cachedBocLt && minExpectedLt > this.cachedBocLt) {
+        if (this.cachedBocLt && Number(minExpectedLt) > Number(this.cachedBocLt)) {
             this.dropCachedData()
         }
         this.minExpectedLt = minExpectedLt;
