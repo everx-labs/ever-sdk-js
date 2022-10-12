@@ -83,16 +83,16 @@ export type ClientConfig = {
 export type NetworkConfig = {
 
     /**
-     * **This field is deprecated, but left for backward-compatibility.** DApp Server public address.
+     * **This field is deprecated, but left for backward-compatibility.** Evernode endpoint.
      */
     server_address?: string,
 
     /**
-     * List of DApp Server addresses.
+     * List of Evernode endpoints.
      * 
      * @remarks
      * Any correct URL format can be specified, including IP addresses. This parameter is prevailing over `server_address`.
-     * Check the full list of [supported network endpoints](../ton-os-api/networks.md).
+     * Check the full list of [supported network endpoints](https://docs.everos.dev/ever-sdk/reference/ever-os-api/networks).
      */
     endpoints?: string[],
 
@@ -221,10 +221,7 @@ export type NetworkConfig = {
     next_remp_status_timeout?: number,
 
     /**
-     * Access key to GraphQL API.
-     * 
-     * @remarks
-     * You can specify here Evercloud project secret ot serialized JWT.
+     * Access key to GraphQL API (Project secret)
      */
     access_key?: string
 }
@@ -548,6 +545,26 @@ export type EncryptionBoxInfo = {
     public?: any
 }
 
+export type EncryptionAlgorithmAESVariant = {
+
+    value: AesParamsEB
+}
+
+export type EncryptionAlgorithmChaCha20Variant = {
+
+    value: ChaCha20ParamsEB
+}
+
+export type EncryptionAlgorithmNaclBoxVariant = {
+
+    value: NaclBoxParamsEB
+}
+
+export type EncryptionAlgorithmNaclSecretBoxVariant = {
+
+    value: NaclSecretBoxParamsEB
+}
+
 /**
  * 
  * Depends on `type` field.
@@ -567,39 +584,39 @@ export type EncryptionBoxInfo = {
  */
 export type EncryptionAlgorithm = ({
     type: 'AES'
-} & AesParamsEB) | ({
+} & EncryptionAlgorithmAESVariant) | ({
     type: 'ChaCha20'
-} & ChaCha20ParamsEB) | ({
+} & EncryptionAlgorithmChaCha20Variant) | ({
     type: 'NaclBox'
-} & NaclBoxParamsEB) | ({
+} & EncryptionAlgorithmNaclBoxVariant) | ({
     type: 'NaclSecretBox'
-} & NaclSecretBoxParamsEB)
+} & EncryptionAlgorithmNaclSecretBoxVariant)
 
-export function encryptionAlgorithmAES(params: AesParamsEB): EncryptionAlgorithm {
+export function encryptionAlgorithmAES(value: AesParamsEB): EncryptionAlgorithm {
     return {
         type: 'AES',
-        ...params,
+        value,
     };
 }
 
-export function encryptionAlgorithmChaCha20(params: ChaCha20ParamsEB): EncryptionAlgorithm {
+export function encryptionAlgorithmChaCha20(value: ChaCha20ParamsEB): EncryptionAlgorithm {
     return {
         type: 'ChaCha20',
-        ...params,
+        value,
     };
 }
 
-export function encryptionAlgorithmNaclBox(params: NaclBoxParamsEB): EncryptionAlgorithm {
+export function encryptionAlgorithmNaclBox(value: NaclBoxParamsEB): EncryptionAlgorithm {
     return {
         type: 'NaclBox',
-        ...params,
+        value,
     };
 }
 
-export function encryptionAlgorithmNaclSecretBox(params: NaclSecretBoxParamsEB): EncryptionAlgorithm {
+export function encryptionAlgorithmNaclSecretBox(value: NaclSecretBoxParamsEB): EncryptionAlgorithm {
     return {
         type: 'NaclSecretBox',
-        ...params,
+        value,
     };
 }
 
@@ -791,6 +808,21 @@ export function cryptoBoxSecretEncryptedSecret(encrypted_secret: string): Crypto
 
 export type CryptoBoxHandle = number
 
+export type BoxEncryptionAlgorithmChaCha20Variant = {
+
+    value: ChaCha20ParamsCB
+}
+
+export type BoxEncryptionAlgorithmNaclBoxVariant = {
+
+    value: NaclBoxParamsCB
+}
+
+export type BoxEncryptionAlgorithmNaclSecretBoxVariant = {
+
+    value: NaclSecretBoxParamsCB
+}
+
 /**
  * 
  * Depends on `type` field.
@@ -807,30 +839,30 @@ export type CryptoBoxHandle = number
  */
 export type BoxEncryptionAlgorithm = ({
     type: 'ChaCha20'
-} & ChaCha20ParamsCB) | ({
+} & BoxEncryptionAlgorithmChaCha20Variant) | ({
     type: 'NaclBox'
-} & NaclBoxParamsCB) | ({
+} & BoxEncryptionAlgorithmNaclBoxVariant) | ({
     type: 'NaclSecretBox'
-} & NaclSecretBoxParamsCB)
+} & BoxEncryptionAlgorithmNaclSecretBoxVariant)
 
-export function boxEncryptionAlgorithmChaCha20(params: ChaCha20ParamsCB): BoxEncryptionAlgorithm {
+export function boxEncryptionAlgorithmChaCha20(value: ChaCha20ParamsCB): BoxEncryptionAlgorithm {
     return {
         type: 'ChaCha20',
-        ...params,
+        value,
     };
 }
 
-export function boxEncryptionAlgorithmNaclBox(params: NaclBoxParamsCB): BoxEncryptionAlgorithm {
+export function boxEncryptionAlgorithmNaclBox(value: NaclBoxParamsCB): BoxEncryptionAlgorithm {
     return {
         type: 'NaclBox',
-        ...params,
+        value,
     };
 }
 
-export function boxEncryptionAlgorithmNaclSecretBox(params: NaclSecretBoxParamsCB): BoxEncryptionAlgorithm {
+export function boxEncryptionAlgorithmNaclSecretBox(value: NaclSecretBoxParamsCB): BoxEncryptionAlgorithm {
     return {
         type: 'NaclSecretBox',
-        ...params,
+        value,
     };
 }
 
@@ -4149,7 +4181,9 @@ export class AbiModule {
  * Pin the BOC with `pin` name.
  * 
  * @remarks
- * Such BOC will not be removed from cache until it is unpinned
+ * Such BOC will not be removed from cache until it is unpinned BOCs can have several pins and each of the pins has reference counter indicating how many
+ * times the BOC was pinned with the pin. BOC is removed from cache after all references for all
+ * pins are unpinned with `cache_unpin` function calls.
  */
 export type BocCacheTypePinnedVariant = {
 
@@ -4157,7 +4191,10 @@ export type BocCacheTypePinnedVariant = {
 }
 
 /**
- *  
+ * BOC is placed into a common BOC pool with limited size regulated by LRU (least recently used) cache lifecycle.
+ * 
+ * @remarks
+ * BOC resides there until it is replaced with other BOCs if it is not used
  */
 export type BocCacheTypeUnpinnedVariant = {
 
@@ -4174,7 +4211,7 @@ export type BocCacheTypeUnpinnedVariant = {
  * 
  * ### `Unpinned`
  * 
- *  
+ * BOC is placed into a common BOC pool with limited size regulated by LRU (least recently used) cache lifecycle.
  */
 export type BocCacheType = ({
     type: 'Pinned'
@@ -4901,7 +4938,7 @@ export class BocModule {
     }
 
     /**
-     * Save BOC into cache
+     * Save BOC into cache or increase pin counter for existing pinned BOC
      * 
      * @param {ParamsOfBocCacheSet} params
      * @returns ResultOfBocCacheSet
@@ -4911,10 +4948,7 @@ export class BocModule {
     }
 
     /**
-     * Unpin BOCs with specified pin.
-     * 
-     * @remarks
-     * BOCs which don't have another pins will be removed from cache
+     * Unpin BOCs with specified pin defined in the `cache_set`. Decrease pin reference counter for BOCs with specified pin defined in the `cache_set`. BOCs which have only 1 pin and its reference counter become 0 will be removed from cache
      * 
      * @param {ParamsOfBocCacheUnpin} params
      * @returns 
@@ -6033,7 +6067,7 @@ export type TransactionFees = {
      * Deprecated.
      * 
      * @remarks
-     * Left for backward compatibility. Does not participate in account transaction fees calculation.
+     * Contains the same data as ext_in_msg_fee field
      */
     in_msg_fwd_fee: bigint,
 
@@ -6059,12 +6093,7 @@ export type TransactionFees = {
      * Deprecated.
      * 
      * @remarks
-     * This is the field that is named as `total_fees` in GraphQL API Transaction type. `total_account_fees` name is misleading, because it does not mean account fees, instead it means
-     * validators total fees received for the transaction execution. It does not include some forward fees that account
-     * actually pays now, but validators will receive later during value delivery to another account (not even in the receiving
-     * transaction).
-     * Because of all of this, this field is not interesting for those who wants to understand
-     * the real account fees, this is why it is deprecated and left for backward compatibility.
+     * Contains the same data as account_fees field
      */
     total_account_fees: bigint,
 
@@ -6392,7 +6421,8 @@ export enum NetErrorCode {
     NotSupported = 611,
     NoEndpointsProvided = 612,
     GraphqlWebsocketInitError = 613,
-    NetworkModuleResumed = 614
+    NetworkModuleResumed = 614,
+    Unauthorized = 615
 }
 
 export type OrderBy = {
@@ -7243,7 +7273,7 @@ export class NetModule {
      * 
      * ### Important Notes on Subscriptions
      * 
-     * Unfortunately sometimes the connection with the network brakes down.
+     * Unfortunately sometimes the connection with the network breakes down.
      * In this situation the library attempts to reconnect to the network.
      * This reconnection sequence can take significant time.
      * All of this time the client is disconnected from the network.

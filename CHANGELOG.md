@@ -1,5 +1,70 @@
 All notable changes to this project will be documented in this file.
 
+## [1.38.0] – 2022-10-06
+
+### New
+
+- **Debot module**:  
+    - ABI specification v2.3 is supported in DEngine.
+    - Supported flags `OVERRIDE_TS`, `OVERRIDE_EXPT`, `ASYNC_CALL` for external messages in DEngine.
+    
+### Improvement
+
+- Support cookies in net module for std mode (not wasm)
+- Remove network aliases (main, dev, main.ton.dev, net.ton.dev)
+- No balancing logic in case of 1 endpoint + removed the check of REMP support on backend during client initialization. 
+  These changes will make client initialization faster -> CLI tools that use SDK will work faster, web pages will load initial data faster.
+- Changed 401 error message to response message from API
+- Tests improvements: cryptobox tests made stable
+
+## [1.37.2] – 2022-08-10
+
+### New
+
+- `crypto.encryption_box_get_info` returns nacl box public key in `info.public` field.
+- Gosh instruction are supported in local VM and executor:
+    - execute_diff
+    - execute_diff_patch_not_quiet
+    - execute_zip
+    - execute_unzip
+    - execute_diff_zip
+    - execute_diff_patch_zip_not_quiet
+    - execute_diff_patch_quiet
+    - execute_diff_patch_zip_quiet
+    - execute_diff_patch_binary_not_quiet
+    - execute_diff_patch_binary_zip_not_quiet
+    - execute_diff_patch_binary_quiet
+    - execute_diff_patch_binary_zip_quiet
+
+### Improvement
+
+- `create_crypto_box` optimisation.
+  When a user creates a crypto box, library encrypts provided secret information using provided 
+  password and salt.
+  When library encrypts the secret, it calculates encryption key from password and salt 
+  using `scrypt` function which takes a lot of CPU time (about 1 second).
+  So when a user creates many crypto boxes using the same password and salt, 
+  it takes a lot of time (about 12 seconds for 10 crypto boxes).
+  With the optimisations introduced in this version the library stores the 
+  pair (password+salt => encryption key) in internal cache for approximately 2 seconds.
+  So when a user creates many crypto boxes at a time using the same password and salt, 
+  library uses cached information to skip heavy calculations. As a result now it takes only 
+  a second to create 10 crypto boxes.  
+
+### Fixed
+
+- Some enum types were not properly presented in api.json (some types that use serde(content="value"))
+
+## [1.37.1] – 2022-08-03
+
+### Fixed
+
+- Pinned BOC cache now has reference counter for each pin in BOC. BOC can be pinned several times 
+with the same pin. BOC is removed from cache after all references for all pins are unpinned with
+`cache_unpin` function calls.
+- Fixed error resolving in case when account state was modified after message expiration time. Now 
+appropriate error text is added to error message instead of executor internal error
+
 ## [1.37.0] – 2022-07-28
 
 ### New

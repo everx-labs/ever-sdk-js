@@ -133,6 +133,7 @@ impl Build {
 }
 
 pub fn exec(cmd: &str, args: &[&str]) -> ExitStatus {
+    println!("{} {:?}", cmd, args);
     Command::new(cmd)
         .args(args)
         .spawn()
@@ -142,6 +143,7 @@ pub fn exec(cmd: &str, args: &[&str]) -> ExitStatus {
 }
 
 pub fn exec_out(cmd: &str, args: &[&str]) -> String {
+    println!("{} {:?}", cmd, args);
     let out = Command::new(cmd).args(args).output().unwrap();
     if !out.status.success() {
         panic!("{}", String::from_utf8(out.stderr).unwrap());
