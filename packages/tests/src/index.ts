@@ -9,5 +9,6 @@ export * from './tests/boc';
 export * from './tests/utils';
 export * from './tests/tvm';
 export * from './tests/net';
+export * from './tests/blockchain';
 export * from './tests/contracts';
 export * from './tests/proofs';
