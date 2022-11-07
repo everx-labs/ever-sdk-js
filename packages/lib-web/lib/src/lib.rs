@@ -45,7 +45,7 @@ pub fn core_destroy_context(context: u32) {
     destroy_context(context)
 }
 
-#[wasm_bindgen(js_namespace = eversdk)]
+#[wasm_bindgen]
 extern "C" {
     fn core_response_handler(request_id: u32, params: JsValue, response_type: u32, finished: bool);
 }
