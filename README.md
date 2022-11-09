@@ -232,6 +232,8 @@ This suite has test packages:
 
 ## Preparation to run tests
 
+You need to provide EVERCLOUD_AUTH_PROJECT environemnt variable. This is ProjectId. Take it from one of your project at https://dashboard.evercloud.dev/projects. (without secret / secret should be disabled)
+
 ```shell script
 cd packages/core
 npm i
