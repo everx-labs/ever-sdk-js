@@ -1,5 +1,12 @@
 All notable changes to this project will be documented in this file.
 
+## [1.38.1] – 2022-11-06
+
+### Fixed
+
+- Error code `Unauthorized` is returned from all network functions in case of authentication failure
+- Server connection attempt is not retried in case of authentication failure
+
 ## [1.38.0] – 2022-10-06
 
 ### New

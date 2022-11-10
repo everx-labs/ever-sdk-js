@@ -6422,7 +6422,8 @@ export enum NetErrorCode {
     NoEndpointsProvided = 612,
     GraphqlWebsocketInitError = 613,
     NetworkModuleResumed = 614,
-    Unauthorized = 615
+    Unauthorized = 615,
+    QueryTransactionTreeTimeout = 616
 }
 
 export type OrderBy = {
