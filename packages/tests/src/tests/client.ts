@@ -81,6 +81,11 @@ test("client: walk api reference", async () => {
                     typeInfo.ref_name != "API" &&
                     typeInfo.ref_name != "AbiParam") {
 
+                    const refType = allTypesDict[typeInfo.ref_name];
+
+                    if (!refType) {
+                        throw new Error(`Type ${typeInfo.ref_name} does not exists in API reference.`)
+                    }
                     walkSubtypes(allTypesDict[typeInfo.ref_name]);
                 }
                 break;
