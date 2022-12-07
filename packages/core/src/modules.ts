@@ -164,7 +164,7 @@ export type NetworkConfig = {
      * Frequency of sync latency detection.
      * 
      * @remarks
-     * Library periodically checks the current endpoint for blockchain data syncronization latency.
+     * Library periodically checks the current endpoint for blockchain data synchronization latency.
      * If the latency (time-lag) is less then `NetworkConfig.max_latency`
      * then library selects another endpoint.
      * 
@@ -173,7 +173,7 @@ export type NetworkConfig = {
     latency_detection_interval?: number,
 
     /**
-     * Maximum value for the endpoint's blockchain data syncronization latency (time-lag). Library periodically checks the current endpoint for blockchain data synchronization latency. If the latency (time-lag) is less then `NetworkConfig.max_latency` then library selects another endpoint.
+     * Maximum value for the endpoint's blockchain data synchronization latency (time-lag). Library periodically checks the current endpoint for blockchain data synchronization latency. If the latency (time-lag) is less then `NetworkConfig.max_latency` then library selects another endpoint.
      * 
      * @remarks
      * Must be specified in milliseconds. Default is 60000 (1 min).
@@ -204,7 +204,7 @@ export type NetworkConfig = {
      * UNSTABLE.
      * 
      * @remarks
-     * First REMP status awaiting timeout. If no status recieved during the timeout than fallback transaction scenario is activated.
+     * First REMP status awaiting timeout. If no status received during the timeout than fallback transaction scenario is activated.
      * 
      * Must be specified in milliseconds. Default is 1000 (1 sec).
      */
@@ -214,7 +214,7 @@ export type NetworkConfig = {
      * UNSTABLE.
      * 
      * @remarks
-     * Subsequent REMP status awaiting timeout. If no status recieved during the timeout than fallback transaction scenario is activated.
+     * Subsequent REMP status awaiting timeout. If no status received during the timeout than fallback transaction scenario is activated.
      * 
      * Must be specified in milliseconds. Default is 5000 (5 sec).
      */
@@ -3303,6 +3303,11 @@ export type AbiContract = {
     fields?: AbiParam[]
 }
 
+export enum DataLayout {
+    Input = "Input",
+    Output = "Output"
+}
+
 export type ParamsOfEncodeMessageBody = {
 
     /**
@@ -3631,7 +3636,14 @@ export type ParamsOfDecodeMessage = {
     /**
      * Flag allowing partial BOC decoding when ABI doesn't describe the full body BOC. Controls decoder behaviour when after decoding all described in ABI params there are some data left in BOC: `true` - return decoded values `false` - return error of incomplete BOC deserialization (default)
      */
-    allow_partial?: boolean
+    allow_partial?: boolean,
+
+    /**
+     * Function name or function id if is known in advance
+     */
+    function_name?: string,
+
+    data_layout?: DataLayout
 }
 
 export type DecodedMessageBody = {
@@ -3677,7 +3689,14 @@ export type ParamsOfDecodeMessageBody = {
     /**
      * Flag allowing partial BOC decoding when ABI doesn't describe the full body BOC. Controls decoder behaviour when after decoding all described in ABI params there are some data left in BOC: `true` - return decoded values `false` - return error of incomplete BOC deserialization (default)
      */
-    allow_partial?: boolean
+    allow_partial?: boolean,
+
+    /**
+     * Function name or function id if is known in advance
+     */
+    function_name?: string,
+
+    data_layout?: DataLayout
 }
 
 export type ParamsOfEncodeAccount = {
@@ -4266,7 +4285,7 @@ export type ParamsOfParseShardstate = {
     boc: string,
 
     /**
-     * Shardstate identificator
+     * Shardstate identifier
      */
     id: string,
 
@@ -5092,10 +5111,10 @@ export type ProcessingEventWillSendVariant = {
 }
 
 /**
- * Notifies the app that the message was sent to the network, i.e `processing.send_message` was successfuly executed. Now, the message is in the blockchain. If Application exits at this phase, Developer needs to proceed with processing after the application is restored with `wait_for_transaction` function, passing shard_block_id and message from this event.
+ * Notifies the app that the message was sent to the network, i.e `processing.send_message` was successfully executed. Now, the message is in the blockchain. If Application exits at this phase, Developer needs to proceed with processing after the application is restored with `wait_for_transaction` function, passing shard_block_id and message from this event.
  * 
  * @remarks
- * Do not forget to specify abi of your contract as well, it is crucial for proccessing. See `processing.wait_for_transaction` documentation.
+ * Do not forget to specify abi of your contract as well, it is crucial for processing. See `processing.wait_for_transaction` documentation.
  */
 export type ProcessingEventDidSendVariant = {
 
@@ -5116,7 +5135,7 @@ export type ProcessingEventDidSendVariant = {
  * If Application exits at this phase, Developer needs to proceed with processing
  * after the application is restored with `wait_for_transaction` function, passing
  * shard_block_id and message from this event. Do not forget to specify abi of your contract
- * as well, it is crucial for proccessing. See `processing.wait_for_transaction` documentation.
+ * as well, it is crucial for processing. See `processing.wait_for_transaction` documentation.
  */
 export type ProcessingEventSendFailedVariant = {
 
@@ -5138,7 +5157,7 @@ export type ProcessingEventSendFailedVariant = {
  * If Application exits at this phase, Developer needs to proceed with processing
  * after the application is restored with `wait_for_transaction` function, passing
  * shard_block_id and message from this event. Do not forget to specify abi of your contract
- * as well, it is crucial for proccessing. See `processing.wait_for_transaction` documentation.
+ * as well, it is crucial for processing. See `processing.wait_for_transaction` documentation.
  */
 export type ProcessingEventWillFetchNextBlockVariant = {
 
@@ -5178,7 +5197,7 @@ export type ProcessingEventFetchNextBlockFailedVariant = {
  * This event occurs only for the contracts which ABI includes "expire" header.
  * 
  * If Application specifies `NetworkConfig.message_retries_count` > 0, then `process_message`
- * will perform retries: will create a new message and send it again and repeat it untill it reaches
+ * will perform retries: will create a new message and send it again and repeat it until it reaches
  * the maximum retries count or receives a successful result.  All the processing
  * events will be repeated.
  */
@@ -5216,7 +5235,7 @@ export type ProcessingEventRempIncludedIntoBlockVariant = {
 }
 
 /**
- * Notifies the app that the block candicate with the message has been accepted by the thread's validators
+ * Notifies the app that the block candidate with the message has been accepted by the thread's validators
  */
 export type ProcessingEventRempIncludedIntoAcceptedBlockVariant = {
 
@@ -5240,7 +5259,7 @@ export type ProcessingEventRempOtherVariant = {
 }
 
 /**
- * Notifies the app about any problem that has occured in REMP processing - in this case library switches to the fallback transaction awaiting scenario (sequential block reading).
+ * Notifies the app about any problem that has occurred in REMP processing - in this case library switches to the fallback transaction awaiting scenario (sequential block reading).
  */
 export type ProcessingEventRempErrorVariant = {
 
@@ -5266,7 +5285,7 @@ export type ProcessingEventRempErrorVariant = {
  * 
  * ### `DidSend`
  * 
- * Notifies the app that the message was sent to the network, i.e `processing.send_message` was successfuly executed. Now, the message is in the blockchain. If Application exits at this phase, Developer needs to proceed with processing after the application is restored with `wait_for_transaction` function, passing shard_block_id and message from this event.
+ * Notifies the app that the message was sent to the network, i.e `processing.send_message` was successfully executed. Now, the message is in the blockchain. If Application exits at this phase, Developer needs to proceed with processing after the application is restored with `wait_for_transaction` function, passing shard_block_id and message from this event.
  * 
  * ### `SendFailed`
  * 
@@ -5294,7 +5313,7 @@ export type ProcessingEventRempErrorVariant = {
  * 
  * ### `RempIncludedIntoAcceptedBlock`
  * 
- * Notifies the app that the block candicate with the message has been accepted by the thread's validators
+ * Notifies the app that the block candidate with the message has been accepted by the thread's validators
  * 
  * ### `RempOther`
  * 
@@ -5302,7 +5321,7 @@ export type ProcessingEventRempErrorVariant = {
  * 
  * ### `RempError`
  * 
- * Notifies the app about any problem that has occured in REMP processing - in this case library switches to the fallback transaction awaiting scenario (sequential block reading).
+ * Notifies the app about any problem that has occurred in REMP processing - in this case library switches to the fallback transaction awaiting scenario (sequential block reading).
  */
 export type ProcessingEvent = ({
     type: 'WillFetchFirstBlock'
@@ -6330,7 +6349,7 @@ export class TvmModule {
      * the same component that is used on Validator Nodes.
      * 
      * Can be used for contract debugging, to find out the reason why a message was not delivered successfully.
-     * Validators throw away the failed external inbound messages (if they failed bedore `ACCEPT`) in the real network.
+     * Validators throw away the failed external inbound messages (if they failed before `ACCEPT`) in the real network.
      * This is why these messages are impossible to debug in the real network.
      * With the help of run_executor you can do that. In fact, `process_message` function
      * performs local check with `run_executor` if there was no transaction as a result of processing
@@ -6423,7 +6442,8 @@ export enum NetErrorCode {
     GraphqlWebsocketInitError = 613,
     NetworkModuleResumed = 614,
     Unauthorized = 615,
-    QueryTransactionTreeTimeout = 616
+    QueryTransactionTreeTimeout = 616,
+    GraphqlConnectionError = 617
 }
 
 export type OrderBy = {
@@ -6869,9 +6889,21 @@ export type ParamsOfQueryTransactionTree = {
      * If some of the following messages and transactions are missing yet
      * The maximum waiting time is regulated by this option.
      * 
-     * Default value is 60000 (1 min).
+     * Default value is 60000 (1 min). If `timeout` is set to 0 then function will wait infinitely
+     * until the whole transaction tree is executed
      */
-    timeout?: number
+    timeout?: number,
+
+    /**
+     * Maximum transaction count to wait.
+     * 
+     * @remarks
+     * If transaction tree contains more transaction then this parameter then only first `transaction_max_count` transaction are awaited and returned.
+     * 
+     * Default value is 50. If `transaction_max_count` is set to 0 then no limitation on
+     * transaction count is used and all transaction are returned.
+     */
+    transaction_max_count?: number
 }
 
 export type ResultOfQueryTransactionTree = {
@@ -7274,7 +7306,7 @@ export class NetModule {
      * 
      * ### Important Notes on Subscriptions
      * 
-     * Unfortunately sometimes the connection with the network breakes down.
+     * Unfortunately sometimes the connection with the network breaks down.
      * In this situation the library attempts to reconnect to the network.
      * This reconnection sequence can take significant time.
      * All of this time the client is disconnected from the network.
@@ -7393,7 +7425,7 @@ export class NetModule {
      * 
      * Function reads transactions layer by layer, by pages of 20 transactions.
      * 
-     * The retrieval prosess goes like this:
+     * The retrieval process goes like this:
      * Let's assume we have an infinite chain of transactions and each transaction generates 5 messages.
      * 1. Retrieve 1st message (input parameter) and corresponding transaction - put it into result.
      * It is the first level of the tree of transactions - its root.
@@ -7471,7 +7503,7 @@ export class NetModule {
      * Resumes block iterator.
      * 
      * @remarks
-     * The iterator stays exactly at the same position where the `resume_state` was catched.
+     * The iterator stays exactly at the same position where the `resume_state` was caught.
      * 
      * Application should call the `remove_iterator` when iterator is no longer required.
      * 
