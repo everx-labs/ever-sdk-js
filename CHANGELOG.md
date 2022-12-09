@@ -1,5 +1,47 @@
 All notable changes to this project will be documented in this file.
 
+## [1.39.0] – 2022-12-07
+
+### Improvement
+
+- Resolved endpoints are cached for 10 minutes so subsequent messages sent will not require
+additional server request
+
+- Queries are retried in case of network errors when websocket connection is used
+
+- `WaitForTimeout` error code (607) is returned in case of `wait_for_transaction` function was 
+successfully executed but expected data did not appeared during the specified timeout
+
+- `timeout` parameter in `net.query_transaction_tree` behaviour changed. Now value 0 indicates that
+no time limit should be used and function will wait for all transactions execution
+
+### New
+
+- `transaction_max_count` parameter in `net.query_transaction_tree` which controls the count of
+transaction to be awaited and returned
+
+- `data_layout` and `function_name` parameters in `abi.decode_message` and `abi.decode_message_body` 
+that can be used to decode responsible function output and optimize message decoding by strict layout check
+
+### Fixed
+
+- `abi.encode_initial_data` function properly creates data in case of public key omitted.
+  Now `abi.encode_initial_data` call without initial data values and public key creates
+  the same data as compiled tvc
+
+- Graphql error messages with HTTP response 400 was skipped (was not propagated to
+  the SDK client application).
+
+- Several misspelling.
+
+- Message processing freeze in case of large amount of messages parallel processing using Websocket
+connection
+
+- Websocket interaction thread panic
+
+- **Debot module**:
+    - fill hash argument in `SDK.signHash` method with leading zeroes up to 32 bytes.
+
 ## [1.38.1] – 2022-11-10
 
 ### Improvement
