@@ -50,7 +50,8 @@ export enum ClientErrorCode {
     CanNotParseNumber = 32,
     InternalError = 33,
     InvalidHandle = 34,
-    LocalStorageError = 35
+    LocalStorageError = 35,
+    InvalidData = 36
 }
 
 export type ClientError = {
@@ -3957,6 +3958,32 @@ export type ResultOfCalcFunctionId = {
     function_id: number
 }
 
+export type ParamsOfGetSignatureData = {
+
+    /**
+     * Contract ABI used to decode.
+     */
+    abi: Abi,
+
+    /**
+     * Message BOC encoded in `base64`.
+     */
+    message: string
+}
+
+export type ResultOfGetSignatureData = {
+
+    /**
+     * Signature from the message in `hex`.
+     */
+    signature: string,
+
+    /**
+     * Hash to verify the signature in `base64`.
+     */
+    hash: string
+}
+
 /**
  * Provides message encoding and decoding according to the ABI specification.
  */
@@ -4190,6 +4217,16 @@ export class AbiModule {
      */
     calc_function_id(params: ParamsOfCalcFunctionId): Promise<ResultOfCalcFunctionId> {
         return this.client.request('abi.calc_function_id', params);
+    }
+
+    /**
+     * Extracts signature from message body and calculates hash to verify the signature
+     * 
+     * @param {ParamsOfGetSignatureData} params
+     * @returns ResultOfGetSignatureData
+     */
+    get_signature_data(params: ParamsOfGetSignatureData): Promise<ResultOfGetSignatureData> {
+        return this.client.request('abi.get_signature_data', params);
     }
 }
 
