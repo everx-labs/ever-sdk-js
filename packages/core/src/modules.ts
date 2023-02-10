@@ -65,6 +65,8 @@ export type ClientError = {
 
 export type ClientConfig = {
 
+    binding?: BindingConfig,
+
     network?: NetworkConfig,
 
     crypto?: CryptoConfig,
@@ -222,9 +224,27 @@ export type NetworkConfig = {
     next_remp_status_timeout?: number,
 
     /**
+     * Network segnature ID which is used by VM in signature verifying instructions if capability `CapSignatureWithId` is enabled in blockchain configuration parameters.
+     * 
+     * @remarks
+     * This parameter should be set to `global_id` field from any blockchain block if network can
+     * not be reachable at the moment of message encoding and the message is aimed to be sent into
+     * network with `CapSignatureWithId` enabled. Otherwise signature ID is detected automatically
+     * inside message encoding functions
+     */
+    signature_id?: number,
+
+    /**
      * Access key to GraphQL API (Project secret)
      */
     access_key?: string
+}
+
+export type BindingConfig = {
+
+    library?: string,
+
+    version?: string
 }
 
 /**
@@ -241,9 +261,9 @@ export enum NetworkQueriesProtocol {
 export type CryptoConfig = {
 
     /**
-     * Mnemonic dictionary that will be used by default in crypto functions. If not specified, 1 dictionary will be used.
+     * Mnemonic dictionary that will be used by default in crypto functions. If not specified, `English` dictionary will be used.
      */
-    mnemonic_dictionary?: number,
+    mnemonic_dictionary?: MnemonicDictionary,
 
     /**
      * Mnemonic word count that will be used by default in crypto functions. If not specified the default value will be 12.
@@ -715,7 +735,7 @@ export type NaclSecretBoxParamsEB = {
  */
 export type CryptoBoxSecretRandomSeedPhraseVariant = {
 
-    dictionary: number,
+    dictionary: MnemonicDictionary,
 
     wordcount: number
 }
@@ -733,7 +753,7 @@ export type CryptoBoxSecretPredefinedSeedPhraseVariant = {
 
     phrase: string,
 
-    dictionary: number,
+    dictionary: MnemonicDictionary,
 
     wordcount: number
 }
@@ -783,7 +803,7 @@ export type CryptoBoxSecret = ({
     type: 'EncryptedSecret'
 } & CryptoBoxSecretEncryptedSecretVariant)
 
-export function cryptoBoxSecretRandomSeedPhrase(dictionary: number, wordcount: number): CryptoBoxSecret {
+export function cryptoBoxSecretRandomSeedPhrase(dictionary: MnemonicDictionary, wordcount: number): CryptoBoxSecret {
     return {
         type: 'RandomSeedPhrase',
         dictionary,
@@ -791,7 +811,7 @@ export function cryptoBoxSecretRandomSeedPhrase(dictionary: number, wordcount: n
     };
 }
 
-export function cryptoBoxSecretPredefinedSeedPhrase(phrase: string, dictionary: number, wordcount: number): CryptoBoxSecret {
+export function cryptoBoxSecretPredefinedSeedPhrase(phrase: string, dictionary: MnemonicDictionary, wordcount: number): CryptoBoxSecret {
     return {
         type: 'PredefinedSeedPhrase',
         phrase,
@@ -903,6 +923,18 @@ export type NaclSecretBoxParamsCB = {
      * Nonce in `hex`
      */
     nonce: string
+}
+
+export enum MnemonicDictionary {
+    Ton = 0,
+    English = 1,
+    ChineseSimplified = 2,
+    ChineseTraditional = 3,
+    French = 4,
+    Italian = 5,
+    Japanese = 6,
+    Korean = 7,
+    Spanish = 8
 }
 
 export type ParamsOfFactorize = {
@@ -1337,7 +1369,7 @@ export type ParamsOfMnemonicWords = {
     /**
      * Dictionary identifier
      */
-    dictionary?: number
+    dictionary?: MnemonicDictionary
 }
 
 export type ResultOfMnemonicWords = {
@@ -1353,7 +1385,7 @@ export type ParamsOfMnemonicFromRandom = {
     /**
      * Dictionary identifier
      */
-    dictionary?: number,
+    dictionary?: MnemonicDictionary,
 
     /**
      * Mnemonic word count
@@ -1382,7 +1414,7 @@ export type ParamsOfMnemonicFromEntropy = {
     /**
      * Dictionary identifier
      */
-    dictionary?: number,
+    dictionary?: MnemonicDictionary,
 
     /**
      * Mnemonic word count
@@ -1408,7 +1440,7 @@ export type ParamsOfMnemonicVerify = {
     /**
      * Dictionary identifier
      */
-    dictionary?: number,
+    dictionary?: MnemonicDictionary,
 
     /**
      * Word count
@@ -1439,7 +1471,7 @@ export type ParamsOfMnemonicDeriveSignKeys = {
     /**
      * Dictionary identifier
      */
-    dictionary?: number,
+    dictionary?: MnemonicDictionary,
 
     /**
      * Word count
@@ -1457,7 +1489,7 @@ export type ParamsOfHDKeyXPrvFromMnemonic = {
     /**
      * Dictionary identifier
      */
-    dictionary?: number,
+    dictionary?: MnemonicDictionary,
 
     /**
      * Mnemonic word count
@@ -1694,7 +1726,7 @@ export type ResultOfGetCryptoBoxSeedPhrase = {
 
     phrase: string,
 
-    dictionary: number,
+    dictionary: MnemonicDictionary,
 
     wordcount: number
 }
@@ -3359,7 +3391,12 @@ export type ParamsOfEncodeMessageBody = {
      * body signature calculation. Should be provided when signed external inbound message body is
      * created. Otherwise can be omitted.
      */
-    address?: string
+    address?: string,
+
+    /**
+     * Signature ID to be used in data to sign preparing when CapSignatureWithId capability is enabled
+     */
+    signature_id?: number
 }
 
 export type ResultOfEncodeMessageBody = {
@@ -3473,7 +3510,12 @@ export type ParamsOfEncodeMessage = {
      * 
      * Default value is 0.
      */
-    processing_try_index?: number
+    processing_try_index?: number,
+
+    /**
+     * Signature ID to be used in data to sign preparing when CapSignatureWithId capability is enabled
+     */
+    signature_id?: number
 }
 
 export type ResultOfEncodeMessage = {
@@ -3968,7 +4010,12 @@ export type ParamsOfGetSignatureData = {
     /**
      * Message BOC encoded in `base64`.
      */
-    message: string
+    message: string,
+
+    /**
+     * Signature ID to be used in unsigned data preparing when CapSignatureWithId capability is enabled
+     */
+    signature_id?: number
 }
 
 export type ResultOfGetSignatureData = {
@@ -3979,9 +4026,9 @@ export type ResultOfGetSignatureData = {
     signature: string,
 
     /**
-     * Hash to verify the signature in `base64`.
+     * Data to verify the signature in `base64`.
      */
-    hash: string
+    unsigned: string
 }
 
 /**
@@ -5120,6 +5167,9 @@ export enum ProcessingErrorCode {
  */
 export type ProcessingEventWillFetchFirstBlockVariant = {
 
+    message_id: string,
+
+    message_dst: string
 }
 
 /**
@@ -5132,7 +5182,11 @@ export type ProcessingEventWillFetchFirstBlockVariant = {
  */
 export type ProcessingEventFetchFirstBlockFailedVariant = {
 
-    error: ClientError
+    error: ClientError,
+
+    message_id: string,
+
+    message_dst: string
 }
 
 /**
@@ -5143,6 +5197,8 @@ export type ProcessingEventWillSendVariant = {
     shard_block_id: string,
 
     message_id: string,
+
+    message_dst: string,
 
     message: string
 }
@@ -5158,6 +5214,8 @@ export type ProcessingEventDidSendVariant = {
     shard_block_id: string,
 
     message_id: string,
+
+    message_dst: string,
 
     message: string
 }
@@ -5179,6 +5237,8 @@ export type ProcessingEventSendFailedVariant = {
     shard_block_id: string,
 
     message_id: string,
+
+    message_dst: string,
 
     message: string,
 
@@ -5202,6 +5262,8 @@ export type ProcessingEventWillFetchNextBlockVariant = {
 
     message_id: string,
 
+    message_dst: string,
+
     message: string
 }
 
@@ -5221,6 +5283,8 @@ export type ProcessingEventFetchNextBlockFailedVariant = {
     shard_block_id: string,
 
     message_id: string,
+
+    message_dst: string,
 
     message: string,
 
@@ -5242,6 +5306,8 @@ export type ProcessingEventMessageExpiredVariant = {
 
     message_id: string,
 
+    message_dst: string,
+
     message: string,
 
     error: ClientError
@@ -5253,6 +5319,8 @@ export type ProcessingEventMessageExpiredVariant = {
 export type ProcessingEventRempSentToValidatorsVariant = {
 
     message_id: string,
+
+    message_dst: string,
 
     timestamp: bigint,
 
@@ -5266,6 +5334,8 @@ export type ProcessingEventRempIncludedIntoBlockVariant = {
 
     message_id: string,
 
+    message_dst: string,
+
     timestamp: bigint,
 
     json: any
@@ -5277,6 +5347,8 @@ export type ProcessingEventRempIncludedIntoBlockVariant = {
 export type ProcessingEventRempIncludedIntoAcceptedBlockVariant = {
 
     message_id: string,
+
+    message_dst: string,
 
     timestamp: bigint,
 
@@ -5290,6 +5362,8 @@ export type ProcessingEventRempOtherVariant = {
 
     message_id: string,
 
+    message_dst: string,
+
     timestamp: bigint,
 
     json: any
@@ -5299,6 +5373,10 @@ export type ProcessingEventRempOtherVariant = {
  * Notifies the app about any problem that has occurred in REMP processing - in this case library switches to the fallback transaction awaiting scenario (sequential block reading).
  */
 export type ProcessingEventRempErrorVariant = {
+
+    message_id: string,
+
+    message_dst: string,
 
     error: ClientError
 }
@@ -5388,114 +5466,130 @@ export type ProcessingEvent = ({
     type: 'RempError'
 } & ProcessingEventRempErrorVariant)
 
-export function processingEventWillFetchFirstBlock(): ProcessingEvent {
+export function processingEventWillFetchFirstBlock(message_id: string, message_dst: string): ProcessingEvent {
     return {
         type: 'WillFetchFirstBlock',
+        message_id,
+        message_dst,
     };
 }
 
-export function processingEventFetchFirstBlockFailed(error: ClientError): ProcessingEvent {
+export function processingEventFetchFirstBlockFailed(error: ClientError, message_id: string, message_dst: string): ProcessingEvent {
     return {
         type: 'FetchFirstBlockFailed',
         error,
+        message_id,
+        message_dst,
     };
 }
 
-export function processingEventWillSend(shard_block_id: string, message_id: string, message: string): ProcessingEvent {
+export function processingEventWillSend(shard_block_id: string, message_id: string, message_dst: string, message: string): ProcessingEvent {
     return {
         type: 'WillSend',
         shard_block_id,
         message_id,
+        message_dst,
         message,
     };
 }
 
-export function processingEventDidSend(shard_block_id: string, message_id: string, message: string): ProcessingEvent {
+export function processingEventDidSend(shard_block_id: string, message_id: string, message_dst: string, message: string): ProcessingEvent {
     return {
         type: 'DidSend',
         shard_block_id,
         message_id,
+        message_dst,
         message,
     };
 }
 
-export function processingEventSendFailed(shard_block_id: string, message_id: string, message: string, error: ClientError): ProcessingEvent {
+export function processingEventSendFailed(shard_block_id: string, message_id: string, message_dst: string, message: string, error: ClientError): ProcessingEvent {
     return {
         type: 'SendFailed',
         shard_block_id,
         message_id,
+        message_dst,
         message,
         error,
     };
 }
 
-export function processingEventWillFetchNextBlock(shard_block_id: string, message_id: string, message: string): ProcessingEvent {
+export function processingEventWillFetchNextBlock(shard_block_id: string, message_id: string, message_dst: string, message: string): ProcessingEvent {
     return {
         type: 'WillFetchNextBlock',
         shard_block_id,
         message_id,
+        message_dst,
         message,
     };
 }
 
-export function processingEventFetchNextBlockFailed(shard_block_id: string, message_id: string, message: string, error: ClientError): ProcessingEvent {
+export function processingEventFetchNextBlockFailed(shard_block_id: string, message_id: string, message_dst: string, message: string, error: ClientError): ProcessingEvent {
     return {
         type: 'FetchNextBlockFailed',
         shard_block_id,
         message_id,
+        message_dst,
         message,
         error,
     };
 }
 
-export function processingEventMessageExpired(message_id: string, message: string, error: ClientError): ProcessingEvent {
+export function processingEventMessageExpired(message_id: string, message_dst: string, message: string, error: ClientError): ProcessingEvent {
     return {
         type: 'MessageExpired',
         message_id,
+        message_dst,
         message,
         error,
     };
 }
 
-export function processingEventRempSentToValidators(message_id: string, timestamp: bigint, json: any): ProcessingEvent {
+export function processingEventRempSentToValidators(message_id: string, message_dst: string, timestamp: bigint, json: any): ProcessingEvent {
     return {
         type: 'RempSentToValidators',
         message_id,
+        message_dst,
         timestamp,
         json,
     };
 }
 
-export function processingEventRempIncludedIntoBlock(message_id: string, timestamp: bigint, json: any): ProcessingEvent {
+export function processingEventRempIncludedIntoBlock(message_id: string, message_dst: string, timestamp: bigint, json: any): ProcessingEvent {
     return {
         type: 'RempIncludedIntoBlock',
         message_id,
+        message_dst,
         timestamp,
         json,
     };
 }
 
-export function processingEventRempIncludedIntoAcceptedBlock(message_id: string, timestamp: bigint, json: any): ProcessingEvent {
+export function processingEventRempIncludedIntoAcceptedBlock(message_id: string, message_dst: string, timestamp: bigint, json: any): ProcessingEvent {
     return {
         type: 'RempIncludedIntoAcceptedBlock',
         message_id,
+        message_dst,
         timestamp,
         json,
     };
 }
 
-export function processingEventRempOther(message_id: string, timestamp: bigint, json: any): ProcessingEvent {
+export function processingEventRempOther(message_id: string, message_dst: string, timestamp: bigint, json: any): ProcessingEvent {
     return {
         type: 'RempOther',
         message_id,
+        message_dst,
         timestamp,
         json,
     };
 }
 
-export function processingEventRempError(error: ClientError): ProcessingEvent {
+export function processingEventRempError(message_id: string, message_dst: string, error: ClientError): ProcessingEvent {
     return {
         type: 'RempError',
+        message_id,
+        message_dst,
         error,
     };
 }
@@ -6033,7 +6127,12 @@ export type ExecutionOptions = {
     /**
      * Overrides standard TVM behaviour. If set to `true` then CHKSIG always will return `true`.
      */
-    chksig_always_succeed?: boolean
+    chksig_always_succeed?: boolean,
+
+    /**
+     * signature ID to be used in signature verifying instructions when CapSignatureWithId capability is enabled
+     */
+    signature_id?: number
 }
 
 /**
@@ -7192,6 +7291,14 @@ export type ResultOfIteratorNext = {
     resume_state?: any
 }
 
+export type ResultOfGetSignatureId = {
+
+    /**
+     * Signature ID for configured network if it should be used in messages signature
+     */
+    signature_id?: number
+}
+
 /**
  * Network access.
  */
@@ -7676,6 +7783,14 @@ export class NetModule {
      */
     remove_iterator(params: RegisteredIterator): Promise<void> {
         return this.client.request('net.remove_iterator', params);
+    }
+
+    /**
+     * Returns signature ID for configured network if it should be used in messages signature
+     * @returns ResultOfGetSignatureId
+     */
+    get_signature_id(): Promise<ResultOfGetSignatureId> {
+        return this.client.request('net.get_signature_id');
     }
 }
 
