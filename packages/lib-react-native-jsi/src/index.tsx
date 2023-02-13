@@ -3,6 +3,10 @@ import type { BinaryLibraryWithParams } from './index.d';
 export function libReactNativeJsi(): Promise<BinaryLibraryWithParams> {
   const tonClientJsiModule = (global as any).tonClientJsiModule;
   return Promise.resolve({
+    getLibName(): Promise<string> {
+      return Promise.resolve('react-native-jsi');
+    },
+
     setResponseParamsHandler(
       handler: (
         requestId: number,

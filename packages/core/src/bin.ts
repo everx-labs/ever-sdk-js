@@ -4,6 +4,8 @@ import { ClientConfig } from "./modules";
 export type ResponseHandler = (params: any, responseType: number) => void;
 
 export interface BinaryLibraryBase {
+    getLibName(): Promise<string>,
+
     createContext(configJson: string): Promise<string>,
 
     destroyContext(context: number): void,
@@ -57,6 +59,8 @@ export enum ResponseType {
 
 
 export interface BinaryBridge {
+    getLibName(): Promise<string>;
+
     createContext(config: ClientConfig): Promise<number>;
 
     destroyContext(context: number): void;
@@ -88,6 +92,10 @@ export function useLibrary(loader: (() => Promise<BinaryLibrary | BinaryLibraryW
 
 class BinaryLibraryAdapter implements BinaryLibraryWithParams {
     constructor(private library: BinaryLibrary) {
+    }
+
+    getLibName(): Promise<string> {
+        return this.library.getLibName();
     }
 
     setResponseParamsHandler(handler?: (
@@ -185,6 +193,10 @@ export class CommonBinaryBridge implements BinaryBridge {
         }
     }
 
+    async getLibName(): Promise<string> {
+        const lib = this.library || await this.loadRequired();
+        return await lib.getLibName();
+    }
 
     async createContext(config: ClientConfig): Promise<number> {
         const lib = this.library || await this.loadRequired();
