@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
 
 function getHomeAddonPath() {
-    const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require('./package.json').version).split(
-        '.')[0];
-    const binariesHomePath = path.resolve(os.homedir(), '.tonlabs', 'binaries', binariesVersion);
-    return path.resolve(binariesHomePath, 'eversdk.node');
+    const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require("./package.json").version).split(
+        ".")[0];
+    const binariesHomePath = path.resolve(os.homedir(), ".tonlabs", "binaries", binariesVersion);
+    return path.resolve(binariesHomePath, "eversdk.node");
 }
 
 function loadAddon() {
     try {
-        return require('./eversdk.node');
+        return require("./eversdk.node");
     } catch (error) {
-        if (fs.existsSync(path.resolve(__dirname, 'eversdk.node'))) {
+        if (fs.existsSync(path.resolve(__dirname, "eversdk.node"))) {
             throw error;
         }
     }
@@ -38,7 +38,16 @@ function loadAddon() {
 
 function libNode() {
     try {
-        return Promise.resolve(loadAddon());
+        const addon = loadAddon();
+        return Promise.resolve({
+            getLibName() {
+                return Promise.resolve("node-js");
+            },
+            setResponseHandler: addon.setResponseHandler,
+            createContext: addon.createContext,
+            destroyContext: addon.destroyContext,
+            sendRequest: addon.sendRequest,
+        });
     } catch (error) {
         return Promise.reject(error);
     }
@@ -46,4 +55,4 @@ function libNode() {
 
 module.exports = {
     libNode,
-}
+};

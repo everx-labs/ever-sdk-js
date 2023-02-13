@@ -15,6 +15,8 @@
  */
 
 export interface BinaryLibraryBase {
+  getLibName(): Promise<string>;
+
   createContext(configJson: string): Promise<string>;
 
   destroyContext(context: number): void;

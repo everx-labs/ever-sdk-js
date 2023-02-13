@@ -5,6 +5,9 @@ export function libReactNative() {
     const libEmitter = new NativeEventEmitter(lib);
     let subscription = null;
     return Promise.resolve({
+        getLibName() {
+            return Promise.resolve("react-native");
+        },
         setResponseHandler(handler) {
             if (subscription) {
                 subscription.remove();

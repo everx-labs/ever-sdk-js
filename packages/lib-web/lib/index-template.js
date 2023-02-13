@@ -24,6 +24,10 @@ export function libWebSetup(libOptions) {
     options = libOptions;
 }
 
+function getLibName() {
+    return Promise.resolve("web");
+}
+
 function debugLog(message) {
     if (options && options.debugLog) {
         options.debugLog(message);
@@ -117,6 +121,7 @@ function withSeparateWorker() {
     })();
 
     return Promise.resolve({
+        getLibName,
         setResponseParamsHandler: (handler) => {
             responseHandler = handler;
         },
@@ -221,6 +226,7 @@ function withoutSeparateWorker() {
     })();
 
     return Promise.resolve({
+        getLibName,
         setResponseParamsHandler: (handler) => {
             responseHandler = handler;
         },

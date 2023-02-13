@@ -1,5 +1,11 @@
 All notable changes to this project will be documented in this file.
 
+## [1.41.0] – 2023-01-11
+
+### New
+
+- specifying binding info in core initialization.
+
 ## [1.40.0] – 2023-01-11
 
 ### New
