@@ -31,6 +31,7 @@ import {
     useLibrary,
 } from "./bin";
 import { TonClientError } from "./errors";
+import { packageVersion } from "./version";
 
 export class TonClient {
     private static _defaultConfig: ClientConfig = {};
@@ -211,17 +212,28 @@ export class TonClient {
         }
         if (this.contextCreation === undefined) {
             this.contextCreation = [];
-            getBridge().createContext(this.config).then((context) => {
-                const creation = this.contextCreation;
-                this.contextCreation = undefined;
-                this.context = context;
-                creation?.forEach(x => x.resolve(context));
-            }, (reason) => {
-                const creation = this.contextCreation;
-                this.contextCreation = undefined;
-                this.contextError = reason ?? undefined;
-                creation?.forEach(x => x.reject(reason));
-            });
+            const bridge = getBridge();
+            (async () => {
+                try {
+                    const binLib = await bridge.getLibName();
+                    const context = await bridge.createContext({
+                        ...this.config,
+                        binding: {
+                            library: `ever-sdk-js (${binLib})`,
+                            version: packageVersion,
+                        },
+                    } as ClientConfig);
+                    const creation = this.contextCreation;
+                    this.contextCreation = undefined;
+                    this.context = context;
+                    creation?.forEach(x => x.resolve(context));
+                } catch (err: any) {
+                    const creation = this.contextCreation;
+                    this.contextCreation = undefined;
+                    this.contextError = err ?? undefined;
+                    creation?.forEach(x => x.reject(err));
+                }
+            })();
         }
         return new Promise<number>((resolve, reject) => {
             this.contextCreation?.push({

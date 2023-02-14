@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/core",
-	"version": "1.40.0",
+	"version": "1.41.0",
 	"description": "TON Client for Java Script",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -9,8 +9,8 @@
 		"url": "https://github.com/tonlabs/ever-sdk-js.git"
 	},
 	"scripts": {
-		"prepublishOnly": "npm i && tsc",
-		"build": "tsc"
+		"prepublishOnly": "npm i && node before-compile.js && tsc",
+		"build": "node before-compile.js && tsc"
 	},
 	"publishConfig": {
 		"access": "public"
