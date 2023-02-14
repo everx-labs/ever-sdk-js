@@ -15,6 +15,7 @@
  */
 
 interface BinaryLibrary {
+    getLibName(): Promise<string>,
     setResponseParamsHandler(
         handler?: (
             requestId: number,
