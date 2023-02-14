@@ -224,7 +224,7 @@ export type NetworkConfig = {
     next_remp_status_timeout?: number,
 
     /**
-     * Network segnature ID which is used by VM in signature verifying instructions if capability `CapSignatureWithId` is enabled in blockchain configuration parameters.
+     * Network signature ID which is used by VM in signature verifying instructions if capability `CapSignatureWithId` is enabled in blockchain configuration parameters.
      * 
      * @remarks
      * This parameter should be set to `global_id` field from any blockchain block if network can
@@ -6130,7 +6130,7 @@ export type ExecutionOptions = {
     chksig_always_succeed?: boolean,
 
     /**
-     * signature ID to be used in signature verifying instructions when CapSignatureWithId capability is enabled
+     * Signature ID to be used in signature verifying instructions when CapSignatureWithId capability is enabled
      */
     signature_id?: number
 }
