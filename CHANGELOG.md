@@ -1,6 +1,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [1.41.1] – 2023-02-14
+
+### Fixed
+- update `getLibName` type declaration
+
 ## [1.41.0] – 2023-02-13
 
 ### New
