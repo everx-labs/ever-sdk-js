@@ -199,7 +199,7 @@ test("blockchain: query - Account", async () => {
     const net = runner.getClient().net;
     const variables = {
         // this addres works on se & main
-        address: "0:b5e9240fc2d2f1ff8cbb1d1dee7fb7cae155e5f6320e585fcc685698994a19a5",
+        address: "0:ece57bcc6c530283becbbd8a3b24d3c5987cdddc3c8b7b33be6e4a6312490415",
     }
     const query = `
         query MyQuery($address: String!) {
