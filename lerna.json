@@ -1,12 +1,12 @@
 {
-	"tagVersionPrefix": "",
-	"packages": [
-		"packages/*"
-	],
-	"version": "1.41.1",
-	"command": {
-		"version": {
-			"message": "Release"
-		}
-	}
+  "tagVersionPrefix": "",
+  "packages": [
+    "packages/*"
+  ],
+  "version": "1.42.0",
+  "command": {
+    "version": {
+      "message": "Release"
+    }
+  }
 }
