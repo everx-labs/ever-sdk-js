@@ -3,6 +3,8 @@
 <p align="center">Client Library built for Everscale, Venom blockchain, TON, Gosh</p>
 <p align="center">for Web, Node.js and React Native platforms</p>
 
+![](./vf-dev-program.png)
+
 **Have a question? Get quick help in our channel:**
 
 [![Chat on Telegram](https://img.shields.io/badge/chat-on%20telegram-9cf.svg)](https://t.me/ever_sdk) 
