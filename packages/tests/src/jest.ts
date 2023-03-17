@@ -14,7 +14,7 @@
 
 import jCircus from 'jest-circus';
 import jExpect from 'expect';
-import {addEventHandler as jAddEventHandler} from 'jest-circus/build/state';
+import {addEventHandler as jAddEventHandler, getState as jGetState} from 'jest-circus/build/state';
 import jRun from 'jest-circus/build/run';
 
 declare const global: any;
@@ -46,6 +46,7 @@ const jest = {
     addEventHandler,
     run,
     setTimeout,
+    getState: jGetState,
 };
 
 export {
