@@ -56,7 +56,7 @@ test.each(ABIVersions)("blockchain: query - Messages", async (abiVersion) => {
         query {
             blockchain {
                 account(address:"${walletAccountAddress}"){
-                    messages(last:1){
+                    messages(last:1 allow_latest_inconsistent_data:true){
                         edges {
                             node {
                                 src
@@ -101,7 +101,7 @@ test.each(ABIVersions)("blockchain: query - Transaction", async (abiVersion) => 
         query {
             blockchain {
                 account(address:"${walletAccountAddress}"){
-                    transactions(last:1){
+                    transactions(last:1 allow_latest_inconsistent_data:true){
                         edges {
                             node {
                                 hash
@@ -174,7 +174,7 @@ test("blockchain: query - Blocks", async () => {
             blockchain {
                 blocks(
                     last:1
-                workchain:0
+                    workchain:0
                 ) {
                 edges {
                     node {
@@ -198,7 +198,7 @@ test("blockchain: query - Blocks", async () => {
 test("blockchain: query - Account", async () => {
     const net = runner.getClient().net;
     const variables = {
-        // this addres works on se & main
+        // this address works on se & main
         address: "0:ece57bcc6c530283becbbd8a3b24d3c5987cdddc3c8b7b33be6e4a6312490415",
     }
     const query = `

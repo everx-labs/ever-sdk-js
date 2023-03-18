@@ -1,7 +1,9 @@
 <p align="center"><a href="https://github.com/tonlabs/ever-sdk-js/"><img src="media/ton-sdk-blue.png" height="60"/></a></p> 
-<h1 align="center">JavaScript Everscale SDK</h1>
-<p align="center">Client Library built on the GraphQL API</p>
+<h1 align="center">JavaScript SDK for TVM compatible networks </h1>
+<p align="center">Client Library built for Everscale, Venom blockchain, TON, Gosh</p>
 <p align="center">for Web, Node.js and React Native platforms</p>
+
+![](./vf-dev-program.png)
 
 **Have a question? Get quick help in our channel:**
 

@@ -27,9 +27,10 @@ import {
     getDefaultGiverKeys,
     giverRequestAmount,
 } from "./givers";
-import {jest} from "./jest";
-import {Account} from "./account";
-import {ContractPackage} from "./contracts";
+import { jest } from "./jest";
+import { Account } from "./account";
+import { ContractPackage } from "./contracts";
+import { TestEntry } from "jest-circus";
 
 function resolveConfig(): ClientConfig {
     return {
@@ -37,6 +38,13 @@ function resolveConfig(): ClientConfig {
             endpoints: [`${process.env.TON_NETWORK_ADDRESS || "http://localhost"}`],
         },
     };
+}
+
+export type TestRunnerLog = (...args: any[]) => void;
+
+export type TestRunnerOptions = {
+    filter?: (test: TestEntry) => boolean,
+    log?: TestRunnerLog,
 }
 
 export class TestsRunner {
@@ -54,8 +62,15 @@ export class TestsRunner {
 
     static async run(
         onStateChange: (state: TestsRunningState) => void,
-        optionLog?: (...args: any[]) => void,
+        options?: TestRunnerOptions | TestRunnerLog,
     ) {
+        const resolvedOptions: TestRunnerOptions =
+            options === undefined
+                ? {}
+                : (typeof options === "function" ? {
+                    log: options,
+                } : options);
+
         function errorToJson(error: any) {
             const json: { [key: string]: any } = {};
             Object.entries(error).forEach(([key, value]) => {
@@ -70,7 +85,7 @@ export class TestsRunner {
             return json;
         }
 
-        const log = optionLog ?? TestsRunner.log;
+        const log = resolvedOptions.log ?? TestsRunner.log;
         try {
             jest.setTimeout(300000);
             const client = runner.getClient();
@@ -105,6 +120,12 @@ export class TestsRunner {
                 onStateChange(state);
             });
             onStateChange(state);
+            const testFilter = resolvedOptions.filter;
+            if (testFilter) {
+                const { rootDescribeBlock } = jest.getState();
+                rootDescribeBlock.tests = rootDescribeBlock.tests.filter(testFilter);
+            }
+
             const results = await jest.run();
             results.forEach((result) => {
                 result.errors = result.errors.map((e) => {
@@ -132,15 +153,17 @@ export class TestsRunner {
         }
         const client = this.getClient();
         const giverKeys = await getDefaultGiverKeys(client);
-        const giver = new Account(client,
+        const giver = new Account(
+            client,
             abiContract(DefaultGiverContract.abi),
             signerKeys(giverKeys),
-            await getDefaultGiverAddress(client, giverKeys));
+            await getDefaultGiverAddress(client, giverKeys),
+        );
         this.giver = giver;
         const accounts = (await client.net.query_collection({
             collection: "accounts",
             filter: {
-                id: {eq: await giver.getAddress()},
+                id: { eq: await giver.getAddress() },
             },
             result: "acc_type balance",
         })).result;
@@ -158,7 +181,13 @@ export class TestsRunner {
         return giver;
     }
 
-    async getAccount(packages: { [abiVersion: number]: ContractPackage }, abiVersion: any, signer?: Signer, initFunctionInput?: any, initData?: any): Promise<Account> {
+    async getAccount(
+        packages: { [abiVersion: number]: ContractPackage },
+        abiVersion: any,
+        signer?: Signer,
+        initFunctionInput?: any,
+        initData?: any,
+    ): Promise<Account> {
         const pkg: ContractPackage | undefined = packages[Number(abiVersion) as ABIVersion];
         if (!pkg) {
             throw new Error(`Missing required contract with ABI v${abiVersion}`);
@@ -172,7 +201,8 @@ export class TestsRunner {
                 initFunctionName: "constructor",
                 initFunctionInput,
                 initData,
-            });
+            },
+        );
     }
 
     async sendGramsTo(account: string, amount: number = giverRequestAmount): Promise<void> {
@@ -183,18 +213,29 @@ export class TestsRunner {
             value: amount,
             bounce: false,
         });
+        await this.waitFor(giver.client, "accounts", "id", account);
+        await this.waitForMessageProcessed(giver.client, result.transaction.in_msg);
         for (const boc of result.out_messages) {
-            const msg = (await giver.client.boc.parse_message({boc})).parsed;
+            const msg = (await giver.client.boc.parse_message({ boc })).parsed;
             if (msg.msg_type === 0) {
-                await giver.client.net.wait_for_collection({
-                    collection: "transactions",
-                    filter: {
-                        in_msg: {eq: msg.id},
-                    },
-                    result: "lt",
-                });
+                await this.waitForMessageProcessed(giver.client, msg.id);
             }
         }
+    }
+
+    private async waitForMessageProcessed(client: TonClient, message: string) {
+        await this.waitFor(client, "transactions", "in_msg", message);
+        await this.waitFor(client, "messages", "id", message);
+    }
+
+    private async waitFor(client: TonClient, collection: string, field: string, value: string) {
+        await client.net.wait_for_collection({
+            collection,
+            filter: {
+                [field]: { eq: value },
+            },
+            result: "id",
+        });
     }
 
     async deploy(account: Account): Promise<void> {
@@ -208,7 +249,7 @@ export class TestsRunner {
         if (giver) {
             for (const account of runner.deployedAccounts) {
                 try {
-                    await account.run("sendAllMoney", {dest_addr: await giver.getAddress()});
+                    await account.run("sendAllMoney", { dest_addr: await giver.getAddress() });
                 } catch (e) {
                     // ignore exception
                 }
