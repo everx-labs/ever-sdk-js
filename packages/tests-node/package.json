@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/tests-node",
-	"version": "1.41.1",
+	"version": "1.42.0",
 	"private": true,
 	"description": "TON Client Tests runner on NodeJs",
 	"main": "index.js",
@@ -23,7 +23,8 @@
 	"dependencies": {
 		"@eversdk/core": "file:../core",
 		"@eversdk/lib-node": "file:../lib-node",
-		"@eversdk/tests": "file:../tests"
+		"@eversdk/tests": "file:../tests",
+		"commander": "^10.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "14.11.8",

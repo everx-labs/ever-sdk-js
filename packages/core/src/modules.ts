@@ -209,7 +209,8 @@ export type NetworkConfig = {
      * @remarks
      * First REMP status awaiting timeout. If no status received during the timeout than fallback transaction scenario is activated.
      * 
-     * Must be specified in milliseconds. Default is 1000 (1 sec).
+     * Must be specified in milliseconds. Default is 1 (1 ms) in order to start fallback scenario
+     * together with REMP statuses processing while REMP is not properly tuned yet.
      */
     first_remp_status_timeout?: number,
 
@@ -5642,6 +5643,253 @@ export type DecodedOutput = {
     output?: any
 }
 
+export type MessageMonitoringTransactionCompute = {
+
+    /**
+     * Compute phase exit code.
+     */
+    exit_code: number
+}
+
+export type MessageMonitoringTransaction = {
+
+    /**
+     * Hash of the transaction. Present if transaction was included into the blocks. When then transaction was emulated this field will be missing.
+     */
+    hash?: string,
+
+    /**
+     * Aborted field of the transaction.
+     */
+    aborted: boolean,
+
+    /**
+     * Optional information about the compute phase of the transaction.
+     */
+    compute?: MessageMonitoringTransactionCompute
+}
+
+export type MessageMonitoringParams = {
+
+    /**
+     * Monitored message identification. Can be provided as a message's BOC or (hash, address) pair. BOC is a preferable way because it helps to determine possible error reason (using TVM execution of the message).
+     */
+    message: MonitoredMessage,
+
+    /**
+     * Block time Must be specified as a UNIX timestamp in seconds
+     */
+    wait_until: number,
+
+    /**
+     * User defined data associated with this message. Helps to identify this message when user received `MessageMonitoringResult`.
+     */
+    user_data?: any
+}
+
+export type MessageMonitoringResult = {
+
+    /**
+     * Hash of the message.
+     */
+    hash: string,
+
+    /**
+     * Processing status.
+     */
+    status: MessageMonitoringStatus,
+
+    /**
+     * In case of `Finalized` the transaction is extracted from the block. In case of `Timeout` the transaction is emulated using the last known account state.
+     */
+    transaction?: MessageMonitoringTransaction,
+
+    /**
+     * In case of `Timeout` contains possible error reason.
+     */
+    error?: string,
+
+    /**
+     * User defined data related to this message. This is the same value as passed before with `MessageMonitoringParams` or `SendMessageParams`.
+     */
+    user_data?: any
+}
+
+export enum MonitorFetchWaitMode {
+    AtLeastOne = "AtLeastOne",
+    All = "All",
+    NoWait = "NoWait"
+}
+
+/**
+ * BOC of the message.
+ */
+export type MonitoredMessageBocVariant = {
+
+    boc: string
+}
+
+/**
+ * Message's hash and destination address.
+ */
+export type MonitoredMessageHashAddressVariant = {
+
+    /**
+     * Hash of the message.
+     */
+    hash: string,
+
+    /**
+     * Destination address of the message.
+     */
+    address: string
+}
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `Boc`
+ * 
+ * BOC of the message.
+ * 
+ * ### `HashAddress`
+ * 
+ * Message's hash and destination address.
+ */
+export type MonitoredMessage = ({
+    type: 'Boc'
+} & MonitoredMessageBocVariant) | ({
+    type: 'HashAddress'
+} & MonitoredMessageHashAddressVariant)
+
+export function monitoredMessageBoc(boc: string): MonitoredMessage {
+    return {
+        type: 'Boc',
+        boc,
+    };
+}
+
+export function monitoredMessageHashAddress(hash: string, address: string): MonitoredMessage {
+    return {
+        type: 'HashAddress',
+        hash,
+        address,
+    };
+}
+
+export enum MessageMonitoringStatus {
+    Finalized = "Finalized",
+    Timeout = "Timeout",
+    Reserved = "Reserved"
+}
+
+export type MessageSendingParams = {
+
+    /**
+     * BOC of the message, that must be sent to the blockchain.
+     */
+    boc: string,
+
+    /**
+     * Expiration time of the message. Must be specified as a UNIX timestamp in seconds.
+     */
+    wait_until: number,
+
+    /**
+     * User defined data associated with this message. Helps to identify this message when user received `MessageMonitoringResult`.
+     */
+    user_data?: any
+}
+
+export type ParamsOfMonitorMessages = {
+
+    /**
+     * Name of the monitoring queue.
+     */
+    queue: string,
+
+    /**
+     * Messages to start monitoring for.
+     */
+    messages: MessageMonitoringParams[]
+}
+
+export type ParamsOfGetMonitorInfo = {
+
+    /**
+     * Name of the monitoring queue.
+     */
+    queue: string
+}
+
+export type MonitoringQueueInfo = {
+
+    /**
+     * Count of the unresolved messages.
+     */
+    unresolved: number,
+
+    /**
+     * Count of resolved results.
+     */
+    resolved: number
+}
+
+export type ParamsOfFetchNextMonitorResults = {
+
+    /**
+     * Name of the monitoring queue.
+     */
+    queue: string,
+
+    /**
+     * Wait mode.
+     * 
+     * @remarks
+     * Default is `NO_WAIT`.
+     */
+    wait_mode?: MonitorFetchWaitMode
+}
+
+export type ResultOfFetchNextMonitorResults = {
+
+    /**
+     * List of the resolved results.
+     */
+    results: MessageMonitoringResult[]
+}
+
+export type ParamsOfCancelMonitor = {
+
+    /**
+     * Name of the monitoring queue.
+     */
+    queue: string
+}
+
+export type ParamsOfSendMessages = {
+
+    /**
+     * Messages that must be sent to the blockchain.
+     */
+    messages: MessageSendingParams[],
+
+    /**
+     * Optional message monitor queue that starts monitoring for the processing results for sent messages.
+     */
+    monitor_queue?: string
+}
+
+export type ResultOfSendMessages = {
+
+    /**
+     * Messages that was sent to the blockchain for execution.
+     */
+    messages: MessageMonitoringParams[]
+}
+
 export type ParamsOfSendMessage = {
 
     /**
@@ -5763,6 +6011,90 @@ export class ProcessingModule {
 
     constructor(client: IClient) {
         this.client = client;
+    }
+
+    /**
+     * Starts monitoring for the processing results of the specified messages.
+     * 
+     * @remarks
+     * Message monitor performs background monitoring for a message processing results
+     * for the specified set of messages.
+     * 
+     * Message monitor can serve several isolated monitoring queues.
+     * Each monitor queue has a unique application defined identifier (or name) used
+     * to separate several queue's.
+     * 
+     * There are two important lists inside of the monitoring queue:
+     * 
+     * - unresolved messages: contains messages requested by the application for monitoring
+     *   and not yet resolved;
+     * 
+     * - resolved results: contains resolved processing results for monitored messages.
+     * 
+     * Each monitoring queue tracks own unresolved and resolved lists.
+     * Application can add more messages to the monitoring queue at any time.
+     * 
+     * Message monitor accumulates resolved results.
+     * Application should fetch this results with `fetchNextMonitorResults` function.
+     * 
+     * When both unresolved and resolved lists becomes empty, monitor stops any background activity
+     * and frees all allocated internal memory.
+     * 
+     * If monitoring queue with specified name already exists then messages will be added
+     * to the unresolved list.
+     * 
+     * If monitoring queue with specified name does not exist then monitoring queue will be created
+     * with specified unresolved messages.
+     * 
+     * @param {ParamsOfMonitorMessages} params
+     * @returns 
+     */
+    monitor_messages(params: ParamsOfMonitorMessages): Promise<void> {
+        return this.client.request('processing.monitor_messages', params);
+    }
+
+    /**
+     * Returns summary information about current state of the specified monitoring queue.
+     * 
+     * @param {ParamsOfGetMonitorInfo} params
+     * @returns MonitoringQueueInfo
+     */
+    get_monitor_info(params: ParamsOfGetMonitorInfo): Promise<MonitoringQueueInfo> {
+        return this.client.request('processing.get_monitor_info', params);
+    }
+
+    /**
+     * Fetches next resolved results from the specified monitoring queue.
+     * 
+     * @remarks
+     * Results and waiting options are depends on the `wait` parameter.
+     * All returned results will be removed from the queue's resolved list.
+     * 
+     * @param {ParamsOfFetchNextMonitorResults} params
+     * @returns ResultOfFetchNextMonitorResults
+     */
+    fetch_next_monitor_results(params: ParamsOfFetchNextMonitorResults): Promise<ResultOfFetchNextMonitorResults> {
+        return this.client.request('processing.fetch_next_monitor_results', params);
+    }
+
+    /**
+     * Cancels all background activity and releases all allocated system resources for the specified monitoring queue.
+     * 
+     * @param {ParamsOfCancelMonitor} params
+     * @returns 
+     */
+    cancel_monitor(params: ParamsOfCancelMonitor): Promise<void> {
+        return this.client.request('processing.cancel_monitor', params);
+    }
+
+    /**
+     * Sends specified messages to the blockchain.
+     * 
+     * @param {ParamsOfSendMessages} params
+     * @returns ResultOfSendMessages
+     */
+    send_messages(params: ParamsOfSendMessages): Promise<ResultOfSendMessages> {
+        return this.client.request('processing.send_messages', params);
     }
 
     /**
@@ -6579,7 +6911,8 @@ export enum NetErrorCode {
     NetworkModuleResumed = 614,
     Unauthorized = 615,
     QueryTransactionTreeTimeout = 616,
-    GraphqlConnectionError = 617
+    GraphqlConnectionError = 617,
+    WrongWebscoketProtocolSequence = 618
 }
 
 export type OrderBy = {

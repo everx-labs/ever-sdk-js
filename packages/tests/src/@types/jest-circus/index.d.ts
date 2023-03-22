@@ -138,12 +138,13 @@ declare module 'jest-circus' {
 
 declare module 'jest-circus/build/state' {
 
-    import {EventHandler} from "jest-circus";
+    import { EventHandler, State } from "jest-circus";
 
     export function addEventHandler(handler: EventHandler): void;
+    export function getState(): State;
 }
 
 declare module 'jest-circus/build/run' {
-    import {TestResults} from "jest-circus";
+    import { TestResults } from "jest-circus";
     export default function run(): Promise<TestResults>;
 }
