@@ -5715,7 +5715,7 @@ export type MessageMonitoringResult = {
     user_data?: any
 }
 
-export enum MonitorFetchWait {
+export enum MonitorFetchWaitMode {
     AtLeastOne = "AtLeastOne",
     All = "All",
     NoWait = "NoWait"
@@ -5850,7 +5850,7 @@ export type ParamsOfFetchNextMonitorResults = {
      * @remarks
      * Default is `NO_WAIT`.
      */
-    wait?: MonitorFetchWait
+    wait_mode?: MonitorFetchWaitMode
 }
 
 export type ResultOfFetchNextMonitorResults = {
