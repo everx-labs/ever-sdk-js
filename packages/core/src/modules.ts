@@ -95,7 +95,7 @@ export type NetworkConfig = {
      * 
      * @remarks
      * Any correct URL format can be specified, including IP addresses. This parameter is prevailing over `server_address`.
-     * Check the full list of [supported network endpoints](https://docs.everos.dev/ever-sdk/reference/ever-os-api/networks).
+     * Check the full list of [supported network endpoints](https://docs.evercloud.dev/products/evercloud/networks-endpoints).
      */
     endpoints?: string[],
 
@@ -145,13 +145,7 @@ export type NetworkConfig = {
     wait_for_timeout?: number,
 
     /**
-     * Maximum time difference between server and client.
-     * 
-     * @remarks
-     * If client's device time is out of sync and difference is more than the threshold then error will occur. Also an error will occur if the specified threshold is more than
-     * `message_processing_timeout/2`.
-     * 
-     * Must be specified in milliseconds. Default is 15000 (15 sec).
+     * **DEPRECATED**: This parameter was deprecated.
      */
     out_of_sync_threshold?: number,
 
@@ -5726,7 +5720,9 @@ export enum MonitorFetchWaitMode {
  */
 export type MonitoredMessageBocVariant = {
 
-    boc: string
+    value: {
+        boc: string
+    }
 }
 
 /**
@@ -5734,15 +5730,10 @@ export type MonitoredMessageBocVariant = {
  */
 export type MonitoredMessageHashAddressVariant = {
 
-    /**
-     * Hash of the message.
-     */
-    hash: string,
-
-    /**
-     * Destination address of the message.
-     */
-    address: string
+    value: {
+        hash: string,
+        address: string
+    }
 }
 
 /**
@@ -5764,18 +5755,22 @@ export type MonitoredMessage = ({
     type: 'HashAddress'
 } & MonitoredMessageHashAddressVariant)
 
-export function monitoredMessageBoc(boc: string): MonitoredMessage {
+export function monitoredMessageBoc(value: {
+    boc: string
+}): MonitoredMessage {
     return {
         type: 'Boc',
-        boc,
+        value,
     };
 }
 
-export function monitoredMessageHashAddress(hash: string, address: string): MonitoredMessage {
+export function monitoredMessageHashAddress(value: {
+    hash: string,
+    address: string
+}): MonitoredMessage {
     return {
         type: 'HashAddress',
-        hash,
-        address,
+        value,
     };
 }
 
