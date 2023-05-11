@@ -9,7 +9,6 @@ export async function kamikadze(options: { value: number | undefined }) {
     try {
         const giver = await Giver.create(sdk)
         const keypair = await sdk.crypto.generate_random_sign_keys()
-
         const signer = signerKeys(keypair)
         const kamikadze = new Account(Kamikadze, { client: sdk, signer })
         const address = await kamikadze.getAddress()

@@ -117,3 +117,6 @@ To test the subscribe functionality, you can use [wscat](https://www.npmjs.com/p
 - add graphql query [prameters](https://graphql.org/learn/queries/#variables) and headers for authorization
 - add graphql schema request
 - add output format modifier `--json`
+- command to show transaction/message history graph
+- command to parse boc (account/block/mesage/transaction)
+- command to show caps/config/zerostate

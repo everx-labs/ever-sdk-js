@@ -1,23 +1,17 @@
-import {
-    TonClient,
-    Abi,
-    KeyPair,
-    Signer,
-    abiContract,
-    signerKeys,
-} from "@eversdk/core"
-import { ContractPackage } from "@eversdk/appkit"
+import { TonClient, KeyPair, abiContract, signerKeys } from "@eversdk/core"
+import { Account, ContractPackage } from "@eversdk/appkit"
 import { getEnv } from "./utils"
 import * as GiverV2 from "./contracts/GiverV2.js"
 import * as GiverV3 from "./contracts/GiverV3.js"
 
+const DEFAULT_TOPUP_BALANCE = 18_000_000
 export type GiverVersions = "v2" | "v3"
 
 export function getDefaultGiverContract(type: GiverVersions): ContractPackage {
     try {
         return { v2: GiverV2, v3: GiverV3 }[type]
     } catch (e) {
-        throw `Giver type '${type}' unknown`
+        throw Error(`Giver type '${type}' unknown`)
     }
 }
 
@@ -59,14 +53,14 @@ export async function getDefaultGiverAddress(
 
 export interface AccountGiver {
     address: string
+    account: Account
 
     sendTo(address: string, value: number): Promise<void>
 }
 
 export class Giver implements AccountGiver {
-    private _abi: Abi
     public address: string
-    private _signer: Signer
+    public account: Account
     private _sdk: TonClient
 
     static async create(sdk: TonClient): Promise<Giver> {
@@ -78,32 +72,77 @@ export class Giver implements AccountGiver {
             giverContract,
             giverKeys,
         )
-        return new Giver(
-            sdk,
-            giverAddress,
-            abiContract(giverContract.abi),
-            signerKeys(giverKeys),
-        )
+
+        const giver = new Account(giverContract, {
+            client: sdk,
+            signer: signerKeys(giverKeys),
+            address: giverAddress,
+        })
+
+        const giverExists = await sdk.net.query({
+            query: `query($addr: String!) {
+                        blockchain {
+                            account(address: $addr) {
+                                info {
+                                    acc_type
+                                    balance
+                                }
+                            }
+                        }
+                    }`,
+            variables: {
+                addr: giverAddress,
+            },
+        })
+        let response: { acc_type: number; balance: string }
+        try {
+            response =
+                giverExists["result"]["data"]["blockchain"]["account"]["info"]
+        } catch {
+            console.dir(giverExists, {
+                depth: null,
+                showHidden: false,
+                colors: true,
+            })
+            throw Error(
+                `Can't parse query response, the address is: "${giverAddress}"`,
+            )
+        }
+        const { acc_type, balance } = response // NOTICE: await giver.getAccount()
+        if (!acc_type || acc_type != 1) {
+            throw Error(
+                `The giver contract must be deployed and active at the address: "${giverAddress}"`,
+            )
+        }
+        if (!balance || BigInt(balance) < DEFAULT_TOPUP_BALANCE) {
+            throw Error(
+                `The giver's contract balance is too small, the address is: "${giverAddress}"`,
+            )
+        }
+
+        return new Giver(sdk, giverAddress, giver)
     }
 
-    public constructor(
-        sdk: TonClient,
-        address: string,
-        abi: Abi,
-        signer: Signer,
-    ) {
+    public constructor(sdk: TonClient, address: string, account: Account) {
         this._sdk = sdk
         this.address = address
-        this._abi = abi
-        this._signer = signer
+        this.account = account
     }
 
-    async sendTo(address: string, value = 18_000_000): Promise<void> {
+    async sendTo(
+        address: string,
+        value = DEFAULT_TOPUP_BALANCE,
+    ): Promise<void> {
+        if (BigInt((await this.account.getBalance()) ?? 0) < value) {
+            throw Error(
+                `The giver's contract balance is too small for topup address: ${address}`,
+            )
+        }
         const topup = await this._sdk.processing.process_message({
             send_events: false,
             message_encode_params: {
                 address: this.address,
-                abi: this._abi,
+                abi: this.account.abi,
                 call_set: {
                     function_name: "sendTransaction",
                     input: {
@@ -112,33 +151,28 @@ export class Giver implements AccountGiver {
                         bounce: false,
                     },
                 },
-                signer: this._signer,
+                signer: this.account.signer,
             },
         })
 
         if (topup.transaction.out_msgs.length == 0) {
             console.error({ transaction: topup.transaction })
-            throw "The giver's topup call should result in at least 1 internal outbound message"
+            throw Error(
+                `The giver's topup call should result in at least 1 internal outbound message, transaction.id: ${topup.transaction.id}`,
+            )
         }
 
         const topupTree = await this._sdk.net.query_transaction_tree({
             in_msg: topup.transaction.in_msg,
         })
-        if (
-            topupTree.transactions[1].in_msg !== topup.transaction.out_msgs[0]
-        ) {
-            console.error({
-                out_msgs: topup.transaction.out_msgs[0],
-                __in_msg: topupTree.transactions[1].in_msg,
-            })
-            throw "The giver's topup second transaction `in_msg` should be equal to `out_msgs` of initial transaction"
-        }
         if (topupTree.transactions[1].account_addr !== address) {
             console.error({
                 dest_address: address,
                 account_addr: topupTree.transactions[1].account_addr,
             })
-            throw "The giver's topup second transaction `account_addr` should be equal to initial destination"
+            throw Error(
+                `The giver's topup second transaction \`account_addr\` should be equal to initial destination: ${address}`,
+            )
         }
     }
 }
