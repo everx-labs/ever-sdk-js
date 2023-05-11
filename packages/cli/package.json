@@ -1,0 +1,72 @@
+{
+  "name": "@eversdk/cli",
+  "version": "1.43.0",
+  "description": "Evercloud CLI",
+  "homepage": "https://everx.dev/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tonlabs/ever-sdk-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tonlabs/ever-sdk-js/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "compile": "cd ./contracts && everdev sol set --compiler 0.65.0 --linker 0.19.5 && everdev sol compile Kamikadze && everdev js wrap Kamikadze.abi.json -e commonjs-default -o Kamikadze.js && npx -p typescript tsc Kamikadze.js --declaration --allowJs --emitDeclarationOnly --outDir .",
+    "eslint": "eslint '**/*.ts'",
+    "prepack": "npm run build",
+    "prettier": "prettier --config .prettierrc '**/*.ts' --write",
+    "test": "npx ts-node index.ts"
+  },
+  "bin": {
+    "evercloud": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "giver.js",
+    "graphql.js",
+    "kamikadze.js",
+    "utils.js",
+    "contracts/Kamikadze.js",
+    "contracts/GiverV2.js",
+    "contracts/GiverV3.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "TON Labs LTD.",
+  "license": "Apache-2.0",
+  "licenses": [
+    {
+      "type": "Apache-2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
+  "dependencies": {
+    "@eversdk/appkit": "^0.3.6",
+    "@eversdk/core": "1.41.1",
+    "@eversdk/lib-node": "1.41.1",
+    "commander": "^10.0.0",
+    "dotenv": "^16.0.3",
+    "qrcode": "^1.5.3",
+    "wscat": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.16.2",
+    "@types/qrcode": "^1.5.0",
+    "@typescript-eslint/eslint-plugin": "^5.19.0",
+    "@typescript-eslint/parser": "^5.19.0",
+    "eslint": "^7.30.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.3.2",
+    "ts-node": "^10.9.1",
+    "tsm": "^2.3.0",
+    "typescript": "^5.0.4"
+  },
+  "engines": {
+    "node": ">=18",
+    "npm": "~9.5.0"
+  }
+}
