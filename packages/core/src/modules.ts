@@ -279,12 +279,18 @@ export type AbiConfig = {
     workchain?: number,
 
     /**
-     * Message lifetime for contracts which ABI includes "expire" header. The default value is 40 sec.
+     * Message lifetime for contracts which ABI includes "expire" header.
+     * 
+     * @remarks
+     * Must be specified in milliseconds. Default is 40000 (40 sec).
      */
     message_expiration_timeout?: number,
 
     /**
-     * Factor that increases the expiration timeout for each retry The default value is 1.5
+     * Factor that increases the expiration timeout for each retry
+     * 
+     * @remarks
+     * Default is 1.5
      */
     message_expiration_timeout_grow_factor?: number
 }
@@ -2948,7 +2954,11 @@ export type AbiHandle = number
 export type FunctionHeader = {
 
     /**
-     * Message expiration time in seconds. If not specified - calculated automatically from message_expiration_timeout(), try_index and message_expiration_timeout_grow_factor() (if ABI includes `expire` header).
+     * Message expiration timestamp (UNIX time) in seconds.
+     * 
+     * @remarks
+     * If not specified - calculated automatically from message_expiration_timeout(),
+     * try_index and message_expiration_timeout_grow_factor() (if ABI includes `expire` header).
      */
     expire?: number,
 
