@@ -20,6 +20,8 @@ program
     .description("Evercloud CLI")
     .version(getEnv("npm_package_version") as string)
 
+program.option('-d, --debug', 'Output debug information (time)')
+
 program
     .command("graphql")
     .alias("q")
@@ -71,7 +73,12 @@ $ EVERCLOUD_GIVER_TYPE=v3 TON_NETWORK_ADDRESS=https://devnet.evercloud.dev/<Proj
 
 program
     .parseAsync(process.argv)
-    .then(() => process.exit(0))
+    .then(cmd => {
+        if (cmd.opts().debug) {
+            console.log(`finished in ${process.uptime().toFixed(2)}s`)
+        }
+        process.exit(0)
+    })
     .catch(error => {
         console.dir(error, { showHidden: false, depth: null })
         process.exit(1)

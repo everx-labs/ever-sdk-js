@@ -23,6 +23,7 @@ Evercloud CLI
 
 Options:
   -V, --version                   Output the version number
+  -d, --debug                     Output debug information (time)
   -h, --help                      Display help for command
 
 Commands:
