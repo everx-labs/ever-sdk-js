@@ -1,10 +1,16 @@
-import { TonClient, KeyPair, abiContract, signerKeys } from "@eversdk/core"
+import {
+    TonClient,
+    KeyPair,
+    abiContract,
+    signerKeys,
+    ParamsOfProcessMessage,
+} from "@eversdk/core"
 import { Account, ContractPackage } from "@eversdk/appkit"
 import { getEnv } from "./utils"
 import * as GiverV2 from "./contracts/GiverV2.js"
 import * as GiverV3 from "./contracts/GiverV3.js"
 
-const DEFAULT_TOPUP_BALANCE = 18_000_000
+const DEFAULT_TOPUP_BALANCE = 20_000_000
 export type GiverVersions = "v2" | "v3"
 
 export function getDefaultGiverContract(type: GiverVersions): ContractPackage {
@@ -138,7 +144,7 @@ export class Giver implements AccountGiver {
                 `The giver's contract balance is too small for topup address: ${address}`,
             )
         }
-        const topup = await this._sdk.processing.process_message({
+        const params: ParamsOfProcessMessage = {
             send_events: false,
             message_encode_params: {
                 address: this.address,
@@ -153,7 +159,8 @@ export class Giver implements AccountGiver {
                 },
                 signer: this.account.signer,
             },
-        })
+        }
+        const topup = await this._sdk.processing.process_message(params)
 
         if (topup.transaction.out_msgs.length == 0) {
             console.error({ transaction: topup.transaction })

@@ -1,4 +1,6 @@
 pragma ever-solidity 0.65.0;
+pragma AbiHeader time;
+pragma AbiHeader expire;
 
 contract Kamikaze {
 
