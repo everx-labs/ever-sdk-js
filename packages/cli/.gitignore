@@ -4,3 +4,4 @@
 !contracts/*.js
 *.d.ts
 !contracts/*.d.ts
+!package-lock.json
