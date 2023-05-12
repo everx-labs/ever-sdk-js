@@ -5,7 +5,16 @@ import { getDefaultEndpoints } from "./utils"
 import * as Kamikadze from "./contracts/Kamikadze.js"
 
 export async function kamikadze(options: { value: number | undefined }) {
-    const sdk = new TonClient({ network: { endpoints: getDefaultEndpoints() } })
+    const sdk = new TonClient({
+        abi: {
+            message_expiration_timeout: 120_000,
+            message_expiration_timeout_grow_factor: 1,
+        },
+        network: {
+            endpoints: getDefaultEndpoints(),
+            message_retries_count: 2,
+        },
+    })
     try {
         const giver = await Giver.create(sdk)
         const keypair = await sdk.crypto.generate_random_sign_keys()
