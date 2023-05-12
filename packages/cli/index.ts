@@ -10,6 +10,7 @@ import dotenv from "dotenv"
 import { myParseInt, getEnv } from "./utils"
 import { graphql } from "./graphql"
 import { kamikadze } from "./kamikadze"
+import { DEFAULT_TOPUP_BALANCE } from "./giver"
 
 dotenv.config()
 
@@ -20,7 +21,7 @@ program
     .description("Evercloud CLI")
     .version(getEnv("npm_package_version") as string)
 
-program.option('-d, --debug', 'Output debug information (time)')
+program.option("-d, --debug", "Output debug information (time)")
 
 program
     .command("graphql")
@@ -44,6 +45,8 @@ program
     .option(
         "-v, --value <number>",
         "Top up the Kamikaze contract before deploying it in nanotokens.",
+        myParseInt,
+        DEFAULT_TOPUP_BALANCE,
     )
     .action(kamikadze)
 

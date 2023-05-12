@@ -27,9 +27,9 @@ Options:
   -h, --help                      Display help for command
 
 Commands:
-  graphql|gql [options] <string>  Sending query to graphql endpoint
-  kamikadze|k [options]           Run Kamikadze contract which selfdestruction process by calling `sendAllMoney` function
-  qrcode|qr <string>              Generate QR code by using text argument and output to the console
+  graphql|gql [options] <string>  Sending a query to a GraphQL endpoint.
+  kamikadze|k [options]           Run the Kamikaze contract, which triggers the self-destruct process by calling the `sendAllMoney` function.
+  qrcode|qr <string>              Generate a QR code using the provided text argument and output it to the console.
   help [command]                  Display help for command
 
 Examples:

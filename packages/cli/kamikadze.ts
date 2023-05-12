@@ -4,7 +4,7 @@ import { Giver } from "./giver"
 import { getDefaultEndpoints } from "./utils"
 import * as Kamikadze from "./contracts/Kamikadze.js"
 
-export async function kamikadze(options: { value: number | undefined }) {
+export async function kamikadze(options: { value: number }) {
     const sdk = new TonClient({
         abi: {
             message_expiration_timeout: 120_000,
