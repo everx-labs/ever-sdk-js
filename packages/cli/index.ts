@@ -1,4 +1,4 @@
-#!/usr/bin/env -S ./node_modules/.bin/tsm --no-warnings
+#!/usr/bin/env node
 
 import { program } from "commander"
 import { TonClient } from "@eversdk/core"

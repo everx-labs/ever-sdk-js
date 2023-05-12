@@ -45,12 +45,11 @@
   ],
   "dependencies": {
     "@eversdk/appkit": "^0.3.6",
-    "@eversdk/core": "1.41.1",
-    "@eversdk/lib-node": "1.41.1",
+    "@eversdk/core": "1.43.0",
+    "@eversdk/lib-node": "1.43.0",
     "commander": "^10.0.0",
     "dotenv": "^16.0.3",
-    "qrcode": "^1.5.3",
-    "wscat": "^5.2.0"
+    "qrcode": "^1.5.3"
   },
   "devDependencies": {
     "@types/node": "^18.16.2",
@@ -62,7 +61,6 @@
     "eslint-plugin-prettier": "^4.0.0",
     "prettier": "^2.3.2",
     "ts-node": "^10.9.1",
-    "tsm": "^2.3.0",
     "typescript": "^5.0.4"
   },
   "engines": {
