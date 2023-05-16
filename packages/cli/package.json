@@ -13,8 +13,9 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "compile-kamikadze": "cd ./contracts && everdev sol set --compiler 0.65.0 --linker 0.19.5 && everdev sol compile Kamikadze && everdev js wrap Kamikadze.abi.json -e commonjs-default -o Kamikadze.js && npx -p typescript tsc Kamikadze.js --declaration --allowJs --emitDeclarationOnly --outDir .",
-    "compile-touch": "cd ./contracts && everdev sol set --compiler 0.65.0 --linker 0.19.5 && everdev sol compile Touch && everdev js wrap Touch.abi.json -e commonjs-default -o Touch.js && npx -p typescript tsc Touch.js --declaration --allowJs --emitDeclarationOnly --outDir .",
+    "compile": "npm test -- c",
+    "compile-kamikadze": "npm run compile -- ./contracts/Kamikadze.sol",
+    "compile-touch": "npm run compile -- ./contracts/Touch.sol",
     "clean": "rimraf *.js *.tgz",
     "eslint": "eslint '**/*.ts'",
     "prepack": "npm run build",
@@ -26,13 +27,16 @@
   },
   "files": [
     "index.js",
+    "compile.js",
     "giver.js",
     "graphql.js",
     "kamikadze.js",
     "touch.js",
     "utils.js",
     "contracts/Kamikadze.js",
-    "contracts/Touch.js"
+    "contracts/Kamikadze.sol",
+    "contracts/Touch.js",
+    "contracts/Touch.sol"
   ],
   "publishConfig": {
     "access": "public"
@@ -47,20 +51,22 @@
   ],
   "dependencies": {
     "@eversdk/appkit": "^0.3.8",
-    "@eversdk/core": "^1.43.0",
-    "@eversdk/lib-node": "^1.43.0",
+    "@eversdk/core": "^1.42.1",
+    "@eversdk/lib-node": "^1.42.1",
     "commander": "^10.0.0",
     "dotenv": "^16.0.3",
-    "qrcode": "^1.5.3"
+    "everdev": "^1.7.0",
+    "qrcode": "^1.5.3",
+    "tvm-solidity-parser": "^0.14.75"
   },
   "devDependencies": {
     "@types/node": "^18.16.2",
     "@types/qrcode": "^1.5.0",
     "@typescript-eslint/eslint-plugin": "^5.19.0",
     "@typescript-eslint/parser": "^5.19.0",
-    "eslint": "^7.30.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "eslint": "^7.30.0",
     "prettier": "^2.3.2",
     "rimraf": "^5.0.0",
     "ts-node": "^10.9.1",

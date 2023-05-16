@@ -27,9 +27,11 @@ Options:
   -h, --help                      Display help for command
 
 Commands:
+  compile|c <string>              Compile contract, wrap it into js, generate d.ts (depends on `npx` tool, should be in PATH)
   graphql|gql [options] <string>  Sending a query to a GraphQL endpoint.
   kamikadze|k [options]           Run the Kamikaze contract, which triggers the self-destruct process by calling the `sendAllMoney` function.
   qrcode|qr <string>              Generate a QR code using the provided text argument and output it to the console.
+  touch|t [options]               Run the Touch contract, which increases local state variable timestamp.
   help [command]                  Display help for command
 
 Examples:
@@ -46,6 +48,17 @@ All commands can use environment variables to specify the Evercloud endpoint:
 ```TON_NETWORK_ADDRESS=https://mainnet.evercloud.dev/<ProjectId>```
 
 You can put all environment variables into the `.env` file.
+
+### compile (alias: c)
+This command get contract solidity compilator version and run following commands:
+```
+everdev sold set --version $ever-solidity-version-from-contract
+$HOME/.everdev/sold/sold <Contract.sol>
+everdev js wrap <Contract.abi.json> -e commonjs-default -o <Contract.js>
+npx -p typescript tsc <Contract.js> --declaration --allowJs --emitDeclarationOnly --outDir .
+```
+In result, you have `<Contract.js>` and `<Contract.d.ts>` files, which can be easily used in your TypeScript application.
+(see `evercloud help c`)
 
 ### graphql (alias: gql)
 This command allows you to send queries to a GraphQL endpoint. You can use internal SDK GraphQL implementation of `sdk.net.query` or `sdk.net.subscribe` to the GraphQL endpoint.
@@ -76,7 +89,7 @@ For the kamikadze command, you can use the following environment variables to sp
 
 For example, next command uses GiverV3 contract, access devnet endpoint with ProjectId (taken from `https://dashboard.evercloud.dev/projects`) uses specific giver address and secret private key:
 ```
-EVERCLOUD_GIVER_TYPE=v3 TON_NETWORK_ADDRESS=https://devnet.evercloud.dev/<ProjectId> TON_GIVER_ADDRESS=<address> TON_GIVER_SECRET=<privateKey> evercloud k
+EVERCLOUD_GIVER_TYPE=v2 TON_NETWORK_ADDRESS=https://devnet.evercloud.dev/<ProjectId> TON_GIVER_ADDRESS=<address> TON_GIVER_SECRET=<privateKey> evercloud k
 ```
 (see `evercloud help k`)
 
@@ -86,6 +99,16 @@ To generate a QR code, you can use the following command:
 evercloud qr "0:96137b99dcd65afce5a54a48dac83c0fd276432abbe3ba7f1bfb0fb795e69025"
 ```
 (see `evercloud help qr`)
+
+### touch (alias: t)
+If the Touch contract does not exist, it will be deployed automatically with 100 tokens.
+Then, the Touch contract function 'touch' will be executed on chain, which will increase the local state variable 'timestamp'.
+This script verify the increase in the local state timestamp by using the 'runLocal' function.
+The purpose of this script is to minimize token usage for fees.
+```
+evercloud t -d
+```
+(see `evercloud help t`)
 
 ## Contribute
 You are free to contribute to Evercloud CLI by submitting a pull request. It would be nice if you could add some useful contracts and create an interface with new commands and parameters. Place command implementation in the root of the project by using the name convention `<command>.ts`. Place contracts in the `./contracts` folder with a capital name and keep all `.sol, .tvc, .abi.json, .d.ts, .js` files in the repository. Compile contracts with the following command:

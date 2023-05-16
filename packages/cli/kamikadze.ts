@@ -22,7 +22,9 @@ export async function kamikadze(options: { value: number }) {
         const kamikadze = new Account(Kamikadze, { client: sdk, signer })
         const address = await kamikadze.getAddress()
 
-        const giverBalanceBefore = BigInt(await giver.account.getBalance() ?? 0)
+        const giverBalanceBefore = BigInt(
+            (await giver.account.getBalance()) ?? 0,
+        )
         await giver.sendTo(address, options.value)
         console.log("Kamikadze topup:", address)
 
@@ -38,8 +40,14 @@ export async function kamikadze(options: { value: number }) {
         console.log("Kamikadze selfdestruct:", selfdestruct.transaction.id)
 
         giver.account.refresh()
-        const giverBalanceAfter = BigInt(await giver.account.getBalance() ?? 0)
-        console.log(`Giver balance: ${giverBalanceAfter}, cost: ${giverBalanceBefore - giverBalanceAfter}`)
+        const giverBalanceAfter = BigInt(
+            (await giver.account.getBalance()) ?? 0,
+        )
+        console.log(
+            `Giver balance: ${giverBalanceAfter}, cost: ${
+                giverBalanceBefore - giverBalanceAfter
+            }`,
+        )
     } finally {
         sdk.close()
     }

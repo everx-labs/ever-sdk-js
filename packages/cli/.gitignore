@@ -5,3 +5,5 @@
 *.d.ts
 !contracts/*.d.ts
 !package-lock.json
+*.code
+*.debug.json

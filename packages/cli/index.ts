@@ -11,6 +11,7 @@ import { myParseInt, getEnv } from "./utils"
 import { graphql } from "./graphql"
 import { kamikadze } from "./kamikadze"
 import { touch, DEFAULT_TOUCH_MAX_BALANCE } from "./touch"
+import { compile } from "./compile"
 import { DEFAULT_TOPUP_BALANCE } from "./giver"
 
 dotenv.config()
@@ -23,6 +24,15 @@ program
     .version(getEnv("npm_package_version") as string)
 
 program.option("-d, --debug", "Output debug information (time)")
+
+program
+    .command("compile")
+    .alias("c")
+    .argument("<string>", "Path to Contract source file (.sol)")
+    .description(
+        "Compile contract, wrap it into js, generate d.ts (depends on `npx` tool, should be in PATH)",
+    )
+    .action(compile)
 
 program
     .command("graphql")
@@ -52,6 +62,17 @@ program
     .action(kamikadze)
 
 program
+    .command("qrcode")
+    .alias("qr")
+    .argument("<string>")
+    .description(
+        "Generate a QR code using the provided text argument and output it to the console.",
+    )
+    .action(async req => {
+        console.log(await promisify(qrcode)(req))
+    })
+
+program
     .command("touch")
     .alias("t")
     .description(
@@ -65,27 +86,22 @@ program
     )
     .action(touch)
 
-program
-    .command("qrcode")
-    .alias("qr")
-    .argument("<string>")
-    .description(
-        "Generate a QR code using the provided text argument and output it to the console.",
-    )
-    .action(async req => {
-        console.log(await promisify(qrcode)(req))
-    })
-
 program.addHelpText(
     "after",
     `
 Examples:
 
+$ evercloud c ./contracts/Kamikadze.sol
+
 $ evercloud q "query{blockchain{blocks(last:1 workchain:-1){edges{node{seq_no hash}}}}}"
 
 $ evercloud q "subscription{blocks(filter:{workchain_id:{eq:-1}}){seq_no id}}"
 
-$ EVERCLOUD_GIVER_TYPE=v3 TON_NETWORK_ADDRESS=https://devnet.evercloud.dev/<ProjectId> TON_GIVER_ADDRESS=<address> TON_GIVER_SECRET=<privateKey> evercloud k
+$ EVERCLOUD_GIVER_TYPE=v2 TON_NETWORK_ADDRESS=https://devnet.evercloud.dev/<ProjectId> TON_GIVER_ADDRESS=<address> TON_GIVER_SECRET=<privateKey> evercloud k
+
+$ evercloud qr 0:66cb703cd63dd0b9eafbce702a9f838211ba1ea5ccce101dc81b98114d824b8a
+
+$ evercloud t -d
 `,
 )
 
