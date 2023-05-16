@@ -10,6 +10,7 @@ import dotenv from "dotenv"
 import { myParseInt, getEnv } from "./utils"
 import { graphql } from "./graphql"
 import { kamikadze } from "./kamikadze"
+import { touch, DEFAULT_TOUCH_MAX_BALANCE } from "./touch"
 import { DEFAULT_TOPUP_BALANCE } from "./giver"
 
 dotenv.config()
@@ -49,6 +50,20 @@ program
         DEFAULT_TOPUP_BALANCE,
     )
     .action(kamikadze)
+
+program
+    .command("touch")
+    .alias("t")
+    .description(
+        "Run the Touch contract, which increases local state variable timestamp.",
+    )
+    .option(
+        "-v, --value <number>",
+        "Top up the Touch contract before deploying it in nanotokens.",
+        myParseInt,
+        DEFAULT_TOUCH_MAX_BALANCE,
+    )
+    .action(touch)
 
 program
     .command("qrcode")

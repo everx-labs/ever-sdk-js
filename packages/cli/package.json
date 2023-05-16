@@ -13,7 +13,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "compile": "cd ./contracts && everdev sol set --compiler 0.65.0 --linker 0.19.5 && everdev sol compile Kamikadze && everdev js wrap Kamikadze.abi.json -e commonjs-default -o Kamikadze.js && npx -p typescript tsc Kamikadze.js --declaration --allowJs --emitDeclarationOnly --outDir .",
+    "compile-kamikadze": "cd ./contracts && everdev sol set --compiler 0.65.0 --linker 0.19.5 && everdev sol compile Kamikadze && everdev js wrap Kamikadze.abi.json -e commonjs-default -o Kamikadze.js && npx -p typescript tsc Kamikadze.js --declaration --allowJs --emitDeclarationOnly --outDir .",
+    "compile-touch": "cd ./contracts && everdev sol set --compiler 0.65.0 --linker 0.19.5 && everdev sol compile Touch && everdev js wrap Touch.abi.json -e commonjs-default -o Touch.js && npx -p typescript tsc Touch.js --declaration --allowJs --emitDeclarationOnly --outDir .",
     "clean": "rimraf *.js *.tgz",
     "eslint": "eslint '**/*.ts'",
     "prepack": "npm run build",
@@ -28,10 +29,10 @@
     "giver.js",
     "graphql.js",
     "kamikadze.js",
+    "touch.js",
     "utils.js",
     "contracts/Kamikadze.js",
-    "contracts/GiverV2.js",
-    "contracts/GiverV3.js"
+    "contracts/Touch.js"
   ],
   "publishConfig": {
     "access": "public"
