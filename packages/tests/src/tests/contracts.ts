@@ -480,7 +480,7 @@ test("initCodeHash", async () => {
     const abiModule = abi;
     const abiVersion = 2;
     const account = await runner.getAccount(contracts.InitCodeHashOld, abiVersion);
-    const actualCodeHash = `0x${(await boc.decode_tvc({ tvc: contracts.InitCodeHashOld[abiVersion].tvc })).code_hash}`;
+    const actualCodeHash = `0x${(await boc.decode_state_init({ state_init: contracts.InitCodeHashOld[abiVersion].tvc })).code_hash}`;
     await runner.deploy(account);
 
     await run(
