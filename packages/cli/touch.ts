@@ -1,7 +1,8 @@
-import { TonClient } from "@eversdk/core"
 import { Account } from "@eversdk/appkit"
+import { getDefaultEndpoints, sleep } from "./utils"
 import { Giver, DEFAULT_TOPUP_BALANCE } from "./giver"
-import { getDefaultEndpoints } from "./utils"
+import { performance } from "node:perf_hooks"
+import { TonClient } from "@eversdk/core"
 import * as Touch from "./contracts/Touch.js"
 
 export const DEFAULT_TOUCH_MAX_BALANCE = 100 * 1e9
@@ -43,27 +44,48 @@ export async function touch(options: { value: number }) {
                 (await touch.runLocal("getTimestamp", {})).decoded?.output
                     .value0 ?? 0,
             )
+            const startTimer = performance.now()
             const balanceBefore = BigInt((await touch.getBalance()) ?? 0)
 
             const response = await touch.run("touch", {})
             touch.refresh()
 
-            const timestampNew = BigInt(
-                (await touch.runLocal("getTimestamp", {})).decoded?.output
-                    .value0 ?? 0,
-            )
             const balanceAfter = BigInt((await touch.getBalance()) ?? 0)
 
-            if (timestampNew > timestampOld) {
-                console.log(
-                    `Touch ok: ${
-                        response.transaction.id
-                    }\nTouch balance: ${balanceAfter} cost: ${
-                        balanceBefore - balanceAfter
-                    }`,
+            const tryCount = 5
+            let tryCounter = 0
+            while (tryCounter < tryCount) {
+                tryCounter++
+                const timestampNew = BigInt(
+                    (await touch.runLocal("getTimestamp", {})).decoded?.output
+                        .value0 ?? 0,
                 )
-            } else {
-                throw Error(`Touch ${response.transaction.id}`)
+
+                if (timestampNew == timestampOld) {
+                    console.log(
+                        `Touch ok: ${
+                            response.transaction.id
+                        }\nTouch balance: ${balanceAfter} cost: ${
+                            balanceBefore - balanceAfter
+                        }`,
+                    )
+                    break
+                } else {
+                    console.log(
+                        `Touch local state has not been updated (try: ${tryCounter})`,
+                    )
+                    await sleep(400)
+                    touch.refresh()
+                }
+
+                if (tryCounter == tryCount) {
+                    const endTimer = performance.now()
+                    throw Error(
+                        `local state has not been updated for ${
+                            (endTimer - startTimer) / 1000
+                        }s`,
+                    )
+                }
             }
         }
     } finally {
