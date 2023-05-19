@@ -114,6 +114,9 @@ async function dl(dstPath, src) {
 }
 
 async function main() {
+    if (process.env.TON_CLIENT_SKIP_DOWNLOAD) {
+        return;
+    }
     const binariesTargetPath = resolveBinariesTargetPath();
     await dl(path.join(binariesTargetPath, `eversdk.node`), `eversdk_${binariesVersion}_nodejs_addon_${arch}-${platform}`);
 }
@@ -126,4 +129,3 @@ async function main() {
         process.exit(1);
     }
 })();
-
