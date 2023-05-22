@@ -6,8 +6,14 @@ import { TonClient } from "@eversdk/core"
 import * as Touch from "./contracts/Touch.js"
 
 export const DEFAULT_TOUCH_MAX_BALANCE = 100 * 1e9
+export const DEFAULT_TOUCH_TRY_COUNT = 5
+export const DEFAULT_TOUCH_TRY_SLEEP = 100
 
-export async function touch(options: { value: number }) {
+export async function touch(options: {
+    value: number
+    tryCount: number
+    trySleep: number
+}) {
     const sdk = new TonClient({
         abi: {
             message_expiration_timeout: 120_000,
@@ -52,16 +58,14 @@ export async function touch(options: { value: number }) {
 
             const balanceAfter = BigInt((await touch.getBalance()) ?? 0)
 
-            const tryCount = 5
             let tryCounter = 0
-            while (tryCounter < tryCount) {
-                tryCounter++
+            while (tryCounter < options.tryCount) {
                 const timestampNew = BigInt(
                     (await touch.runLocal("getTimestamp", {})).decoded?.output
                         .value0 ?? 0,
                 )
 
-                if (timestampNew == timestampOld) {
+                if (timestampNew > timestampOld) {
                     console.log(
                         `Touch ok: ${
                             response.transaction.id
@@ -72,18 +76,18 @@ export async function touch(options: { value: number }) {
                     break
                 } else {
                     console.log(
-                        `Touch local state has not been updated (try: ${tryCounter})`,
+                        `Touch local state has not been updated (try: ${++tryCounter})`,
                     )
-                    await sleep(400)
+                    await sleep(options.trySleep)
                     touch.refresh()
                 }
 
-                if (tryCounter == tryCount) {
+                if (tryCounter == options.tryCount) {
                     const endTimer = performance.now()
+                    const elapsed =
+                        Math.floor((endTimer - startTimer) / 10) / 100
                     throw Error(
-                        `local state has not been updated for ${
-                            (endTimer - startTimer) / 1000
-                        }s`,
+                        `local state has not been updated for ${elapsed}s`,
                     )
                 }
             }

@@ -10,7 +10,12 @@ import dotenv from "dotenv"
 import { myParseInt, getEnv } from "./utils"
 import { graphql } from "./graphql"
 import { kamikadze } from "./kamikadze"
-import { touch, DEFAULT_TOUCH_MAX_BALANCE } from "./touch"
+import {
+    touch,
+    DEFAULT_TOUCH_MAX_BALANCE,
+    DEFAULT_TOUCH_TRY_COUNT,
+    DEFAULT_TOUCH_TRY_SLEEP,
+} from "./touch"
 import { compile } from "./compile"
 import { DEFAULT_TOPUP_BALANCE } from "./giver"
 
@@ -83,6 +88,18 @@ program
         "Top up the Touch contract before deploying it in nanotokens.",
         myParseInt,
         DEFAULT_TOUCH_MAX_BALANCE,
+    )
+    .option(
+        "-c, --try-count <number>",
+        "If the GraphQL response does not contain a valid value, retry the request a maximum of `tryCount` times.",
+        myParseInt,
+        DEFAULT_TOUCH_TRY_COUNT,
+    )
+    .option(
+        "-s, --try-sleep <number>",
+        "If the GraphQL response does not contain a valid value, sleep for `trySleep` milisecodes before next try.",
+        myParseInt,
+        DEFAULT_TOUCH_TRY_SLEEP,
     )
     .action(touch)
 

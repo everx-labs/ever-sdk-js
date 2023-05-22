@@ -20,7 +20,7 @@
     "eslint": "eslint '**/*.ts'",
     "prepack": "npm run build",
     "prettier": "prettier --config .prettierrc '**/*.ts' --write",
-    "test": "npx ts-node index.ts"
+    "test": "npm run clean; npx ts-node index.ts"
   },
   "bin": {
     "evercloud": "./index.js"
