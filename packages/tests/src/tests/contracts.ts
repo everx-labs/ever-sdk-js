@@ -306,7 +306,7 @@ test("Test CheckInitParams contract double deployment with different init data",
     // end of test, start of local functions
 
     async function generateRandomBytesInHex(length: number): Promise<string> {
-        var randomBytesInBase64 = 
+        const randomBytesInBase64 =
             await runner.getClient()
                 .crypto.generate_random_bytes({
                     length,
@@ -380,29 +380,33 @@ test.each(ABIVersions)("Test SetCode contracts (ABI v%i)", async (abiVersion) =>
 test("Test expire retries", async () => {
     const processing = runner.getClient().processing;
 
-    const helloAccount = await runner.getAccount(contracts.Hello, 2);
+    const helloAccount = await runner.getAccount(contracts.MultiTouch, 2);
     const helloAccountAddress = await helloAccount.getAddress();
     await runner.deploy(helloAccount);
 
-    let completed = 0;
-    const run = async () => {
+    const run = async (seqno: number) => {
+        const startTime = new Date().valueOf();
         const result = await processing.process_message({
             message_encode_params: {
                 abi: helloAccount.abi,
                 signer: helloAccount.signer,
                 address: helloAccountAddress,
                 call_set: {
-                    function_name: "touch"
+                    function_name: "touch",
+                    input: {
+                        seqno
+                    }
                 }
             },
             send_events: false,
         });
-        console.log(`>>> run complete ${++completed}`);
+        const endTime = new Date().valueOf();
+        console.log(`>>> run complete seq_no:${seqno} in ${endTime - startTime}ms`);
         return result;
     };
     const runs = [];
-    for (let i = 0; i < 10; i += 1) {
-        runs.push(run());
+    for (let i = 0; i < 10;) {
+        runs.push(run(++i));
     }
     await Promise.all(runs);
 });
