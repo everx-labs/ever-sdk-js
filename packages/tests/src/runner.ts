@@ -35,7 +35,12 @@ import { TestEntry } from "jest-circus";
 
 function resolveConfig(): ClientConfig {
     return {
+        abi: {
+            message_expiration_timeout: 5000,
+            message_expiration_timeout_grow_factor: 1,
+        },
         network: {
+            message_retries_count: 10,
             endpoints: [`${process.env.TON_NETWORK_ADDRESS || "http://localhost"}`],
         },
     };
