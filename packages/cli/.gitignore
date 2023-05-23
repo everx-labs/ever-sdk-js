@@ -1,0 +1,9 @@
+/node_modules/
+*.tgz
+*.js
+!contracts/*.js
+*.d.ts
+!contracts/*.d.ts
+!package-lock.json
+*.code
+*.debug.json

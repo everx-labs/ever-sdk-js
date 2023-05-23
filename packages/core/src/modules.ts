@@ -95,7 +95,7 @@ export type NetworkConfig = {
      * 
      * @remarks
      * Any correct URL format can be specified, including IP addresses. This parameter is prevailing over `server_address`.
-     * Check the full list of [supported network endpoints](https://docs.everos.dev/ever-sdk/reference/ever-os-api/networks).
+     * Check the full list of [supported network endpoints](https://docs.evercloud.dev/products/evercloud/networks-endpoints).
      */
     endpoints?: string[],
 
@@ -145,13 +145,7 @@ export type NetworkConfig = {
     wait_for_timeout?: number,
 
     /**
-     * Maximum time difference between server and client.
-     * 
-     * @remarks
-     * If client's device time is out of sync and difference is more than the threshold then error will occur. Also an error will occur if the specified threshold is more than
-     * `message_processing_timeout/2`.
-     * 
-     * Must be specified in milliseconds. Default is 15000 (15 sec).
+     * **DEPRECATED**: This parameter was deprecated.
      */
     out_of_sync_threshold?: number,
 
@@ -285,12 +279,18 @@ export type AbiConfig = {
     workchain?: number,
 
     /**
-     * Message lifetime for contracts which ABI includes "expire" header. The default value is 40 sec.
+     * Message lifetime for contracts which ABI includes "expire" header.
+     * 
+     * @remarks
+     * Must be specified in milliseconds. Default is 40000 (40 sec).
      */
     message_expiration_timeout?: number,
 
     /**
-     * Factor that increases the expiration timeout for each retry The default value is 1.5
+     * Factor that increases the expiration timeout for each retry
+     * 
+     * @remarks
+     * Default is 1.5
      */
     message_expiration_timeout_grow_factor?: number
 }
@@ -2954,7 +2954,11 @@ export type AbiHandle = number
 export type FunctionHeader = {
 
     /**
-     * Message expiration time in seconds. If not specified - calculated automatically from message_expiration_timeout(), try_index and message_expiration_timeout_grow_factor() (if ABI includes `expire` header).
+     * Message expiration timestamp (UNIX time) in seconds.
+     * 
+     * @remarks
+     * If not specified - calculated automatically from message_expiration_timeout(),
+     * try_index and message_expiration_timeout_grow_factor() (if ABI includes `expire` header).
      */
     expire?: number,
 
@@ -3001,9 +3005,19 @@ export type CallSet = {
 export type DeploySet = {
 
     /**
-     * Content of TVC file encoded in `base64`.
+     * Content of TVC file encoded in `base64`. For compatibility reason this field can contain an encoded  `StateInit`.
      */
-    tvc: string,
+    tvc?: string,
+
+    /**
+     * Contract code BOC encoded with base64.
+     */
+    code?: string,
+
+    /**
+     * State init BOC encoded with base64.
+     */
+    state_init?: string,
 
     /**
      * Target workchain for destination address.
@@ -4336,167 +4350,6 @@ export function bocCacheTypeUnpinned(): BocCacheType {
     };
 }
 
-export enum BocErrorCode {
-    InvalidBoc = 201,
-    SerializationError = 202,
-    InappropriateBlock = 203,
-    MissingSourceBoc = 204,
-    InsufficientCacheSize = 205,
-    BocRefNotFound = 206,
-    InvalidBocRef = 207
-}
-
-export type ParamsOfParse = {
-
-    /**
-     * BOC encoded as base64
-     */
-    boc: string
-}
-
-export type ResultOfParse = {
-
-    /**
-     * JSON containing parsed BOC
-     */
-    parsed: any
-}
-
-export type ParamsOfParseShardstate = {
-
-    /**
-     * BOC encoded as base64
-     */
-    boc: string,
-
-    /**
-     * Shardstate identifier
-     */
-    id: string,
-
-    /**
-     * Workchain shardstate belongs to
-     */
-    workchain_id: number
-}
-
-export type ParamsOfGetBlockchainConfig = {
-
-    /**
-     * Key block BOC or zerostate BOC encoded as base64
-     */
-    block_boc: string
-}
-
-export type ResultOfGetBlockchainConfig = {
-
-    /**
-     * Blockchain config BOC encoded as base64
-     */
-    config_boc: string
-}
-
-export type ParamsOfGetBocHash = {
-
-    /**
-     * BOC encoded as base64 or BOC handle
-     */
-    boc: string
-}
-
-export type ResultOfGetBocHash = {
-
-    /**
-     * BOC root hash encoded with hex
-     */
-    hash: string
-}
-
-export type ParamsOfGetBocDepth = {
-
-    /**
-     * BOC encoded as base64 or BOC handle
-     */
-    boc: string
-}
-
-export type ResultOfGetBocDepth = {
-
-    /**
-     * BOC root cell depth
-     */
-    depth: number
-}
-
-export type ParamsOfGetCodeFromTvc = {
-
-    /**
-     * Contract TVC image or image BOC handle
-     */
-    tvc: string
-}
-
-export type ResultOfGetCodeFromTvc = {
-
-    /**
-     * Contract code encoded as base64
-     */
-    code: string
-}
-
-export type ParamsOfBocCacheGet = {
-
-    /**
-     * Reference to the cached BOC
-     */
-    boc_ref: string
-}
-
-export type ResultOfBocCacheGet = {
-
-    /**
-     * BOC encoded as base64.
-     */
-    boc?: string
-}
-
-export type ParamsOfBocCacheSet = {
-
-    /**
-     * BOC encoded as base64 or BOC reference
-     */
-    boc: string,
-
-    /**
-     * Cache type
-     */
-    cache_type: BocCacheType
-}
-
-export type ResultOfBocCacheSet = {
-
-    /**
-     * Reference to the cached BOC
-     */
-    boc_ref: string
-}
-
-export type ParamsOfBocCacheUnpin = {
-
-    /**
-     * Pinned name
-     */
-    pin: string,
-
-    /**
-     * Reference to the cached BOC.
-     * 
-     * @remarks
-     * If it is provided then only referenced BOC is unpinned
-     */
-    boc_ref?: string
-}
-
 /**
  * Append integer to cell data.
  */
@@ -4650,6 +4503,214 @@ export function builderOpAddress(address: string): BuilderOp {
     };
 }
 
+export type TvcV1Variant = {
+
+    value: TvcV1
+}
+
+/**
+ * 
+ * Depends on `type` field.
+ * 
+ * 
+ * ### `V1`
+ * 
+ */
+export type Tvc = ({
+    type: 'V1'
+} & TvcV1Variant)
+
+export function tvcV1(value: TvcV1): Tvc {
+    return {
+        type: 'V1',
+        value,
+    };
+}
+
+export type TvcV1 = {
+
+    code?: string,
+
+    description?: string
+}
+
+export enum BocErrorCode {
+    InvalidBoc = 201,
+    SerializationError = 202,
+    InappropriateBlock = 203,
+    MissingSourceBoc = 204,
+    InsufficientCacheSize = 205,
+    BocRefNotFound = 206,
+    InvalidBocRef = 207
+}
+
+export type ParamsOfDecodeTvc = {
+
+    /**
+     * Contract TVC BOC encoded as base64 or BOC handle
+     */
+    tvc: string
+}
+
+export type ResultOfDecodeTvc = {
+
+    /**
+     * Decoded TVC
+     */
+    tvc: Tvc
+}
+
+export type ParamsOfParse = {
+
+    /**
+     * BOC encoded as base64
+     */
+    boc: string
+}
+
+export type ResultOfParse = {
+
+    /**
+     * JSON containing parsed BOC
+     */
+    parsed: any
+}
+
+export type ParamsOfParseShardstate = {
+
+    /**
+     * BOC encoded as base64
+     */
+    boc: string,
+
+    /**
+     * Shardstate identifier
+     */
+    id: string,
+
+    /**
+     * Workchain shardstate belongs to
+     */
+    workchain_id: number
+}
+
+export type ParamsOfGetBlockchainConfig = {
+
+    /**
+     * Key block BOC or zerostate BOC encoded as base64
+     */
+    block_boc: string
+}
+
+export type ResultOfGetBlockchainConfig = {
+
+    /**
+     * Blockchain config BOC encoded as base64
+     */
+    config_boc: string
+}
+
+export type ParamsOfGetBocHash = {
+
+    /**
+     * BOC encoded as base64 or BOC handle
+     */
+    boc: string
+}
+
+export type ResultOfGetBocHash = {
+
+    /**
+     * BOC root hash encoded with hex
+     */
+    hash: string
+}
+
+export type ParamsOfGetBocDepth = {
+
+    /**
+     * BOC encoded as base64 or BOC handle
+     */
+    boc: string
+}
+
+export type ResultOfGetBocDepth = {
+
+    /**
+     * BOC root cell depth
+     */
+    depth: number
+}
+
+export type ParamsOfGetCodeFromTvc = {
+
+    /**
+     * Contract TVC image or image BOC handle
+     */
+    tvc: string
+}
+
+export type ResultOfGetCodeFromTvc = {
+
+    /**
+     * Contract code encoded as base64
+     */
+    code: string
+}
+
+export type ParamsOfBocCacheGet = {
+
+    /**
+     * Reference to the cached BOC
+     */
+    boc_ref: string
+}
+
+export type ResultOfBocCacheGet = {
+
+    /**
+     * BOC encoded as base64.
+     */
+    boc?: string
+}
+
+export type ParamsOfBocCacheSet = {
+
+    /**
+     * BOC encoded as base64 or BOC reference
+     */
+    boc: string,
+
+    /**
+     * Cache type
+     */
+    cache_type: BocCacheType
+}
+
+export type ResultOfBocCacheSet = {
+
+    /**
+     * Reference to the cached BOC
+     */
+    boc_ref: string
+}
+
+export type ParamsOfBocCacheUnpin = {
+
+    /**
+     * Pinned name
+     */
+    pin: string,
+
+    /**
+     * Reference to the cached BOC.
+     * 
+     * @remarks
+     * If it is provided then only referenced BOC is unpinned
+     */
+    boc_ref?: string
+}
+
 export type ParamsOfEncodeBoc = {
 
     /**
@@ -4727,12 +4788,12 @@ export type ResultOfSetCodeSalt = {
     code: string
 }
 
-export type ParamsOfDecodeTvc = {
+export type ParamsOfDecodeStateInit = {
 
     /**
-     * Contract TVC image BOC encoded as base64 or BOC handle
+     * Contract StateInit image BOC encoded as base64 or BOC handle
      */
-    tvc: string,
+    state_init: string,
 
     /**
      * Cache type to put the result. The BOC itself returned if no cache type provided.
@@ -4740,7 +4801,7 @@ export type ParamsOfDecodeTvc = {
     boc_cache?: BocCacheType
 }
 
-export type ResultOfDecodeTvc = {
+export type ResultOfDecodeStateInit = {
 
     /**
      * Contract code BOC encoded as base64 or BOC handle
@@ -4804,7 +4865,7 @@ export type ResultOfDecodeTvc = {
     compiler_version?: string
 }
 
-export type ParamsOfEncodeTvc = {
+export type ParamsOfEncodeStateInit = {
 
     /**
      * Contract code BOC encoded as base64 or BOC handle
@@ -4848,12 +4909,12 @@ export type ParamsOfEncodeTvc = {
     boc_cache?: BocCacheType
 }
 
-export type ResultOfEncodeTvc = {
+export type ResultOfEncodeStateInit = {
 
     /**
-     * Contract TVC image BOC encoded as base64 or BOC handle of boc_cache parameter was specified
+     * Contract StateInit image BOC encoded as base64 or BOC handle of boc_cache parameter was specified
      */
-    tvc: string
+    state_init: string
 }
 
 export type ParamsOfEncodeExternalInMessage = {
@@ -4924,6 +4985,16 @@ export class BocModule {
 
     constructor(client: IClient) {
         this.client = client;
+    }
+
+    /**
+     * Decodes tvc into code, data, libraries and special options.
+     * 
+     * @param {ParamsOfDecodeTvc} params
+     * @returns ResultOfDecodeTvc
+     */
+    decode_tvc(params: ParamsOfDecodeTvc): Promise<ResultOfDecodeTvc> {
+        return this.client.request('boc.decode_tvc', params);
     }
 
     /**
@@ -5097,21 +5168,21 @@ export class BocModule {
     /**
      * Decodes tvc into code, data, libraries and special options.
      * 
-     * @param {ParamsOfDecodeTvc} params
-     * @returns ResultOfDecodeTvc
+     * @param {ParamsOfDecodeStateInit} params
+     * @returns ResultOfDecodeStateInit
      */
-    decode_tvc(params: ParamsOfDecodeTvc): Promise<ResultOfDecodeTvc> {
-        return this.client.request('boc.decode_tvc', params);
+    decode_state_init(params: ParamsOfDecodeStateInit): Promise<ResultOfDecodeStateInit> {
+        return this.client.request('boc.decode_state_init', params);
     }
 
     /**
      * Encodes tvc from code, data, libraries ans special options (see input params)
      * 
-     * @param {ParamsOfEncodeTvc} params
-     * @returns ResultOfEncodeTvc
+     * @param {ParamsOfEncodeStateInit} params
+     * @returns ResultOfEncodeStateInit
      */
-    encode_tvc(params: ParamsOfEncodeTvc): Promise<ResultOfEncodeTvc> {
-        return this.client.request('boc.encode_tvc', params);
+    encode_state_init(params: ParamsOfEncodeStateInit): Promise<ResultOfEncodeStateInit> {
+        return this.client.request('boc.encode_state_init', params);
     }
 
     /**
@@ -5726,7 +5797,9 @@ export enum MonitorFetchWaitMode {
  */
 export type MonitoredMessageBocVariant = {
 
-    boc: string
+    value: {
+        boc: string
+    }
 }
 
 /**
@@ -5734,15 +5807,10 @@ export type MonitoredMessageBocVariant = {
  */
 export type MonitoredMessageHashAddressVariant = {
 
-    /**
-     * Hash of the message.
-     */
-    hash: string,
-
-    /**
-     * Destination address of the message.
-     */
-    address: string
+    value: {
+        hash: string,
+        address: string
+    }
 }
 
 /**
@@ -5764,18 +5832,22 @@ export type MonitoredMessage = ({
     type: 'HashAddress'
 } & MonitoredMessageHashAddressVariant)
 
-export function monitoredMessageBoc(boc: string): MonitoredMessage {
+export function monitoredMessageBoc(value: {
+    boc: string
+}): MonitoredMessage {
     return {
         type: 'Boc',
-        boc,
+        value,
     };
 }
 
-export function monitoredMessageHashAddress(hash: string, address: string): MonitoredMessage {
+export function monitoredMessageHashAddress(value: {
+    hash: string,
+    address: string
+}): MonitoredMessage {
     return {
         type: 'HashAddress',
-        hash,
-        address,
+        value,
     };
 }
 
@@ -6431,7 +6503,8 @@ export enum TvmErrorCode {
     InvalidInputStack = 411,
     InvalidAccountBoc = 412,
     InvalidMessageType = 413,
-    ContractExecutionError = 414
+    ContractExecutionError = 414,
+    AccountIsSuspended = 415
 }
 
 export type ExecutionOptions = {
