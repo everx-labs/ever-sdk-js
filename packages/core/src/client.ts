@@ -25,13 +25,15 @@ import {
     UtilsModule,
 } from "./modules";
 import {
+    BinaryBridge,
     BinaryLibrary,
+    BinaryLibraryWithParams,
     getBridge,
     ResponseHandler,
     useLibrary,
 } from "./bin";
-import { TonClientError } from "./errors";
-import { packageVersion } from "./version";
+import {TonClientError} from "./errors";
+import {packageVersion} from "./version";
 
 export class TonClient {
     private static _defaultConfig: ClientConfig = {};
@@ -83,7 +85,7 @@ export class TonClient {
         this.proofs = new ProofsModule(this);
     }
 
-    static useBinaryLibrary(loader: () => Promise<BinaryLibrary>) {
+    static useBinaryLibrary(loader: (() => Promise<BinaryLibrary | BinaryLibraryWithParams>) | BinaryBridge) {
         useLibrary(loader);
     }
 
@@ -152,49 +154,49 @@ export class TonClient {
 
             function walkParameters(valueTypeInfo: any, value: any, path: string) {
                 switch (valueTypeInfo.type) {
-                case "Array":
-                    if (Array.isArray(value)) {
-                        value.forEach(v => walkParameters(
-                            valueTypeInfo.array_item,
-                            v,
-                            `${path}[i]`,
+                    case "Array":
+                        if (Array.isArray(value)) {
+                            value.forEach(v => walkParameters(
+                                valueTypeInfo.array_item,
+                                v,
+                                `${path}[i]`,
+                            ));
+                        }
+                        break;
+                    case "Struct":
+                        valueTypeInfo.struct_fields.forEach((sf: any) => walkParameters(
+                            sf,
+                            value[sf.name],
+                            path ? `${path}.${sf.name}` : sf.name,
                         ));
-                    }
-                    break;
-                case "Struct":
-                    valueTypeInfo.struct_fields.forEach((sf: any) => walkParameters(
-                        sf,
-                        value[sf.name],
-                        path ? `${path}.${sf.name}` : sf.name,
-                    ));
-                    break;
-                case "Optional":
-                    if (value) {
-                        walkParameters(valueTypeInfo.optional_inner, value, path);
-                    }
-                    break;
-                case "Ref":
-                    if (valueTypeInfo.ref_name != "Value" &&
-                        valueTypeInfo.ref_name != "API" &&
-                        valueTypeInfo.ref_name != "AbiParam") {
+                        break;
+                    case "Optional":
+                        if (value) {
+                            walkParameters(valueTypeInfo.optional_inner, value, path);
+                        }
+                        break;
+                    case "Ref":
+                        if (valueTypeInfo.ref_name != "Value" &&
+                            valueTypeInfo.ref_name != "API" &&
+                            valueTypeInfo.ref_name != "AbiParam") {
 
-                        walkParameters(allTypesDict[valueTypeInfo.ref_name], value, path);
-                    }
-                    break;
-                case "EnumOfTypes":
-                    if (valueTypeInfo.enum_types.some((et: any) => et.name == value.type)) {
-                        return;
-                    }
+                            walkParameters(allTypesDict[valueTypeInfo.ref_name], value, path);
+                        }
+                        break;
+                    case "EnumOfTypes":
+                        if (valueTypeInfo.enum_types.some((et: any) => et.name == value.type)) {
+                            return;
+                        }
 
-                    let parameterName = valueTypeInfo.name.toLowerCase();
-                    let helperFunctions: string[] = [];
-                    valueTypeInfo.enum_types.forEach((et: any) => helperFunctions.push(parameterName + et.name));
+                        let parameterName = valueTypeInfo.name.toLowerCase();
+                        let helperFunctions: string[] = [];
+                        valueTypeInfo.enum_types.forEach((et: any) => helperFunctions.push(parameterName + et.name));
 
-                    err.message = `Consider using one of the helper methods (${helperFunctions.join(
-                        ", ")}) for the \"${path}\" parameter\n` + err.message;
-                    break;
-                default:
-                    break;
+                        err.message = `Consider using one of the helper methods (${helperFunctions.join(
+                            ", ")}) for the \"${path}\" parameter\n` + err.message;
+                        break;
+                    default:
+                        break;
                 }
             }
         } catch (e: any) {
