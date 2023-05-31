@@ -1,5 +1,6 @@
 import { TonClient, ResultOfProcessMessage } from "@eversdk/core"
 import { Account, AccountGiver } from "@eversdk/appkit"
+import { getDefaultEndpoints } from "./utils"
 
 export const DEFAULT_TOPUP_BALANCE = 20_000_000 // 0.02 tokens should be enouth for deploy + selfdestruct operation tested on evernode-se
 
@@ -58,5 +59,23 @@ export class Giver implements AccountGiver {
         }
 
         return topup
+    }
+}
+
+export async function deploy() {
+    const sdk = new TonClient({
+        network: {
+            endpoints: getDefaultEndpoints(),
+        },
+    })
+    try {
+        const giver = await Account.getGiverForClient(sdk)
+        const deploy = await giver.account.deploy({
+            initFunctionName: "constructor",
+            initInput: {},
+        })
+        console.log("Giver deploy:", deploy.transaction.id)
+    } finally {
+        sdk.close()
     }
 }

@@ -17,7 +17,7 @@ import {
     DEFAULT_TOUCH_TRY_SLEEP,
 } from "./touch"
 import { compile } from "./compile"
-import { DEFAULT_TOPUP_BALANCE } from "./giver"
+import { DEFAULT_TOPUP_BALANCE, deploy } from "./giver"
 
 dotenv.config()
 
@@ -38,6 +38,8 @@ program
         "Compile contract, wrap it into js, generate d.ts (depends on `npx` tool, should be in PATH)",
     )
     .action(compile)
+
+program.command("deploy").alias("d").description("Deploy giver").action(deploy)
 
 program
     .command("graphql")
