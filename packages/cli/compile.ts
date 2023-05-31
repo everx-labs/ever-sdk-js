@@ -34,7 +34,7 @@ export async function compile(contractName: string) {
                 ) {
                     if (!Array.isArray(node.value)) {
                         const matches = node.value.match(/(\d+\.\d+\.\d+)/)
-                        if (Array.isArray(matches)) {
+                        if (Array.isArray(matches) && matches.length > 0) {
                             ;[everSolidityVersion] = matches
                         }
                     }

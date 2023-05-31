@@ -54,41 +54,38 @@ export async function touch(options: {
             const balanceBefore = BigInt((await touch.getBalance()) ?? 0)
 
             const response = await touch.run("touch", {})
-            touch.refresh()
-
-            const balanceAfter = BigInt((await touch.getBalance()) ?? 0)
+            console.log(`Touch ok: ${response.transaction.id}`)
 
             let tryCounter = 0
             while (tryCounter < options.tryCount) {
+                touch.refresh() // Force to take frech boc from graphql
+                const balanceAfter = BigInt((await touch.getBalance()) ?? 0)
                 const timestampNew = BigInt(
                     (await touch.runLocal("getTimestamp", {})).decoded?.output
                         .value0 ?? 0,
                 )
 
                 if (timestampNew > timestampOld) {
+                    // Contract local state has been updated
+                    console.log(`Touch balance: ${balanceAfter}`)
                     console.log(
-                        `Touch ok: ${
-                            response.transaction.id
-                        }\nTouch balance: ${balanceAfter} cost: ${
-                            balanceBefore - balanceAfter
-                        }`,
+                        `Operation cost: ${balanceBefore - balanceAfter}`,
                     )
                     break
-                } else {
-                    console.log(
-                        `Touch local state has not been updated (try: ${++tryCounter})`,
-                    )
-                    await sleep(options.trySleep)
-                    touch.refresh()
-                }
-
-                if (tryCounter == options.tryCount) {
+                } else if (options.tryCount - tryCounter == 1) {
+                    // It was last try
                     const endTimer = performance.now()
                     const elapsed =
                         Math.floor((endTimer - startTimer) / 10) / 100
                     throw Error(
-                        `local state has not been updated for ${elapsed}s`,
+                        `local state has not been updated (try: ${++tryCounter}) for ${elapsed}s`,
                     )
+                } else {
+                    // Waiting for another try
+                    console.log(
+                        `Touch local state has not been updated (try: ${++tryCounter})`,
+                    )
+                    await sleep(options.trySleep)
                 }
             }
         }
