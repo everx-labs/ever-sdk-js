@@ -4988,7 +4988,7 @@ export class BocModule {
     }
 
     /**
-     * Decodes tvc according to the tvc spec. Read more about tvc structure here https://github.com/tonlabs/ever-struct/blob/main/src/scheme/mod.rs#L30
+     * Decodes tvc into code, data, libraries and special options.
      * 
      * @param {ParamsOfDecodeTvc} params
      * @returns ResultOfDecodeTvc
@@ -5166,7 +5166,7 @@ export class BocModule {
     }
 
     /**
-     * Decodes contract's initial state into code, data, libraries and special options.
+     * Decodes tvc into code, data, libraries and special options.
      * 
      * @param {ParamsOfDecodeStateInit} params
      * @returns ResultOfDecodeStateInit
@@ -5176,7 +5176,7 @@ export class BocModule {
     }
 
     /**
-     * Encodes initial contract state from code, data, libraries ans special options (see input params)
+     * Encodes tvc from code, data, libraries ans special options (see input params)
      * 
      * @param {ParamsOfEncodeStateInit} params
      * @returns ResultOfEncodeStateInit
@@ -5797,9 +5797,7 @@ export enum MonitorFetchWaitMode {
  */
 export type MonitoredMessageBocVariant = {
 
-    value: {
-        boc: string
-    }
+    boc: string
 }
 
 /**
@@ -5807,10 +5805,15 @@ export type MonitoredMessageBocVariant = {
  */
 export type MonitoredMessageHashAddressVariant = {
 
-    value: {
-        hash: string,
-        address: string
-    }
+    /**
+     * Hash of the message.
+     */
+    hash: string,
+
+    /**
+     * Destination address of the message.
+     */
+    address: string
 }
 
 /**
@@ -5832,22 +5835,18 @@ export type MonitoredMessage = ({
     type: 'HashAddress'
 } & MonitoredMessageHashAddressVariant)
 
-export function monitoredMessageBoc(value: {
-    boc: string
-}): MonitoredMessage {
+export function monitoredMessageBoc(boc: string): MonitoredMessage {
     return {
         type: 'Boc',
-        value,
+        boc,
     };
 }
 
-export function monitoredMessageHashAddress(value: {
-    hash: string,
-    address: string
-}): MonitoredMessage {
+export function monitoredMessageHashAddress(hash: string, address: string): MonitoredMessage {
     return {
         type: 'HashAddress',
-        value,
+        hash,
+        address,
     };
 }
 
