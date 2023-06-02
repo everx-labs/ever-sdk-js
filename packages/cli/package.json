@@ -18,7 +18,7 @@
     "compile-touch": "npm run compile -- ./contracts/Touch.sol",
     "clean": "rimraf *.js *.tgz",
     "eslint": "eslint '**/*.ts'",
-    "prepublishOnly": "NODE_ENV=development npm ci",
+    "prepublishOnly": "NODE_ENV=development npm i",
     "prepack": "NODE_ENV=production npm run build",
     "prettier": "prettier --config .prettierrc '**/*.ts' --write",
     "test": "npm run clean; npx ts-node index.ts"
