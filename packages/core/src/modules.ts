@@ -4988,7 +4988,7 @@ export class BocModule {
     }
 
     /**
-     * Decodes tvc into code, data, libraries and special options.
+     * Decodes tvc according to the tvc spec. Read more about tvc structure here https://github.com/tonlabs/ever-struct/blob/main/src/scheme/mod.rs#L30
      * 
      * @param {ParamsOfDecodeTvc} params
      * @returns ResultOfDecodeTvc
@@ -5166,7 +5166,7 @@ export class BocModule {
     }
 
     /**
-     * Decodes tvc into code, data, libraries and special options.
+     * Decodes contract's initial state into code, data, libraries and special options.
      * 
      * @param {ParamsOfDecodeStateInit} params
      * @returns ResultOfDecodeStateInit
@@ -5176,7 +5176,7 @@ export class BocModule {
     }
 
     /**
-     * Encodes tvc from code, data, libraries ans special options (see input params)
+     * Encodes initial contract state from code, data, libraries ans special options (see input params)
      * 
      * @param {ParamsOfEncodeStateInit} params
      * @returns ResultOfEncodeStateInit
