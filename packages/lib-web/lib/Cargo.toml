@@ -28,7 +28,7 @@ lazy_static = '1.4.0'
 # just to fix building of rand for WASM:
 getrandom = { default-features = false, features = [ 'js' ], version = '0.2.2' }
 
-ton_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/tonlabs/ever-sdk.git', tag = '1.43.2' }
+ton_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/tonlabs/ever-sdk.git', tag = '1.43.3' }
 
 [dependencies.web-sys]
 version = '0.3.57'
