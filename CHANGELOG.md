@@ -1,6 +1,21 @@
 All notable changes to this project will be documented in this file.
 
 
+## [1.44.3] – 2023-06-24
+
+### New
+
+- Added `_sync` version for each SDK function.
+  So SDK can be used in utility scripts in sync manner.
+  Not all bindings are support sync calls.
+  The only binding that supports sync calls is the `lib-node`.
+  Example:
+  ```javascript
+  const sdk = new TonClient();
+  console.log(sdk.client.version_sync().version);
+  console.log(sdk.net.query_sync("query{info{version}}"));
+  ```
+
 ## [1.43.3] – 2023-06-24
 
 ### Fixed

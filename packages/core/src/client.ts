@@ -127,9 +127,31 @@ export class TonClient {
         if (err.code !== 23 || !(err.data?.suggest_use_helper_for)) {
             return err;
         }
+        return this.resolveApiError((await this.client.get_api_reference()).api, functionName, params, err);
+    }
+
+    resolveErrorSync(
+        functionName: string,
+        params: any,
+        err: TonClientError,
+    ): TonClientError {
+        if (err.code !== 23 || !(err.data?.suggest_use_helper_for)) {
+            return err;
+        }
+        return this.resolveApiError(this.client.get_api_reference_sync().api, functionName, params, err);
+    }
+
+    private resolveApiError(
+        api: any,
+        functionName: string,
+        params: any,
+        err: TonClientError,
+    ): TonClientError {
+        if (err.code !== 23 || !(err.data?.suggest_use_helper_for)) {
+            return err;
+        }
         try {
             const [modName, funcName] = functionName.split(".");
-            const api = (await this.client.get_api_reference()).api;
 
             const allTypesArray = api.modules.reduce((
                 accumulator: any,
@@ -203,6 +225,25 @@ export class TonClient {
         return err;
     }
 
+    private getClientConfig(libName: string): ClientConfig {
+        return {
+            ...this.config,
+            binding: {
+                library: `ever-sdk-js (${libName})`,
+                version: packageVersion,
+            },
+        } as ClientConfig;
+    }
+
+    private contextRequiredSync(): number {
+        if (this.context !== undefined) {
+            return this.context;
+        }
+        const bridge = getBridge();
+        this.context = bridge.createContextSync(this.getClientConfig(bridge.getLibNameSync()));
+        return this.context;
+    }
+
     private contextRequired(): Promise<number> {
         if (this.context !== undefined) {
             return Promise.resolve(this.context);
@@ -215,14 +256,8 @@ export class TonClient {
             const bridge = getBridge();
             (async () => {
                 try {
-                    const binLib = await bridge.getLibName();
-                    const context = await bridge.createContext({
-                        ...this.config,
-                        binding: {
-                            library: `ever-sdk-js (${binLib})`,
-                            version: packageVersion,
-                        },
-                    } as ClientConfig);
+                    const config = this.getClientConfig(await bridge.getLibName());
+                    const context = await bridge.createContext(config);
                     const creation = this.contextCreation;
                     this.contextCreation = undefined;
                     this.context = context;
@@ -255,6 +290,19 @@ export class TonClient {
             .catch(async (reason) => {
                 throw await this.resolveError(functionName, functionParams, reason);
             });
+    }
+
+    requestSync(
+        functionName: string,
+        functionParams: any,
+    ): any {
+        const context = this.context ?? this.contextRequiredSync();
+        const bridge = getBridge();
+        try {
+            return bridge.requestSync(context, functionName, functionParams);
+        } catch (err) {
+            throw this.resolveErrorSync(functionName, functionParams, err as TonClientError);
+        }
     }
 
     async resolve_app_request(app_request_id: number | null, result: any): Promise<void> {

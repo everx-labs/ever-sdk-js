@@ -19,8 +19,8 @@ const path = require("path");
 const os = require("os");
 
 function getHomeAddonPath() {
-    const binariesVersion = process.env.TON_CLIENT_BIN_VERSION || (require("./package.json").version).split('.').slice(0, 2).join('_');
-    const binariesHomePath = path.resolve(os.homedir(), ".tonlabs", "binaries", binariesVersion);
+    const binVersion = process.env.TON_CLIENT_BIN_VERSION || (require("./package.json").version).split('.').slice(0, 2).join('_');
+    const binariesHomePath = path.resolve(os.homedir(), ".tonlabs", "binaries", binVersion);
     return path.resolve(binariesHomePath, "eversdk.node");
 }
 
@@ -35,23 +35,6 @@ function loadAddon() {
     return require(getHomeAddonPath());
 }
 
-function libNode() {
-    try {
-        const addon = loadAddon();
-        return Promise.resolve({
-            getLibName() {
-                return Promise.resolve("node-js");
-            },
-            setResponseHandler: addon.setResponseHandler,
-            createContext: addon.createContext,
-            destroyContext: addon.destroyContext,
-            sendRequest: addon.sendRequest,
-        });
-    } catch (error) {
-        return Promise.reject(error);
-    }
-}
-
 module.exports = {
-    libNode,
+    libNode: loadAddon,
 };
