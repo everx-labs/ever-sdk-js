@@ -151,7 +151,7 @@ function resolveBinding(library: IBinaryLibrary): LibraryBinding {
     if ("requestSync" in library) {
         return {syncLibrary: new SyncBinaryLibraryAdapter(library)};
     }
-    if ("sendParamsRequest" in library) {
+    if ("sendRequestParams" in library) {
         return {library};
     } else {
         return {library: new BinaryLibraryAdapter(library as BinaryLibrary)};
