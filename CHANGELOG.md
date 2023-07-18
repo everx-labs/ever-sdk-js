@@ -1,6 +1,38 @@
 All notable changes to this project will be documented in this file.
 
 
+## [1.44.0] – 2023-07-12
+
+### New
+
+- Ability to call async functions via `tc_request_sync`.
+- In rust API, the following functions become sync (slight breaking):
+  `abi::encode_internal_message`, `abi::attach_signature_to_message_body`, `abi::attach_signature`,
+  `abi::decode_message`, `abi::decode_message_body`, `abi::decode_account_data`, 
+  `abi::update_initial_data`, `abi::encode_initial_data`, `abi::decode_initial_data`,
+  `abi::decode_boc`, `abi::encode_boc`, `boc::decode_tvc`, `boc::parse_message`, `boc::parse_transaction`,
+  `boc::parse_account`, `boc::parse_block`, `boc::parse_shardstate`, `boc::get_blockchain_config`,
+  `boc::get_boc_hash`, `boc::get_code_from_tvc`, `boc::cache_get`, `boc::cache_set`, `boc::cache_unpin`,
+  `boc::encode_boc`, `boc::get_code_salt`, `boc::set_code_salt`, `boc::decode_state_init`, `boc::encode_state_init`,
+  `boc::encode_external_in_message`, `boc::get_compiler_version`, `processing::monitor_messages`,
+  `processing::get_monitor_info`, `processing::cancel_monitor`
+- Code generator for `modules.ts` produces `_sync` wrapper for all API functions.
+
+## [1.44.3] – 2023-06-24
+
+### New
+
+- Added `_sync` version for each SDK function.
+  So SDK can be used in utility scripts in sync manner.
+  Not all bindings are support sync calls.
+  The only binding that supports sync calls is the `lib-node`.
+  Example:
+  ```javascript
+  const sdk = new TonClient();
+  console.log(sdk.client.version_sync().version);
+  console.log(sdk.net.query_sync("query{info{version}}"));
+  ```
+
 ## [1.43.3] – 2023-06-24
 
 ### Fixed

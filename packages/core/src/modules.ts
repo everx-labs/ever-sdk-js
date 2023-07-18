@@ -8,6 +8,10 @@ interface IClient {
         functionParams?: any,
         responseHandler?: ResponseHandler
     ): Promise<any>;
+    requestSync(
+        functionName: string,
+        functionParams?: any,
+    ): any;
     resolve_app_request(app_request_id: number | null, result: any): Promise<void>;
     reject_app_request(app_request_id: number | null, error: any): Promise<void>;
 }
@@ -465,11 +469,27 @@ export class ClientModule {
     }
 
     /**
+     * Returns Core Library API reference
+     * @returns ResultOfGetApiReference
+     */
+    get_api_reference_sync(): ResultOfGetApiReference {
+        return this.client.requestSync('client.get_api_reference');
+    }
+
+    /**
      * Returns Core Library version
      * @returns ResultOfVersion
      */
     version(): Promise<ResultOfVersion> {
         return this.client.request('client.version');
+    }
+
+    /**
+     * Returns Core Library version
+     * @returns ResultOfVersion
+     */
+    version_sync(): ResultOfVersion {
+        return this.client.requestSync('client.version');
     }
 
     /**
@@ -481,11 +501,27 @@ export class ClientModule {
     }
 
     /**
+     * Returns Core Library API reference
+     * @returns ClientConfig
+     */
+    config_sync(): ClientConfig {
+        return this.client.requestSync('client.config');
+    }
+
+    /**
      * Returns detailed information about this build.
      * @returns ResultOfBuildInfo
      */
     build_info(): Promise<ResultOfBuildInfo> {
         return this.client.request('client.build_info');
+    }
+
+    /**
+     * Returns detailed information about this build.
+     * @returns ResultOfBuildInfo
+     */
+    build_info_sync(): ResultOfBuildInfo {
+        return this.client.requestSync('client.build_info');
     }
 
     /**
@@ -496,6 +532,16 @@ export class ClientModule {
      */
     resolve_app_request(params: ParamsOfResolveAppRequest): Promise<void> {
         return this.client.request('client.resolve_app_request', params);
+    }
+
+    /**
+     * Resolves application request processing result
+     * 
+     * @param {ParamsOfResolveAppRequest} params
+     * @returns 
+     */
+    resolve_app_request_sync(params: ParamsOfResolveAppRequest): void {
+        this.client.requestSync('client.resolve_app_request', params);
     }
 }
 
@@ -2253,6 +2299,21 @@ export class CryptoModule {
     }
 
     /**
+     * Integer factorization
+     * 
+     * @remarks
+     * Performs prime factorization – decomposition of a composite number
+     * into a product of smaller prime integers (factors).
+     * See [https://en.wikipedia.org/wiki/Integer_factorization]
+     * 
+     * @param {ParamsOfFactorize} params
+     * @returns ResultOfFactorize
+     */
+    factorize_sync(params: ParamsOfFactorize): ResultOfFactorize {
+        return this.client.requestSync('crypto.factorize', params);
+    }
+
+    /**
      * Modular exponentiation
      * 
      * @remarks
@@ -2267,6 +2328,20 @@ export class CryptoModule {
     }
 
     /**
+     * Modular exponentiation
+     * 
+     * @remarks
+     * Performs modular exponentiation for big integers (`base`^`exponent` mod `modulus`).
+     * See [https://en.wikipedia.org/wiki/Modular_exponentiation]
+     * 
+     * @param {ParamsOfModularPower} params
+     * @returns ResultOfModularPower
+     */
+    modular_power_sync(params: ParamsOfModularPower): ResultOfModularPower {
+        return this.client.requestSync('crypto.modular_power', params);
+    }
+
+    /**
      * Calculates CRC16 using TON algorithm.
      * 
      * @param {ParamsOfTonCrc16} params
@@ -2274,6 +2349,16 @@ export class CryptoModule {
      */
     ton_crc16(params: ParamsOfTonCrc16): Promise<ResultOfTonCrc16> {
         return this.client.request('crypto.ton_crc16', params);
+    }
+
+    /**
+     * Calculates CRC16 using TON algorithm.
+     * 
+     * @param {ParamsOfTonCrc16} params
+     * @returns ResultOfTonCrc16
+     */
+    ton_crc16_sync(params: ParamsOfTonCrc16): ResultOfTonCrc16 {
+        return this.client.requestSync('crypto.ton_crc16', params);
     }
 
     /**
@@ -2287,6 +2372,16 @@ export class CryptoModule {
     }
 
     /**
+     * Generates random byte array of the specified length and returns it in `base64` format
+     * 
+     * @param {ParamsOfGenerateRandomBytes} params
+     * @returns ResultOfGenerateRandomBytes
+     */
+    generate_random_bytes_sync(params: ParamsOfGenerateRandomBytes): ResultOfGenerateRandomBytes {
+        return this.client.requestSync('crypto.generate_random_bytes', params);
+    }
+
+    /**
      * Converts public key to ton safe_format
      * 
      * @param {ParamsOfConvertPublicKeyToTonSafeFormat} params
@@ -2297,11 +2392,29 @@ export class CryptoModule {
     }
 
     /**
+     * Converts public key to ton safe_format
+     * 
+     * @param {ParamsOfConvertPublicKeyToTonSafeFormat} params
+     * @returns ResultOfConvertPublicKeyToTonSafeFormat
+     */
+    convert_public_key_to_ton_safe_format_sync(params: ParamsOfConvertPublicKeyToTonSafeFormat): ResultOfConvertPublicKeyToTonSafeFormat {
+        return this.client.requestSync('crypto.convert_public_key_to_ton_safe_format', params);
+    }
+
+    /**
      * Generates random ed25519 key pair.
      * @returns KeyPair
      */
     generate_random_sign_keys(): Promise<KeyPair> {
         return this.client.request('crypto.generate_random_sign_keys');
+    }
+
+    /**
+     * Generates random ed25519 key pair.
+     * @returns KeyPair
+     */
+    generate_random_sign_keys_sync(): KeyPair {
+        return this.client.requestSync('crypto.generate_random_sign_keys');
     }
 
     /**
@@ -2315,6 +2428,16 @@ export class CryptoModule {
     }
 
     /**
+     * Signs a data using the provided keys.
+     * 
+     * @param {ParamsOfSign} params
+     * @returns ResultOfSign
+     */
+    sign_sync(params: ParamsOfSign): ResultOfSign {
+        return this.client.requestSync('crypto.sign', params);
+    }
+
+    /**
      * Verifies signed data using the provided public key. Raises error if verification is failed.
      * 
      * @param {ParamsOfVerifySignature} params
@@ -2322,6 +2445,16 @@ export class CryptoModule {
      */
     verify_signature(params: ParamsOfVerifySignature): Promise<ResultOfVerifySignature> {
         return this.client.request('crypto.verify_signature', params);
+    }
+
+    /**
+     * Verifies signed data using the provided public key. Raises error if verification is failed.
+     * 
+     * @param {ParamsOfVerifySignature} params
+     * @returns ResultOfVerifySignature
+     */
+    verify_signature_sync(params: ParamsOfVerifySignature): ResultOfVerifySignature {
+        return this.client.requestSync('crypto.verify_signature', params);
     }
 
     /**
@@ -2335,6 +2468,16 @@ export class CryptoModule {
     }
 
     /**
+     * Calculates SHA256 hash of the specified data.
+     * 
+     * @param {ParamsOfHash} params
+     * @returns ResultOfHash
+     */
+    sha256_sync(params: ParamsOfHash): ResultOfHash {
+        return this.client.requestSync('crypto.sha256', params);
+    }
+
+    /**
      * Calculates SHA512 hash of the specified data.
      * 
      * @param {ParamsOfHash} params
@@ -2342,6 +2485,16 @@ export class CryptoModule {
      */
     sha512(params: ParamsOfHash): Promise<ResultOfHash> {
         return this.client.request('crypto.sha512', params);
+    }
+
+    /**
+     * Calculates SHA512 hash of the specified data.
+     * 
+     * @param {ParamsOfHash} params
+     * @returns ResultOfHash
+     */
+    sha512_sync(params: ParamsOfHash): ResultOfHash {
+        return this.client.requestSync('crypto.sha512', params);
     }
 
     /**
@@ -2372,6 +2525,33 @@ export class CryptoModule {
     }
 
     /**
+     * Perform `scrypt` encryption
+     * 
+     * @remarks
+     * Derives key from `password` and `key` using `scrypt` algorithm.
+     * See [https://en.wikipedia.org/wiki/Scrypt].
+     * 
+     * # Arguments
+     * - `log_n` - The log2 of the Scrypt parameter `N`
+     * - `r` - The Scrypt parameter `r`
+     * - `p` - The Scrypt parameter `p`
+     * # Conditions
+     * - `log_n` must be less than `64`
+     * - `r` must be greater than `0` and less than or equal to `4294967295`
+     * - `p` must be greater than `0` and less than `4294967295`
+     * # Recommended values sufficient for most use-cases
+     * - `log_n = 15` (`n = 32768`)
+     * - `r = 8`
+     * - `p = 1`
+     * 
+     * @param {ParamsOfScrypt} params
+     * @returns ResultOfScrypt
+     */
+    scrypt_sync(params: ParamsOfScrypt): ResultOfScrypt {
+        return this.client.requestSync('crypto.scrypt', params);
+    }
+
+    /**
      * Generates a key pair for signing from the secret key
      * 
      * @remarks
@@ -2387,6 +2567,21 @@ export class CryptoModule {
     }
 
     /**
+     * Generates a key pair for signing from the secret key
+     * 
+     * @remarks
+     * **NOTE:** In the result the secret key is actually the concatenation
+     * of secret and public keys (128 symbols hex string) by design of [NaCL](http://nacl.cr.yp.to/sign.html).
+     * See also [the stackexchange question](https://crypto.stackexchange.com/questions/54353/).
+     * 
+     * @param {ParamsOfNaclSignKeyPairFromSecret} params
+     * @returns KeyPair
+     */
+    nacl_sign_keypair_from_secret_key_sync(params: ParamsOfNaclSignKeyPairFromSecret): KeyPair {
+        return this.client.requestSync('crypto.nacl_sign_keypair_from_secret_key', params);
+    }
+
+    /**
      * Signs data using the signer's secret key.
      * 
      * @param {ParamsOfNaclSign} params
@@ -2394,6 +2589,16 @@ export class CryptoModule {
      */
     nacl_sign(params: ParamsOfNaclSign): Promise<ResultOfNaclSign> {
         return this.client.request('crypto.nacl_sign', params);
+    }
+
+    /**
+     * Signs data using the signer's secret key.
+     * 
+     * @param {ParamsOfNaclSign} params
+     * @returns ResultOfNaclSign
+     */
+    nacl_sign_sync(params: ParamsOfNaclSign): ResultOfNaclSign {
+        return this.client.requestSync('crypto.nacl_sign', params);
     }
 
     /**
@@ -2413,6 +2618,22 @@ export class CryptoModule {
     }
 
     /**
+     * Verifies the signature and returns the unsigned message
+     * 
+     * @remarks
+     * Verifies the signature in `signed` using the signer's public key `public`
+     * and returns the message `unsigned`.
+     * 
+     * If the signature fails verification, crypto_sign_open raises an exception.
+     * 
+     * @param {ParamsOfNaclSignOpen} params
+     * @returns ResultOfNaclSignOpen
+     */
+    nacl_sign_open_sync(params: ParamsOfNaclSignOpen): ResultOfNaclSignOpen {
+        return this.client.requestSync('crypto.nacl_sign_open', params);
+    }
+
+    /**
      * Signs the message using the secret key and returns a signature.
      * 
      * @remarks
@@ -2427,6 +2648,20 @@ export class CryptoModule {
     }
 
     /**
+     * Signs the message using the secret key and returns a signature.
+     * 
+     * @remarks
+     * Signs the message `unsigned` using the secret key `secret`
+     * and returns a signature `signature`.
+     * 
+     * @param {ParamsOfNaclSign} params
+     * @returns ResultOfNaclSignDetached
+     */
+    nacl_sign_detached_sync(params: ParamsOfNaclSign): ResultOfNaclSignDetached {
+        return this.client.requestSync('crypto.nacl_sign_detached', params);
+    }
+
+    /**
      * Verifies the signature with public key and `unsigned` data.
      * 
      * @param {ParamsOfNaclSignDetachedVerify} params
@@ -2434,6 +2669,16 @@ export class CryptoModule {
      */
     nacl_sign_detached_verify(params: ParamsOfNaclSignDetachedVerify): Promise<ResultOfNaclSignDetachedVerify> {
         return this.client.request('crypto.nacl_sign_detached_verify', params);
+    }
+
+    /**
+     * Verifies the signature with public key and `unsigned` data.
+     * 
+     * @param {ParamsOfNaclSignDetachedVerify} params
+     * @returns ResultOfNaclSignDetachedVerify
+     */
+    nacl_sign_detached_verify_sync(params: ParamsOfNaclSignDetachedVerify): ResultOfNaclSignDetachedVerify {
+        return this.client.requestSync('crypto.nacl_sign_detached_verify', params);
     }
 
     /**
@@ -2445,6 +2690,14 @@ export class CryptoModule {
     }
 
     /**
+     * Generates a random NaCl key pair
+     * @returns KeyPair
+     */
+    nacl_box_keypair_sync(): KeyPair {
+        return this.client.requestSync('crypto.nacl_box_keypair');
+    }
+
+    /**
      * Generates key pair from a secret key
      * 
      * @param {ParamsOfNaclBoxKeyPairFromSecret} params
@@ -2452,6 +2705,16 @@ export class CryptoModule {
      */
     nacl_box_keypair_from_secret_key(params: ParamsOfNaclBoxKeyPairFromSecret): Promise<KeyPair> {
         return this.client.request('crypto.nacl_box_keypair_from_secret_key', params);
+    }
+
+    /**
+     * Generates key pair from a secret key
+     * 
+     * @param {ParamsOfNaclBoxKeyPairFromSecret} params
+     * @returns KeyPair
+     */
+    nacl_box_keypair_from_secret_key_sync(params: ParamsOfNaclBoxKeyPairFromSecret): KeyPair {
+        return this.client.requestSync('crypto.nacl_box_keypair_from_secret_key', params);
     }
 
     /**
@@ -2469,6 +2732,20 @@ export class CryptoModule {
     }
 
     /**
+     * Public key authenticated encryption
+     * 
+     * @remarks
+     * Encrypt and authenticate a message using the senders secret key, the receivers public
+     * key, and a nonce.
+     * 
+     * @param {ParamsOfNaclBox} params
+     * @returns ResultOfNaclBox
+     */
+    nacl_box_sync(params: ParamsOfNaclBox): ResultOfNaclBox {
+        return this.client.requestSync('crypto.nacl_box', params);
+    }
+
+    /**
      * Decrypt and verify the cipher text using the receivers secret key, the senders public key, and the nonce.
      * 
      * @param {ParamsOfNaclBoxOpen} params
@@ -2476,6 +2753,16 @@ export class CryptoModule {
      */
     nacl_box_open(params: ParamsOfNaclBoxOpen): Promise<ResultOfNaclBoxOpen> {
         return this.client.request('crypto.nacl_box_open', params);
+    }
+
+    /**
+     * Decrypt and verify the cipher text using the receivers secret key, the senders public key, and the nonce.
+     * 
+     * @param {ParamsOfNaclBoxOpen} params
+     * @returns ResultOfNaclBoxOpen
+     */
+    nacl_box_open_sync(params: ParamsOfNaclBoxOpen): ResultOfNaclBoxOpen {
+        return this.client.requestSync('crypto.nacl_box_open', params);
     }
 
     /**
@@ -2489,6 +2776,16 @@ export class CryptoModule {
     }
 
     /**
+     * Encrypt and authenticate message using nonce and secret key.
+     * 
+     * @param {ParamsOfNaclSecretBox} params
+     * @returns ResultOfNaclBox
+     */
+    nacl_secret_box_sync(params: ParamsOfNaclSecretBox): ResultOfNaclBox {
+        return this.client.requestSync('crypto.nacl_secret_box', params);
+    }
+
+    /**
      * Decrypts and verifies cipher text using `nonce` and secret `key`.
      * 
      * @param {ParamsOfNaclSecretBoxOpen} params
@@ -2499,6 +2796,16 @@ export class CryptoModule {
     }
 
     /**
+     * Decrypts and verifies cipher text using `nonce` and secret `key`.
+     * 
+     * @param {ParamsOfNaclSecretBoxOpen} params
+     * @returns ResultOfNaclBoxOpen
+     */
+    nacl_secret_box_open_sync(params: ParamsOfNaclSecretBoxOpen): ResultOfNaclBoxOpen {
+        return this.client.requestSync('crypto.nacl_secret_box_open', params);
+    }
+
+    /**
      * Prints the list of words from the specified dictionary
      * 
      * @param {ParamsOfMnemonicWords} params
@@ -2506,6 +2813,16 @@ export class CryptoModule {
      */
     mnemonic_words(params: ParamsOfMnemonicWords): Promise<ResultOfMnemonicWords> {
         return this.client.request('crypto.mnemonic_words', params);
+    }
+
+    /**
+     * Prints the list of words from the specified dictionary
+     * 
+     * @param {ParamsOfMnemonicWords} params
+     * @returns ResultOfMnemonicWords
+     */
+    mnemonic_words_sync(params: ParamsOfMnemonicWords): ResultOfMnemonicWords {
+        return this.client.requestSync('crypto.mnemonic_words', params);
     }
 
     /**
@@ -2522,6 +2839,19 @@ export class CryptoModule {
     }
 
     /**
+     * Generates a random mnemonic
+     * 
+     * @remarks
+     * Generates a random mnemonic from the specified dictionary and word count
+     * 
+     * @param {ParamsOfMnemonicFromRandom} params
+     * @returns ResultOfMnemonicFromRandom
+     */
+    mnemonic_from_random_sync(params: ParamsOfMnemonicFromRandom): ResultOfMnemonicFromRandom {
+        return this.client.requestSync('crypto.mnemonic_from_random', params);
+    }
+
+    /**
      * Generates mnemonic from pre-generated entropy
      * 
      * @param {ParamsOfMnemonicFromEntropy} params
@@ -2529,6 +2859,16 @@ export class CryptoModule {
      */
     mnemonic_from_entropy(params: ParamsOfMnemonicFromEntropy): Promise<ResultOfMnemonicFromEntropy> {
         return this.client.request('crypto.mnemonic_from_entropy', params);
+    }
+
+    /**
+     * Generates mnemonic from pre-generated entropy
+     * 
+     * @param {ParamsOfMnemonicFromEntropy} params
+     * @returns ResultOfMnemonicFromEntropy
+     */
+    mnemonic_from_entropy_sync(params: ParamsOfMnemonicFromEntropy): ResultOfMnemonicFromEntropy {
+        return this.client.requestSync('crypto.mnemonic_from_entropy', params);
     }
 
     /**
@@ -2546,6 +2886,20 @@ export class CryptoModule {
     }
 
     /**
+     * Validates a mnemonic phrase
+     * 
+     * @remarks
+     * The phrase supplied will be checked for word length and validated according to the checksum
+     * specified in BIP0039.
+     * 
+     * @param {ParamsOfMnemonicVerify} params
+     * @returns ResultOfMnemonicVerify
+     */
+    mnemonic_verify_sync(params: ParamsOfMnemonicVerify): ResultOfMnemonicVerify {
+        return this.client.requestSync('crypto.mnemonic_verify', params);
+    }
+
+    /**
      * Derives a key pair for signing from the seed phrase
      * 
      * @remarks
@@ -2560,6 +2914,20 @@ export class CryptoModule {
     }
 
     /**
+     * Derives a key pair for signing from the seed phrase
+     * 
+     * @remarks
+     * Validates the seed phrase, generates master key and then derives
+     * the key pair from the master key and the specified path
+     * 
+     * @param {ParamsOfMnemonicDeriveSignKeys} params
+     * @returns KeyPair
+     */
+    mnemonic_derive_sign_keys_sync(params: ParamsOfMnemonicDeriveSignKeys): KeyPair {
+        return this.client.requestSync('crypto.mnemonic_derive_sign_keys', params);
+    }
+
+    /**
      * Generates an extended master private key that will be the root for all the derived keys
      * 
      * @param {ParamsOfHDKeyXPrvFromMnemonic} params
@@ -2567,6 +2935,16 @@ export class CryptoModule {
      */
     hdkey_xprv_from_mnemonic(params: ParamsOfHDKeyXPrvFromMnemonic): Promise<ResultOfHDKeyXPrvFromMnemonic> {
         return this.client.request('crypto.hdkey_xprv_from_mnemonic', params);
+    }
+
+    /**
+     * Generates an extended master private key that will be the root for all the derived keys
+     * 
+     * @param {ParamsOfHDKeyXPrvFromMnemonic} params
+     * @returns ResultOfHDKeyXPrvFromMnemonic
+     */
+    hdkey_xprv_from_mnemonic_sync(params: ParamsOfHDKeyXPrvFromMnemonic): ResultOfHDKeyXPrvFromMnemonic {
+        return this.client.requestSync('crypto.hdkey_xprv_from_mnemonic', params);
     }
 
     /**
@@ -2580,6 +2958,16 @@ export class CryptoModule {
     }
 
     /**
+     * Returns extended private key derived from the specified extended private key and child index
+     * 
+     * @param {ParamsOfHDKeyDeriveFromXPrv} params
+     * @returns ResultOfHDKeyDeriveFromXPrv
+     */
+    hdkey_derive_from_xprv_sync(params: ParamsOfHDKeyDeriveFromXPrv): ResultOfHDKeyDeriveFromXPrv {
+        return this.client.requestSync('crypto.hdkey_derive_from_xprv', params);
+    }
+
+    /**
      * Derives the extended private key from the specified key and path
      * 
      * @param {ParamsOfHDKeyDeriveFromXPrvPath} params
@@ -2587,6 +2975,16 @@ export class CryptoModule {
      */
     hdkey_derive_from_xprv_path(params: ParamsOfHDKeyDeriveFromXPrvPath): Promise<ResultOfHDKeyDeriveFromXPrvPath> {
         return this.client.request('crypto.hdkey_derive_from_xprv_path', params);
+    }
+
+    /**
+     * Derives the extended private key from the specified key and path
+     * 
+     * @param {ParamsOfHDKeyDeriveFromXPrvPath} params
+     * @returns ResultOfHDKeyDeriveFromXPrvPath
+     */
+    hdkey_derive_from_xprv_path_sync(params: ParamsOfHDKeyDeriveFromXPrvPath): ResultOfHDKeyDeriveFromXPrvPath {
+        return this.client.requestSync('crypto.hdkey_derive_from_xprv_path', params);
     }
 
     /**
@@ -2600,6 +2998,16 @@ export class CryptoModule {
     }
 
     /**
+     * Extracts the private key from the serialized extended private key
+     * 
+     * @param {ParamsOfHDKeySecretFromXPrv} params
+     * @returns ResultOfHDKeySecretFromXPrv
+     */
+    hdkey_secret_from_xprv_sync(params: ParamsOfHDKeySecretFromXPrv): ResultOfHDKeySecretFromXPrv {
+        return this.client.requestSync('crypto.hdkey_secret_from_xprv', params);
+    }
+
+    /**
      * Extracts the public key from the serialized extended private key
      * 
      * @param {ParamsOfHDKeyPublicFromXPrv} params
@@ -2610,6 +3018,16 @@ export class CryptoModule {
     }
 
     /**
+     * Extracts the public key from the serialized extended private key
+     * 
+     * @param {ParamsOfHDKeyPublicFromXPrv} params
+     * @returns ResultOfHDKeyPublicFromXPrv
+     */
+    hdkey_public_from_xprv_sync(params: ParamsOfHDKeyPublicFromXPrv): ResultOfHDKeyPublicFromXPrv {
+        return this.client.requestSync('crypto.hdkey_public_from_xprv', params);
+    }
+
+    /**
      * Performs symmetric `chacha20` encryption.
      * 
      * @param {ParamsOfChaCha20} params
@@ -2617,6 +3035,16 @@ export class CryptoModule {
      */
     chacha20(params: ParamsOfChaCha20): Promise<ResultOfChaCha20> {
         return this.client.request('crypto.chacha20', params);
+    }
+
+    /**
+     * Performs symmetric `chacha20` encryption.
+     * 
+     * @param {ParamsOfChaCha20} params
+     * @returns ResultOfChaCha20
+     */
+    chacha20_sync(params: ParamsOfChaCha20): ResultOfChaCha20 {
+        return this.client.requestSync('crypto.chacha20', params);
     }
 
     /**
@@ -2647,6 +3075,27 @@ export class CryptoModule {
     }
 
     /**
+     * Creates a Crypto Box instance.
+     * 
+     * @remarks
+     * Crypto Box is a root crypto object, that encapsulates some secret (seed phrase usually)
+     * in encrypted form and acts as a factory for all crypto primitives used in SDK:
+     * keys for signing and encryption, derived from this secret.
+     * 
+     * Crypto Box encrypts original Seed Phrase with salt and password that is retrieved
+     * from `password_provider` callback, implemented on Application side.
+     * 
+     * When used, decrypted secret shows up in core library's memory for a very short period
+     * of time and then is immediately overwritten with zeroes.
+     * 
+     * @param {ParamsOfCreateCryptoBox} params
+     * @returns RegisteredCryptoBox
+     */
+    create_crypto_box_sync(params: ParamsOfCreateCryptoBox): RegisteredCryptoBox {
+        return this.client.requestSync('crypto.create_crypto_box', params);
+    }
+
+    /**
      * Removes Crypto Box. Clears all secret data.
      * 
      * @param {RegisteredCryptoBox} params
@@ -2657,6 +3106,16 @@ export class CryptoModule {
     }
 
     /**
+     * Removes Crypto Box. Clears all secret data.
+     * 
+     * @param {RegisteredCryptoBox} params
+     * @returns 
+     */
+    remove_crypto_box_sync(params: RegisteredCryptoBox): void {
+        this.client.requestSync('crypto.remove_crypto_box', params);
+    }
+
+    /**
      * Get Crypto Box Info. Used to get `encrypted_secret` that should be used for all the cryptobox initializations except the first one.
      * 
      * @param {RegisteredCryptoBox} params
@@ -2664,6 +3123,16 @@ export class CryptoModule {
      */
     get_crypto_box_info(params: RegisteredCryptoBox): Promise<ResultOfGetCryptoBoxInfo> {
         return this.client.request('crypto.get_crypto_box_info', params);
+    }
+
+    /**
+     * Get Crypto Box Info. Used to get `encrypted_secret` that should be used for all the cryptobox initializations except the first one.
+     * 
+     * @param {RegisteredCryptoBox} params
+     * @returns ResultOfGetCryptoBoxInfo
+     */
+    get_crypto_box_info_sync(params: RegisteredCryptoBox): ResultOfGetCryptoBoxInfo {
+        return this.client.requestSync('crypto.get_crypto_box_info', params);
     }
 
     /**
@@ -2680,6 +3149,19 @@ export class CryptoModule {
     }
 
     /**
+     * Get Crypto Box Seed Phrase.
+     * 
+     * @remarks
+     * Attention! Store this data in your application for a very short period of time and overwrite it with zeroes ASAP.
+     * 
+     * @param {RegisteredCryptoBox} params
+     * @returns ResultOfGetCryptoBoxSeedPhrase
+     */
+    get_crypto_box_seed_phrase_sync(params: RegisteredCryptoBox): ResultOfGetCryptoBoxSeedPhrase {
+        return this.client.requestSync('crypto.get_crypto_box_seed_phrase', params);
+    }
+
+    /**
      * Get handle of Signing Box derived from Crypto Box.
      * 
      * @param {ParamsOfGetSigningBoxFromCryptoBox} params
@@ -2687,6 +3169,16 @@ export class CryptoModule {
      */
     get_signing_box_from_crypto_box(params: ParamsOfGetSigningBoxFromCryptoBox): Promise<RegisteredSigningBox> {
         return this.client.request('crypto.get_signing_box_from_crypto_box', params);
+    }
+
+    /**
+     * Get handle of Signing Box derived from Crypto Box.
+     * 
+     * @param {ParamsOfGetSigningBoxFromCryptoBox} params
+     * @returns RegisteredSigningBox
+     */
+    get_signing_box_from_crypto_box_sync(params: ParamsOfGetSigningBoxFromCryptoBox): RegisteredSigningBox {
+        return this.client.requestSync('crypto.get_signing_box_from_crypto_box', params);
     }
 
     /**
@@ -2707,6 +3199,23 @@ export class CryptoModule {
     }
 
     /**
+     * Gets Encryption Box from Crypto Box.
+     * 
+     * @remarks
+     * Derives encryption keypair from cryptobox secret and hdpath and
+     * stores it in cache for `secret_lifetime`
+     * or until explicitly cleared by `clear_crypto_box_secret_cache` method.
+     * If `secret_lifetime` is not specified - overwrites encryption secret with zeroes immediately after
+     * encryption operation.
+     * 
+     * @param {ParamsOfGetEncryptionBoxFromCryptoBox} params
+     * @returns RegisteredEncryptionBox
+     */
+    get_encryption_box_from_crypto_box_sync(params: ParamsOfGetEncryptionBoxFromCryptoBox): RegisteredEncryptionBox {
+        return this.client.requestSync('crypto.get_encryption_box_from_crypto_box', params);
+    }
+
+    /**
      * Removes cached secrets (overwrites with zeroes) from all signing and encryption boxes, derived from crypto box.
      * 
      * @param {RegisteredCryptoBox} params
@@ -2714,6 +3223,16 @@ export class CryptoModule {
      */
     clear_crypto_box_secret_cache(params: RegisteredCryptoBox): Promise<void> {
         return this.client.request('crypto.clear_crypto_box_secret_cache', params);
+    }
+
+    /**
+     * Removes cached secrets (overwrites with zeroes) from all signing and encryption boxes, derived from crypto box.
+     * 
+     * @param {RegisteredCryptoBox} params
+     * @returns 
+     */
+    clear_crypto_box_secret_cache_sync(params: RegisteredCryptoBox): void {
+        this.client.requestSync('crypto.clear_crypto_box_secret_cache', params);
     }
 
     /**
@@ -2731,6 +3250,14 @@ export class CryptoModule {
     }
 
     /**
+     * Register an application implemented signing box.
+     * @returns RegisteredSigningBox
+     */
+    register_signing_box_sync(): RegisteredSigningBox {
+        return this.client.requestSync('crypto.register_signing_box');
+    }
+
+    /**
      * Creates a default signing box implementation.
      * 
      * @param {KeyPair} params
@@ -2738,6 +3265,16 @@ export class CryptoModule {
      */
     get_signing_box(params: KeyPair): Promise<RegisteredSigningBox> {
         return this.client.request('crypto.get_signing_box', params);
+    }
+
+    /**
+     * Creates a default signing box implementation.
+     * 
+     * @param {KeyPair} params
+     * @returns RegisteredSigningBox
+     */
+    get_signing_box_sync(params: KeyPair): RegisteredSigningBox {
+        return this.client.requestSync('crypto.get_signing_box', params);
     }
 
     /**
@@ -2751,6 +3288,16 @@ export class CryptoModule {
     }
 
     /**
+     * Returns public key of signing key pair.
+     * 
+     * @param {RegisteredSigningBox} params
+     * @returns ResultOfSigningBoxGetPublicKey
+     */
+    signing_box_get_public_key_sync(params: RegisteredSigningBox): ResultOfSigningBoxGetPublicKey {
+        return this.client.requestSync('crypto.signing_box_get_public_key', params);
+    }
+
+    /**
      * Returns signed user data.
      * 
      * @param {ParamsOfSigningBoxSign} params
@@ -2761,6 +3308,16 @@ export class CryptoModule {
     }
 
     /**
+     * Returns signed user data.
+     * 
+     * @param {ParamsOfSigningBoxSign} params
+     * @returns ResultOfSigningBoxSign
+     */
+    signing_box_sign_sync(params: ParamsOfSigningBoxSign): ResultOfSigningBoxSign {
+        return this.client.requestSync('crypto.signing_box_sign', params);
+    }
+
+    /**
      * Removes signing box from SDK.
      * 
      * @param {RegisteredSigningBox} params
@@ -2768,6 +3325,16 @@ export class CryptoModule {
      */
     remove_signing_box(params: RegisteredSigningBox): Promise<void> {
         return this.client.request('crypto.remove_signing_box', params);
+    }
+
+    /**
+     * Removes signing box from SDK.
+     * 
+     * @param {RegisteredSigningBox} params
+     * @returns 
+     */
+    remove_signing_box_sync(params: RegisteredSigningBox): void {
+        this.client.requestSync('crypto.remove_signing_box', params);
     }
 
     /**
@@ -2785,6 +3352,14 @@ export class CryptoModule {
     }
 
     /**
+     * Register an application implemented encryption box.
+     * @returns RegisteredEncryptionBox
+     */
+    register_encryption_box_sync(): RegisteredEncryptionBox {
+        return this.client.requestSync('crypto.register_encryption_box');
+    }
+
+    /**
      * Removes encryption box from SDK
      * 
      * @param {RegisteredEncryptionBox} params
@@ -2795,6 +3370,16 @@ export class CryptoModule {
     }
 
     /**
+     * Removes encryption box from SDK
+     * 
+     * @param {RegisteredEncryptionBox} params
+     * @returns 
+     */
+    remove_encryption_box_sync(params: RegisteredEncryptionBox): void {
+        this.client.requestSync('crypto.remove_encryption_box', params);
+    }
+
+    /**
      * Queries info from the given encryption box
      * 
      * @param {ParamsOfEncryptionBoxGetInfo} params
@@ -2802,6 +3387,16 @@ export class CryptoModule {
      */
     encryption_box_get_info(params: ParamsOfEncryptionBoxGetInfo): Promise<ResultOfEncryptionBoxGetInfo> {
         return this.client.request('crypto.encryption_box_get_info', params);
+    }
+
+    /**
+     * Queries info from the given encryption box
+     * 
+     * @param {ParamsOfEncryptionBoxGetInfo} params
+     * @returns ResultOfEncryptionBoxGetInfo
+     */
+    encryption_box_get_info_sync(params: ParamsOfEncryptionBoxGetInfo): ResultOfEncryptionBoxGetInfo {
+        return this.client.requestSync('crypto.encryption_box_get_info', params);
     }
 
     /**
@@ -2819,6 +3414,20 @@ export class CryptoModule {
     }
 
     /**
+     * Encrypts data using given encryption box Note.
+     * 
+     * @remarks
+     * Block cipher algorithms pad data to cipher block size so encrypted data can be longer then original data. Client should store the original data size after encryption and use it after
+     * decryption to retrieve the original data from decrypted data.
+     * 
+     * @param {ParamsOfEncryptionBoxEncrypt} params
+     * @returns ResultOfEncryptionBoxEncrypt
+     */
+    encryption_box_encrypt_sync(params: ParamsOfEncryptionBoxEncrypt): ResultOfEncryptionBoxEncrypt {
+        return this.client.requestSync('crypto.encryption_box_encrypt', params);
+    }
+
+    /**
      * Decrypts data using given encryption box Note.
      * 
      * @remarks
@@ -2833,6 +3442,20 @@ export class CryptoModule {
     }
 
     /**
+     * Decrypts data using given encryption box Note.
+     * 
+     * @remarks
+     * Block cipher algorithms pad data to cipher block size so encrypted data can be longer then original data. Client should store the original data size after encryption and use it after
+     * decryption to retrieve the original data from decrypted data.
+     * 
+     * @param {ParamsOfEncryptionBoxDecrypt} params
+     * @returns ResultOfEncryptionBoxDecrypt
+     */
+    encryption_box_decrypt_sync(params: ParamsOfEncryptionBoxDecrypt): ResultOfEncryptionBoxDecrypt {
+        return this.client.requestSync('crypto.encryption_box_decrypt', params);
+    }
+
+    /**
      * Creates encryption box with specified algorithm
      * 
      * @param {ParamsOfCreateEncryptionBox} params
@@ -2840,6 +3463,16 @@ export class CryptoModule {
      */
     create_encryption_box(params: ParamsOfCreateEncryptionBox): Promise<RegisteredEncryptionBox> {
         return this.client.request('crypto.create_encryption_box', params);
+    }
+
+    /**
+     * Creates encryption box with specified algorithm
+     * 
+     * @param {ParamsOfCreateEncryptionBox} params
+     * @returns RegisteredEncryptionBox
+     */
+    create_encryption_box_sync(params: ParamsOfCreateEncryptionBox): RegisteredEncryptionBox {
+        return this.client.requestSync('crypto.create_encryption_box', params);
     }
 }
 
@@ -4067,12 +4700,31 @@ export class AbiModule {
     }
 
     /**
+     * Encodes message body according to ABI function call.
+     * 
+     * @param {ParamsOfEncodeMessageBody} params
+     * @returns ResultOfEncodeMessageBody
+     */
+    encode_message_body_sync(params: ParamsOfEncodeMessageBody): ResultOfEncodeMessageBody {
+        return this.client.requestSync('abi.encode_message_body', params);
+    }
+
+    /**
      * 
      * @param {ParamsOfAttachSignatureToMessageBody} params
      * @returns ResultOfAttachSignatureToMessageBody
      */
     attach_signature_to_message_body(params: ParamsOfAttachSignatureToMessageBody): Promise<ResultOfAttachSignatureToMessageBody> {
         return this.client.request('abi.attach_signature_to_message_body', params);
+    }
+
+    /**
+     * 
+     * @param {ParamsOfAttachSignatureToMessageBody} params
+     * @returns ResultOfAttachSignatureToMessageBody
+     */
+    attach_signature_to_message_body_sync(params: ParamsOfAttachSignatureToMessageBody): ResultOfAttachSignatureToMessageBody {
+        return this.client.requestSync('abi.attach_signature_to_message_body', params);
     }
 
     /**
@@ -4118,6 +4770,48 @@ export class AbiModule {
     }
 
     /**
+     * Encodes an ABI-compatible message
+     * 
+     * @remarks
+     * Allows to encode deploy and function call messages,
+     * both signed and unsigned.
+     * 
+     * Use cases include messages of any possible type:
+     * - deploy with initial function call (i.e. `constructor` or any other function that is used for some kind
+     * of initialization);
+     * - deploy without initial function call;
+     * - signed/unsigned + data for signing.
+     * 
+     * `Signer` defines how the message should or shouldn't be signed:
+     * 
+     * `Signer::None` creates an unsigned message. This may be needed in case of some public methods,
+     * that do not require authorization by pubkey.
+     * 
+     * `Signer::External` takes public key and returns `data_to_sign` for later signing.
+     * Use `attach_signature` method with the result signature to get the signed message.
+     * 
+     * `Signer::Keys` creates a signed message with provided key pair.
+     * 
+     * [SOON] `Signer::SigningBox` Allows using a special interface to implement signing
+     * without private key disclosure to SDK. For instance, in case of using a cold wallet or HSM,
+     * when application calls some API to sign data.
+     * 
+     * There is an optional public key can be provided in deploy set in order to substitute one
+     * in TVM file.
+     * 
+     * Public key resolving priority:
+     * 1. Public key from deploy set.
+     * 2. Public key, specified in TVM file.
+     * 3. Public key, provided by signer.
+     * 
+     * @param {ParamsOfEncodeMessage} params
+     * @returns ResultOfEncodeMessage
+     */
+    encode_message_sync(params: ParamsOfEncodeMessage): ResultOfEncodeMessage {
+        return this.client.requestSync('abi.encode_message', params);
+    }
+
+    /**
      * Encodes an internal ABI-compatible message
      * 
      * @remarks
@@ -4144,6 +4838,32 @@ export class AbiModule {
     }
 
     /**
+     * Encodes an internal ABI-compatible message
+     * 
+     * @remarks
+     * Allows to encode deploy and function call messages.
+     * 
+     * Use cases include messages of any possible type:
+     * - deploy with initial function call (i.e. `constructor` or any other function that is used for some kind
+     * of initialization);
+     * - deploy without initial function call;
+     * - simple function call
+     * 
+     * There is an optional public key can be provided in deploy set in order to substitute one
+     * in TVM file.
+     * 
+     * Public key resolving priority:
+     * 1. Public key from deploy set.
+     * 2. Public key, specified in TVM file.
+     * 
+     * @param {ParamsOfEncodeInternalMessage} params
+     * @returns ResultOfEncodeInternalMessage
+     */
+    encode_internal_message_sync(params: ParamsOfEncodeInternalMessage): ResultOfEncodeInternalMessage {
+        return this.client.requestSync('abi.encode_internal_message', params);
+    }
+
+    /**
      * Combines `hex`-encoded `signature` with `base64`-encoded `unsigned_message`. Returns signed message encoded in `base64`.
      * 
      * @param {ParamsOfAttachSignature} params
@@ -4151,6 +4871,16 @@ export class AbiModule {
      */
     attach_signature(params: ParamsOfAttachSignature): Promise<ResultOfAttachSignature> {
         return this.client.request('abi.attach_signature', params);
+    }
+
+    /**
+     * Combines `hex`-encoded `signature` with `base64`-encoded `unsigned_message`. Returns signed message encoded in `base64`.
+     * 
+     * @param {ParamsOfAttachSignature} params
+     * @returns ResultOfAttachSignature
+     */
+    attach_signature_sync(params: ParamsOfAttachSignature): ResultOfAttachSignature {
+        return this.client.requestSync('abi.attach_signature', params);
     }
 
     /**
@@ -4164,6 +4894,16 @@ export class AbiModule {
     }
 
     /**
+     * Decodes message body using provided message BOC and ABI.
+     * 
+     * @param {ParamsOfDecodeMessage} params
+     * @returns DecodedMessageBody
+     */
+    decode_message_sync(params: ParamsOfDecodeMessage): DecodedMessageBody {
+        return this.client.requestSync('abi.decode_message', params);
+    }
+
+    /**
      * Decodes message body using provided body BOC and ABI.
      * 
      * @param {ParamsOfDecodeMessageBody} params
@@ -4171,6 +4911,16 @@ export class AbiModule {
      */
     decode_message_body(params: ParamsOfDecodeMessageBody): Promise<DecodedMessageBody> {
         return this.client.request('abi.decode_message_body', params);
+    }
+
+    /**
+     * Decodes message body using provided body BOC and ABI.
+     * 
+     * @param {ParamsOfDecodeMessageBody} params
+     * @returns DecodedMessageBody
+     */
+    decode_message_body_sync(params: ParamsOfDecodeMessageBody): DecodedMessageBody {
+        return this.client.requestSync('abi.decode_message_body', params);
     }
 
     /**
@@ -4189,6 +4939,21 @@ export class AbiModule {
     }
 
     /**
+     * Creates account state BOC
+     * 
+     * @remarks
+     * Creates account state provided with one of these sets of data :
+     * 1. BOC of code, BOC of data, BOC of library
+     * 2. TVC (string in `base64`), keys, init params
+     * 
+     * @param {ParamsOfEncodeAccount} params
+     * @returns ResultOfEncodeAccount
+     */
+    encode_account_sync(params: ParamsOfEncodeAccount): ResultOfEncodeAccount {
+        return this.client.requestSync('abi.encode_account', params);
+    }
+
+    /**
      * Decodes account data using provided data BOC and ABI.
      * 
      * @remarks
@@ -4202,6 +4967,19 @@ export class AbiModule {
     }
 
     /**
+     * Decodes account data using provided data BOC and ABI.
+     * 
+     * @remarks
+     * Note: this feature requires ABI 2.1 or higher.
+     * 
+     * @param {ParamsOfDecodeAccountData} params
+     * @returns ResultOfDecodeAccountData
+     */
+    decode_account_data_sync(params: ParamsOfDecodeAccountData): ResultOfDecodeAccountData {
+        return this.client.requestSync('abi.decode_account_data', params);
+    }
+
+    /**
      * Updates initial account data with initial values for the contract's static variables and owner's public key. This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
      * 
      * @param {ParamsOfUpdateInitialData} params
@@ -4209,6 +4987,16 @@ export class AbiModule {
      */
     update_initial_data(params: ParamsOfUpdateInitialData): Promise<ResultOfUpdateInitialData> {
         return this.client.request('abi.update_initial_data', params);
+    }
+
+    /**
+     * Updates initial account data with initial values for the contract's static variables and owner's public key. This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
+     * 
+     * @param {ParamsOfUpdateInitialData} params
+     * @returns ResultOfUpdateInitialData
+     */
+    update_initial_data_sync(params: ParamsOfUpdateInitialData): ResultOfUpdateInitialData {
+        return this.client.requestSync('abi.update_initial_data', params);
     }
 
     /**
@@ -4225,6 +5013,19 @@ export class AbiModule {
     }
 
     /**
+     * Encodes initial account data with initial values for the contract's static variables and owner's public key into a data BOC that can be passed to `encode_tvc` function afterwards.
+     * 
+     * @remarks
+     * This function is analogue of `tvm.buildDataInit` function in Solidity.
+     * 
+     * @param {ParamsOfEncodeInitialData} params
+     * @returns ResultOfEncodeInitialData
+     */
+    encode_initial_data_sync(params: ParamsOfEncodeInitialData): ResultOfEncodeInitialData {
+        return this.client.requestSync('abi.encode_initial_data', params);
+    }
+
+    /**
      * Decodes initial values of a contract's static variables and owner's public key from account initial data This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
      * 
      * @param {ParamsOfDecodeInitialData} params
@@ -4232,6 +5033,16 @@ export class AbiModule {
      */
     decode_initial_data(params: ParamsOfDecodeInitialData): Promise<ResultOfDecodeInitialData> {
         return this.client.request('abi.decode_initial_data', params);
+    }
+
+    /**
+     * Decodes initial values of a contract's static variables and owner's public key from account initial data This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
+     * 
+     * @param {ParamsOfDecodeInitialData} params
+     * @returns ResultOfDecodeInitialData
+     */
+    decode_initial_data_sync(params: ParamsOfDecodeInitialData): ResultOfDecodeInitialData {
+        return this.client.requestSync('abi.decode_initial_data', params);
     }
 
     /**
@@ -4262,6 +5073,33 @@ export class AbiModule {
     }
 
     /**
+     * Decodes BOC into JSON as a set of provided parameters.
+     * 
+     * @remarks
+     * Solidity functions use ABI types for [builder encoding](https://github.com/tonlabs/TON-Solidity-Compiler/blob/master/API.md#tvmbuilderstore).
+     * The simplest way to decode such a BOC is to use ABI decoding.
+     * ABI has it own rules for fields layout in cells so manually encoded
+     * BOC can not be described in terms of ABI rules.
+     * 
+     * To solve this problem we introduce a new ABI type `Ref(<ParamType>)`
+     * which allows to store `ParamType` ABI parameter in cell reference and, thus,
+     * decode manually encoded BOCs. This type is available only in `decode_boc` function
+     * and will not be available in ABI messages encoding until it is included into some ABI revision.
+     * 
+     * Such BOC descriptions covers most users needs. If someone wants to decode some BOC which
+     * can not be described by these rules (i.e. BOC with TLB containing constructors of flags
+     * defining some parsing conditions) then they can decode the fields up to fork condition,
+     * check the parsed data manually, expand the parsing schema and then decode the whole BOC
+     * with the full schema.
+     * 
+     * @param {ParamsOfDecodeBoc} params
+     * @returns ResultOfDecodeBoc
+     */
+    decode_boc_sync(params: ParamsOfDecodeBoc): ResultOfDecodeBoc {
+        return this.client.requestSync('abi.decode_boc', params);
+    }
+
+    /**
      * Encodes given parameters in JSON into a BOC using param types from ABI.
      * 
      * @param {ParamsOfAbiEncodeBoc} params
@@ -4269,6 +5107,16 @@ export class AbiModule {
      */
     encode_boc(params: ParamsOfAbiEncodeBoc): Promise<ResultOfAbiEncodeBoc> {
         return this.client.request('abi.encode_boc', params);
+    }
+
+    /**
+     * Encodes given parameters in JSON into a BOC using param types from ABI.
+     * 
+     * @param {ParamsOfAbiEncodeBoc} params
+     * @returns ResultOfAbiEncodeBoc
+     */
+    encode_boc_sync(params: ParamsOfAbiEncodeBoc): ResultOfAbiEncodeBoc {
+        return this.client.requestSync('abi.encode_boc', params);
     }
 
     /**
@@ -4282,6 +5130,16 @@ export class AbiModule {
     }
 
     /**
+     * Calculates contract function ID by contract ABI
+     * 
+     * @param {ParamsOfCalcFunctionId} params
+     * @returns ResultOfCalcFunctionId
+     */
+    calc_function_id_sync(params: ParamsOfCalcFunctionId): ResultOfCalcFunctionId {
+        return this.client.requestSync('abi.calc_function_id', params);
+    }
+
+    /**
      * Extracts signature from message body and calculates hash to verify the signature
      * 
      * @param {ParamsOfGetSignatureData} params
@@ -4289,6 +5147,16 @@ export class AbiModule {
      */
     get_signature_data(params: ParamsOfGetSignatureData): Promise<ResultOfGetSignatureData> {
         return this.client.request('abi.get_signature_data', params);
+    }
+
+    /**
+     * Extracts signature from message body and calculates hash to verify the signature
+     * 
+     * @param {ParamsOfGetSignatureData} params
+     * @returns ResultOfGetSignatureData
+     */
+    get_signature_data_sync(params: ParamsOfGetSignatureData): ResultOfGetSignatureData {
+        return this.client.requestSync('abi.get_signature_data', params);
     }
 }
 
@@ -4998,6 +5866,16 @@ export class BocModule {
     }
 
     /**
+     * Decodes tvc according to the tvc spec. Read more about tvc structure here https://github.com/tonlabs/ever-struct/blob/main/src/scheme/mod.rs#L30
+     * 
+     * @param {ParamsOfDecodeTvc} params
+     * @returns ResultOfDecodeTvc
+     */
+    decode_tvc_sync(params: ParamsOfDecodeTvc): ResultOfDecodeTvc {
+        return this.client.requestSync('boc.decode_tvc', params);
+    }
+
+    /**
      * Parses message boc into a JSON
      * 
      * @remarks
@@ -5008,6 +5886,19 @@ export class BocModule {
      */
     parse_message(params: ParamsOfParse): Promise<ResultOfParse> {
         return this.client.request('boc.parse_message', params);
+    }
+
+    /**
+     * Parses message boc into a JSON
+     * 
+     * @remarks
+     * JSON structure is compatible with GraphQL API message object
+     * 
+     * @param {ParamsOfParse} params
+     * @returns ResultOfParse
+     */
+    parse_message_sync(params: ParamsOfParse): ResultOfParse {
+        return this.client.requestSync('boc.parse_message', params);
     }
 
     /**
@@ -5024,6 +5915,19 @@ export class BocModule {
     }
 
     /**
+     * Parses transaction boc into a JSON
+     * 
+     * @remarks
+     * JSON structure is compatible with GraphQL API transaction object
+     * 
+     * @param {ParamsOfParse} params
+     * @returns ResultOfParse
+     */
+    parse_transaction_sync(params: ParamsOfParse): ResultOfParse {
+        return this.client.requestSync('boc.parse_transaction', params);
+    }
+
+    /**
      * Parses account boc into a JSON
      * 
      * @remarks
@@ -5034,6 +5938,19 @@ export class BocModule {
      */
     parse_account(params: ParamsOfParse): Promise<ResultOfParse> {
         return this.client.request('boc.parse_account', params);
+    }
+
+    /**
+     * Parses account boc into a JSON
+     * 
+     * @remarks
+     * JSON structure is compatible with GraphQL API account object
+     * 
+     * @param {ParamsOfParse} params
+     * @returns ResultOfParse
+     */
+    parse_account_sync(params: ParamsOfParse): ResultOfParse {
+        return this.client.requestSync('boc.parse_account', params);
     }
 
     /**
@@ -5050,6 +5967,19 @@ export class BocModule {
     }
 
     /**
+     * Parses block boc into a JSON
+     * 
+     * @remarks
+     * JSON structure is compatible with GraphQL API block object
+     * 
+     * @param {ParamsOfParse} params
+     * @returns ResultOfParse
+     */
+    parse_block_sync(params: ParamsOfParse): ResultOfParse {
+        return this.client.requestSync('boc.parse_block', params);
+    }
+
+    /**
      * Parses shardstate boc into a JSON
      * 
      * @remarks
@@ -5063,6 +5993,19 @@ export class BocModule {
     }
 
     /**
+     * Parses shardstate boc into a JSON
+     * 
+     * @remarks
+     * JSON structure is compatible with GraphQL API shardstate object
+     * 
+     * @param {ParamsOfParseShardstate} params
+     * @returns ResultOfParse
+     */
+    parse_shardstate_sync(params: ParamsOfParseShardstate): ResultOfParse {
+        return this.client.requestSync('boc.parse_shardstate', params);
+    }
+
+    /**
      * Extract blockchain configuration from key block and also from zerostate.
      * 
      * @param {ParamsOfGetBlockchainConfig} params
@@ -5070,6 +6013,16 @@ export class BocModule {
      */
     get_blockchain_config(params: ParamsOfGetBlockchainConfig): Promise<ResultOfGetBlockchainConfig> {
         return this.client.request('boc.get_blockchain_config', params);
+    }
+
+    /**
+     * Extract blockchain configuration from key block and also from zerostate.
+     * 
+     * @param {ParamsOfGetBlockchainConfig} params
+     * @returns ResultOfGetBlockchainConfig
+     */
+    get_blockchain_config_sync(params: ParamsOfGetBlockchainConfig): ResultOfGetBlockchainConfig {
+        return this.client.requestSync('boc.get_blockchain_config', params);
     }
 
     /**
@@ -5083,6 +6036,16 @@ export class BocModule {
     }
 
     /**
+     * Calculates BOC root hash
+     * 
+     * @param {ParamsOfGetBocHash} params
+     * @returns ResultOfGetBocHash
+     */
+    get_boc_hash_sync(params: ParamsOfGetBocHash): ResultOfGetBocHash {
+        return this.client.requestSync('boc.get_boc_hash', params);
+    }
+
+    /**
      * Calculates BOC depth
      * 
      * @param {ParamsOfGetBocDepth} params
@@ -5090,6 +6053,16 @@ export class BocModule {
      */
     get_boc_depth(params: ParamsOfGetBocDepth): Promise<ResultOfGetBocDepth> {
         return this.client.request('boc.get_boc_depth', params);
+    }
+
+    /**
+     * Calculates BOC depth
+     * 
+     * @param {ParamsOfGetBocDepth} params
+     * @returns ResultOfGetBocDepth
+     */
+    get_boc_depth_sync(params: ParamsOfGetBocDepth): ResultOfGetBocDepth {
+        return this.client.requestSync('boc.get_boc_depth', params);
     }
 
     /**
@@ -5103,6 +6076,16 @@ export class BocModule {
     }
 
     /**
+     * Extracts code from TVC contract image
+     * 
+     * @param {ParamsOfGetCodeFromTvc} params
+     * @returns ResultOfGetCodeFromTvc
+     */
+    get_code_from_tvc_sync(params: ParamsOfGetCodeFromTvc): ResultOfGetCodeFromTvc {
+        return this.client.requestSync('boc.get_code_from_tvc', params);
+    }
+
+    /**
      * Get BOC from cache
      * 
      * @param {ParamsOfBocCacheGet} params
@@ -5110,6 +6093,16 @@ export class BocModule {
      */
     cache_get(params: ParamsOfBocCacheGet): Promise<ResultOfBocCacheGet> {
         return this.client.request('boc.cache_get', params);
+    }
+
+    /**
+     * Get BOC from cache
+     * 
+     * @param {ParamsOfBocCacheGet} params
+     * @returns ResultOfBocCacheGet
+     */
+    cache_get_sync(params: ParamsOfBocCacheGet): ResultOfBocCacheGet {
+        return this.client.requestSync('boc.cache_get', params);
     }
 
     /**
@@ -5123,6 +6116,16 @@ export class BocModule {
     }
 
     /**
+     * Save BOC into cache or increase pin counter for existing pinned BOC
+     * 
+     * @param {ParamsOfBocCacheSet} params
+     * @returns ResultOfBocCacheSet
+     */
+    cache_set_sync(params: ParamsOfBocCacheSet): ResultOfBocCacheSet {
+        return this.client.requestSync('boc.cache_set', params);
+    }
+
+    /**
      * Unpin BOCs with specified pin defined in the `cache_set`. Decrease pin reference counter for BOCs with specified pin defined in the `cache_set`. BOCs which have only 1 pin and its reference counter become 0 will be removed from cache
      * 
      * @param {ParamsOfBocCacheUnpin} params
@@ -5130,6 +6133,16 @@ export class BocModule {
      */
     cache_unpin(params: ParamsOfBocCacheUnpin): Promise<void> {
         return this.client.request('boc.cache_unpin', params);
+    }
+
+    /**
+     * Unpin BOCs with specified pin defined in the `cache_set`. Decrease pin reference counter for BOCs with specified pin defined in the `cache_set`. BOCs which have only 1 pin and its reference counter become 0 will be removed from cache
+     * 
+     * @param {ParamsOfBocCacheUnpin} params
+     * @returns 
+     */
+    cache_unpin_sync(params: ParamsOfBocCacheUnpin): void {
+        this.client.requestSync('boc.cache_unpin', params);
     }
 
     /**
@@ -5143,6 +6156,16 @@ export class BocModule {
     }
 
     /**
+     * Encodes bag of cells (BOC) with builder operations. This method provides the same functionality as Solidity TvmBuilder. Resulting BOC of this method can be passed into Solidity and C++ contracts as TvmCell type.
+     * 
+     * @param {ParamsOfEncodeBoc} params
+     * @returns ResultOfEncodeBoc
+     */
+    encode_boc_sync(params: ParamsOfEncodeBoc): ResultOfEncodeBoc {
+        return this.client.requestSync('boc.encode_boc', params);
+    }
+
+    /**
      * Returns the contract code's salt if it is present.
      * 
      * @param {ParamsOfGetCodeSalt} params
@@ -5150,6 +6173,16 @@ export class BocModule {
      */
     get_code_salt(params: ParamsOfGetCodeSalt): Promise<ResultOfGetCodeSalt> {
         return this.client.request('boc.get_code_salt', params);
+    }
+
+    /**
+     * Returns the contract code's salt if it is present.
+     * 
+     * @param {ParamsOfGetCodeSalt} params
+     * @returns ResultOfGetCodeSalt
+     */
+    get_code_salt_sync(params: ParamsOfGetCodeSalt): ResultOfGetCodeSalt {
+        return this.client.requestSync('boc.get_code_salt', params);
     }
 
     /**
@@ -5166,6 +6199,19 @@ export class BocModule {
     }
 
     /**
+     * Sets new salt to contract code.
+     * 
+     * @remarks
+     * Returns the new contract code with salt.
+     * 
+     * @param {ParamsOfSetCodeSalt} params
+     * @returns ResultOfSetCodeSalt
+     */
+    set_code_salt_sync(params: ParamsOfSetCodeSalt): ResultOfSetCodeSalt {
+        return this.client.requestSync('boc.set_code_salt', params);
+    }
+
+    /**
      * Decodes contract's initial state into code, data, libraries and special options.
      * 
      * @param {ParamsOfDecodeStateInit} params
@@ -5176,6 +6222,16 @@ export class BocModule {
     }
 
     /**
+     * Decodes contract's initial state into code, data, libraries and special options.
+     * 
+     * @param {ParamsOfDecodeStateInit} params
+     * @returns ResultOfDecodeStateInit
+     */
+    decode_state_init_sync(params: ParamsOfDecodeStateInit): ResultOfDecodeStateInit {
+        return this.client.requestSync('boc.decode_state_init', params);
+    }
+
+    /**
      * Encodes initial contract state from code, data, libraries ans special options (see input params)
      * 
      * @param {ParamsOfEncodeStateInit} params
@@ -5183,6 +6239,16 @@ export class BocModule {
      */
     encode_state_init(params: ParamsOfEncodeStateInit): Promise<ResultOfEncodeStateInit> {
         return this.client.request('boc.encode_state_init', params);
+    }
+
+    /**
+     * Encodes initial contract state from code, data, libraries ans special options (see input params)
+     * 
+     * @param {ParamsOfEncodeStateInit} params
+     * @returns ResultOfEncodeStateInit
+     */
+    encode_state_init_sync(params: ParamsOfEncodeStateInit): ResultOfEncodeStateInit {
+        return this.client.requestSync('boc.encode_state_init', params);
     }
 
     /**
@@ -5199,6 +6265,19 @@ export class BocModule {
     }
 
     /**
+     * Encodes a message
+     * 
+     * @remarks
+     * Allows to encode any external inbound message.
+     * 
+     * @param {ParamsOfEncodeExternalInMessage} params
+     * @returns ResultOfEncodeExternalInMessage
+     */
+    encode_external_in_message_sync(params: ParamsOfEncodeExternalInMessage): ResultOfEncodeExternalInMessage {
+        return this.client.requestSync('boc.encode_external_in_message', params);
+    }
+
+    /**
      * Returns the compiler version used to compile the code.
      * 
      * @param {ParamsOfGetCompilerVersion} params
@@ -5206,6 +6285,16 @@ export class BocModule {
      */
     get_compiler_version(params: ParamsOfGetCompilerVersion): Promise<ResultOfGetCompilerVersion> {
         return this.client.request('boc.get_compiler_version', params);
+    }
+
+    /**
+     * Returns the compiler version used to compile the code.
+     * 
+     * @param {ParamsOfGetCompilerVersion} params
+     * @returns ResultOfGetCompilerVersion
+     */
+    get_compiler_version_sync(params: ParamsOfGetCompilerVersion): ResultOfGetCompilerVersion {
+        return this.client.requestSync('boc.get_compiler_version', params);
     }
 }
 
@@ -6125,6 +7214,46 @@ export class ProcessingModule {
     }
 
     /**
+     * Starts monitoring for the processing results of the specified messages.
+     * 
+     * @remarks
+     * Message monitor performs background monitoring for a message processing results
+     * for the specified set of messages.
+     * 
+     * Message monitor can serve several isolated monitoring queues.
+     * Each monitor queue has a unique application defined identifier (or name) used
+     * to separate several queue's.
+     * 
+     * There are two important lists inside of the monitoring queue:
+     * 
+     * - unresolved messages: contains messages requested by the application for monitoring
+     *   and not yet resolved;
+     * 
+     * - resolved results: contains resolved processing results for monitored messages.
+     * 
+     * Each monitoring queue tracks own unresolved and resolved lists.
+     * Application can add more messages to the monitoring queue at any time.
+     * 
+     * Message monitor accumulates resolved results.
+     * Application should fetch this results with `fetchNextMonitorResults` function.
+     * 
+     * When both unresolved and resolved lists becomes empty, monitor stops any background activity
+     * and frees all allocated internal memory.
+     * 
+     * If monitoring queue with specified name already exists then messages will be added
+     * to the unresolved list.
+     * 
+     * If monitoring queue with specified name does not exist then monitoring queue will be created
+     * with specified unresolved messages.
+     * 
+     * @param {ParamsOfMonitorMessages} params
+     * @returns 
+     */
+    monitor_messages_sync(params: ParamsOfMonitorMessages): void {
+        this.client.requestSync('processing.monitor_messages', params);
+    }
+
+    /**
      * Returns summary information about current state of the specified monitoring queue.
      * 
      * @param {ParamsOfGetMonitorInfo} params
@@ -6132,6 +7261,16 @@ export class ProcessingModule {
      */
     get_monitor_info(params: ParamsOfGetMonitorInfo): Promise<MonitoringQueueInfo> {
         return this.client.request('processing.get_monitor_info', params);
+    }
+
+    /**
+     * Returns summary information about current state of the specified monitoring queue.
+     * 
+     * @param {ParamsOfGetMonitorInfo} params
+     * @returns MonitoringQueueInfo
+     */
+    get_monitor_info_sync(params: ParamsOfGetMonitorInfo): MonitoringQueueInfo {
+        return this.client.requestSync('processing.get_monitor_info', params);
     }
 
     /**
@@ -6149,6 +7288,20 @@ export class ProcessingModule {
     }
 
     /**
+     * Fetches next resolved results from the specified monitoring queue.
+     * 
+     * @remarks
+     * Results and waiting options are depends on the `wait` parameter.
+     * All returned results will be removed from the queue's resolved list.
+     * 
+     * @param {ParamsOfFetchNextMonitorResults} params
+     * @returns ResultOfFetchNextMonitorResults
+     */
+    fetch_next_monitor_results_sync(params: ParamsOfFetchNextMonitorResults): ResultOfFetchNextMonitorResults {
+        return this.client.requestSync('processing.fetch_next_monitor_results', params);
+    }
+
+    /**
      * Cancels all background activity and releases all allocated system resources for the specified monitoring queue.
      * 
      * @param {ParamsOfCancelMonitor} params
@@ -6159,6 +7312,16 @@ export class ProcessingModule {
     }
 
     /**
+     * Cancels all background activity and releases all allocated system resources for the specified monitoring queue.
+     * 
+     * @param {ParamsOfCancelMonitor} params
+     * @returns 
+     */
+    cancel_monitor_sync(params: ParamsOfCancelMonitor): void {
+        this.client.requestSync('processing.cancel_monitor', params);
+    }
+
+    /**
      * Sends specified messages to the blockchain.
      * 
      * @param {ParamsOfSendMessages} params
@@ -6166,6 +7329,16 @@ export class ProcessingModule {
      */
     send_messages(params: ParamsOfSendMessages): Promise<ResultOfSendMessages> {
         return this.client.request('processing.send_messages', params);
+    }
+
+    /**
+     * Sends specified messages to the blockchain.
+     * 
+     * @param {ParamsOfSendMessages} params
+     * @returns ResultOfSendMessages
+     */
+    send_messages_sync(params: ParamsOfSendMessages): ResultOfSendMessages {
+        return this.client.requestSync('processing.send_messages', params);
     }
 
     /**
@@ -6180,6 +7353,20 @@ export class ProcessingModule {
      */
     send_message(params: ParamsOfSendMessage, responseHandler?: ResponseHandler): Promise<ResultOfSendMessage> {
         return this.client.request('processing.send_message', params, responseHandler);
+    }
+
+    /**
+     * Sends message to the network
+     * 
+     * @remarks
+     * Sends message to the network and returns the last generated shard block of the destination account
+     * before the message was sent. It will be required later for message processing.
+     * 
+     * @param {ParamsOfSendMessage} params
+     * @returns ResultOfSendMessage
+     */
+    send_message_sync(params: ParamsOfSendMessage): ResultOfSendMessage {
+        return this.client.requestSync('processing.send_message', params);
     }
 
     /**
@@ -6219,6 +7406,42 @@ export class ProcessingModule {
     }
 
     /**
+     * Performs monitoring of the network for the result transaction of the external inbound message processing.
+     * 
+     * @remarks
+     * `send_events` enables intermediate events, such as `WillFetchNextBlock`,
+     * `FetchNextBlockFailed` that may be useful for logging of new shard blocks creation
+     * during message processing.
+     * 
+     * Note, that presence of the `abi` parameter is critical for ABI
+     * compliant contracts. Message processing uses drastically
+     * different strategy for processing message for contracts which
+     * ABI includes "expire" header.
+     * 
+     * When the ABI header `expire` is present, the processing uses
+     * `message expiration` strategy:
+     * - The maximum block gen time is set to
+     *   `message_expiration_timeout + transaction_wait_timeout`.
+     * - When maximum block gen time is reached, the processing will
+     *   be finished with `MessageExpired` error.
+     * 
+     * When the ABI header `expire` isn't present or `abi` parameter
+     * isn't specified, the processing uses `transaction waiting`
+     * strategy:
+     * - The maximum block gen time is set to
+     *   `now() + transaction_wait_timeout`.
+     * 
+     * - If maximum block gen time is reached and no result transaction is found,
+     * the processing will exit with an error.
+     * 
+     * @param {ParamsOfWaitForTransaction} params
+     * @returns ResultOfProcessMessage
+     */
+    wait_for_transaction_sync(params: ParamsOfWaitForTransaction): ResultOfProcessMessage {
+        return this.client.requestSync('processing.wait_for_transaction', params);
+    }
+
+    /**
      * Creates message, sends it to the network and monitors its processing.
      * 
      * @remarks
@@ -6244,6 +7467,34 @@ export class ProcessingModule {
      */
     process_message(params: ParamsOfProcessMessage, responseHandler?: ResponseHandler): Promise<ResultOfProcessMessage> {
         return this.client.request('processing.process_message', params, responseHandler);
+    }
+
+    /**
+     * Creates message, sends it to the network and monitors its processing.
+     * 
+     * @remarks
+     * Creates ABI-compatible message,
+     * sends it to the network and monitors for the result transaction.
+     * Decodes the output messages' bodies.
+     * 
+     * If contract's ABI includes "expire" header, then
+     * SDK implements retries in case of unsuccessful message delivery within the expiration
+     * timeout: SDK recreates the message, sends it and processes it again.
+     * 
+     * The intermediate events, such as `WillFetchFirstBlock`, `WillSend`, `DidSend`,
+     * `WillFetchNextBlock`, etc - are switched on/off by `send_events` flag
+     * and logged into the supplied callback function.
+     * 
+     * The retry configuration parameters are defined in the client's `NetworkConfig` and `AbiConfig`.
+     * 
+     * If contract's ABI does not include "expire" header
+     * then, if no transaction is found within the network timeout (see config parameter ), exits with error.
+     * 
+     * @param {ParamsOfProcessMessage} params
+     * @returns ResultOfProcessMessage
+     */
+    process_message_sync(params: ParamsOfProcessMessage): ResultOfProcessMessage {
+        return this.client.requestSync('processing.process_message', params);
     }
 }
 
@@ -6435,6 +7686,16 @@ export class UtilsModule {
     }
 
     /**
+     * Converts address from any TON format to any TON format
+     * 
+     * @param {ParamsOfConvertAddress} params
+     * @returns ResultOfConvertAddress
+     */
+    convert_address_sync(params: ParamsOfConvertAddress): ResultOfConvertAddress {
+        return this.client.requestSync('utils.convert_address', params);
+    }
+
+    /**
      * Validates and returns the type of any TON address.
      * 
      * @remarks
@@ -6455,6 +7716,26 @@ export class UtilsModule {
     }
 
     /**
+     * Validates and returns the type of any TON address.
+     * 
+     * @remarks
+     * Address types are the following
+     * 
+     * `0:919db8e740d50bf349df2eea03fa30c385d846b991ff5542e67098ee833fc7f7` - standard TON address most
+     * commonly used in all cases. Also called as hex address
+     * `919db8e740d50bf349df2eea03fa30c385d846b991ff5542e67098ee833fc7f7` - account ID. A part of full
+     * address. Identifies account inside particular workchain
+     * `EQCRnbjnQNUL80nfLuoD+jDDhdhGuZH/VULmcJjugz/H9wam` - base64 address. Also called "user-friendly".
+     * Was used at the beginning of TON. Now it is supported for compatibility
+     * 
+     * @param {ParamsOfGetAddressType} params
+     * @returns ResultOfGetAddressType
+     */
+    get_address_type_sync(params: ParamsOfGetAddressType): ResultOfGetAddressType {
+        return this.client.requestSync('utils.get_address_type', params);
+    }
+
+    /**
      * Calculates storage fee for an account over a specified time period
      * 
      * @param {ParamsOfCalcStorageFee} params
@@ -6462,6 +7743,16 @@ export class UtilsModule {
      */
     calc_storage_fee(params: ParamsOfCalcStorageFee): Promise<ResultOfCalcStorageFee> {
         return this.client.request('utils.calc_storage_fee', params);
+    }
+
+    /**
+     * Calculates storage fee for an account over a specified time period
+     * 
+     * @param {ParamsOfCalcStorageFee} params
+     * @returns ResultOfCalcStorageFee
+     */
+    calc_storage_fee_sync(params: ParamsOfCalcStorageFee): ResultOfCalcStorageFee {
+        return this.client.requestSync('utils.calc_storage_fee', params);
     }
 
     /**
@@ -6475,6 +7766,16 @@ export class UtilsModule {
     }
 
     /**
+     * Compresses data using Zstandard algorithm
+     * 
+     * @param {ParamsOfCompressZstd} params
+     * @returns ResultOfCompressZstd
+     */
+    compress_zstd_sync(params: ParamsOfCompressZstd): ResultOfCompressZstd {
+        return this.client.requestSync('utils.compress_zstd', params);
+    }
+
+    /**
      * Decompresses data using Zstandard algorithm
      * 
      * @param {ParamsOfDecompressZstd} params
@@ -6482,6 +7783,16 @@ export class UtilsModule {
      */
     decompress_zstd(params: ParamsOfDecompressZstd): Promise<ResultOfDecompressZstd> {
         return this.client.request('utils.decompress_zstd', params);
+    }
+
+    /**
+     * Decompresses data using Zstandard algorithm
+     * 
+     * @param {ParamsOfDecompressZstd} params
+     * @returns ResultOfDecompressZstd
+     */
+    decompress_zstd_sync(params: ParamsOfDecompressZstd): ResultOfDecompressZstd {
+        return this.client.requestSync('utils.decompress_zstd', params);
     }
 }
 
@@ -6925,6 +8236,49 @@ export class TvmModule {
     }
 
     /**
+     * Emulates all the phases of contract execution locally
+     * 
+     * @remarks
+     * Performs all the phases of contract execution on Transaction Executor -
+     * the same component that is used on Validator Nodes.
+     * 
+     * Can be used for contract debugging, to find out the reason why a message was not delivered successfully.
+     * Validators throw away the failed external inbound messages (if they failed before `ACCEPT`) in the real network.
+     * This is why these messages are impossible to debug in the real network.
+     * With the help of run_executor you can do that. In fact, `process_message` function
+     * performs local check with `run_executor` if there was no transaction as a result of processing
+     * and returns the error, if there is one.
+     * 
+     * Another use case to use `run_executor` is to estimate fees for message execution.
+     * Set  `AccountForExecutor::Account.unlimited_balance`
+     * to `true` so that emulation will not depend on the actual balance.
+     * This may be needed to calculate deploy fees for an account that does not exist yet.
+     * JSON with fees is in `fees` field of the result.
+     * 
+     * One more use case - you can produce the sequence of operations,
+     * thus emulating the sequential contract calls locally.
+     * And so on.
+     * 
+     * Transaction executor requires account BOC (bag of cells) as a parameter.
+     * To get the account BOC - use `net.query` method to download it from GraphQL API
+     * (field `boc` of `account`) or generate it with `abi.encode_account` method.
+     * 
+     * Also it requires message BOC. To get the message BOC - use `abi.encode_message` or `abi.encode_internal_message`.
+     * 
+     * If you need this emulation to be as precise as possible (for instance - emulate transaction
+     * with particular lt in particular block or use particular blockchain config,
+     * downloaded from a particular key block - then specify `execution_options` parameter.
+     * 
+     * If you need to see the aborted transaction as a result, not as an error, set `skip_transaction_check` to `true`.
+     * 
+     * @param {ParamsOfRunExecutor} params
+     * @returns ResultOfRunExecutor
+     */
+    run_executor_sync(params: ParamsOfRunExecutor): ResultOfRunExecutor {
+        return this.client.requestSync('tvm.run_executor', params);
+    }
+
+    /**
      * Executes get-methods of ABI-compatible contracts
      * 
      * @remarks
@@ -6949,6 +8303,30 @@ export class TvmModule {
     }
 
     /**
+     * Executes get-methods of ABI-compatible contracts
+     * 
+     * @remarks
+     * Performs only a part of compute phase of transaction execution
+     * that is used to run get-methods of ABI-compatible contracts.
+     * 
+     * If you try to run get-methods with `run_executor` you will get an error, because it checks ACCEPT and exits
+     * if there is none, which is actually true for get-methods.
+     * 
+     *  To get the account BOC (bag of cells) - use `net.query` method to download it from GraphQL API
+     * (field `boc` of `account`) or generate it with `abi.encode_account method`.
+     * To get the message BOC - use `abi.encode_message` or prepare it any other way, for instance, with FIFT script.
+     * 
+     * Attention! Updated account state is produces as well, but only
+     * `account_state.storage.state.data`  part of the BOC is updated.
+     * 
+     * @param {ParamsOfRunTvm} params
+     * @returns ResultOfRunTvm
+     */
+    run_tvm_sync(params: ParamsOfRunTvm): ResultOfRunTvm {
+        return this.client.requestSync('tvm.run_tvm', params);
+    }
+
+    /**
      * Executes a get-method of FIFT contract
      * 
      * @remarks
@@ -6960,6 +8338,20 @@ export class TvmModule {
      */
     run_get(params: ParamsOfRunGet): Promise<ResultOfRunGet> {
         return this.client.request('tvm.run_get', params);
+    }
+
+    /**
+     * Executes a get-method of FIFT contract
+     * 
+     * @remarks
+     * Executes a get-method of FIFT contract that fulfills the smc-guidelines https://test.ton.org/smc-guidelines.txt
+     * and returns the result data from TVM's stack
+     * 
+     * @param {ParamsOfRunGet} params
+     * @returns ResultOfRunGet
+     */
+    run_get_sync(params: ParamsOfRunGet): ResultOfRunGet {
+        return this.client.requestSync('tvm.run_get', params);
     }
 }
 
@@ -7725,6 +9117,16 @@ export class NetModule {
     }
 
     /**
+     * Performs DAppServer GraphQL query.
+     * 
+     * @param {ParamsOfQuery} params
+     * @returns ResultOfQuery
+     */
+    query_sync(params: ParamsOfQuery): ResultOfQuery {
+        return this.client.requestSync('net.query', params);
+    }
+
+    /**
      * Performs multiple queries per single fetch.
      * 
      * @param {ParamsOfBatchQuery} params
@@ -7732,6 +9134,16 @@ export class NetModule {
      */
     batch_query(params: ParamsOfBatchQuery): Promise<ResultOfBatchQuery> {
         return this.client.request('net.batch_query', params);
+    }
+
+    /**
+     * Performs multiple queries per single fetch.
+     * 
+     * @param {ParamsOfBatchQuery} params
+     * @returns ResultOfBatchQuery
+     */
+    batch_query_sync(params: ParamsOfBatchQuery): ResultOfBatchQuery {
+        return this.client.requestSync('net.batch_query', params);
     }
 
     /**
@@ -7750,6 +9162,21 @@ export class NetModule {
     }
 
     /**
+     * Queries collection data
+     * 
+     * @remarks
+     * Queries data that satisfies the `filter` conditions,
+     * limits the number of returned records and orders them.
+     * The projection fields are limited to `result` fields
+     * 
+     * @param {ParamsOfQueryCollection} params
+     * @returns ResultOfQueryCollection
+     */
+    query_collection_sync(params: ParamsOfQueryCollection): ResultOfQueryCollection {
+        return this.client.requestSync('net.query_collection', params);
+    }
+
+    /**
      * Aggregates collection data.
      * 
      * @remarks
@@ -7761,6 +9188,20 @@ export class NetModule {
      */
     aggregate_collection(params: ParamsOfAggregateCollection): Promise<ResultOfAggregateCollection> {
         return this.client.request('net.aggregate_collection', params);
+    }
+
+    /**
+     * Aggregates collection data.
+     * 
+     * @remarks
+     * Aggregates values from the specified `fields` for records
+     * that satisfies the `filter` conditions,
+     * 
+     * @param {ParamsOfAggregateCollection} params
+     * @returns ResultOfAggregateCollection
+     */
+    aggregate_collection_sync(params: ParamsOfAggregateCollection): ResultOfAggregateCollection {
+        return this.client.requestSync('net.aggregate_collection', params);
     }
 
     /**
@@ -7782,6 +9223,24 @@ export class NetModule {
     }
 
     /**
+     * Returns an object that fulfills the conditions or waits for its appearance
+     * 
+     * @remarks
+     * Triggers only once.
+     * If object that satisfies the `filter` conditions
+     * already exists - returns it immediately.
+     * If not - waits for insert/update of data within the specified `timeout`,
+     * and returns it.
+     * The projection fields are limited to `result` fields
+     * 
+     * @param {ParamsOfWaitForCollection} params
+     * @returns ResultOfWaitForCollection
+     */
+    wait_for_collection_sync(params: ParamsOfWaitForCollection): ResultOfWaitForCollection {
+        return this.client.requestSync('net.wait_for_collection', params);
+    }
+
+    /**
      * Cancels a subscription
      * 
      * @remarks
@@ -7792,6 +9251,19 @@ export class NetModule {
      */
     unsubscribe(params: ResultOfSubscribeCollection): Promise<void> {
         return this.client.request('net.unsubscribe', params);
+    }
+
+    /**
+     * Cancels a subscription
+     * 
+     * @remarks
+     * Cancels a subscription specified by its handle.
+     * 
+     * @param {ResultOfSubscribeCollection} params
+     * @returns 
+     */
+    unsubscribe_sync(params: ResultOfSubscribeCollection): void {
+        this.client.requestSync('net.unsubscribe', params);
     }
 
     /**
@@ -7847,6 +9319,58 @@ export class NetModule {
     }
 
     /**
+     * Creates a collection subscription
+     * 
+     * @remarks
+     * Triggers for each insert/update of data that satisfies
+     * the `filter` conditions.
+     * The projection fields are limited to `result` fields.
+     * 
+     * The subscription is a persistent communication channel between
+     * client and Free TON Network.
+     * All changes in the blockchain will be reflected in realtime.
+     * Changes means inserts and updates of the blockchain entities.
+     * 
+     * ### Important Notes on Subscriptions
+     * 
+     * Unfortunately sometimes the connection with the network brakes down.
+     * In this situation the library attempts to reconnect to the network.
+     * This reconnection sequence can take significant time.
+     * All of this time the client is disconnected from the network.
+     * 
+     * Bad news is that all blockchain changes that happened while
+     * the client was disconnected are lost.
+     * 
+     * Good news is that the client report errors to the callback when
+     * it loses and resumes connection.
+     * 
+     * So, if the lost changes are important to the application then
+     * the application must handle these error reports.
+     * 
+     * Library reports errors with `responseType` == 101
+     * and the error object passed via `params`.
+     * 
+     * When the library has successfully reconnected
+     * the application receives callback with
+     * `responseType` == 101 and `params.code` == 614 (NetworkModuleResumed).
+     * 
+     * Application can use several ways to handle this situation:
+     * - If application monitors changes for the single blockchain
+     * object (for example specific account):  application
+     * can perform a query for this object and handle actual data as a
+     * regular data from the subscription.
+     * - If application monitors sequence of some blockchain objects
+     * (for example transactions of the specific account): application must
+     * refresh all cached (or visible to user) lists where this sequences presents.
+     * 
+     * @param {ParamsOfSubscribeCollection} params
+     * @returns ResultOfSubscribeCollection
+     */
+    subscribe_collection_sync(params: ParamsOfSubscribeCollection): ResultOfSubscribeCollection {
+        return this.client.requestSync('net.subscribe_collection', params);
+    }
+
+    /**
      * Creates a subscription
      * 
      * @remarks
@@ -7893,6 +9417,52 @@ export class NetModule {
     }
 
     /**
+     * Creates a subscription
+     * 
+     * @remarks
+     * The subscription is a persistent communication channel between
+     * client and Everscale Network.
+     * 
+     * ### Important Notes on Subscriptions
+     * 
+     * Unfortunately sometimes the connection with the network breaks down.
+     * In this situation the library attempts to reconnect to the network.
+     * This reconnection sequence can take significant time.
+     * All of this time the client is disconnected from the network.
+     * 
+     * Bad news is that all changes that happened while
+     * the client was disconnected are lost.
+     * 
+     * Good news is that the client report errors to the callback when
+     * it loses and resumes connection.
+     * 
+     * So, if the lost changes are important to the application then
+     * the application must handle these error reports.
+     * 
+     * Library reports errors with `responseType` == 101
+     * and the error object passed via `params`.
+     * 
+     * When the library has successfully reconnected
+     * the application receives callback with
+     * `responseType` == 101 and `params.code` == 614 (NetworkModuleResumed).
+     * 
+     * Application can use several ways to handle this situation:
+     * - If application monitors changes for the single
+     * object (for example specific account):  application
+     * can perform a query for this object and handle actual data as a
+     * regular data from the subscription.
+     * - If application monitors sequence of some objects
+     * (for example transactions of the specific account): application must
+     * refresh all cached (or visible to user) lists where this sequences presents.
+     * 
+     * @param {ParamsOfSubscribe} params
+     * @returns ResultOfSubscribeCollection
+     */
+    subscribe_sync(params: ParamsOfSubscribe): ResultOfSubscribeCollection {
+        return this.client.requestSync('net.subscribe', params);
+    }
+
+    /**
      * Suspends network module to stop any network activity
      * @returns 
      */
@@ -7901,11 +9471,27 @@ export class NetModule {
     }
 
     /**
+     * Suspends network module to stop any network activity
+     * @returns 
+     */
+    suspend_sync(): void {
+        this.client.requestSync('net.suspend');
+    }
+
+    /**
      * Resumes network module to enable network activity
      * @returns 
      */
     resume(): Promise<void> {
         return this.client.request('net.resume');
+    }
+
+    /**
+     * Resumes network module to enable network activity
+     * @returns 
+     */
+    resume_sync(): void {
+        this.client.requestSync('net.resume');
     }
 
     /**
@@ -7919,11 +9505,29 @@ export class NetModule {
     }
 
     /**
+     * Returns ID of the last block in a specified account shard
+     * 
+     * @param {ParamsOfFindLastShardBlock} params
+     * @returns ResultOfFindLastShardBlock
+     */
+    find_last_shard_block_sync(params: ParamsOfFindLastShardBlock): ResultOfFindLastShardBlock {
+        return this.client.requestSync('net.find_last_shard_block', params);
+    }
+
+    /**
      * Requests the list of alternative endpoints from server
      * @returns EndpointsSet
      */
     fetch_endpoints(): Promise<EndpointsSet> {
         return this.client.request('net.fetch_endpoints');
+    }
+
+    /**
+     * Requests the list of alternative endpoints from server
+     * @returns EndpointsSet
+     */
+    fetch_endpoints_sync(): EndpointsSet {
+        return this.client.requestSync('net.fetch_endpoints');
     }
 
     /**
@@ -7937,11 +9541,29 @@ export class NetModule {
     }
 
     /**
+     * Sets the list of endpoints to use on reinit
+     * 
+     * @param {EndpointsSet} params
+     * @returns 
+     */
+    set_endpoints_sync(params: EndpointsSet): void {
+        this.client.requestSync('net.set_endpoints', params);
+    }
+
+    /**
      * Requests the list of alternative endpoints from server
      * @returns ResultOfGetEndpoints
      */
     get_endpoints(): Promise<ResultOfGetEndpoints> {
         return this.client.request('net.get_endpoints');
+    }
+
+    /**
+     * Requests the list of alternative endpoints from server
+     * @returns ResultOfGetEndpoints
+     */
+    get_endpoints_sync(): ResultOfGetEndpoints {
+        return this.client.requestSync('net.get_endpoints');
     }
 
     /**
@@ -7957,6 +9579,21 @@ export class NetModule {
      */
     query_counterparties(params: ParamsOfQueryCounterparties): Promise<ResultOfQueryCollection> {
         return this.client.request('net.query_counterparties', params);
+    }
+
+    /**
+     * Allows to query and paginate through the list of accounts that the specified account has interacted with, sorted by the time of the last internal message between accounts
+     * 
+     * @remarks
+     * *Attention* this query retrieves data from 'Counterparties' service which is not supported in
+     * the opensource version of DApp Server (and will not be supported) as well as in Evernode SE (will be supported in SE in future),
+     * but is always accessible via [EVER OS Clouds](../ton-os-api/networks.md)
+     * 
+     * @param {ParamsOfQueryCounterparties} params
+     * @returns ResultOfQueryCollection
+     */
+    query_counterparties_sync(params: ParamsOfQueryCounterparties): ResultOfQueryCollection {
+        return this.client.requestSync('net.query_counterparties', params);
     }
 
     /**
@@ -8000,6 +9637,49 @@ export class NetModule {
      */
     query_transaction_tree(params: ParamsOfQueryTransactionTree): Promise<ResultOfQueryTransactionTree> {
         return this.client.request('net.query_transaction_tree', params);
+    }
+
+    /**
+     * Returns a tree of transactions triggered by a specific message.
+     * 
+     * @remarks
+     * Performs recursive retrieval of a transactions tree produced by a specific message:
+     * in_msg -> dst_transaction -> out_messages -> dst_transaction -> ...
+     * If the chain of transactions execution is in progress while the function is running,
+     * it will wait for the next transactions to appear until the full tree or more than 50 transactions
+     * are received.
+     * 
+     * All the retrieved messages and transactions are included
+     * into `result.messages` and `result.transactions` respectively.
+     * 
+     * Function reads transactions layer by layer, by pages of 20 transactions.
+     * 
+     * The retrieval process goes like this:
+     * Let's assume we have an infinite chain of transactions and each transaction generates 5 messages.
+     * 1. Retrieve 1st message (input parameter) and corresponding transaction - put it into result.
+     * It is the first level of the tree of transactions - its root.
+     * Retrieve 5 out message ids from the transaction for next steps.
+     * 2. Retrieve 5 messages and corresponding transactions on the 2nd layer. Put them into result.
+     * Retrieve 5*5 out message ids from these transactions for next steps
+     * 3. Retrieve 20 (size of the page) messages and transactions (3rd layer) and 20*5=100 message ids (4th layer).
+     * 4. Retrieve the last 5 messages and 5 transactions on the 3rd layer + 15 messages and transactions (of 100) from the 4th layer
+     * + 25 message ids of the 4th layer + 75 message ids of the 5th layer.
+     * 5. Retrieve 20 more messages and 20 more transactions of the 4th layer + 100 more message ids of the 5th layer.
+     * 6. Now we have 1+5+20+20+20 = 66 transactions, which is more than 50. Function exits with the tree of
+     * 1m->1t->5m->5t->25m->25t->35m->35t. If we see any message ids in the last transactions out_msgs, which don't have
+     * corresponding messages in the function result, it means that the full tree was not received and we need to continue iteration.
+     * 
+     * To summarize, it is guaranteed that each message in `result.messages` has the corresponding transaction
+     * in the `result.transactions`.
+     * But there is no guarantee that all messages from transactions `out_msgs` are
+     * presented in `result.messages`.
+     * So the application has to continue retrieval for missing messages if it requires.
+     * 
+     * @param {ParamsOfQueryTransactionTree} params
+     * @returns ResultOfQueryTransactionTree
+     */
+    query_transaction_tree_sync(params: ParamsOfQueryTransactionTree): ResultOfQueryTransactionTree {
+        return this.client.requestSync('net.query_transaction_tree', params);
     }
 
     /**
@@ -8049,6 +9729,52 @@ export class NetModule {
     }
 
     /**
+     * Creates block iterator.
+     * 
+     * @remarks
+     * Block iterator uses robust iteration methods that guaranties that every
+     * block in the specified range isn't missed or iterated twice.
+     * 
+     * Iterated range can be reduced with some filters:
+     * - `start_time` – the bottom time range. Only blocks with `gen_utime`
+     * more or equal to this value is iterated. If this parameter is omitted then there is
+     * no bottom time edge, so all blocks since zero state is iterated.
+     * - `end_time` – the upper time range. Only blocks with `gen_utime`
+     * less then this value is iterated. If this parameter is omitted then there is
+     * no upper time edge, so iterator never finishes.
+     * - `shard_filter` – workchains and shard prefixes that reduce the set of interesting
+     * blocks. Block conforms to the shard filter if it belongs to the filter workchain
+     * and the first bits of block's `shard` fields matches to the shard prefix.
+     * Only blocks with suitable shard are iterated.
+     * 
+     * Items iterated is a JSON objects with block data. The minimal set of returned
+     * fields is:
+     * ```text
+     * id
+     * gen_utime
+     * workchain_id
+     * shard
+     * after_split
+     * after_merge
+     * prev_ref {
+     *     root_hash
+     * }
+     * prev_alt_ref {
+     *     root_hash
+     * }
+     * ```
+     * Application can request additional fields in the `result` parameter.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfCreateBlockIterator} params
+     * @returns RegisteredIterator
+     */
+    create_block_iterator_sync(params: ParamsOfCreateBlockIterator): RegisteredIterator {
+        return this.client.requestSync('net.create_block_iterator', params);
+    }
+
+    /**
      * Resumes block iterator.
      * 
      * @remarks
@@ -8061,6 +9787,21 @@ export class NetModule {
      */
     resume_block_iterator(params: ParamsOfResumeBlockIterator): Promise<RegisteredIterator> {
         return this.client.request('net.resume_block_iterator', params);
+    }
+
+    /**
+     * Resumes block iterator.
+     * 
+     * @remarks
+     * The iterator stays exactly at the same position where the `resume_state` was caught.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfResumeBlockIterator} params
+     * @returns RegisteredIterator
+     */
+    resume_block_iterator_sync(params: ParamsOfResumeBlockIterator): RegisteredIterator {
+        return this.client.requestSync('net.resume_block_iterator', params);
     }
 
     /**
@@ -8131,6 +9872,73 @@ export class NetModule {
     }
 
     /**
+     * Creates transaction iterator.
+     * 
+     * @remarks
+     * Transaction iterator uses robust iteration methods that guaranty that every
+     * transaction in the specified range isn't missed or iterated twice.
+     * 
+     * Iterated range can be reduced with some filters:
+     * - `start_time` – the bottom time range. Only transactions with `now`
+     * more or equal to this value are iterated. If this parameter is omitted then there is
+     * no bottom time edge, so all the transactions since zero state are iterated.
+     * - `end_time` – the upper time range. Only transactions with `now`
+     * less then this value are iterated. If this parameter is omitted then there is
+     * no upper time edge, so iterator never finishes.
+     * - `shard_filter` – workchains and shard prefixes that reduce the set of interesting
+     * accounts. Account address conforms to the shard filter if
+     * it belongs to the filter workchain and the first bits of address match to
+     * the shard prefix. Only transactions with suitable account addresses are iterated.
+     * - `accounts_filter` – set of account addresses whose transactions must be iterated.
+     * Note that accounts filter can conflict with shard filter so application must combine
+     * these filters carefully.
+     * 
+     * Iterated item is a JSON objects with transaction data. The minimal set of returned
+     * fields is:
+     * ```text
+     * id
+     * account_addr
+     * now
+     * balance_delta(format:DEC)
+     * bounce { bounce_type }
+     * in_message {
+     *     id
+     *     value(format:DEC)
+     *     msg_type
+     *     src
+     * }
+     * out_messages {
+     *     id
+     *     value(format:DEC)
+     *     msg_type
+     *     dst
+     * }
+     * ```
+     * Application can request an additional fields in the `result` parameter.
+     * 
+     * Another parameter that affects on the returned fields is the `include_transfers`.
+     * When this parameter is `true` the iterator computes and adds `transfer` field containing
+     * list of the useful `TransactionTransfer` objects.
+     * Each transfer is calculated from the particular message related to the transaction
+     * and has the following structure:
+     * - message – source message identifier.
+     * - isBounced – indicates that the transaction is bounced, which means the value will be returned back to the sender.
+     * - isDeposit – indicates that this transfer is the deposit (true) or withdraw (false).
+     * - counterparty – account address of the transfer source or destination depending on `isDeposit`.
+     * - value – amount of nano tokens transferred. The value is represented as a decimal string
+     * because the actual value can be more precise than the JSON number can represent. Application
+     * must use this string carefully – conversion to number can follow to loose of precision.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfCreateTransactionIterator} params
+     * @returns RegisteredIterator
+     */
+    create_transaction_iterator_sync(params: ParamsOfCreateTransactionIterator): RegisteredIterator {
+        return this.client.requestSync('net.create_transaction_iterator', params);
+    }
+
+    /**
      * Resumes transaction iterator.
      * 
      * @remarks
@@ -8146,6 +9954,24 @@ export class NetModule {
      */
     resume_transaction_iterator(params: ParamsOfResumeTransactionIterator): Promise<RegisteredIterator> {
         return this.client.request('net.resume_transaction_iterator', params);
+    }
+
+    /**
+     * Resumes transaction iterator.
+     * 
+     * @remarks
+     * The iterator stays exactly at the same position where the `resume_state` was caught.
+     * Note that `resume_state` doesn't store the account filter. If the application requires
+     * to use the same account filter as it was when the iterator was created then the application
+     * must pass the account filter again in `accounts_filter` parameter.
+     * 
+     * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * @param {ParamsOfResumeTransactionIterator} params
+     * @returns RegisteredIterator
+     */
+    resume_transaction_iterator_sync(params: ParamsOfResumeTransactionIterator): RegisteredIterator {
+        return this.client.requestSync('net.resume_transaction_iterator', params);
     }
 
     /**
@@ -8175,6 +10001,32 @@ export class NetModule {
     }
 
     /**
+     * Returns next available items.
+     * 
+     * @remarks
+     * In addition to available items this function returns the `has_more` flag
+     * indicating that the iterator isn't reach the end of the iterated range yet.
+     * 
+     * This function can return the empty list of available items but
+     * indicates that there are more items is available.
+     * This situation appears when the iterator doesn't reach iterated range
+     * but database doesn't contains available items yet.
+     * 
+     * If application requests resume state in `return_resume_state` parameter
+     * then this function returns `resume_state` that can be used later to
+     * resume the iteration from the position after returned items.
+     * 
+     * The structure of the items returned depends on the iterator used.
+     * See the description to the appropriated iterator creation function.
+     * 
+     * @param {ParamsOfIteratorNext} params
+     * @returns ResultOfIteratorNext
+     */
+    iterator_next_sync(params: ParamsOfIteratorNext): ResultOfIteratorNext {
+        return this.client.requestSync('net.iterator_next', params);
+    }
+
+    /**
      * Removes an iterator
      * 
      * @remarks
@@ -8191,11 +10043,35 @@ export class NetModule {
     }
 
     /**
+     * Removes an iterator
+     * 
+     * @remarks
+     * Frees all resources allocated in library to serve iterator.
+     * 
+     * Application always should call the `remove_iterator` when iterator
+     * is no longer required.
+     * 
+     * @param {RegisteredIterator} params
+     * @returns 
+     */
+    remove_iterator_sync(params: RegisteredIterator): void {
+        this.client.requestSync('net.remove_iterator', params);
+    }
+
+    /**
      * Returns signature ID for configured network if it should be used in messages signature
      * @returns ResultOfGetSignatureId
      */
     get_signature_id(): Promise<ResultOfGetSignatureId> {
         return this.client.request('net.get_signature_id');
+    }
+
+    /**
+     * Returns signature ID for configured network if it should be used in messages signature
+     * @returns ResultOfGetSignatureId
+     */
+    get_signature_id_sync(): ResultOfGetSignatureId {
+        return this.client.requestSync('net.get_signature_id');
     }
 }
 
@@ -8944,6 +10820,23 @@ export class DebotModule {
     }
 
     /**
+     * [UNSTABLE](UNSTABLE.md) Creates and instance of DeBot.
+     * 
+     * @remarks
+     * Downloads debot smart contract (code and data) from blockchain and creates
+     * an instance of Debot Engine for it.
+     * 
+     * # Remarks
+     * It does not switch debot to context 0. Browser Callbacks are not called.
+     * 
+     * @param {ParamsOfInit} params
+     * @returns RegisteredDebot
+     */
+    init_sync(params: ParamsOfInit): RegisteredDebot {
+        return this.client.requestSync('debot.init', params);
+    }
+
+    /**
      * [UNSTABLE](UNSTABLE.md) Starts the DeBot.
      * 
      * @remarks
@@ -8966,6 +10859,28 @@ export class DebotModule {
     }
 
     /**
+     * [UNSTABLE](UNSTABLE.md) Starts the DeBot.
+     * 
+     * @remarks
+     * Downloads debot smart contract from blockchain and switches it to
+     * context zero.
+     * 
+     * This function must be used by Debot Browser to start a dialog with debot.
+     * While the function is executing, several Browser Callbacks can be called,
+     * since the debot tries to display all actions from the context 0 to the user.
+     * 
+     * When the debot starts SDK registers `BrowserCallbacks` AppObject.
+     * Therefore when `debote.remove` is called the debot is being deleted and the callback is called
+     * with `finish`=`true` which indicates that it will never be used again.
+     * 
+     * @param {ParamsOfStart} params
+     * @returns 
+     */
+    start_sync(params: ParamsOfStart): void {
+        this.client.requestSync('debot.start', params);
+    }
+
+    /**
      * [UNSTABLE](UNSTABLE.md) Fetches DeBot metadata from blockchain.
      * 
      * @remarks
@@ -8976,6 +10891,19 @@ export class DebotModule {
      */
     fetch(params: ParamsOfFetch): Promise<ResultOfFetch> {
         return this.client.request('debot.fetch', params);
+    }
+
+    /**
+     * [UNSTABLE](UNSTABLE.md) Fetches DeBot metadata from blockchain.
+     * 
+     * @remarks
+     * Downloads DeBot from blockchain and creates and fetches its metadata.
+     * 
+     * @param {ParamsOfFetch} params
+     * @returns ResultOfFetch
+     */
+    fetch_sync(params: ParamsOfFetch): ResultOfFetch {
+        return this.client.requestSync('debot.fetch', params);
     }
 
     /**
@@ -8996,6 +10924,23 @@ export class DebotModule {
     }
 
     /**
+     * [UNSTABLE](UNSTABLE.md) Executes debot action.
+     * 
+     * @remarks
+     * Calls debot engine referenced by debot handle to execute input action.
+     * Calls Debot Browser Callbacks if needed.
+     * 
+     * # Remarks
+     * Chain of actions can be executed if input action generates a list of subactions.
+     * 
+     * @param {ParamsOfExecute} params
+     * @returns 
+     */
+    execute_sync(params: ParamsOfExecute): void {
+        this.client.requestSync('debot.execute', params);
+    }
+
+    /**
      * [UNSTABLE](UNSTABLE.md) Sends message to Debot.
      * 
      * @remarks
@@ -9009,6 +10954,19 @@ export class DebotModule {
     }
 
     /**
+     * [UNSTABLE](UNSTABLE.md) Sends message to Debot.
+     * 
+     * @remarks
+     * Used by Debot Browser to send response on Dinterface call or from other Debots.
+     * 
+     * @param {ParamsOfSend} params
+     * @returns 
+     */
+    send_sync(params: ParamsOfSend): void {
+        this.client.requestSync('debot.send', params);
+    }
+
+    /**
      * [UNSTABLE](UNSTABLE.md) Destroys debot handle.
      * 
      * @remarks
@@ -9019,6 +10977,19 @@ export class DebotModule {
      */
     remove(params: ParamsOfRemove): Promise<void> {
         return this.client.request('debot.remove', params);
+    }
+
+    /**
+     * [UNSTABLE](UNSTABLE.md) Destroys debot handle.
+     * 
+     * @remarks
+     * Removes handle from Client Context and drops debot engine referenced by that handle.
+     * 
+     * @param {ParamsOfRemove} params
+     * @returns 
+     */
+    remove_sync(params: ParamsOfRemove): void {
+        this.client.requestSync('debot.remove', params);
     }
 }
 
@@ -9137,6 +11108,76 @@ export class ProofsModule {
     }
 
     /**
+     * Proves that a given block's data, which is queried from TONOS API, can be trusted.
+     * 
+     * @remarks
+     * This function checks block proofs and compares given data with the proven.
+     * If the given data differs from the proven, the exception will be thrown.
+     * The input param is a single block's JSON object, which was queried from DApp server using
+     * functions such as `net.query`, `net.query_collection` or `net.wait_for_collection`.
+     * If block's BOC is not provided in the JSON, it will be queried from DApp server
+     * (in this case it is required to provide at least `id` of block).
+     * 
+     * Please note, that joins (like `signatures` in `Block`) are separated entities and not supported,
+     * so function will throw an exception in a case if JSON being checked has such entities in it.
+     * 
+     * If `cache_in_local_storage` in config is set to `true` (default), downloaded proofs and
+     * master-chain BOCs are saved into the persistent local storage (e.g. file system for native
+     * environments or browser's IndexedDB for the web); otherwise all the data is cached only in
+     * memory in current client's context and will be lost after destruction of the client.
+     * 
+     * **Why Proofs are needed**
+     * 
+     * Proofs are needed to ensure that the data downloaded from a DApp server is real blockchain
+     * data. Checking proofs can protect from the malicious DApp server which can potentially provide
+     * fake data, or also from "Man in the Middle" attacks class.
+     * 
+     * **What Proofs are**
+     * 
+     * Simply, proof is a list of signatures of validators', which have signed this particular master-
+     * block.
+     * 
+     * The very first validator set's public keys are included in the zero-state. Whe know a root hash
+     * of the zero-state, because it is stored in the network configuration file, it is our authority
+     * root. For proving zero-state it is enough to calculate and compare its root hash.
+     * 
+     * In each new validator cycle the validator set is changed. The new one is stored in a key-block,
+     * which is signed by the validator set, which we already trust, the next validator set will be
+     * stored to the new key-block and signed by the current validator set, and so on.
+     * 
+     * In order to prove any block in the master-chain we need to check, that it has been signed by
+     * a trusted validator set. So we need to check all key-blocks' proofs, started from the zero-state
+     * and until the block, which we want to prove. But it can take a lot of time and traffic to
+     * download and prove all key-blocks on a client. For solving this, special trusted blocks are used
+     * in Ever-SDK.
+     * 
+     * The trusted block is the authority root, as well, as the zero-state. Each trusted block is the
+     * `id` (e.g. `root_hash`) of the already proven key-block. There can be plenty of trusted
+     * blocks, so there can be a lot of authority roots. The hashes of trusted blocks for MainNet
+     * and DevNet are hardcoded in SDK in a separated binary file (trusted_key_blocks.bin) and is
+     * being updated for each release by using `update_trusted_blocks` utility.
+     * 
+     * See [update_trusted_blocks](../../../tools/update_trusted_blocks) directory for more info.
+     * 
+     * In future SDK releases, one will also be able to provide their hashes of trusted blocks for
+     * other networks, besides for MainNet and DevNet.
+     * By using trusted key-blocks, in order to prove any block, we can prove chain of key-blocks to
+     * the closest previous trusted key-block, not only to the zero-state.
+     * 
+     * But shard-blocks don't have proofs on DApp server. In this case, in order to prove any shard-
+     * block data, we search for a corresponding master-block, which contains the root hash of this
+     * shard-block, or some shard block which is linked to that block in shard-chain. After proving
+     * this master-block, we traverse through each link and calculate and compare hashes with links,
+     * one-by-one. After that we can ensure that this shard-block has also been proven.
+     * 
+     * @param {ParamsOfProofBlockData} params
+     * @returns 
+     */
+    proof_block_data_sync(params: ParamsOfProofBlockData): void {
+        this.client.requestSync('proofs.proof_block_data', params);
+    }
+
+    /**
      * Proves that a given transaction's data, which is queried from TONOS API, can be trusted.
      * 
      * @remarks
@@ -9164,6 +11205,33 @@ export class ProofsModule {
     }
 
     /**
+     * Proves that a given transaction's data, which is queried from TONOS API, can be trusted.
+     * 
+     * @remarks
+     * This function requests the corresponding block, checks block proofs, ensures that given
+     * transaction exists in the proven block and compares given data with the proven.
+     * If the given data differs from the proven, the exception will be thrown.
+     * The input parameter is a single transaction's JSON object (see params description),
+     * which was queried from TONOS API using functions such as `net.query`, `net.query_collection`
+     * or `net.wait_for_collection`.
+     * 
+     * If transaction's BOC and/or `block_id` are not provided in the JSON, they will be queried from
+     * TONOS API.
+     * 
+     * Please note, that joins (like `account`, `in_message`, `out_messages`, etc. in `Transaction`
+     * entity) are separated entities and not supported, so function will throw an exception in a case
+     * if JSON being checked has such entities in it.
+     * 
+     * For more information about proofs checking, see description of `proof_block_data` function.
+     * 
+     * @param {ParamsOfProofTransactionData} params
+     * @returns 
+     */
+    proof_transaction_data_sync(params: ParamsOfProofTransactionData): void {
+        this.client.requestSync('proofs.proof_transaction_data', params);
+    }
+
+    /**
      * Proves that a given message's data, which is queried from TONOS API, can be trusted.
      * 
      * @remarks
@@ -9188,6 +11256,33 @@ export class ProofsModule {
      */
     proof_message_data(params: ParamsOfProofMessageData): Promise<void> {
         return this.client.request('proofs.proof_message_data', params);
+    }
+
+    /**
+     * Proves that a given message's data, which is queried from TONOS API, can be trusted.
+     * 
+     * @remarks
+     * This function first proves the corresponding transaction, ensures that the proven transaction
+     * refers to the given message and compares given data with the proven.
+     * If the given data differs from the proven, the exception will be thrown.
+     * The input parameter is a single message's JSON object (see params description),
+     * which was queried from TONOS API using functions such as `net.query`, `net.query_collection`
+     * or `net.wait_for_collection`.
+     * 
+     * If message's BOC and/or non-null `src_transaction.id` or `dst_transaction.id` are not provided
+     * in the JSON, they will be queried from TONOS API.
+     * 
+     * Please note, that joins (like `block`, `dst_account`, `dst_transaction`, `src_account`,
+     * `src_transaction`, etc. in `Message` entity) are separated entities and not supported,
+     * so function will throw an exception in a case if JSON being checked has such entities in it.
+     * 
+     * For more information about proofs checking, see description of `proof_block_data` function.
+     * 
+     * @param {ParamsOfProofMessageData} params
+     * @returns 
+     */
+    proof_message_data_sync(params: ParamsOfProofMessageData): void {
+        this.client.requestSync('proofs.proof_message_data', params);
     }
 }
 
