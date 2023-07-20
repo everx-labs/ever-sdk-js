@@ -46,7 +46,7 @@ const ARCHS: [Arch; 4] = [
 ];
 
 const LIB: &str = "libeversdk.so";
-const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r17c-darwin-x86_64.zip";
+const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r23-darwin.zip";
 
 fn main() {
     let target_arg = env::args().nth(1).unwrap_or("".to_string());
@@ -63,7 +63,7 @@ fn main() {
             &builder.lib_dir.join("NDK").join(arch.ndk).join("bin"),
         ));
         std::env::set_var("PATH", path);
-        assert!(exec("cargo", &["build", "--target", arch.target, "--release"]).success());
+        assert!(exec("cargo", &["+1.71.0-x86_64-apple-darwin", "build", "--target", arch.target, "--release"]).success());
     }
 
     let out_dir = builder.package_dir.join("src/main/jniLibs");
@@ -100,7 +100,7 @@ fn get_ndk(builder: &Build) -> PathBuf {
         }
     }
     let ndk_zip_file = builder.lib_dir.join(NDK_URL.split("/").last().unwrap());
-    let ndk_dir = builder.lib_dir.join("android-ndk-r17c");
+    let ndk_dir = builder.lib_dir.join("android-ndk-r23");
     if !ndk_zip_file.exists() {
         println!("Downloading android NDK...");
         assert!(exec("curl", &[NDK_URL, "-o", path_str(&ndk_zip_file)]).success());
