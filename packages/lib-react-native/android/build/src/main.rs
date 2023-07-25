@@ -63,7 +63,7 @@ fn main() {
             &builder.lib_dir.join("NDK").join(arch.ndk).join("bin"),
         ));
         std::env::set_var("PATH", path);
-        assert!(exec("cargo", &["build", "--target", arch.target, "--release"]).success());
+        assert!(exec("cargo", &["+1.65.0-x86_64-apple-darwin", "build", "--target", arch.target, "--release"]).success());
     }
 
     let out_dir = builder.package_dir.join("src/main/jniLibs");
