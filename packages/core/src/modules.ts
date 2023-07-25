@@ -470,6 +470,10 @@ export class ClientModule {
 
     /**
      * Returns Core Library API reference
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns ResultOfGetApiReference
      */
     get_api_reference_sync(): ResultOfGetApiReference {
@@ -486,6 +490,10 @@ export class ClientModule {
 
     /**
      * Returns Core Library version
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns ResultOfVersion
      */
     version_sync(): ResultOfVersion {
@@ -502,6 +510,10 @@ export class ClientModule {
 
     /**
      * Returns Core Library API reference
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns ClientConfig
      */
     config_sync(): ClientConfig {
@@ -518,6 +530,10 @@ export class ClientModule {
 
     /**
      * Returns detailed information about this build.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns ResultOfBuildInfo
      */
     build_info_sync(): ResultOfBuildInfo {
@@ -536,6 +552,10 @@ export class ClientModule {
 
     /**
      * Resolves application request processing result
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfResolveAppRequest} params
      * @returns 
@@ -2306,6 +2326,10 @@ export class CryptoModule {
      * into a product of smaller prime integers (factors).
      * See [https://en.wikipedia.org/wiki/Integer_factorization]
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfFactorize} params
      * @returns ResultOfFactorize
      */
@@ -2334,6 +2358,10 @@ export class CryptoModule {
      * Performs modular exponentiation for big integers (`base`^`exponent` mod `modulus`).
      * See [https://en.wikipedia.org/wiki/Modular_exponentiation]
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfModularPower} params
      * @returns ResultOfModularPower
      */
@@ -2353,6 +2381,10 @@ export class CryptoModule {
 
     /**
      * Calculates CRC16 using TON algorithm.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfTonCrc16} params
      * @returns ResultOfTonCrc16
@@ -2374,6 +2406,10 @@ export class CryptoModule {
     /**
      * Generates random byte array of the specified length and returns it in `base64` format
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfGenerateRandomBytes} params
      * @returns ResultOfGenerateRandomBytes
      */
@@ -2394,6 +2430,10 @@ export class CryptoModule {
     /**
      * Converts public key to ton safe_format
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfConvertPublicKeyToTonSafeFormat} params
      * @returns ResultOfConvertPublicKeyToTonSafeFormat
      */
@@ -2411,6 +2451,10 @@ export class CryptoModule {
 
     /**
      * Generates random ed25519 key pair.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns KeyPair
      */
     generate_random_sign_keys_sync(): KeyPair {
@@ -2429,6 +2473,10 @@ export class CryptoModule {
 
     /**
      * Signs a data using the provided keys.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfSign} params
      * @returns ResultOfSign
@@ -2450,6 +2498,10 @@ export class CryptoModule {
     /**
      * Verifies signed data using the provided public key. Raises error if verification is failed.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfVerifySignature} params
      * @returns ResultOfVerifySignature
      */
@@ -2470,6 +2522,10 @@ export class CryptoModule {
     /**
      * Calculates SHA256 hash of the specified data.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfHash} params
      * @returns ResultOfHash
      */
@@ -2489,6 +2545,10 @@ export class CryptoModule {
 
     /**
      * Calculates SHA512 hash of the specified data.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfHash} params
      * @returns ResultOfHash
@@ -2544,6 +2604,10 @@ export class CryptoModule {
      * - `r = 8`
      * - `p = 1`
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfScrypt} params
      * @returns ResultOfScrypt
      */
@@ -2574,6 +2638,10 @@ export class CryptoModule {
      * of secret and public keys (128 symbols hex string) by design of [NaCL](http://nacl.cr.yp.to/sign.html).
      * See also [the stackexchange question](https://crypto.stackexchange.com/questions/54353/).
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfNaclSignKeyPairFromSecret} params
      * @returns KeyPair
      */
@@ -2593,6 +2661,10 @@ export class CryptoModule {
 
     /**
      * Signs data using the signer's secret key.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfNaclSign} params
      * @returns ResultOfNaclSign
@@ -2626,6 +2698,10 @@ export class CryptoModule {
      * 
      * If the signature fails verification, crypto_sign_open raises an exception.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfNaclSignOpen} params
      * @returns ResultOfNaclSignOpen
      */
@@ -2654,6 +2730,10 @@ export class CryptoModule {
      * Signs the message `unsigned` using the secret key `secret`
      * and returns a signature `signature`.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfNaclSign} params
      * @returns ResultOfNaclSignDetached
      */
@@ -2674,6 +2754,10 @@ export class CryptoModule {
     /**
      * Verifies the signature with public key and `unsigned` data.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfNaclSignDetachedVerify} params
      * @returns ResultOfNaclSignDetachedVerify
      */
@@ -2691,6 +2775,10 @@ export class CryptoModule {
 
     /**
      * Generates a random NaCl key pair
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns KeyPair
      */
     nacl_box_keypair_sync(): KeyPair {
@@ -2709,6 +2797,10 @@ export class CryptoModule {
 
     /**
      * Generates key pair from a secret key
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfNaclBoxKeyPairFromSecret} params
      * @returns KeyPair
@@ -2738,6 +2830,10 @@ export class CryptoModule {
      * Encrypt and authenticate a message using the senders secret key, the receivers public
      * key, and a nonce.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfNaclBox} params
      * @returns ResultOfNaclBox
      */
@@ -2757,6 +2853,10 @@ export class CryptoModule {
 
     /**
      * Decrypt and verify the cipher text using the receivers secret key, the senders public key, and the nonce.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfNaclBoxOpen} params
      * @returns ResultOfNaclBoxOpen
@@ -2778,6 +2878,10 @@ export class CryptoModule {
     /**
      * Encrypt and authenticate message using nonce and secret key.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfNaclSecretBox} params
      * @returns ResultOfNaclBox
      */
@@ -2798,6 +2902,10 @@ export class CryptoModule {
     /**
      * Decrypts and verifies cipher text using `nonce` and secret `key`.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfNaclSecretBoxOpen} params
      * @returns ResultOfNaclBoxOpen
      */
@@ -2817,6 +2925,10 @@ export class CryptoModule {
 
     /**
      * Prints the list of words from the specified dictionary
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfMnemonicWords} params
      * @returns ResultOfMnemonicWords
@@ -2844,6 +2956,10 @@ export class CryptoModule {
      * @remarks
      * Generates a random mnemonic from the specified dictionary and word count
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfMnemonicFromRandom} params
      * @returns ResultOfMnemonicFromRandom
      */
@@ -2863,6 +2979,10 @@ export class CryptoModule {
 
     /**
      * Generates mnemonic from pre-generated entropy
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfMnemonicFromEntropy} params
      * @returns ResultOfMnemonicFromEntropy
@@ -2892,6 +3012,10 @@ export class CryptoModule {
      * The phrase supplied will be checked for word length and validated according to the checksum
      * specified in BIP0039.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfMnemonicVerify} params
      * @returns ResultOfMnemonicVerify
      */
@@ -2920,6 +3044,10 @@ export class CryptoModule {
      * Validates the seed phrase, generates master key and then derives
      * the key pair from the master key and the specified path
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfMnemonicDeriveSignKeys} params
      * @returns KeyPair
      */
@@ -2939,6 +3067,10 @@ export class CryptoModule {
 
     /**
      * Generates an extended master private key that will be the root for all the derived keys
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfHDKeyXPrvFromMnemonic} params
      * @returns ResultOfHDKeyXPrvFromMnemonic
@@ -2960,6 +3092,10 @@ export class CryptoModule {
     /**
      * Returns extended private key derived from the specified extended private key and child index
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfHDKeyDeriveFromXPrv} params
      * @returns ResultOfHDKeyDeriveFromXPrv
      */
@@ -2979,6 +3115,10 @@ export class CryptoModule {
 
     /**
      * Derives the extended private key from the specified key and path
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfHDKeyDeriveFromXPrvPath} params
      * @returns ResultOfHDKeyDeriveFromXPrvPath
@@ -3000,6 +3140,10 @@ export class CryptoModule {
     /**
      * Extracts the private key from the serialized extended private key
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfHDKeySecretFromXPrv} params
      * @returns ResultOfHDKeySecretFromXPrv
      */
@@ -3020,6 +3164,10 @@ export class CryptoModule {
     /**
      * Extracts the public key from the serialized extended private key
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfHDKeyPublicFromXPrv} params
      * @returns ResultOfHDKeyPublicFromXPrv
      */
@@ -3039,6 +3187,10 @@ export class CryptoModule {
 
     /**
      * Performs symmetric `chacha20` encryption.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfChaCha20} params
      * @returns ResultOfChaCha20
@@ -3088,6 +3240,10 @@ export class CryptoModule {
      * When used, decrypted secret shows up in core library's memory for a very short period
      * of time and then is immediately overwritten with zeroes.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfCreateCryptoBox} params
      * @returns RegisteredCryptoBox
      */
@@ -3108,6 +3264,10 @@ export class CryptoModule {
     /**
      * Removes Crypto Box. Clears all secret data.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {RegisteredCryptoBox} params
      * @returns 
      */
@@ -3127,6 +3287,10 @@ export class CryptoModule {
 
     /**
      * Get Crypto Box Info. Used to get `encrypted_secret` that should be used for all the cryptobox initializations except the first one.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {RegisteredCryptoBox} params
      * @returns ResultOfGetCryptoBoxInfo
@@ -3154,6 +3318,10 @@ export class CryptoModule {
      * @remarks
      * Attention! Store this data in your application for a very short period of time and overwrite it with zeroes ASAP.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {RegisteredCryptoBox} params
      * @returns ResultOfGetCryptoBoxSeedPhrase
      */
@@ -3173,6 +3341,10 @@ export class CryptoModule {
 
     /**
      * Get handle of Signing Box derived from Crypto Box.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfGetSigningBoxFromCryptoBox} params
      * @returns RegisteredSigningBox
@@ -3208,6 +3380,10 @@ export class CryptoModule {
      * If `secret_lifetime` is not specified - overwrites encryption secret with zeroes immediately after
      * encryption operation.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfGetEncryptionBoxFromCryptoBox} params
      * @returns RegisteredEncryptionBox
      */
@@ -3227,6 +3403,10 @@ export class CryptoModule {
 
     /**
      * Removes cached secrets (overwrites with zeroes) from all signing and encryption boxes, derived from crypto box.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {RegisteredCryptoBox} params
      * @returns 
@@ -3251,6 +3431,10 @@ export class CryptoModule {
 
     /**
      * Register an application implemented signing box.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns RegisteredSigningBox
      */
     register_signing_box_sync(): RegisteredSigningBox {
@@ -3269,6 +3453,10 @@ export class CryptoModule {
 
     /**
      * Creates a default signing box implementation.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {KeyPair} params
      * @returns RegisteredSigningBox
@@ -3290,6 +3478,10 @@ export class CryptoModule {
     /**
      * Returns public key of signing key pair.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {RegisteredSigningBox} params
      * @returns ResultOfSigningBoxGetPublicKey
      */
@@ -3310,6 +3502,10 @@ export class CryptoModule {
     /**
      * Returns signed user data.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfSigningBoxSign} params
      * @returns ResultOfSigningBoxSign
      */
@@ -3329,6 +3525,10 @@ export class CryptoModule {
 
     /**
      * Removes signing box from SDK.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {RegisteredSigningBox} params
      * @returns 
@@ -3353,6 +3553,10 @@ export class CryptoModule {
 
     /**
      * Register an application implemented encryption box.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns RegisteredEncryptionBox
      */
     register_encryption_box_sync(): RegisteredEncryptionBox {
@@ -3371,6 +3575,10 @@ export class CryptoModule {
 
     /**
      * Removes encryption box from SDK
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {RegisteredEncryptionBox} params
      * @returns 
@@ -3391,6 +3599,10 @@ export class CryptoModule {
 
     /**
      * Queries info from the given encryption box
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfEncryptionBoxGetInfo} params
      * @returns ResultOfEncryptionBoxGetInfo
@@ -3420,6 +3632,10 @@ export class CryptoModule {
      * Block cipher algorithms pad data to cipher block size so encrypted data can be longer then original data. Client should store the original data size after encryption and use it after
      * decryption to retrieve the original data from decrypted data.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfEncryptionBoxEncrypt} params
      * @returns ResultOfEncryptionBoxEncrypt
      */
@@ -3448,6 +3664,10 @@ export class CryptoModule {
      * Block cipher algorithms pad data to cipher block size so encrypted data can be longer then original data. Client should store the original data size after encryption and use it after
      * decryption to retrieve the original data from decrypted data.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfEncryptionBoxDecrypt} params
      * @returns ResultOfEncryptionBoxDecrypt
      */
@@ -3467,6 +3687,10 @@ export class CryptoModule {
 
     /**
      * Creates encryption box with specified algorithm
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfCreateEncryptionBox} params
      * @returns RegisteredEncryptionBox
@@ -4702,6 +4926,10 @@ export class AbiModule {
     /**
      * Encodes message body according to ABI function call.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfEncodeMessageBody} params
      * @returns ResultOfEncodeMessageBody
      */
@@ -4719,6 +4947,10 @@ export class AbiModule {
     }
 
     /**
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfAttachSignatureToMessageBody} params
      * @returns ResultOfAttachSignatureToMessageBody
@@ -4804,6 +5036,10 @@ export class AbiModule {
      * 2. Public key, specified in TVM file.
      * 3. Public key, provided by signer.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfEncodeMessage} params
      * @returns ResultOfEncodeMessage
      */
@@ -4856,6 +5092,10 @@ export class AbiModule {
      * 1. Public key from deploy set.
      * 2. Public key, specified in TVM file.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfEncodeInternalMessage} params
      * @returns ResultOfEncodeInternalMessage
      */
@@ -4875,6 +5115,10 @@ export class AbiModule {
 
     /**
      * Combines `hex`-encoded `signature` with `base64`-encoded `unsigned_message`. Returns signed message encoded in `base64`.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfAttachSignature} params
      * @returns ResultOfAttachSignature
@@ -4896,6 +5140,10 @@ export class AbiModule {
     /**
      * Decodes message body using provided message BOC and ABI.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfDecodeMessage} params
      * @returns DecodedMessageBody
      */
@@ -4915,6 +5163,10 @@ export class AbiModule {
 
     /**
      * Decodes message body using provided body BOC and ABI.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfDecodeMessageBody} params
      * @returns DecodedMessageBody
@@ -4946,6 +5198,10 @@ export class AbiModule {
      * 1. BOC of code, BOC of data, BOC of library
      * 2. TVC (string in `base64`), keys, init params
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfEncodeAccount} params
      * @returns ResultOfEncodeAccount
      */
@@ -4972,6 +5228,10 @@ export class AbiModule {
      * @remarks
      * Note: this feature requires ABI 2.1 or higher.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfDecodeAccountData} params
      * @returns ResultOfDecodeAccountData
      */
@@ -4991,6 +5251,10 @@ export class AbiModule {
 
     /**
      * Updates initial account data with initial values for the contract's static variables and owner's public key. This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfUpdateInitialData} params
      * @returns ResultOfUpdateInitialData
@@ -5018,6 +5282,10 @@ export class AbiModule {
      * @remarks
      * This function is analogue of `tvm.buildDataInit` function in Solidity.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfEncodeInitialData} params
      * @returns ResultOfEncodeInitialData
      */
@@ -5037,6 +5305,10 @@ export class AbiModule {
 
     /**
      * Decodes initial values of a contract's static variables and owner's public key from account initial data This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfDecodeInitialData} params
      * @returns ResultOfDecodeInitialData
@@ -5092,6 +5364,10 @@ export class AbiModule {
      * check the parsed data manually, expand the parsing schema and then decode the whole BOC
      * with the full schema.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfDecodeBoc} params
      * @returns ResultOfDecodeBoc
      */
@@ -5111,6 +5387,10 @@ export class AbiModule {
 
     /**
      * Encodes given parameters in JSON into a BOC using param types from ABI.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfAbiEncodeBoc} params
      * @returns ResultOfAbiEncodeBoc
@@ -5132,6 +5412,10 @@ export class AbiModule {
     /**
      * Calculates contract function ID by contract ABI
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfCalcFunctionId} params
      * @returns ResultOfCalcFunctionId
      */
@@ -5151,6 +5435,10 @@ export class AbiModule {
 
     /**
      * Extracts signature from message body and calculates hash to verify the signature
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfGetSignatureData} params
      * @returns ResultOfGetSignatureData
@@ -5868,6 +6156,10 @@ export class BocModule {
     /**
      * Decodes tvc according to the tvc spec. Read more about tvc structure here https://github.com/tonlabs/ever-struct/blob/main/src/scheme/mod.rs#L30
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfDecodeTvc} params
      * @returns ResultOfDecodeTvc
      */
@@ -5893,6 +6185,10 @@ export class BocModule {
      * 
      * @remarks
      * JSON structure is compatible with GraphQL API message object
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfParse} params
      * @returns ResultOfParse
@@ -5920,6 +6216,10 @@ export class BocModule {
      * @remarks
      * JSON structure is compatible with GraphQL API transaction object
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfParse} params
      * @returns ResultOfParse
      */
@@ -5945,6 +6245,10 @@ export class BocModule {
      * 
      * @remarks
      * JSON structure is compatible with GraphQL API account object
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfParse} params
      * @returns ResultOfParse
@@ -5972,6 +6276,10 @@ export class BocModule {
      * @remarks
      * JSON structure is compatible with GraphQL API block object
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfParse} params
      * @returns ResultOfParse
      */
@@ -5998,6 +6306,10 @@ export class BocModule {
      * @remarks
      * JSON structure is compatible with GraphQL API shardstate object
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfParseShardstate} params
      * @returns ResultOfParse
      */
@@ -6017,6 +6329,10 @@ export class BocModule {
 
     /**
      * Extract blockchain configuration from key block and also from zerostate.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfGetBlockchainConfig} params
      * @returns ResultOfGetBlockchainConfig
@@ -6038,6 +6354,10 @@ export class BocModule {
     /**
      * Calculates BOC root hash
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfGetBocHash} params
      * @returns ResultOfGetBocHash
      */
@@ -6057,6 +6377,10 @@ export class BocModule {
 
     /**
      * Calculates BOC depth
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfGetBocDepth} params
      * @returns ResultOfGetBocDepth
@@ -6078,6 +6402,10 @@ export class BocModule {
     /**
      * Extracts code from TVC contract image
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfGetCodeFromTvc} params
      * @returns ResultOfGetCodeFromTvc
      */
@@ -6097,6 +6425,10 @@ export class BocModule {
 
     /**
      * Get BOC from cache
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfBocCacheGet} params
      * @returns ResultOfBocCacheGet
@@ -6118,6 +6450,10 @@ export class BocModule {
     /**
      * Save BOC into cache or increase pin counter for existing pinned BOC
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfBocCacheSet} params
      * @returns ResultOfBocCacheSet
      */
@@ -6137,6 +6473,10 @@ export class BocModule {
 
     /**
      * Unpin BOCs with specified pin defined in the `cache_set`. Decrease pin reference counter for BOCs with specified pin defined in the `cache_set`. BOCs which have only 1 pin and its reference counter become 0 will be removed from cache
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfBocCacheUnpin} params
      * @returns 
@@ -6158,6 +6498,10 @@ export class BocModule {
     /**
      * Encodes bag of cells (BOC) with builder operations. This method provides the same functionality as Solidity TvmBuilder. Resulting BOC of this method can be passed into Solidity and C++ contracts as TvmCell type.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfEncodeBoc} params
      * @returns ResultOfEncodeBoc
      */
@@ -6177,6 +6521,10 @@ export class BocModule {
 
     /**
      * Returns the contract code's salt if it is present.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfGetCodeSalt} params
      * @returns ResultOfGetCodeSalt
@@ -6204,6 +6552,10 @@ export class BocModule {
      * @remarks
      * Returns the new contract code with salt.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfSetCodeSalt} params
      * @returns ResultOfSetCodeSalt
      */
@@ -6224,6 +6576,10 @@ export class BocModule {
     /**
      * Decodes contract's initial state into code, data, libraries and special options.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfDecodeStateInit} params
      * @returns ResultOfDecodeStateInit
      */
@@ -6243,6 +6599,10 @@ export class BocModule {
 
     /**
      * Encodes initial contract state from code, data, libraries ans special options (see input params)
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfEncodeStateInit} params
      * @returns ResultOfEncodeStateInit
@@ -6270,6 +6630,10 @@ export class BocModule {
      * @remarks
      * Allows to encode any external inbound message.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfEncodeExternalInMessage} params
      * @returns ResultOfEncodeExternalInMessage
      */
@@ -6289,6 +6653,10 @@ export class BocModule {
 
     /**
      * Returns the compiler version used to compile the code.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfGetCompilerVersion} params
      * @returns ResultOfGetCompilerVersion
@@ -7075,9 +7443,9 @@ export type ParamsOfSendMessage = {
     abi?: Abi,
 
     /**
-     * Flag for requesting events sending
+     * Flag for requesting events sending. Default is `false`.
      */
-    send_events: boolean
+    send_events?: boolean
 }
 
 export type ResultOfSendMessage = {
@@ -7131,9 +7499,9 @@ export type ParamsOfWaitForTransaction = {
     shard_block_id: string,
 
     /**
-     * Flag that enables/disables intermediate events
+     * Flag that enables/disables intermediate events. Default is `false`.
      */
-    send_events: boolean,
+    send_events?: boolean,
 
     /**
      * The list of endpoints to which the message was sent.
@@ -7154,9 +7522,9 @@ export type ParamsOfProcessMessage = {
     message_encode_params: ParamsOfEncodeMessage,
 
     /**
-     * Flag for requesting events sending
+     * Flag for requesting events sending. Default is `false`.
      */
-    send_events: boolean
+    send_events?: boolean
 }
 
 /**
@@ -7246,6 +7614,10 @@ export class ProcessingModule {
      * If monitoring queue with specified name does not exist then monitoring queue will be created
      * with specified unresolved messages.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfMonitorMessages} params
      * @returns 
      */
@@ -7265,6 +7637,10 @@ export class ProcessingModule {
 
     /**
      * Returns summary information about current state of the specified monitoring queue.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfGetMonitorInfo} params
      * @returns MonitoringQueueInfo
@@ -7294,6 +7670,10 @@ export class ProcessingModule {
      * Results and waiting options are depends on the `wait` parameter.
      * All returned results will be removed from the queue's resolved list.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfFetchNextMonitorResults} params
      * @returns ResultOfFetchNextMonitorResults
      */
@@ -7314,6 +7694,10 @@ export class ProcessingModule {
     /**
      * Cancels all background activity and releases all allocated system resources for the specified monitoring queue.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfCancelMonitor} params
      * @returns 
      */
@@ -7333,6 +7717,10 @@ export class ProcessingModule {
 
     /**
      * Sends specified messages to the blockchain.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfSendMessages} params
      * @returns ResultOfSendMessages
@@ -7361,6 +7749,10 @@ export class ProcessingModule {
      * @remarks
      * Sends message to the network and returns the last generated shard block of the destination account
      * before the message was sent. It will be required later for message processing.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfSendMessage} params
      * @returns ResultOfSendMessage
@@ -7434,6 +7826,10 @@ export class ProcessingModule {
      * - If maximum block gen time is reached and no result transaction is found,
      * the processing will exit with an error.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfWaitForTransaction} params
      * @returns ResultOfProcessMessage
      */
@@ -7489,6 +7885,10 @@ export class ProcessingModule {
      * 
      * If contract's ABI does not include "expire" header
      * then, if no transaction is found within the network timeout (see config parameter ), exits with error.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfProcessMessage} params
      * @returns ResultOfProcessMessage
@@ -7688,6 +8088,10 @@ export class UtilsModule {
     /**
      * Converts address from any TON format to any TON format
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfConvertAddress} params
      * @returns ResultOfConvertAddress
      */
@@ -7728,6 +8132,10 @@ export class UtilsModule {
      * `EQCRnbjnQNUL80nfLuoD+jDDhdhGuZH/VULmcJjugz/H9wam` - base64 address. Also called "user-friendly".
      * Was used at the beginning of TON. Now it is supported for compatibility
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfGetAddressType} params
      * @returns ResultOfGetAddressType
      */
@@ -7747,6 +8155,10 @@ export class UtilsModule {
 
     /**
      * Calculates storage fee for an account over a specified time period
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfCalcStorageFee} params
      * @returns ResultOfCalcStorageFee
@@ -7768,6 +8180,10 @@ export class UtilsModule {
     /**
      * Compresses data using Zstandard algorithm
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfCompressZstd} params
      * @returns ResultOfCompressZstd
      */
@@ -7787,6 +8203,10 @@ export class UtilsModule {
 
     /**
      * Decompresses data using Zstandard algorithm
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfDecompressZstd} params
      * @returns ResultOfDecompressZstd
@@ -8271,6 +8691,10 @@ export class TvmModule {
      * 
      * If you need to see the aborted transaction as a result, not as an error, set `skip_transaction_check` to `true`.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfRunExecutor} params
      * @returns ResultOfRunExecutor
      */
@@ -8319,6 +8743,10 @@ export class TvmModule {
      * Attention! Updated account state is produces as well, but only
      * `account_state.storage.state.data`  part of the BOC is updated.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfRunTvm} params
      * @returns ResultOfRunTvm
      */
@@ -8346,6 +8774,10 @@ export class TvmModule {
      * @remarks
      * Executes a get-method of FIFT contract that fulfills the smc-guidelines https://test.ton.org/smc-guidelines.txt
      * and returns the result data from TVM's stack
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfRunGet} params
      * @returns ResultOfRunGet
@@ -9119,6 +9551,10 @@ export class NetModule {
     /**
      * Performs DAppServer GraphQL query.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfQuery} params
      * @returns ResultOfQuery
      */
@@ -9138,6 +9574,10 @@ export class NetModule {
 
     /**
      * Performs multiple queries per single fetch.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfBatchQuery} params
      * @returns ResultOfBatchQuery
@@ -9169,6 +9609,10 @@ export class NetModule {
      * limits the number of returned records and orders them.
      * The projection fields are limited to `result` fields
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfQueryCollection} params
      * @returns ResultOfQueryCollection
      */
@@ -9196,6 +9640,10 @@ export class NetModule {
      * @remarks
      * Aggregates values from the specified `fields` for records
      * that satisfies the `filter` conditions,
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfAggregateCollection} params
      * @returns ResultOfAggregateCollection
@@ -9233,6 +9681,10 @@ export class NetModule {
      * and returns it.
      * The projection fields are limited to `result` fields
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfWaitForCollection} params
      * @returns ResultOfWaitForCollection
      */
@@ -9258,6 +9710,10 @@ export class NetModule {
      * 
      * @remarks
      * Cancels a subscription specified by its handle.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ResultOfSubscribeCollection} params
      * @returns 
@@ -9363,6 +9819,10 @@ export class NetModule {
      * (for example transactions of the specific account): application must
      * refresh all cached (or visible to user) lists where this sequences presents.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfSubscribeCollection} params
      * @returns ResultOfSubscribeCollection
      */
@@ -9455,6 +9915,10 @@ export class NetModule {
      * (for example transactions of the specific account): application must
      * refresh all cached (or visible to user) lists where this sequences presents.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfSubscribe} params
      * @returns ResultOfSubscribeCollection
      */
@@ -9472,6 +9936,10 @@ export class NetModule {
 
     /**
      * Suspends network module to stop any network activity
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns 
      */
     suspend_sync(): void {
@@ -9488,6 +9956,10 @@ export class NetModule {
 
     /**
      * Resumes network module to enable network activity
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns 
      */
     resume_sync(): void {
@@ -9507,6 +9979,10 @@ export class NetModule {
     /**
      * Returns ID of the last block in a specified account shard
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfFindLastShardBlock} params
      * @returns ResultOfFindLastShardBlock
      */
@@ -9524,6 +10000,10 @@ export class NetModule {
 
     /**
      * Requests the list of alternative endpoints from server
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns EndpointsSet
      */
     fetch_endpoints_sync(): EndpointsSet {
@@ -9543,6 +10023,10 @@ export class NetModule {
     /**
      * Sets the list of endpoints to use on reinit
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {EndpointsSet} params
      * @returns 
      */
@@ -9560,6 +10044,10 @@ export class NetModule {
 
     /**
      * Requests the list of alternative endpoints from server
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns ResultOfGetEndpoints
      */
     get_endpoints_sync(): ResultOfGetEndpoints {
@@ -9588,6 +10076,10 @@ export class NetModule {
      * *Attention* this query retrieves data from 'Counterparties' service which is not supported in
      * the opensource version of DApp Server (and will not be supported) as well as in Evernode SE (will be supported in SE in future),
      * but is always accessible via [EVER OS Clouds](../ton-os-api/networks.md)
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfQueryCounterparties} params
      * @returns ResultOfQueryCollection
@@ -9674,6 +10166,10 @@ export class NetModule {
      * But there is no guarantee that all messages from transactions `out_msgs` are
      * presented in `result.messages`.
      * So the application has to continue retrieval for missing messages if it requires.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfQueryTransactionTree} params
      * @returns ResultOfQueryTransactionTree
@@ -9767,6 +10263,10 @@ export class NetModule {
      * 
      * Application should call the `remove_iterator` when iterator is no longer required.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfCreateBlockIterator} params
      * @returns RegisteredIterator
      */
@@ -9796,6 +10296,10 @@ export class NetModule {
      * The iterator stays exactly at the same position where the `resume_state` was caught.
      * 
      * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfResumeBlockIterator} params
      * @returns RegisteredIterator
@@ -9931,6 +10435,10 @@ export class NetModule {
      * 
      * Application should call the `remove_iterator` when iterator is no longer required.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfCreateTransactionIterator} params
      * @returns RegisteredIterator
      */
@@ -9966,6 +10474,10 @@ export class NetModule {
      * must pass the account filter again in `accounts_filter` parameter.
      * 
      * Application should call the `remove_iterator` when iterator is no longer required.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfResumeTransactionIterator} params
      * @returns RegisteredIterator
@@ -10019,6 +10531,10 @@ export class NetModule {
      * The structure of the items returned depends on the iterator used.
      * See the description to the appropriated iterator creation function.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfIteratorNext} params
      * @returns ResultOfIteratorNext
      */
@@ -10051,6 +10567,10 @@ export class NetModule {
      * Application always should call the `remove_iterator` when iterator
      * is no longer required.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {RegisteredIterator} params
      * @returns 
      */
@@ -10068,6 +10588,10 @@ export class NetModule {
 
     /**
      * Returns signature ID for configured network if it should be used in messages signature
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * @returns ResultOfGetSignatureId
      */
     get_signature_id_sync(): ResultOfGetSignatureId {
@@ -10095,12 +10619,12 @@ export enum DebotErrorCode {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Handle of registered in SDK debot
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Handle of registered in SDK debot
  */
 export type DebotHandle = number
 
 /**
- * [UNSTABLE](UNSTABLE.md) Describes a debot action in a Debot Context.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Describes a debot action in a Debot Context.
  */
 export type DebotAction = {
 
@@ -10148,7 +10672,7 @@ export type DebotAction = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Describes DeBot metadata.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Describes DeBot metadata.
  */
 export type DebotInfo = {
 
@@ -10255,7 +10779,7 @@ export type DebotActivityTransactionVariant = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Describes the operation that the DeBot wants to perform.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Describes the operation that the DeBot wants to perform.
  * 
  * Depends on `type` field.
  * 
@@ -10282,7 +10806,7 @@ export function debotActivityTransaction(msg: string, dst: string, out: Spending
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Describes how much funds will be debited from the target  contract balance as a result of the transaction.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Describes how much funds will be debited from the target  contract balance as a result of the transaction.
  */
 export type Spending = {
 
@@ -10298,7 +10822,7 @@ export type Spending = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Parameters to init DeBot.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Parameters to init DeBot.
  */
 export type ParamsOfInit = {
 
@@ -10309,7 +10833,7 @@ export type ParamsOfInit = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Structure for storing debot handle returned from `init` function.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Structure for storing debot handle returned from `init` function.
  */
 export type RegisteredDebot = {
 
@@ -10432,7 +10956,7 @@ export type ParamsOfAppDebotBrowserApproveVariant = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Debot Browser callbacks
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Debot Browser callbacks
  * 
  * @remarks
  * Called by debot engine to communicate with debot browser.
@@ -10602,7 +11126,7 @@ export type ResultOfAppDebotBrowserApproveVariant = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Returning values from Debot Browser callbacks.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Returning values from Debot Browser callbacks.
  * 
  * Depends on `type` field.
  * 
@@ -10661,7 +11185,7 @@ export function resultOfAppDebotBrowserApprove(approved: boolean): ResultOfAppDe
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Parameters to start DeBot. DeBot must be already initialized with init() function.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Parameters to start DeBot. DeBot must be already initialized with init() function.
  */
 export type ParamsOfStart = {
 
@@ -10672,7 +11196,7 @@ export type ParamsOfStart = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Parameters to fetch DeBot metadata.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Parameters to fetch DeBot metadata.
  */
 export type ParamsOfFetch = {
 
@@ -10683,7 +11207,7 @@ export type ParamsOfFetch = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md)
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md)
  */
 export type ResultOfFetch = {
 
@@ -10694,7 +11218,7 @@ export type ResultOfFetch = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Parameters for executing debot action.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Parameters for executing debot action.
  */
 export type ParamsOfExecute = {
 
@@ -10710,7 +11234,7 @@ export type ParamsOfExecute = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Parameters of `send` function.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Parameters of `send` function.
  */
 export type ParamsOfSend = {
 
@@ -10726,7 +11250,7 @@ export type ParamsOfSend = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md)
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md)
  */
 export type ParamsOfRemove = {
 
@@ -10787,7 +11311,7 @@ async function dispatchAppDebotBrowser(obj: AppDebotBrowser, params: ParamsOfApp
     }
 }
 /**
- * [UNSTABLE](UNSTABLE.md) Module for working with debot.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Module for working with debot.
  */
 export class DebotModule {
     client: IClient;
@@ -10797,7 +11321,7 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Creates and instance of DeBot.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Creates and instance of DeBot.
      * 
      * @remarks
      * Downloads debot smart contract (code and data) from blockchain and creates
@@ -10820,7 +11344,7 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Creates and instance of DeBot.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Creates and instance of DeBot.
      * 
      * @remarks
      * Downloads debot smart contract (code and data) from blockchain and creates
@@ -10828,6 +11352,10 @@ export class DebotModule {
      * 
      * # Remarks
      * It does not switch debot to context 0. Browser Callbacks are not called.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfInit} params
      * @returns RegisteredDebot
@@ -10837,7 +11365,7 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Starts the DeBot.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Starts the DeBot.
      * 
      * @remarks
      * Downloads debot smart contract from blockchain and switches it to
@@ -10859,7 +11387,7 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Starts the DeBot.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Starts the DeBot.
      * 
      * @remarks
      * Downloads debot smart contract from blockchain and switches it to
@@ -10873,6 +11401,10 @@ export class DebotModule {
      * Therefore when `debote.remove` is called the debot is being deleted and the callback is called
      * with `finish`=`true` which indicates that it will never be used again.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfStart} params
      * @returns 
      */
@@ -10881,7 +11413,7 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Fetches DeBot metadata from blockchain.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Fetches DeBot metadata from blockchain.
      * 
      * @remarks
      * Downloads DeBot from blockchain and creates and fetches its metadata.
@@ -10894,10 +11426,14 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Fetches DeBot metadata from blockchain.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Fetches DeBot metadata from blockchain.
      * 
      * @remarks
      * Downloads DeBot from blockchain and creates and fetches its metadata.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfFetch} params
      * @returns ResultOfFetch
@@ -10907,7 +11443,7 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Executes debot action.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Executes debot action.
      * 
      * @remarks
      * Calls debot engine referenced by debot handle to execute input action.
@@ -10924,7 +11460,7 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Executes debot action.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Executes debot action.
      * 
      * @remarks
      * Calls debot engine referenced by debot handle to execute input action.
@@ -10932,6 +11468,10 @@ export class DebotModule {
      * 
      * # Remarks
      * Chain of actions can be executed if input action generates a list of subactions.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfExecute} params
      * @returns 
@@ -10941,7 +11481,7 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Sends message to Debot.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Sends message to Debot.
      * 
      * @remarks
      * Used by Debot Browser to send response on Dinterface call or from other Debots.
@@ -10954,10 +11494,14 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Sends message to Debot.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Sends message to Debot.
      * 
      * @remarks
      * Used by Debot Browser to send response on Dinterface call or from other Debots.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfSend} params
      * @returns 
@@ -10967,7 +11511,7 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Destroys debot handle.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Destroys debot handle.
      * 
      * @remarks
      * Removes handle from Client Context and drops debot engine referenced by that handle.
@@ -10980,10 +11524,14 @@ export class DebotModule {
     }
 
     /**
-     * [UNSTABLE](UNSTABLE.md) Destroys debot handle.
+     * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Destroys debot handle.
      * 
      * @remarks
      * Removes handle from Client Context and drops debot engine referenced by that handle.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfRemove} params
      * @returns 
@@ -11028,7 +11576,7 @@ export type ParamsOfProofMessageData = {
 }
 
 /**
- * [UNSTABLE](UNSTABLE.md) Module for proving data, retrieved from TONOS API.
+ * [UNSTABLE](UNSTABLE.md) [DEPRECATED](DEPRECATED.md) Module for proving data, retrieved from TONOS API.
  */
 export class ProofsModule {
     client: IClient;
@@ -11170,6 +11718,10 @@ export class ProofsModule {
      * this master-block, we traverse through each link and calculate and compare hashes with links,
      * one-by-one. After that we can ensure that this shard-block has also been proven.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfProofBlockData} params
      * @returns 
      */
@@ -11224,6 +11776,10 @@ export class ProofsModule {
      * 
      * For more information about proofs checking, see description of `proof_block_data` function.
      * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
+     * 
      * @param {ParamsOfProofTransactionData} params
      * @returns 
      */
@@ -11277,6 +11833,10 @@ export class ProofsModule {
      * so function will throw an exception in a case if JSON being checked has such entities in it.
      * 
      * For more information about proofs checking, see description of `proof_block_data` function.
+     * 
+     * NOTE: Available only for `lib-node` binding.
+     * 
+     * 
      * 
      * @param {ParamsOfProofMessageData} params
      * @returns 
