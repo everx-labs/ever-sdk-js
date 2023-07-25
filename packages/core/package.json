@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/core",
-	"version": "1.44.0",
+	"version": "1.44.1",
 	"description": "TON Client for Java Script",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
