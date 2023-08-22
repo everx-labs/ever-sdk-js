@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/lib-node",
-	"version": "1.44.1",
+	"version": "1.44.2",
 	"description": "TON Client NodeJs AddOn",
 	"repository": {
 		"type": "git",
