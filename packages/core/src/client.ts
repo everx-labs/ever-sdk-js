@@ -23,15 +23,15 @@ import {
     ProofsModule,
     TvmModule,
     UtilsModule,
-} from "./modules";
+} from "./modules.ts";
 import {
-    BinaryLibrary,
+    BinaryLibrary, BinaryLoader,
     getBridge,
     ResponseHandler,
     useLibrary,
-} from "./bin";
-import { TonClientError } from "./errors";
-import { packageVersion } from "./version";
+} from "./bin.ts";
+import { TonClientError } from "./errors.ts";
+import { packageVersion } from "./version.ts";
 
 export class TonClient {
     private static _defaultConfig: ClientConfig = {};
@@ -83,7 +83,7 @@ export class TonClient {
         this.proofs = new ProofsModule(this);
     }
 
-    static useBinaryLibrary(loader: () => Promise<BinaryLibrary>) {
+    static useBinaryLibrary(loader: BinaryLoader) {
         useLibrary(loader);
     }
 

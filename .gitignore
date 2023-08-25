@@ -17,6 +17,7 @@ Jenkinsfile
 **/*.so
 **/*.dylib
 **/*.node
+**/*.deno
 **/*.wasm
 **/dist/
 **/*.map
