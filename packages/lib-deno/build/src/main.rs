@@ -16,12 +16,17 @@ use ton_client_build::{exec, Build};
 
 fn main() {
     let builder = Build::new();
-    let target = "release";
-    assert!(exec("cargo", &["build", &format!("--{}", target)]).success());
-
+    let is_release = false;
+    let build_args = if is_release {
+        vec!["build", "--release"]
+    } else {
+        vec!["build"]
+    };
+    assert!(exec("cargo", &build_args).success());
+    let out_folder = if is_release { "release" } else { "debug" };
     let Some(lib) = ["dll", "so", "dylib"].iter().find_map(|x| {
         let name = format!("libeversdk.{}", x);
-        if builder.target_dir.join(target).join(&name).exists() {
+        if builder.target_dir.join(out_folder).join(&name).exists() {
             Some(name)
         } else {
             None
@@ -31,7 +36,9 @@ fn main() {
     };
     builder.add_package_file(
         "eversdk.deno",
-        builder.target_dir.join(target).join(lib),
+        builder.target_dir.join(out_folder).join(lib),
     );
-    builder.publish_package_file("eversdk.deno", "eversdk_{v}_deno_addon_{p}");
+    if is_release {
+        builder.publish_package_file("eversdk.deno", "eversdk_{v}_deno_addon_{p}");
+    }
 }

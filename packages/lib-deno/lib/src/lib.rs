@@ -17,7 +17,7 @@ extern crate ton_client;
 use lazy_static::lazy_static;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
-use std::sync::RwLock;
+use std::sync::Mutex;
 
 pub use ton_client::{create_context, destroy_context, request, request_sync};
 
@@ -48,25 +48,95 @@ pub unsafe extern "C" fn deno_destroy_context(context: u32) {
 pub type DenoResponseCallback =
     extern "C" fn(id: u32, params_json: *const c_char, response_type: u32, finished: bool);
 
+struct Callback {
+    callback: Option<DenoResponseCallback>,
+    id: u32,
+    locked_ids: Vec<u32>,
+}
+
+impl Callback {
+    fn new() -> Self {
+        Self {
+            callback: None,
+            id: 0,
+            locked_ids: Vec::new(),
+        }
+    }
+
+    fn lock(&mut self) -> Option<(DenoResponseCallback, u32)> {
+        if let Some(callback) = self.callback {
+            self.locked_ids.push(self.id);
+            Some((callback, self.id))
+        } else {
+            None
+        }
+    }
+
+    fn unlock(&mut self, id: u32) {
+        if let Some(i) = self.find_index_of_locked_id(id) {
+            self.locked_ids.remove(i);
+        }
+    }
+
+    fn find_index_of_locked_id(&mut self, id: u32) -> Option<usize> {
+        for i in (0..self.locked_ids.len()).rev() {
+            if self.locked_ids[i] == id {
+                return Some(i);
+            }
+        }
+        None
+    }
+
+    fn set(&mut self, callback: Option<DenoResponseCallback>) -> u32 {
+        if callback.is_some() {
+            self.id = self.id.overflowing_add(1).0;
+        }
+        self.callback = callback;
+        self.id
+    }
+}
+
 lazy_static! {
-    static ref DENO_RESPONSE_CALLBACK: RwLock<Option<DenoResponseCallback>> = RwLock::new(None);
+    static ref CALLBACK: Mutex<Callback> = Mutex::new(Callback::new());
+}
+
+fn lock_callback() -> Option<(DenoResponseCallback, u32)> {
+    CALLBACK.lock().unwrap().lock()
+}
+
+fn unlock_callback(id: u32) {
+    CALLBACK.lock().unwrap().unlock(id);
 }
 
 fn deno_response_handler(request_id: u32, params_json: String, response_type: u32, finished: bool) {
-    let callback = { *DENO_RESPONSE_CALLBACK.read().unwrap() };
-    if let Some(callback) = callback {
-        callback(request_id, out_string(params_json), response_type, finished)
+    if let Some((callback, id)) = lock_callback() {
+        callback(
+            request_id,
+            out_string(params_json.clone()),
+            response_type,
+            finished,
+        );
+        unlock_callback(id);
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn deno_set_response_callback(callback: DenoResponseCallback) {
-    *DENO_RESPONSE_CALLBACK.write().unwrap() = Some(callback);
+pub unsafe extern "C" fn deno_set_response_callback(callback: DenoResponseCallback) -> u32 {
+    CALLBACK.lock().unwrap().set(Some(callback))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn deno_clear_response_callback() {
-    *DENO_RESPONSE_CALLBACK.write().unwrap() = None;
+    CALLBACK.lock().unwrap().set(None);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn deno_response_callback_is_locked(id: u32) -> bool {
+    CALLBACK
+        .lock()
+        .unwrap()
+        .find_index_of_locked_id(id)
+        .is_some()
 }
 
 #[no_mangle]

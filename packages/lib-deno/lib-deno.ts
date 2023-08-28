@@ -36,11 +36,15 @@ const sdk = Deno.dlopen(
         },
         deno_set_response_callback: {
             parameters: ["function"],
-            result: "void",
+            result: "u32",
         },
         deno_clear_response_callback: {
             parameters: [],
             result: "void",
+        },
+        deno_response_callback_is_locked: {
+            parameters: ["u32"],
+            result: "bool",
         },
         deno_free_string: {
             parameters: ["pointer"],
@@ -49,7 +53,11 @@ const sdk = Deno.dlopen(
     } as const,
 );
 
-let currentCallback: Deno.UnsafeCallback | null = null;
+type Callback = {
+    callback: Deno.UnsafeCallback
+    id: number
+}
+let currentCallback: Callback | null = null;
 
 const denoLib = {
     createContext(configJson: string): string {
@@ -86,26 +94,37 @@ const denoLib = {
             responseType: number,
             finished: boolean,
         ) => void): void {
-        let callback: Deno.UnsafeCallback | null = null;
+        let newCallback: Callback | null = null;
         if (handler) {
-            const newCallback = new Deno.UnsafeCallback(
+            const callback = Deno.UnsafeCallback.threadSafe(
                 {
                     parameters: ["u32", "buffer", "u32", "bool"],
                     result: "void",
+
                 } as const,
                 (requestId: number, paramsJson: Deno.PointerValue, responseType: number, finished: boolean) => {
                     handler(requestId, stringFromPointer(paramsJson), responseType, finished);
                 },
             );
-            sdk.symbols.deno_set_response_callback(newCallback.pointer);
-            callback = newCallback
+            newCallback = {
+                callback,
+                id: sdk.symbols.deno_set_response_callback(callback.pointer),
+            };
         } else {
             sdk.symbols.deno_clear_response_callback();
         }
         if (currentCallback) {
-            currentCallback.close();
+            const closing = currentCallback;
+            const tryClose = () => {
+                if (sdk.symbols.deno_response_callback_is_locked(closing.id)) {
+                    setTimeout(tryClose, 0);
+                } else {
+                    closing.callback.close()
+                }
+            }
+            tryClose();
         }
-        currentCallback = callback;
+        currentCallback = newCallback;
     },
 };
 
