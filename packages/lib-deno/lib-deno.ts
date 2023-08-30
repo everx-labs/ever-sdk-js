@@ -129,7 +129,10 @@ const denoLib = {
 };
 
 function stringToPointer(str: string) {
-    return new TextEncoder().encode(str);
+    const buffer = new TextEncoder().encode(str);
+    const nullTerminated = new Uint8Array(buffer.length + 1);
+    nullTerminated.set(buffer, 0);
+    return nullTerminated;
 }
 
 // Convert ArrayBuffer (pointer) back to a JavaScript string
