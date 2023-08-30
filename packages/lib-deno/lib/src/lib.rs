@@ -25,7 +25,11 @@ fn in_string(s: *const c_char) -> String {
     if s.is_null() {
         String::default()
     } else {
-        unsafe { CStr::from_ptr(s).to_str().unwrap_or_default().to_string() }
+        let mut s = unsafe { CStr::from_ptr(s).to_str().unwrap_or_default().to_string() };
+        while s.ends_with('\0') {
+            s.pop();
+        }
+        s
     }
 }
 
