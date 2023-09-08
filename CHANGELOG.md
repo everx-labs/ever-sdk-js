@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 
 
+## [1.44.2] – 2023-08-22
+
+### New
+
+- Pruned account serialization supported
+
 ## [1.44.1] – 2023-07-25
 
 ### New
