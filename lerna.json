@@ -3,7 +3,7 @@
   "packages": [
     "packages/*"
   ],
-  "version": "1.44.2",
+  "version": "1.44.3",
   "command": {
     "version": {
       "message": "Release"
