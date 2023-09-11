@@ -12,14 +12,14 @@ const client = new TonClient(
     },
 );
 (async () => {
-    console.log(">>>", (await client.client.version()).version);
-    console.log(">>>", JSON.stringify(await client.crypto.generate_random_sign_keys()));
-    console.log(">>>", JSON.stringify(await client.net.query_collection({
+    console.log("Client version:", (await client.client.version()).version);
+    console.log("Generated Keys:", JSON.stringify(await client.crypto.generate_random_sign_keys()));
+    console.log("Query Account: ", JSON.stringify(await client.net.query_collection({
         collection: "accounts",
         result: "id",
         limit: 1,
     })));
-    console.log(">>>", JSON.stringify(await client.net.query_collection({
+    console.log("Query Block:   ", JSON.stringify(await client.net.query_collection({
         collection: "blocks",
         result: "id",
         limit: 1,

@@ -1,2 +1,2 @@
-export { TonClient } from "../../core/src/client.ts";
+export { TonClient } from "npm:@eversdk/core";
 

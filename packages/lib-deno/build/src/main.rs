@@ -16,7 +16,7 @@ use ton_client_build::{exec, Build};
 
 fn main() {
     let builder = Build::new();
-    let is_release = false;
+    let is_release = true;
     let build_args = if is_release {
         vec!["build", "--release"]
     } else {

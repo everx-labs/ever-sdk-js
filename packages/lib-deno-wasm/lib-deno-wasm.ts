@@ -1137,7 +1137,7 @@ async function loadModule() {
     if (options && options.loadModule) {
         wasmModule = await options.loadModule;
     } else {
-        wasmModule = await new WebAssembly.Module(Deno.readFileSync("../eversdk.wasm"));
+        wasmModule = await new WebAssembly.Module(Deno.readFileSync(options?.binaryURL ?? "eversdk.wasm"));
     }
     await init(wasmModule);
     debugLog(`compile time ${Date.now() - startLoadTime}`);
@@ -1203,7 +1203,7 @@ function withSeparateWorker() {
         console.log(`Error from Web Worker: ${evt.message}`);
     };
 
-    const wasmModule = new WebAssembly.Module(Deno.readFileSync("../eversdk.wasm"));
+    const wasmModule = new WebAssembly.Module(Deno.readFileSync(options?.binaryURL ?? "eversdk.wasm"));
     worker.postMessage({
         type: "init",
         wasmModule,
