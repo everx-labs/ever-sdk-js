@@ -1,6 +1,6 @@
 
 
-import {ResponseHandler} from "./bin.ts";
+import {ResponseHandler} from "./bin";
 
 interface IClient {
     request(

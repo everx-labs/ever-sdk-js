@@ -1,5 +1,5 @@
-import { TonClientError } from "./errors.ts";
-import { ClientConfig } from "./modules.ts";
+import { TonClientError } from "./errors";
+import { ClientConfig } from "./modules";
 
 export type ResponseHandler = (params: any, responseType: number) => void;
 
@@ -133,7 +133,7 @@ export function getBridge(): BinaryBridge {
 }
 
 type IBinaryLibrary = BinaryLibrary | BinaryLibraryWithParams | SyncBinaryLibrary | SyncBinaryLibraryWithParams;
-export type BinaryLoader = () => Promise<IBinaryLibrary> | IBinaryLibrary;
+type BinaryLoader = () => Promise<IBinaryLibrary> | IBinaryLibrary;
 
 export function useLibrary(loader: BinaryLoader) {
     bridge = new BinaryBridge(loader);
