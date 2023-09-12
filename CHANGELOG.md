@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 
 
+## [1.44.4] – 2023-09-05
+
+### New
+
+- Added experimental support for `Deno` runtime.
+
 ## [1.44.3] – 2023-09-05
 
 ### New
