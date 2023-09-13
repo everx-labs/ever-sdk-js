@@ -2,7 +2,7 @@ import { Account } from "@eversdk/appkit"
 import { getDefaultEndpoints, sleep } from "./utils"
 import { Giver, DEFAULT_TOPUP_BALANCE } from "./giver"
 import { performance } from "node:perf_hooks"
-import { TonClient } from "@eversdk/core"
+import { TonClient, Signer } from "@eversdk/core"
 import * as Touch from "./contracts/Touch.js"
 
 export const DEFAULT_TOUCH_MAX_BALANCE = 100 * 1e9
@@ -13,6 +13,7 @@ export async function touch(options: {
     value: number
     tryCount: number
     trySleep: number
+    signer: Signer
 }) {
     const sdk = new TonClient({
         abi: {
@@ -28,14 +29,17 @@ export async function touch(options: {
         const giver = await Giver.create(sdk)
         const touch = new Account(Touch, {
             client: sdk,
-            signer: giver.account.signer,
+            signer: options.signer ?? giver.account.signer,
         })
         const touchAccount = await touch.getAccount()
-        const { balance } = touchAccount
+        const balance = await touch.getBalance()
         const address = await touch.getAddress()
 
-        if (BigInt(balance ?? 0) < DEFAULT_TOPUP_BALANCE) {
-            await giver.sendTo(address, options.value)
+        if (balance && BigInt(balance) < DEFAULT_TOPUP_BALANCE) {
+            await giver.sendTo(address, options.value ?? DEFAULT_TOUCH_MAX_BALANCE)
+            console.log("Touch topup:", address)
+        } else if (!balance) {
+            await giver.sendTo(address, DEFAULT_TOPUP_BALANCE)
             console.log("Touch topup:", address)
         }
 
@@ -57,7 +61,7 @@ export async function touch(options: {
             console.log(`Touch ok: ${response.transaction.id}`)
 
             let tryCounter = 0
-            while (tryCounter < options.tryCount) {
+            while (tryCounter < options.tryCount ?? DEFAULT_TOUCH_TRY_COUNT) {
                 touch.refresh() // Force to take frech boc from graphql
                 const balanceAfter = BigInt((await touch.getBalance()) ?? 0)
                 const timestampNew = BigInt(
@@ -85,7 +89,7 @@ export async function touch(options: {
                     console.log(
                         `Touch local state has not been updated (try: ${++tryCounter})`,
                     )
-                    await sleep(options.trySleep)
+                    await sleep(options.trySleep ?? DEFAULT_TOUCH_TRY_SLEEP)
                 }
             }
         }

@@ -24,10 +24,11 @@
     "test": "npm run clean; npx ts-node index.ts"
   },
   "bin": {
-    "evercloud": "./index.js"
+    "evercloud": "./cli.js"
   },
   "files": [
     "index.js",
+    "cli.js",
     "compile.js",
     "giver.js",
     "graphql.js",
