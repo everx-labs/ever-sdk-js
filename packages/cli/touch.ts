@@ -32,7 +32,7 @@ export async function touch(options: {
             signer: options.signer ?? giver.account.signer,
         })
         const touchAccount = await touch.getAccount()
-        const balance = await touch.getBalance()
+        const { balance } = touchAccount
         const address = await touch.getAddress()
 
         if (balance && BigInt(balance) < DEFAULT_TOPUP_BALANCE) {

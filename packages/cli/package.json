@@ -1,6 +1,6 @@
 {
   "name": "@eversdk/cli",
-  "version": "1.44.3",
+  "version": "1.44.4",
   "description": "Evercloud CLI",
   "homepage": "https://everx.dev/",
   "repository": {
@@ -11,6 +11,7 @@
     "url": "https://github.com/tonlabs/ever-sdk-js/issues"
   },
   "main": "index.js",
+  "types": "./index.d.ts",
   "scripts": {
     "build": "tsc",
     "compile": "npm test -- c",
@@ -27,18 +28,10 @@
     "evercloud": "./cli.js"
   },
   "files": [
-    "index.js",
-    "cli.js",
-    "compile.js",
-    "giver.js",
-    "graphql.js",
-    "kamikadze.js",
-    "touch.js",
-    "utils.js",
-    "contracts/Kamikadze.js",
-    "contracts/Kamikadze.sol",
-    "contracts/Touch.js",
-    "contracts/Touch.sol"
+    "*.js",
+    "*.d.ts",
+    "contracts/*.js",
+    "contracts/*.sol"
   ],
   "publishConfig": {
     "access": "public"
