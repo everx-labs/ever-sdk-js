@@ -1,6 +1,6 @@
 {
   "name": "@eversdk/cli",
-  "version": "1.44.3",
+  "version": "1.44.4",
   "description": "Evercloud CLI",
   "homepage": "https://everx.dev/",
   "repository": {
@@ -52,8 +52,8 @@
   ],
   "dependencies": {
     "@eversdk/appkit": "^0.3.8",
-    "@eversdk/core": "^1.44.3",
-    "@eversdk/lib-node": "^1.44.3",
+    "@eversdk/core": "^1.44.4",
+    "@eversdk/lib-node": "^1.44.4",
     "commander": "^10.0.0",
     "dotenv": "^16.0.3",
     "everdev": "^1.7.0",
