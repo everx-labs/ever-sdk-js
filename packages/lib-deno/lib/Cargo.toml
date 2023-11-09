@@ -1,0 +1,17 @@
+[package]
+name = 'ever_sdk_deno_addon'
+version = '1.44.0'
+authors = [ 'TON Labs' ]
+license = 'Apache-2.0'
+
+[lib]
+name = 'eversdk'
+crate-type = [ 'cdylib' ]
+
+[dependencies]
+libc = '0.2'
+lazy_static = "1.4.0"
+ton_client = { git = 'https://github.com/tonlabs/ever-sdk.git', tag = '1.44.1' }
+
+[profile.release]
+lto = true
