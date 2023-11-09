@@ -7,6 +7,8 @@ import {
     Signer,
 } from "@eversdk/core";
 
+export const MAX_WAIT_TIME = 40_000; // 40 sec
+
 export type AccountDeployParams = {
     tvc: string, initFunctionName?: string,
     initFunctionInput?: any,
@@ -142,14 +144,37 @@ export class Account {
         if (this.cachedBoc) {
             return this.cachedBoc;
         }
-        const { boc, last_trans_lt } = (await this.client.net.wait_for_collection({
-            collection: "accounts",
-            filter: {
-                id: {eq: this.address},
-                last_trans_lt: {ge: this.minExpectedLt},
-            },
-            result: "boc last_trans_lt",
-        })).result;
+        const query = `
+            query($address:String!) {
+                blockchain {
+                    account(
+                        address: $address
+                    ) {
+                        info {
+                            boc
+                            last_trans_lt
+                        }
+                    }
+                }
+            }`;
+        const variables = {address: this.address};
+        let last_trans_lt;
+        let boc;
+        let delay = 0
+        const timeLimit = Date.now() + MAX_WAIT_TIME // 40 sec
+        while (!(last_trans_lt >= this.minExpectedLt) && (Date.now() < timeLimit)) {
+        if (delay > 0) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            if (delay < 5000) {
+                delay += 1000
+                }
+            } else {
+                delay = 1000
+            }
+            const { result }  = await this.client.net.query({ query, variables });
+            boc = result.data.blockchain.account.info.boc;
+            last_trans_lt = result.data.blockchain.account.info.last_trans_lt;
+        }
         this.cachedBoc = boc;
         this.cachedBocLt = last_trans_lt;
         return boc;
