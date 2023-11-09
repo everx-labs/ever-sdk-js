@@ -270,7 +270,7 @@ export class TestsRunner {
 }
 
 export const runner = new TestsRunner();
-export const ABIVersions = [1, 2];
+export const ABIVersions = [2]; // drop AbiVersion 1 it's too old for support
 export type ABIVersion = 1 | 2;
 
 export type TestsRunningState = {
