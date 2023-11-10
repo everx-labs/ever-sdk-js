@@ -30,32 +30,32 @@ jobs:
           node-version: 12
           registry-url: https://registry.npmjs.org/
 
-      # - name: Core
-      #   run: npm publish --access public
-      #   working-directory: ./packages/core
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Core
+        run: npm publish --access public
+        working-directory: ./packages/core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # - name: NodeJs
-      #   run: npm publish --access public
-      #   working-directory: ./packages/lib-node
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: NodeJs
+        run: npm publish --access public
+        working-directory: ./packages/lib-node
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # - name: ReactNative
-      #   run: npm publish --access public
-      #   working-directory: ./packages/lib-react-native
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: ReactNative
+        run: npm publish --access public
+        working-directory: ./packages/lib-react-native
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # - name: ReactNativeJsi
-      #   run: |
-      #       npm i
-      #       npx tsc
-      #       npm publish --access public
-      #   working-directory: ./packages/lib-react-native-jsi
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: ReactNativeJsi
+        run: |
+            npm i
+            npx tsc
+            npm publish --access public
+        working-directory: ./packages/lib-react-native-jsi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: WASM
         run: npm publish --access public
