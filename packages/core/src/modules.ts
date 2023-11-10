@@ -3718,7 +3718,8 @@ export enum AbiErrorCode {
     InvalidFunctionId = 312,
     InvalidData = 313,
     EncodeInitialDataFailed = 314,
-    InvalidFunctionName = 315
+    InvalidFunctionName = 315,
+    PubKeyNotSupported = 316
 }
 
 export type AbiContractVariant = {
@@ -3897,6 +3898,9 @@ export type DeploySet = {
      * 1. Public key from deploy set.
      * 2. Public key, specified in TVM file.
      * 3. Public key, provided by Signer.
+     * 
+     * Applicable only for contracts with ABI version < 2.4. Contract initial public key should be
+     * explicitly provided inside `initial_data` since ABI 2.4
      */
     initial_pubkey?: string
 }
@@ -4000,162 +4004,15 @@ export enum MessageBodyType {
     Event = "Event"
 }
 
-/**
- * Deploy message.
- */
-export type StateInitSourceMessageVariant = {
-
-    source: MessageSource
-}
-
-/**
- * State init data.
- */
-export type StateInitSourceStateInitVariant = {
-
-    /**
-     * Code BOC.
-     * 
-     * @remarks
-     * Encoded in `base64`.
-     */
-    code: string,
-
-    /**
-     * Data BOC.
-     * 
-     * @remarks
-     * Encoded in `base64`.
-     */
-    data: string,
-
-    /**
-     * Library BOC.
-     * 
-     * @remarks
-     * Encoded in `base64`.
-     */
-    library?: string
-}
-
-/**
- * Content of the TVC file.
- * 
- * @remarks
- * Encoded in `base64`.
- */
-export type StateInitSourceTvcVariant = {
-
-    tvc: string,
-
-    public_key?: string,
-
-    init_params?: StateInitParams
-}
-
-/**
- * 
- * Depends on `type` field.
- * 
- * 
- * ### `Message`
- * 
- * Deploy message.
- * 
- * ### `StateInit`
- * 
- * State init data.
- * 
- * ### `Tvc`
- * 
- * Content of the TVC file.
- */
-export type StateInitSource = ({
-    type: 'Message'
-} & StateInitSourceMessageVariant) | ({
-    type: 'StateInit'
-} & StateInitSourceStateInitVariant) | ({
-    type: 'Tvc'
-} & StateInitSourceTvcVariant)
-
-export function stateInitSourceMessage(source: MessageSource): StateInitSource {
-    return {
-        type: 'Message',
-        source,
-    };
-}
-
-export function stateInitSourceStateInit(code: string, data: string, library?: string): StateInitSource {
-    return {
-        type: 'StateInit',
-        code,
-        data,
-        library,
-    };
-}
-
-export function stateInitSourceTvc(tvc: string, public_key?: string, init_params?: StateInitParams): StateInitSource {
-    return {
-        type: 'Tvc',
-        tvc,
-        public_key,
-        init_params,
-    };
-}
-
-export type StateInitParams = {
-
-    abi: Abi,
-
-    value: any
-}
-
-export type MessageSourceEncodedVariant = {
-
-    message: string,
-
-    abi?: Abi
-}
-
-/**
- * 
- * Depends on `type` field.
- * 
- * 
- * ### `Encoded`
- * 
- * 
- * ### `EncodingParams`
- * 
- */
-export type MessageSource = ({
-    type: 'Encoded'
-} & MessageSourceEncodedVariant) | ({
-    type: 'EncodingParams'
-} & ParamsOfEncodeMessage)
-
-export function messageSourceEncoded(message: string, abi?: Abi): MessageSource {
-    return {
-        type: 'Encoded',
-        message,
-        abi,
-    };
-}
-
-export function messageSourceEncodingParams(params: ParamsOfEncodeMessage): MessageSource {
-    return {
-        type: 'EncodingParams',
-        ...params,
-    };
-}
-
 export type AbiParam = {
 
     name: string,
 
     type: string,
 
-    components?: AbiParam[]
+    components?: AbiParam[],
+
+    init?: boolean
 }
 
 export type AbiEvent = {
@@ -4617,9 +4474,9 @@ export type ParamsOfDecodeMessageBody = {
 export type ParamsOfEncodeAccount = {
 
     /**
-     * Source of the account state init.
+     * Account state init.
      */
-    state_init: StateInitSource,
+    state_init: string,
 
     /**
      * Initial balance.
@@ -4689,7 +4546,7 @@ export type ParamsOfUpdateInitialData = {
     /**
      * Contract ABI
      */
-    abi?: Abi,
+    abi: Abi,
 
     /**
      * Data BOC or BOC handle
@@ -4728,7 +4585,7 @@ export type ParamsOfEncodeInitialData = {
     /**
      * Contract ABI
      */
-    abi?: Abi,
+    abi: Abi,
 
     /**
      * List of initial values for contract's static variables.
@@ -4765,7 +4622,7 @@ export type ParamsOfDecodeInitialData = {
      * @remarks
      * Initial data is decoded if this parameter is provided
      */
-    abi?: Abi,
+    abi: Abi,
 
     /**
      * Data BOC or BOC handle
@@ -4786,7 +4643,7 @@ export type ResultOfDecodeInitialData = {
      * @remarks
      * Initial data is decoded if `abi` input parameter is provided
      */
-    initial_data?: any,
+    initial_data: any,
 
     /**
      * Initial account owner's public key
@@ -5178,11 +5035,6 @@ export class AbiModule {
     /**
      * Creates account state BOC
      * 
-     * @remarks
-     * Creates account state provided with one of these sets of data :
-     * 1. BOC of code, BOC of data, BOC of library
-     * 2. TVC (string in `base64`), keys, init params
-     * 
      * @param {ParamsOfEncodeAccount} params
      * @returns ResultOfEncodeAccount
      */
@@ -5192,11 +5044,6 @@ export class AbiModule {
 
     /**
      * Creates account state BOC
-     * 
-     * @remarks
-     * Creates account state provided with one of these sets of data :
-     * 1. BOC of code, BOC of data, BOC of library
-     * 2. TVC (string in `base64`), keys, init params
      * 
      * NOTE: Available only for `lib-node` binding.
      * 
@@ -5242,6 +5089,9 @@ export class AbiModule {
     /**
      * Updates initial account data with initial values for the contract's static variables and owner's public key. This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
      * 
+     * @remarks
+     * Doesn't support ABI version >= 2.4. Use `encode_initial_data` instead
+     * 
      * @param {ParamsOfUpdateInitialData} params
      * @returns ResultOfUpdateInitialData
      */
@@ -5251,6 +5101,9 @@ export class AbiModule {
 
     /**
      * Updates initial account data with initial values for the contract's static variables and owner's public key. This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
+     * 
+     * @remarks
+     * Doesn't support ABI version >= 2.4. Use `encode_initial_data` instead
      * 
      * NOTE: Available only for `lib-node` binding.
      * 
@@ -5296,6 +5149,9 @@ export class AbiModule {
     /**
      * Decodes initial values of a contract's static variables and owner's public key from account initial data This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
      * 
+     * @remarks
+     * Doesn't support ABI version >= 2.4. Use `decode_account_data` instead
+     * 
      * @param {ParamsOfDecodeInitialData} params
      * @returns ResultOfDecodeInitialData
      */
@@ -5305,6 +5161,9 @@ export class AbiModule {
 
     /**
      * Decodes initial values of a contract's static variables and owner's public key from account initial data This operation is applicable only for initial account data (before deploy). If the contract is already deployed, its data doesn't contain this data section any more.
+     * 
+     * @remarks
+     * Doesn't support ABI version >= 2.4. Use `decode_account_data` instead
      * 
      * NOTE: Available only for `lib-node` binding.
      * 
