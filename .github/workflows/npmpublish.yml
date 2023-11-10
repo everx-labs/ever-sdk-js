@@ -30,17 +30,17 @@ jobs:
           node-version: 12
           registry-url: https://registry.npmjs.org/
 
-      - name: Core
-        run: npm publish --access public
-        working-directory: ./packages/core
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # - name: Core
+      #   run: npm publish --access public
+      #   working-directory: ./packages/core
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: NodeJs
-        run: npm publish --access public
-        working-directory: ./packages/lib-node
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # - name: NodeJs
+      #   run: npm publish --access public
+      #   working-directory: ./packages/lib-node
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # - name: ReactNative
       #   run: npm publish --access public
