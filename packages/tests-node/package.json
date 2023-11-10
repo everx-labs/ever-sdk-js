@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/tests-node",
-	"version": "1.44.4",
+	"version": "1.45.0",
 	"private": true,
 	"description": "TON Client Tests runner on NodeJs",
 	"main": "index.js",
