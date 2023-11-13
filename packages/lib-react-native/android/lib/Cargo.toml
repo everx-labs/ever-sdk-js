@@ -11,7 +11,7 @@ crate-type = [ 'cdylib' ]
 [dependencies]
 lazy_static = '1.4.0'
 jni = { default-features = false, version = '0.12.0' }
-ton_client = { git = 'https://github.com/tonlabs/ever-sdk.git', tag = '1.45.0', features = [ 'native-tls-vendored' ] }
+ton_client = { git = 'https://github.com/tonlabs/ever-sdk.git', tag = '1.45.0', default-features = false, features = [ 'rustls-tls-webpki-roots' ] }
 
 [profile.release]
 lto = true
