@@ -77,69 +77,30 @@ jobs:
           cargo update
           cargo run -r
 
-  #     - name: Artifact ${{ matrix.result }}
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         path: ${{ matrix.dir }}/target/${{ matrix.target }}/release/${{ matrix.bin }}
-  #         name: ${{ matrix.result }}--${{ matrix.bin }}
-  #         if-no-files-found: error
-  #         retention-days: 3
+      - name: Fix names
+        run: |
+          mv eversdk_*_wasm.gz eversdk.wasm.gz
+          mv eversdk_*_wasm_js.gz eversdk.wasm.js.gz
 
-  #   outputs:
-  #     version: ${{ steps.version.outputs.VERSION }}
+      - name: Upload Draft
+        uses: softprops/action-gh-release@v1
+        if: env.release != 'true'
+        with:
+          draft: true
+          tag_name: ${{ github.ref_name }}-${{ github.run_number }}
+          files: |
+            packages/lib-web/publish/eversdk.wasm.gz
+            packages/lib-web/publish/eversdk.wasm.js.gz
+          body: ""
 
-  # release:
-  #   needs:
-  #     - build
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       result:
-  #         - git-remote-gosh-darwin-arm64
-  #         - git-remote-gosh-darwin-amd64
-  #         - git-remote-gosh-linux-arm64
-  #         - git-remote-gosh-linux-amd64
-
-  #   steps:
-  #     - name: Download all artifacts
-  #       uses: actions/download-artifact@v3
-
-  #     - name: Display structure of downloaded files
-  #       run: ls -R
-
-  #     ## IMPORTANT! only works with non-windows binaries
-  #     - name: Gather all binaries "${{ matrix.result }}"
-  #       run: |
-  #         mkdir -p ${{ matrix.result }}
-  #         cp ${{ matrix.result }}--*/* ${{ matrix.result }}
-  #         ls -lA ${{ matrix.result }}
-
-  #     - name: Make archive
-  #       run: |
-  #         chmod +x ${{ matrix.result }}/*
-  #         cd ${{ matrix.result }}
-  #         printf "%s\n" git-remote-gosh_* | sort -rV | tee dispatcher.ini
-  #         tar -czvf ../${{ matrix.result }}.tar.gz .
-
-  #     - name: Upload Draft
-  #       uses: softprops/action-gh-release@v1
-  #       if: env.release != 'true'
-  #       with:
-  #         draft: true
-  #         tag_name: ${{ github.ref_name }}-${{ github.run_number }}
-  #         files: |
-  #           ${{ matrix.result }}.tar.gz
-  #         body: ""
-
-  #     - name: Upload Prerelease
-  #       uses: softprops/action-gh-release@v1
-  #       if: env.release == 'true'
-  #       with:
-  #         prerelease: true
-  #         tag_name: ${{ github.ref_name }}
-  #         files: |
-  #           ${{ matrix.result }}.tar.gz
-  #         name: "Version: ${{ github.ref_name }}"
-  #         body: ""
-
-
+      - name: Upload Prerelease
+        uses: softprops/action-gh-release@v1
+        if: env.release == 'true'
+        with:
+          prerelease: true
+          tag_name: ${{ github.ref_name }}
+          files: |
+            packages/lib-web/publish/eversdk.wasm.gz
+            packages/lib-web/publish/eversdk.wasm.js.gz
+          name: "Version: ${{ github.ref_name }}"
+          body: ""
