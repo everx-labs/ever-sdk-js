@@ -58,7 +58,12 @@ fn main() {
     let builder = Build::new();
     let lib_dir = builder.package_dir.join("lib");
     std::env::set_current_dir(&lib_dir).unwrap();
-    exec("cargo", &["install", "wasm-pack", "--version", "0.9.1"]);
+    eprintln!(
+        "Current dir: {}",
+        std::env::current_dir().unwrap().display()
+    );
+
+    exec("cargo", &["install", "wasm-pack", "--version", "0.12.1"]);
     assert!(exec("wasm-pack", &["build", "--release", "--target", "web"]).success());
     let pkg = lib_dir.join("pkg");
     builder.add_package_file("eversdk.wasm", pkg.join("eversdk_bg.wasm"));

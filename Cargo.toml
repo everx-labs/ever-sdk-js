@@ -1,0 +1,11 @@
+[workspace]
+resolver = "2"
+members = [
+    #
+    'build',
+    'packages/lib-web/build/',
+    'packages/lib-web/lib/',
+]
+
+[metadata.wasm-pack.profile.release]
+wasm-opt = [ '-Os' ]

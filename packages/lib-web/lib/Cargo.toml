@@ -8,6 +8,13 @@ license = 'Apache-2.0'
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = [ '-Os' ]
 
+# sane defaults
+[package.metadata.wasm-pack.profile.release.wasm-bindgen]
+debug-js-glue = false
+demangle-name-section = true
+dwarf-debug-info = false
+omit-default-module-path = false
+
 [profile.release]
 lto = true
 opt-level = 's'
@@ -28,7 +35,7 @@ lazy_static = '1.4.0'
 # just to fix building of rand for WASM:
 getrandom = { default-features = false, features = [ 'js' ], version = '0.2.2' }
 
-ton_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/tonlabs/ever-sdk.git', tag = '1.45.0' }
+ton_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/gosh-sh/ever-sdk.git', branch = 'master' }
 
 [dependencies.web-sys]
 version = '0.3.57'
