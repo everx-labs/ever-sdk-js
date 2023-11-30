@@ -1,0 +1,34 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[{*.json,*.jsonc}]
+indent_style = space
+indent_size = 4
+
+[{*.yml,*.yaml}]
+indent_style = space
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+indent_size = 8
+
+[Dockerfile]
+indent_size = 4
+
+# Ignore paths
+[**/{node_modules,target,vendor}/**]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+indent_size = unset
+indent_style = unset
+trim_trailing_whitespace = unset
