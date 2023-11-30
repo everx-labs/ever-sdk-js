@@ -78,6 +78,7 @@ jobs:
           cargo run -r
 
       - name: Fix names
+        working-directory: packages/lib-web/publish
         run: |
           mv eversdk_*_wasm.gz eversdk.wasm.gz
           mv eversdk_*_wasm_js.gz eversdk.wasm.js.gz
