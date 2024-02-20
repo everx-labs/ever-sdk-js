@@ -97,6 +97,10 @@ impl Build {
         }
     }
 
+    pub fn set_platform(&mut self, platform: &str) {
+        self.platform = platform.into();
+    }
+
     pub fn read_lib_file(&self, path: &str) -> String {
         fs::read_to_string(self.package_dir.join("lib").join(path)).unwrap()
     }

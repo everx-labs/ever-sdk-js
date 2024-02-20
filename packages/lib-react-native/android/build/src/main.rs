@@ -46,7 +46,7 @@ const ARCHS: [Arch; 4] = [
 ];
 
 const LIB: &str = "libeversdk.so";
-const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r17c-linux-x86_64.zip";
+const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r26c-linux.zip";
 
 fn main() {
     let target_arg = env::args().nth(1).unwrap_or("".to_string());
