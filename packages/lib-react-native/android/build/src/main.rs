@@ -46,7 +46,7 @@ const ARCHS: [Arch; 4] = [
 ];
 
 const LIB: &str = "libeversdk.so";
-const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r17c-linux-x86_64.zip";
+const NDK_URL: &str = "http://dl.google.com/android/repository/android-ndk-r26c-linux.zip";
 
 fn main() {
     let target_arg = env::args().nth(1).unwrap_or("".to_string());
@@ -63,7 +63,7 @@ fn main() {
             &builder.lib_dir.join("NDK").join(arch.ndk).join("bin"),
         ));
         std::env::set_var("PATH", path);
-        assert!(exec("cargo", &["+1.67.0-x86_64-unknown-linux-gnu", "build", "--target", arch.target, "--release"]).success());
+        assert!(exec("cargo", &["build", "--target", arch.target, "--release"]).success());
     }
 
     let out_dir = builder.package_dir.join("src/main/jniLibs");
