@@ -3,7 +3,7 @@ To build WASM you need `clang v8`. Use this workaround if you encounter a proble
 
 ## Pulling build image
 ```
-docker pull tonlabs/build-tonclient-wasm
+docker pull everx-labs/build-tonclient-wasm
 ```
 Change your current location to `ever-sdk-js` project. It is important because the next command will use this location to mount the volume with source code inside the docker container with build environment.
 ```
@@ -11,7 +11,7 @@ cd ever-sdk-js
 ```
 Run build container in background. First attempt will take a long time.
 ```
-docker run -v $(pwd):/tonlabs/TON-SDK --name build-tonclient-wasm -dt build-tonclient-wasm tail -f /dev/null
+docker run -v $(pwd):/everx-labs/TON-SDK --name build-tonclient-wasm -dt build-tonclient-wasm tail -f /dev/null
 ```
 ## Build WASM
 ```

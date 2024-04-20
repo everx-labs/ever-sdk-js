@@ -10,7 +10,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/tonlabs/ever-sdk-js.git"
+    "url": "https://github.com/everx-labs/ever-sdk-js.git"
   },
   "scripts": {
     "build": "tsc"

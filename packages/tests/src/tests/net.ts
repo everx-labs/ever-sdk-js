@@ -205,7 +205,7 @@ test.each(ABIVersions)("net: Subscribe (subscribe_collection) for transactions w
         })).handle;
 
     // hack for Windows-assembled TON NODE SE
-    // issue: https://github.com/tonlabs/tonos-se/issues/13
+    // issue: https://github.com/everx-labs/tonos-se/issues/13
     await new Promise((resolve=>setTimeout(resolve, 5_000)));
 
     await wallet.deploy();

@@ -5,10 +5,10 @@
   "homepage": "https://everx.dev/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tonlabs/ever-sdk-js.git"
+    "url": "https://github.com/everx-labs/ever-sdk-js.git"
   },
   "bugs": {
-    "url": "https://github.com/tonlabs/ever-sdk-js/issues"
+    "url": "https://github.com/everx-labs/ever-sdk-js/issues"
   },
   "main": "index.js",
   "scripts": {

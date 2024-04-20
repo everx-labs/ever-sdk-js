@@ -10,7 +10,7 @@ using namespace facebook;
 struct TonClientJsiModule : jni::JavaClass<TonClientJsiModule>
 {
 public:
-  __unused static constexpr auto kJavaDescriptor = "Lcom/tonlabs/tonclientjsi/TonClientJSIModulePackage;";
+  __unused static constexpr auto kJavaDescriptor = "Lcom/everx-labs/tonclientjsi/TonClientJSIModulePackage;";
 
   static void registerNatives()
   {

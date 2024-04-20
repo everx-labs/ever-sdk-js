@@ -48,7 +48,7 @@ State init should be finalized and ready to be used in message as is.
   
 ### Deprecated
 
-- Debot module is [DEPRECATED](https://github.com/tonlabs/ever-sdk/blob/master/docs/reference/types-and-methods/DEPRECATED.md)
+- Debot module is [DEPRECATED](https://github.com/everx-labs/ever-sdk/blob/master/docs/reference/types-and-methods/DEPRECATED.md)
 
 ## [1.44.0] – 2023-07-12
 
@@ -450,13 +450,13 @@ appropriate error text is added to error message instead of executor internal er
   Crypto box provides signing and encryption boxes.
 
   Functions:  
-  [`create_crypto_box`](https://github.com/tonlabs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#create_crypto_box) - initializes cryptobox with secret   
-  [`remove_crypto_box`](https://github.com/tonlabs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#remove_crypto_box) - removes cryptobox and overwrites all secrets with zeroes  
-  [`get_crypto_box_seed_phrase`](https://github.com/tonlabs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#get_crypto_box_seed_phrase) - returns decrypted seed phrase  
-  [`get_crypto_box_info`](https://github.com/tonlabs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#get_crypto_box_info) - returns encrypted cryptobox secret for next cryptobox initializations  
-  [`get_signing_box_from_crypto_box`](https://github.com/tonlabs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#get_signing_box_from_crypto_box) - derives signing box from secret  
-  [`get_encryption_box_from_crypto_box`](https://github.com/tonlabs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#get_encryption_box_from_crypto_box) - derives encryption box from secret  
-  [`clear_crypto_box_secret_cache`](https://github.com/tonlabs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#clear_crypto_box_secret_cache) - forces secret cache (signing and encryption) clean up (overwrites all secrets with zeroes). 
+  [`create_crypto_box`](https://github.com/everx-labs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#create_crypto_box) - initializes cryptobox with secret   
+  [`remove_crypto_box`](https://github.com/everx-labs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#remove_crypto_box) - removes cryptobox and overwrites all secrets with zeroes  
+  [`get_crypto_box_seed_phrase`](https://github.com/everx-labs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#get_crypto_box_seed_phrase) - returns decrypted seed phrase  
+  [`get_crypto_box_info`](https://github.com/everx-labs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#get_crypto_box_info) - returns encrypted cryptobox secret for next cryptobox initializations  
+  [`get_signing_box_from_crypto_box`](https://github.com/everx-labs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#get_signing_box_from_crypto_box) - derives signing box from secret  
+  [`get_encryption_box_from_crypto_box`](https://github.com/everx-labs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#get_encryption_box_from_crypto_box) - derives encryption box from secret  
+  [`clear_crypto_box_secret_cache`](https://github.com/everx-labs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_crypto.md#clear_crypto_box_secret_cache) - forces secret cache (signing and encryption) clean up (overwrites all secrets with zeroes). 
 
 
 ### Fixed
@@ -523,7 +523,7 @@ appropriate error text is added to error message instead of executor internal er
 ## [1.27.0] – 2021-12-03
 
 ### New
-- Function [`abi.encode_initial_data`](https://github.com/tonlabs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_abi.md#encode_initial_data) which
+- Function [`abi.encode_initial_data`](https://github.com/everx-labs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_abi.md#encode_initial_data) which
   encodes initial account data with initial values for the contract's static variables and owner's public key. 
   This function is analogue of `tvm.buildDataInit` function in Solidity.
 
@@ -545,22 +545,22 @@ appropriate error text is added to error message instead of executor internal er
     - `Query` interface extended with `waitForCollection` and `query` methods. `waitForCollection` allows to wait
      for completion of async external calls.
     - Added support for DeBots with ABI 2.2.
-- Function [`proofs.proof_message_data`](https://github.com/tonlabs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_proofs.md#proof_message_data) which proves message data, retrieved 
+- Function [`proofs.proof_message_data`](https://github.com/everx-labs/TON-SDK/blob/master/docs/reference/types-and-methods/mod_proofs.md#proof_message_data) which proves message data, retrieved 
   from Graphql API.
 
 ## [1.25.0] – 2021-11-08
 
 ### New
 - Added JS Blob support in lib-web
-- New module [`proofs`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_proofs.md) is introduced!  
+- New module [`proofs`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_proofs.md) is introduced!  
 - Functions [`proofs.proof_block_data`](./docs/mod_proofs.md#proof_block_data) and [`proofs.proof_transaction_data`](./docs/mod_proofs.md#proof_transaction_data) 
   which prove block data, retrieved from Graphql API. 
   
   These are the first functions from proofs series :) Wait for others(`proof_account_data`, `proof_message_data`) in the next releases. 
 
-  Read about them more in the [documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_proofs.md#proof_block_data). 
+  Read about them more in the [documentation](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_proofs.md#proof_block_data). 
 
-- [`abi.decode_boc`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#decode_boc) function to decode custom BOC data into JSON parameters.
+- [`abi.decode_boc`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_abi.md#decode_boc) function to decode custom BOC data into JSON parameters.
 - `Ref(<ParamType>)` type was added to ABI.   
   Solidity functions use ABI types for builder encoding. The simplest way to decode such a BOC is to use ABI decoding. ABI has it own rules for fields layout in cells so manually encoded BOC can not be described in terms of ABI rules. To solve this problem we introduce a new ABI type `Ref(<ParamType>)` which allows to store `ParamType` ABI parameter in cell reference and, thus, decode manually encoded BOCs. This type is available only in `decode_boc` function and will not be available in ABI messages encoding until it is included into some ABI revision.
 
@@ -584,7 +584,7 @@ appropriate error text is added to error message instead of executor internal er
 ## [1.22.0] – 2021-09-20
 
 ### New
-- ABI v2.2 with fixed message body layout supported. [See the specification](https://github.com/tonlabs/ton-labs-abi/blob/master/docs/ABI_2.2_spec.md).
+- ABI v2.2 with fixed message body layout supported. [See the specification](https://github.com/everx-labs/ton-labs-abi/blob/master/docs/ABI_2.2_spec.md).
 
   Now, for contracts with ABI version < 2.2  compact layout will still be used for compatibility, for contracts with ABI version 2.2 and more - fixed layout will be used.  
 **Please, make sure that you updated the ABI if you recompiled your contract with 2.2 ABI, or you may get an inconsistent contract behaviour**.
@@ -681,7 +681,7 @@ be set with `net.query_timeout` config parameter. Its default value is 60000 ms
 ## [1.17.0] – 2021-06-21
 
 ### New
-- Added support of external encryption boxes. [See the documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_crypto.md#register_encryption_box)
+- Added support of external encryption boxes. [See the documentation](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_crypto.md#register_encryption_box)
 - **Debot module**:
     - Dengine waits for completion of all transactions in a chain initiated by debot's onchain call.
 
@@ -706,7 +706,7 @@ be set with `net.query_timeout` config parameter. Its default value is 60000 ms
 ### New
 
 - `query_transaction_tree` function that returns messages and transactions tree produced 
-  by the specified message was added to `net` module. [See the documentation](https://github.com/tonlabs/TON-SDK/blob/1.16.0/docs/mod_net.md#query_transaction_tree)
+  by the specified message was added to `net` module. [See the documentation](https://github.com/everx-labs/TON-SDK/blob/1.16.0/docs/mod_net.md#query_transaction_tree)
 - `libOptions.loadModule` – ability to specify alternative WASM module loader. 
 
 ### Fixed
@@ -765,7 +765,7 @@ be set with `net.query_timeout` config parameter. Its default value is 60000 ms
   For example it makes possible to use separated response handlers for different 
   requests.
   
-- [`net.query_counterparties`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_net.md#query_counterparties) - allows to query and paginate through the list of accounts that the specified account 
+- [`net.query_counterparties`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_net.md#query_counterparties) - allows to query and paginate through the list of accounts that the specified account 
  has interacted with, sorted by the time of the last internal message between accounts.   
   Subscription to counterparties collection is available via `net.subscribe_collection` function.
 
@@ -785,8 +785,8 @@ be set with `net.query_timeout` config parameter. Its default value is 60000 ms
 ## [1.12.0] – 2021-04-01
 
 ### New
-- [`utils.compress_zstd`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_utils.md#compress_zstd) compresses data using Facebook's Zstandard algorithm.
-- [`utils.decompress_zstd`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_utils.md#decompress_zstd) decompresses data using Facebook's Zstandard algorithm.
+- [`utils.compress_zstd`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_utils.md#compress_zstd) compresses data using Facebook's Zstandard algorithm.
+- [`utils.decompress_zstd`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_utils.md#decompress_zstd) decompresses data using Facebook's Zstandard algorithm.
 - **Debot module**:
     - `init` function that creates an instance of DeBot and returns DeBot metadata.
     - Dengine fetches metadata form DeBot by calling 2 mandatory functions: `getRequiredInterfaces` and `getDebotInfo`. This data is returned by `fetch` and `init` functions.
@@ -805,7 +805,7 @@ be set with `net.query_timeout` config parameter. Its default value is 60000 ms
 ## [1.11.0] – 2021-03-05
 
 ### New
-- [`utils.calc_storage_fee`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_utils.md#calc_storage_fee) function to calculate account storage fee over a some time period.
+- [`utils.calc_storage_fee`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_utils.md#calc_storage_fee) function to calculate account storage fee over a some time period.
 - **Debot Module**:
     - Added unstable functions to `Sdk` interface: `getAccountsDataByHash`
 
@@ -829,20 +829,20 @@ be set with `net.query_timeout` config parameter. Its default value is 60000 ms
     - `getAccount`- returns all the data about the account in json format
     - `boc` - returns the account boc.
    
-   `GiverContract` object is introduced that is ititialized with [TON OS SE Giver](https://github.com/tonlabs/tonos-se/tree/master/contracts#giver-v2) address and keys.
+   `GiverContract` object is introduced that is ititialized with [TON OS SE Giver](https://github.com/everx-labs/tonos-se/tree/master/contracts#giver-v2) address and keys.
 
 ## [1.10.0] – 2021-03-04
 
 ### New
-- Add optional field `src_address` to [`ParamsOfEncodeInternalMessage`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#encode_internal_message).
-- Field `abi` in [`ParamsOfEncodeInternalMessage`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#encode_internal_message) is optional and can be `None` if `call_set` and `deploy_set` are  `None`.
-- [`boc.encode_boc`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_boc.md#encode_boc) function provides ability to build and serialize any custom tree of cells.
+- Add optional field `src_address` to [`ParamsOfEncodeInternalMessage`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_abi.md#encode_internal_message).
+- Field `abi` in [`ParamsOfEncodeInternalMessage`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_abi.md#encode_internal_message) is optional and can be `None` if `call_set` and `deploy_set` are  `None`.
+- [`boc.encode_boc`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_boc.md#encode_boc) function provides ability to build and serialize any custom tree of cells.
   Application can use several base Builder serialization primitives like integers, bitstrings
   and nested cells.
-- [`boc.get_blockchain_config`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_boc.md#get_blockchain_config) function can extract blockchain configuration from key block and also
+- [`boc.get_blockchain_config`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_boc.md#get_blockchain_config) function can extract blockchain configuration from key block and also
 from zerostate.
-- [`tvm` module](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_tvm.md) functions download current blockchain configuration if `net` is initialized with
-DApp Server endpoints. Otherwise [default configuration](https://github.com/tonlabs/ton-executor/blob/11f46c416ebf1f145eacfb996587891a0a3cb940/src/blockchain_config.rs#L214) is used.
+- [`tvm` module](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_tvm.md) functions download current blockchain configuration if `net` is initialized with
+DApp Server endpoints. Otherwise [default configuration](https://github.com/everx-labs/ton-executor/blob/11f46c416ebf1f145eacfb996587891a0a3cb940/src/blockchain_config.rs#L214) is used.
 - **Debot Module**:
     - Support for debot invoking in Debot Engine. `send` browser callback is used not only for interface calls but to invoke debots.
     - `start` and `fetch` functions returns debot ABI.
@@ -850,12 +850,12 @@ DApp Server endpoints. Otherwise [default configuration](https://github.com/tonl
     - Added unstable functions to `Sdk` interface: naclBox, naclBoxOpen, naclKeypairFromSecret, getAccountCodeHash.
 
 ### Changed
-- Both `call_set` and `deploy_set` in [`ParamsOfEncodeInternalMessage`](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#encode_internal_message) can be omitted. In this case `encode_internal_message` generates internal message with empty body.
+- Both `call_set` and `deploy_set` in [`ParamsOfEncodeInternalMessage`](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_abi.md#encode_internal_message) can be omitted. In this case `encode_internal_message` generates internal message with empty body.
 - **Debot Module**:
     - `send` function accepts one argument - serialized internal message as string encoded into base64.
 ### Documentation
-- [Debot browser app object](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_debot.md#AppDebotBrowser) and [signing box app object](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_crypto.md#appsigningbox) descriptions added
-- functions-helpers for enum type variable creation for [Signer](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#signer), [Abi](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_abi.md#abi), [ParamsOfAppDebotBrowser](mod_debot.md#paramsofappdebotbrowser)
+- [Debot browser app object](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_debot.md#AppDebotBrowser) and [signing box app object](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_crypto.md#appsigningbox) descriptions added
+- functions-helpers for enum type variable creation for [Signer](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_abi.md#signer), [Abi](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_abi.md#abi), [ParamsOfAppDebotBrowser](mod_debot.md#paramsofappdebotbrowser)
 
 ### Fixed
 
@@ -875,7 +875,7 @@ This reduces stack size requirements for long lists.
 ### Fixed
 
 - Binaries download links are now under https protocol
-- If you receive this error on Web: "Runtime error. Unreachable code should not be executed..." in `run_get`, use the new parameter `tuple_list_as_array = true`. [See the documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/mod_tvm.md#run_get). This may happen, for example, when elector contract contains too many participants
+- If you receive this error on Web: "Runtime error. Unreachable code should not be executed..." in `run_get`, use the new parameter `tuple_list_as_array = true`. [See the documentation](https://github.com/everx-labs/TON-SDK/blob/master/docs/mod_tvm.md#run_get). This may happen, for example, when elector contract contains too many participants
 
 ## 1.8.0 Feb 11, 2021
 
@@ -992,11 +992,11 @@ and deserializations which drastically improves performance of `run_tvm` and `ru
 ## 1.2.0 - Dec 3, 2020
 
 ### New
-- Thin binding: JS binding has become very thin - all the implementation, including network layer, was moved to the core [TON-SDK library](https://github.com/tonlabs/TON-SDK). Find out all the key changes in the [core library CHANGELOG](https://github.com/tonlabs/TON-SDK/blob/master/CHANGELOG.md), starting from 1.0.0 release.
+- Thin binding: JS binding has become very thin - all the implementation, including network layer, was moved to the core [TON-SDK library](https://github.com/everx-labs/TON-SDK). Find out all the key changes in the [core library CHANGELOG](https://github.com/everx-labs/TON-SDK/blob/master/CHANGELOG.md), starting from 1.0.0 release.
 - Mono repository: now all the platform packages are developed in the same repository, platform bridges were also moved here from core repository
 - Typescript: v1 JS binding is written in Typescript
 - Low level API: at the moment the library provides only low level API, **we plan to extend it with high level handy wrappers in the future releases.**
-- new API reference: [core api reference documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md) provides typescript samples of function signatures. 
+- new API reference: [core api reference documentation](https://github.com/everx-labs/TON-SDK/blob/master/docs/modules.md) provides typescript samples of function signatures. 
 
 ## 0.26.2 - Sep 21, 2020
 ### Fixed

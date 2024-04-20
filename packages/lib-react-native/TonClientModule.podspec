@@ -6,11 +6,11 @@ Pod::Spec.new do |s|
   s.description  = <<-DESC
                   TON Client React Native Module
                    DESC
-  s.homepage     = "https://github.com/tonlabs/ever-sdk-js"
+  s.homepage     = "https://github.com/everx-labs/ever-sdk-js"
   s.license      = "MIT"
   s.author       = { "author" => "sdk@tonlabs.io" }
   s.platform     = :ios, "7.0"
-  s.source       = { :git => "https://github.com/tonlabs/ever-sdk-js.git", :tag => "master" }
+  s.source       = { :git => "https://github.com/everx-labs/ever-sdk-js.git", :tag => "master" }
   s.source_files = "ios/**/*.{h,m,mm}"
   s.ios.vendored_library = "ios/libeversdk.a"
 

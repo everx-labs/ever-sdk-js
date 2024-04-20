@@ -24,7 +24,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/tonlabs/ever-sdk-js.git"
+    "url": "https://github.com/everx-labs/ever-sdk-js.git"
   },
   "scripts": {
     "postinstall": "node install.js",
@@ -54,7 +54,7 @@
   ],
   "homepage": "https://docs.ton.dev/",
   "bugs": {
-    "url": "https://github.com/tonlabs/ever-sdk-js/issues"
+    "url": "https://github.com/everx-labs/ever-sdk-js/issues"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
