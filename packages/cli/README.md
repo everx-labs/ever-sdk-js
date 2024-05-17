@@ -83,7 +83,7 @@ This command performs the following actions:
 - Calls the 'sendAllMoney' function, which self-destructs this contract
 
 For the kamikadze command, you can use the following environment variables to specify the giver:
-- `EVERCLOUD_GIVER_TYPE=v2` giver type (value can be `v2` please check [giver contracts](https://github.com/tonlabs/evernode-se/tree/master/contracts) for more information)
+- `EVERCLOUD_GIVER_TYPE=v2` giver type (value can be `v2` please check [giver contracts](https://github.com/everx-labs/evernode-se/tree/master/contracts) for more information)
 - `TON_GIVER_ADDRESS=<address>` giver address
 - `TON_GIVER_SECRET=<privateKey>` giver private key
 
@@ -130,7 +130,7 @@ npx -p typescript tsc <Contract>.js --declaration --allowJs --emitDeclarationOnl
 All new commands should have a shortcut alias in one letter.
 
 ## Alternatives
-You can use [tonos-cli](https://github.com/tonlabs/tonos-cli) as an alternative to Evercloud CLI. However, Evercloud CLI provides precompiled and wrapped contracts in the form of a CLI and uses `sdk.net.query` and `sdk.net.subscribe` methods, which tonos-cli does not support yet.
+You can use [ever-cli](https://github.com/everx-labs/ever-cli) as an alternative to Evercloud CLI. However, Evercloud CLI provides precompiled and wrapped contracts in the form of a CLI and uses `sdk.net.query` and `sdk.net.subscribe` methods, which ever-cli does not support yet.
 
 To test the subscribe functionality, you can use [wscat](https://www.npmjs.com/package/wscat). It can handle `ws://localhost` Evernode-SE and `wss://devnet.evercloud.dev/<ProjectId>` endpoints as well. But don't forget to send an initial payload with the following command:
 ```

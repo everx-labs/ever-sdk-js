@@ -473,7 +473,7 @@ test("Signing", async () => {
 
 test("initCodeHash", async () => {
     // contracts from sol2tvm/tests3/net_test_suite3.py/test27
-    // https://github.com/tonlabs/sol2tvm/pull/1424
+    // https://github.com/everx-labs/sol2tvm/pull/1424
     const {
         abi,
         boc,

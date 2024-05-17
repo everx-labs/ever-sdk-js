@@ -1,14 +1,14 @@
 {
   "name": "@eversdk/cli",
-  "version": "1.45.1",
+  "version": "1.46.1",
   "description": "Evercloud CLI",
   "homepage": "https://everx.dev/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tonlabs/ever-sdk-js.git"
+    "url": "https://github.com/everx-labs/ever-sdk-js.git"
   },
   "bugs": {
-    "url": "https://github.com/tonlabs/ever-sdk-js/issues"
+    "url": "https://github.com/everx-labs/ever-sdk-js/issues"
   },
   "main": "index.js",
   "scripts": {
@@ -53,8 +53,8 @@
   ],
   "dependencies": {
     "@eversdk/appkit": "^0.3.8",
-    "@eversdk/core": "^1.45.1",
-    "@eversdk/lib-node": "^1.45.1",
+    "@eversdk/core": "^1.46.1",
+    "@eversdk/lib-node": "^1.46.1",
     "commander": "^10.0.0",
     "dotenv": "^16.0.3",
     "everdev": "^1.7.0",

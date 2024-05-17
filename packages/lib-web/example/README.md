@@ -28,4 +28,4 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-For testing with Jest, see [github.com/tonlabs/sdk-samples](https://github.com/tonlabs/sdk-samples/blob/master/core-examples/react-jest)
+For testing with Jest, see [github.com/everx-labs/sdk-samples](https://github.com/everx-labs/sdk-samples/blob/master/core-examples/react-jest)

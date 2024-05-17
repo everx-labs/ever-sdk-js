@@ -1,4 +1,4 @@
-<p align="center"><a href="https://github.com/tonlabs/ever-sdk-js/"><img src="media/ton-sdk-blue.png" height="60"/></a></p> 
+<p align="center"><a href="https://github.com/everx-labs/ever-sdk-js/"><img src="media/ton-sdk-blue.png" height="60"/></a></p> 
 <h1 align="center">JavaScript SDK for TVM compatible networks </h1>
 <p align="center">Client Library built for Everscale, Venom blockchain, TON, Gosh</p>
 <p align="center">for Web, Node.js and React Native platforms</p>
@@ -36,11 +36,11 @@
   
 - [Types and Methods (API Reference)](https://tonlabs.github.io/ever-sdk-js/)
   
-- [AppKit](https://github.com/tonlabs/appkit-js) - JS package built on top of [@eversdk/core](https://www.npmjs.com/package/@eversdk/core) package which purpose is to simplify writing applications on EverScale. It helps to implement most common use-cases with less coding. 
+- [AppKit](https://github.com/everx-labs/appkit-js) - JS package built on top of [@eversdk/core](https://www.npmjs.com/package/@eversdk/core) package which purpose is to simplify writing applications on EverScale. It helps to implement most common use-cases with less coding. 
   
 - [SDK guides](https://tonlabs.gitbook.io/ton-sdk/guides/installation/add_sdk_to_your_app) - get a deeper understanding by diving into our guides where you can find extensive explanations of each step of DApp development on EverScale.
   
-- [SDK Samples](https://github.com/tonlabs/sdk-samples) - a good place to get to practice with SDK examples asap:)
+- [SDK Samples](https://github.com/everx-labs/sdk-samples) - a good place to get to practice with SDK examples asap:)
 
 # Library distribution
 This SDK is distributed via npm packages:
@@ -189,7 +189,7 @@ In the end, close client to close all the sockets related to it:
  client.close();
 ```
 
-You can find reference guide to `TonClient` here: [TON-SDK API Documentation](https://github.com/tonlabs/TON-SDK/blob/master/docs/modules.md)
+You can find reference guide to `TonClient` here: [TON-SDK API Documentation](https://github.com/everx-labs/TON-SDK/blob/master/docs/modules.md)
 
 # Build bridge binaries
 

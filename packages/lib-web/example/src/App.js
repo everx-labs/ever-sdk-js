@@ -59,7 +59,7 @@ function App() {
 
   const handleEncodeDecode = async () => {
     const url =
-      "https://raw.githubusercontent.com/tonlabs/ever-sdk-js/master/media/ton-sdk-blue.png";
+      "https://raw.githubusercontent.com/everx-labs/ever-sdk-js/master/media/ton-sdk-blue.png";
     const response = await fetch(url);
     const original = await response.blob();
 

@@ -10,7 +10,7 @@ namespace tonlabs
 
   struct TonClientJsiBlobManager : jni::JavaClass<TonClientJsiBlobManager>
   {
-    __unused static constexpr auto kJavaDescriptor = "Lcom/tonlabs/tonclientjsi/TonClientJsiBlobManager;";
+    __unused static constexpr auto kJavaDescriptor = "Lcom/everx-labs/tonclientjsi/TonClientJsiBlobManager;";
 
     std::string store(jni::alias_ref<jni::JByteBuffer> byteBuffer) // calling thread must be attached to JVM
     {

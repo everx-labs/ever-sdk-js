@@ -5180,7 +5180,7 @@ export class AbiModule {
      * Decodes BOC into JSON as a set of provided parameters.
      * 
      * @remarks
-     * Solidity functions use ABI types for [builder encoding](https://github.com/tonlabs/TON-Solidity-Compiler/blob/master/API.md#tvmbuilderstore).
+     * Solidity functions use ABI types for [builder encoding](https://github.com/everx-labs/TON-Solidity-Compiler/blob/master/API.md#tvmbuilderstore).
      * The simplest way to decode such a BOC is to use ABI decoding.
      * ABI has it own rules for fields layout in cells so manually encoded
      * BOC can not be described in terms of ABI rules.
@@ -5207,7 +5207,7 @@ export class AbiModule {
      * Decodes BOC into JSON as a set of provided parameters.
      * 
      * @remarks
-     * Solidity functions use ABI types for [builder encoding](https://github.com/tonlabs/TON-Solidity-Compiler/blob/master/API.md#tvmbuilderstore).
+     * Solidity functions use ABI types for [builder encoding](https://github.com/everx-labs/TON-Solidity-Compiler/blob/master/API.md#tvmbuilderstore).
      * The simplest way to decode such a BOC is to use ABI decoding.
      * ABI has it own rules for fields layout in cells so manually encoded
      * BOC can not be described in terms of ABI rules.
@@ -6003,7 +6003,7 @@ export class BocModule {
     }
 
     /**
-     * Decodes tvc according to the tvc spec. Read more about tvc structure here https://github.com/tonlabs/ever-struct/blob/main/src/scheme/mod.rs#L30
+     * Decodes tvc according to the tvc spec. Read more about tvc structure here https://github.com/everx-labs/ever-struct/blob/main/src/scheme/mod.rs#L30
      * 
      * @param {ParamsOfDecodeTvc} params
      * @returns ResultOfDecodeTvc
@@ -6013,7 +6013,7 @@ export class BocModule {
     }
 
     /**
-     * Decodes tvc according to the tvc spec. Read more about tvc structure here https://github.com/tonlabs/ever-struct/blob/main/src/scheme/mod.rs#L30
+     * Decodes tvc according to the tvc spec. Read more about tvc structure here https://github.com/everx-labs/ever-struct/blob/main/src/scheme/mod.rs#L30
      * 
      * NOTE: Available only for `lib-node` binding.
      * 

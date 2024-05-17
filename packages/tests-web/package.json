@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/tests-web",
-	"version": "1.45.1",
+	"version": "1.46.1",
 	"private": true,
 	"description": "TON Client WASM module tests runner",
 	"scripts": {
@@ -19,7 +19,7 @@
 	"license": "SEE LICENSE IN LICENSE",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/tonlabs/ever-sdk-js.git"
+		"url": "https://github.com/everx-labs/ever-sdk-js.git"
 	},
 	"homepage": "https://docs.ton.dev/",
 	"dependencies": {

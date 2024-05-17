@@ -1,10 +1,10 @@
 {
 	"name": "@eversdk/lib-node",
-	"version": "1.45.1",
+	"version": "1.46.1",
 	"description": "TON Client NodeJs AddOn",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/tonlabs/ever-sdk-js.git"
+		"url": "https://github.com/everx-labs/ever-sdk-js.git"
 	},
 	"scripts": {
 		"postinstall": "node install.js"
