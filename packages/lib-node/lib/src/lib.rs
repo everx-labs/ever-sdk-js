@@ -12,6 +12,6 @@
 */
 
 extern crate libc;
-extern crate ton_client;
+extern crate ever_client;
 
-pub use ton_client::{tc_create_context, tc_destroy_context, tc_request, tc_request_sync};
+pub use ever_client::{tc_create_context, tc_destroy_context, tc_request, tc_request_sync};

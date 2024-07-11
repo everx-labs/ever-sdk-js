@@ -12,11 +12,11 @@
 */
 
 extern crate jni;
-extern crate ton_client;
+extern crate ever_client;
 #[macro_use]
 extern crate lazy_static;
 
-use self::ton_client::{create_context, destroy_context, request, ContextHandle};
+use self::ever_client::{create_context, destroy_context, request, ContextHandle};
 
 use jni::objects::{GlobalRef, JClass, JObject, JString, JValue};
 use jni::sys::{jlong, jstring};
