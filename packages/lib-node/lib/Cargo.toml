@@ -1,6 +1,6 @@
 [package]
 name = 'ever_sdk_node_addon'
-version = '1.46.2'
+version = '1.47.0'
 authors = [ 'TON Labs' ]
 license = 'Apache-2.0'
 
