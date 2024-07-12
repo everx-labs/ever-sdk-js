@@ -14,7 +14,7 @@
 use js_sys::Error;
 use std::collections::HashMap;
 use std::sync::Mutex;
-use ton_client::{create_context, destroy_context, request};
+use ever_client::{create_context, destroy_context, request};
 use wasm_bindgen::prelude::*;
 
 mod conv;

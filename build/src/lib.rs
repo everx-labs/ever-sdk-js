@@ -62,7 +62,7 @@ impl Build {
             .map(|x| PathBuf::from(x))
             .unwrap_or(lib_dir.join("target"));
         for dep in meta["packages"].as_array().unwrap().iter() {
-            if dep["name"].as_str().unwrap() == "ton_client" {
+            if dep["name"].as_str().unwrap() == "ever_client" {
                 version = dep["version"]
                     .as_str()
                     .unwrap()
