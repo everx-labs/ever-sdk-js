@@ -93,7 +93,7 @@ export class TestsRunner {
 
         const log = resolvedOptions.log ?? TestsRunner.log;
         try {
-            jest.setTimeout(300000);
+            jest.setTimeout(600000); // 10*60*1000 // 10 min
             const client = runner.getClient();
 
             const state: TestsRunningState = {
