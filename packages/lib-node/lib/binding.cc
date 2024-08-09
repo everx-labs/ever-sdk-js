@@ -241,7 +241,7 @@ napi_value requestSync(napi_env env, napi_callback_info info) {
 
 //--------------------------------------------------------- initialization
 
-void unload(napi_env env, void *data, void *hint) {
+void unload(const napi_env env, void *data, void *hint) {
 }
 
 napi_value init(napi_env env, napi_value exports) {
