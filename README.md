@@ -208,7 +208,7 @@ If you checkout this repository you can build binaries for all bridges.
 ```shell script
 cd packages/lib-node/build
 cargo run
-cd ../../../lib-web/build
+cd ../../lib-web/build
 cargo run
 cd ../../../lib-react-native/android/build
 cargo run
@@ -238,7 +238,7 @@ You need to provide EVERCLOUD_AUTH_PROJECT environemnt variable. This is Project
 cd packages/core
 npm i
 npx tsc
-cd packages/tests
+cd ../tests
 npm i
 npx tsc
 ```
@@ -255,7 +255,9 @@ node run
 
 ```shell script
 cd packages/tests-web
-npm i
+npm i -f webpack
+npm i -f webpack-cli
+npm i -f
 node run
 ```
 
