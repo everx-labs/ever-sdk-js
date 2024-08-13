@@ -1,6 +1,6 @@
 [package]
 name = 'ever_sdk_react_native_ios'
-version = '1.47.0'
+version = '1.48.0'
 authors = [ 'TON Labs' ]
 license = 'Apache-2.0'
 

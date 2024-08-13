@@ -1,6 +1,6 @@
 {
   "name": "@eversdk/tests-react-native-jsi",
-  "version": "1.47.0",
+  "version": "1.48.0",
   "private": true,
   "main": "index.js",
   "browser": true,
