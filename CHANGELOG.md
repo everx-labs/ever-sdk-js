@@ -1,5 +1,11 @@
 All notable changes to this project will be documented in this file.
 
+## [1.48.0] – 2024-08-13
+
+### New
+
+- Updating the version according to the main project
+
 ## [1.47.0] – 2024-07-12
 
 ### New
