@@ -152,7 +152,7 @@ property of the <code>TonClient</code> object.</p>
 <p>In the end, close client to close all the sockets related to it:</p>
 <pre><code class="language-ts"><span class="hl-0"> </span><span class="hl-6">client</span><span class="hl-0">.</span><span class="hl-3">close</span><span class="hl-0">();</span>
 </code></pre>
-<p>You can find reference guide to <code>TonClient</code> here: <a href="https://github.com/everx-labs/ever-sdk/blob/master/docs/modules.md">TON-SDK API Documentation</a></p>
+<p>You can find reference guide to <code>TonClient</code> here: <a href="https://github.com/everx-labs/TON-SDK/blob/master/docs/modules.md">TON-SDK API Documentation</a></p>
 
 <a href="#build-bridge-binaries" id="build-bridge-binaries" style="color: inherit; text-decoration: none;">
   <h1>Build bridge binaries</h1>
@@ -166,7 +166,7 @@ property of the <code>TonClient</code> object.</p>
   <h1>Build binaries</h1>
 </a>
 <p>If you checkout this repository you can build binaries for all bridges.</p>
-<pre><code class="language-shell"><span class="hl-3">cd</span><span class="hl-0"> packages/lib-node/build</span><br/><span class="hl-0">cargo run</span><br/><span class="hl-3">cd</span><span class="hl-0"> ../../../lib-web/build</span><br/><span class="hl-0">cargo run</span><br/><span class="hl-3">cd</span><span class="hl-0"> ../../../lib-react-native/android/build</span><br/><span class="hl-0">cargo run</span><br/><span class="hl-3">cd</span><span class="hl-0"> ../../ios/build</span><br/><span class="hl-0">cargo run</span>
+<pre><code class="language-shell"><span class="hl-3">cd</span><span class="hl-0"> packages/lib-node/build</span><br/><span class="hl-0">cargo run</span><br/><span class="hl-3">cd</span><span class="hl-0"> ../../lib-web/build</span><br/><span class="hl-0">cargo run</span><br/><span class="hl-3">cd</span><span class="hl-0"> ../../../lib-react-native/android/build</span><br/><span class="hl-0">cargo run</span><br/><span class="hl-3">cd</span><span class="hl-0"> ../../ios/build</span><br/><span class="hl-0">cargo run</span>
 </code></pre>
 <p>Also the archives will be created to be published on the TON Labs cloud storage. Archives will be placed into the following folders:</p>
 <ul>
@@ -191,7 +191,7 @@ property of the <code>TonClient</code> object.</p>
   <h2>Preparation to run tests</h2>
 </a>
 <p>You need to provide EVERCLOUD_AUTH_PROJECT environemnt variable. This is ProjectId. Take it from one of your project at <a href="https://dashboard.evercloud.dev/projects">https://dashboard.evercloud.dev/projects</a>. (without secret / secret should be disabled)</p>
-<pre><code class="language-shell"><span class="hl-3">cd</span><span class="hl-0"> packages/core</span><br/><span class="hl-0">npm i</span><br/><span class="hl-0">npx tsc</span><br/><span class="hl-3">cd</span><span class="hl-0"> packages/tests</span><br/><span class="hl-0">npm i</span><br/><span class="hl-0">npx tsc</span>
+<pre><code class="language-shell"><span class="hl-3">cd</span><span class="hl-0"> packages/core</span><br/><span class="hl-0">npm i</span><br/><span class="hl-0">npx tsc</span><br/><span class="hl-3">cd</span><span class="hl-0"> ../tests</span><br/><span class="hl-0">npm i</span><br/><span class="hl-0">npx tsc</span>
 </code></pre>
 
 <a href="#run-tests-on-node-js" id="run-tests-on-node-js" style="color: inherit; text-decoration: none;">
@@ -203,7 +203,7 @@ property of the <code>TonClient</code> object.</p>
 <a href="#run-tests-on-web-browser" id="run-tests-on-web-browser" style="color: inherit; text-decoration: none;">
   <h2>Run tests on web browser</h2>
 </a>
-<pre><code class="language-shell"><span class="hl-3">cd</span><span class="hl-0"> packages/tests-web</span><br/><span class="hl-0">npm i</span><br/><span class="hl-0">node run</span>
+<pre><code class="language-shell"><span class="hl-3">cd</span><span class="hl-0"> packages/tests-web</span><br/><span class="hl-0">npm i -f webpack</span><br/><span class="hl-0">npm i -f webpack-cli</span><br/><span class="hl-0">npm i -f</span><br/><span class="hl-0">node run</span>
 </code></pre>
 
 <a href="#run-tests-on-react-native-platform" id="run-tests-on-react-native-platform" style="color: inherit; text-decoration: none;">
