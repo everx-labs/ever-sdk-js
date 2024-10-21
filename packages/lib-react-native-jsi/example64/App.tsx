@@ -72,7 +72,7 @@ export default function App() {
 
   const handleEncodeDecode = async () => {
     const url =
-      'https://raw.githubusercontent.com/everx-labs/TON-SDK/master/assets/ton-sdk-blue.png';
+      'https://raw.githubusercontent.com/everx-labs/ever-sdk/master/assets/ton-sdk-blue.png';
     const response = await fetch(url);
     const original = await response.blob();
 

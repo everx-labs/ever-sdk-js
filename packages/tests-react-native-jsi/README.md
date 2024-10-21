@@ -40,7 +40,7 @@ There are some options for preparing and testing:
   - `android/arm64-v8a/libeversdk.so`
   - `android/armeabi-v7a/libeversdk.so`
   - `android/x86/libeversdk.so`
-- `TON-SDK` project besided of the `ton-client-react-native-js` folder – if it exists and `TC_BIN_SRC` doesn't specified then `TC_BIN_SRC` will be set to build output for React Native core libraries. This may be useful for running tests with a non published version of the core library.
+- `EVER-SDK` project besided of the `ton-client-react-native-js` folder – if it exists and `TC_BIN_SRC` doesn't specified then `TC_BIN_SRC` will be set to build output for React Native core libraries. This may be useful for running tests with a non published version of the core library.
 
 ---
 
