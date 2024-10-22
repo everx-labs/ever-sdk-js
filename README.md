@@ -189,7 +189,7 @@ In the end, close client to close all the sockets related to it:
  client.close();
 ```
 
-You can find reference guide to `TonClient` here: [TON-SDK API Documentation](https://github.com/everx-labs/TON-SDK/blob/master/docs/modules.md)
+You can find reference guide to `TonClient` here: [EVER-SDK API Documentation](https://github.com/everx-labs/ever-sdk/blob/master/docs/modules.md)
 
 # Build bridge binaries
 

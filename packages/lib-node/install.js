@@ -22,6 +22,7 @@ const path = require('path');
 const os = require('os');
 const platform = os.platform();
 const arch = os.arch();
+const osRelease = os.release();
 
 const binariesSource =
   process.env.TON_CLIENT_BIN_SRC || 'https://binaries.tonlabs.io';
@@ -106,6 +107,12 @@ function resolveBinariesTargetPath() {
     }
 }
 
+function resolveBinariesSourceFileName() {
+    return (platform == 'darwin' && osRelease.split('.')[0] >= 11) ?
+        `eversdk_${binariesVersion}_nodejs_addon-${platform}` :
+        `eversdk_${binariesVersion}_nodejs_addon_${arch}-${platform}`;
+}
+
 async function dl(dstPath, src) {
     const srcUrl = `${binariesSource}/${src}.gz`;
     process.stdout.write(`Downloading from ${srcUrl} to ${dstPath} ...`);
@@ -118,7 +125,7 @@ async function main() {
         return;
     }
     const binariesTargetPath = resolveBinariesTargetPath();
-    await dl(path.join(binariesTargetPath, `eversdk.node`), `eversdk_${binariesVersion}_nodejs_addon_${arch}-${platform}`);
+    await dl(path.join(binariesTargetPath, `eversdk.node`), resolveBinariesSourceFileName());
 }
 
 (async () => {
