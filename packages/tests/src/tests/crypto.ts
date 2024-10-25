@@ -27,7 +27,7 @@ function text2base64(text: string): string {
     return Buffer.from(text, "utf8").toString("base64");
 }
 
-// The "//-----" partitions are derived from TON-SDK/ton_client/src/crypto file structure
+// The "//-----" partitions are derived from ever-sdk/ever_client/src/crypto file structure
 
 test("crypto - encrypt large blocks", async () => {
     const client = runner.getClient();
