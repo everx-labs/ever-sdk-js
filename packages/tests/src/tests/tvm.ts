@@ -168,7 +168,7 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
     expect(getSubscriptionResult.decoded?.output?.value0?.pubkey)
         .toEqual(subscriptionParams.pubkey);
 
-    const pubkey2 = "0x3333333333333333333333333333333333333333333333333333333333333333";
+    const pubkey2 = BigInt("0x3333333333333333333333333333333333333333333333333333333333333333").toString(10);
     const { transaction } = await processing.process_message({
         message_encode_params: {
             address: accountAddress,
