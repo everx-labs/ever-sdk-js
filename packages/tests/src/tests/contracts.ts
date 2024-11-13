@@ -22,7 +22,6 @@ import {
     ResultOfProcessMessage,
     ResultOfRunTvm,
     signerKeys,
-    TonClient,
     TvmErrorCode,
 } from "@eversdk/core";
 
@@ -274,10 +273,10 @@ test("Test CheckInitParams contract double deployment with different init data",
     const uintResult2 = await run_tvm(checkInitParamsAccount2, "getUintVariable");
     
     expect(uintResult1.decoded?.output).toEqual({
-        value0: "0x" + TonClient.toHex(initData1.uintVariable, 256),
+        value0: "0", // See initData1.uintVariable
     });
     expect(uintResult2.decoded?.output).toEqual({
-        value0: "0x" + TonClient.toHex(initData2.uintVariable, 256),
+        value0: "4294967295",  // See initData2.uintVariable
     });
     
 
@@ -343,13 +342,13 @@ test.each(ABIVersions)("Test SetCode contracts (ABI v%i)", async (abiVersion) =>
 
     const version1 = await run(setCodeAccount, setCodeAccount.abi, "getVersion");
     expect (version1.decoded?.output?.value0)
-        .toEqual("0x0000000000000000000000000000000000000000000000000000000000000001");
+        .toEqual("1");
 
     await run(setCodeAccount, setCodeAccount.abi, "main", { newcode: (await boc.get_code_from_tvc({ tvc: setCode2ContractPackage.tvc })).code });
 
     const version2 = await run(setCodeAccount, abiContract(setCode2ContractPackage.abi), "getNewVersion");
     expect (version2.decoded?.output?.value0)
-        .toEqual("0x0000000000000000000000000000000000000000000000000000000000000002");
+        .toEqual("2");
 
     // end of test, start of local functions
 
@@ -484,7 +483,9 @@ test("initCodeHash", async () => {
     const abiModule = abi;
     const abiVersion = 2;
     const account = await runner.getAccount(contracts.InitCodeHashOld, abiVersion);
-    const actualCodeHash = `0x${(await boc.decode_state_init({ state_init: contracts.InitCodeHashOld[abiVersion].tvc })).code_hash}`;
+    const actualCodeHash = BigInt(
+        `0x${(await boc.decode_state_init({ state_init: contracts.InitCodeHashOld[abiVersion].tvc })).code_hash}`
+    ).toString(10);
     await runner.deploy(account);
 
     await run(

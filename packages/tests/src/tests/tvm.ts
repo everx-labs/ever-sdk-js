@@ -104,7 +104,7 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
 
     const subscriptionParams = {
         subscriptionId: "0x1111111111111111111111111111111111111111111111111111111111111111",
-        pubkey: "0x2222222222222222222222222222222222222222222222222222222222222222",
+        pubkey: "15438945231642159389809464667825054380435997955418741871927677867721750618658",
         to: "0:3333333333333333333333333333333333333333333333333333333333333333",
         value: "0x123",
         period: "0x456",
@@ -168,7 +168,7 @@ test.each(ABIVersions)("tvm: run_tvm and run_executor (ABIv%i)", async (abiVersi
     expect(getSubscriptionResult.decoded?.output?.value0?.pubkey)
         .toEqual(subscriptionParams.pubkey);
 
-    const pubkey2 = "0x3333333333333333333333333333333333333333333333333333333333333333";
+    const pubkey2 = BigInt("0x3333333333333333333333333333333333333333333333333333333333333333").toString(10);
     const { transaction } = await processing.process_message({
         message_encode_params: {
             address: accountAddress,

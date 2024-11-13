@@ -12,7 +12,7 @@ crate-type = [ 'cdylib' ]
 openssl-sys = { version = "0.9.97", features = [ "vendored" ] }
 lazy_static = '1.4.0'
 jni = { default-features = false, version = '0.12.0' }
-ever_client = { git = 'https://github.com/everx-labs/ever-sdk.git', tag = '1.48.1' }
+ever_client = { git = 'https://github.com/everx-labs/ever-sdk.git', tag = '1.49.0' }
 
 [profile.release]
 lto = true
