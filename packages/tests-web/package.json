@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/tests-web",
-	"version": "1.49.0",
+	"version": "1.49.1",
 	"private": true,
 	"description": "TON Client WASM module tests runner",
 	"scripts": {
