@@ -1,6 +1,6 @@
 {
   "name": "@eversdk/lib-react-native-jsi",
-  "version": "1.49.1",
+  "version": "1.49.2",
   "description": "TON Client React Native JSI Module",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
