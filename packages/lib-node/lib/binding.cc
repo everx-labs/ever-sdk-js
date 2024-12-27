@@ -254,7 +254,7 @@ napi_value init(napi_env env, napi_value exports) {
             {"requestSync", nullptr, requestSync, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
     CHECK(napi_define_properties(env, exports, 6, properties));
-    CHECK(napi_wrap(env, exports, nullptr, unload, nullptr, nullptr));
+    CHECK(napi_wrap(env, exports, nullptr, nullptr, nullptr, nullptr));
     return exports;
 }
 
