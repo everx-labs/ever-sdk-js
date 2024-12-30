@@ -27,10 +27,17 @@
 		"@eversdk/lib-web": "file:../lib-web",
 		"@eversdk/tests": "file:../tests",
 		"assert": "^2.0.0",
+		"babel-cli": "6.24.1",
+		"babel-core": "6.25.0",
+		"babel-plugin-transform-class-properties": "6.24.1",
+		"babel-preset-env": "1.5.2",
+		"babel-preset-react": "6.24.1",
 		"buffer": "^6.0.2",
 		"opentracing": "^0.14.4"
 	},
 	"devDependencies": {
+		"@babel/core": "^7.6.0",
+		"babel-loader": "^8.0.6",
 		"copy-webpack-plugin": "^6.2.1",
 		"find-process": "^1.4.4",
 		"puppeteer": "^5.3.1",

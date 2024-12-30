@@ -30,7 +30,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.jsx?$/,
+                test: /\.(ts|js)x?$/,
                 include: [
                     path.resolve('index.js'),
                     path.resolve(__dirname, './node_modules/webpack-dev-server'),
@@ -40,6 +40,7 @@ module.exports = {
                     path.resolve(__dirname, './node_modules/@eversdk/tests'),
                     path.resolve(__dirname, './node_modules/@eversdk/lib-web'),
                 ],
+                use: 'babel-loader',
             },
             {
                 test: /\.css$/,
