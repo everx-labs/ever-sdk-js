@@ -6,7 +6,7 @@ import { TestsRunner } from "@eversdk/tests";
 entry();
 libWebSetup({
     disableSeparateWorker: true
-})
+});
 TonClient.useBinaryLibrary(libWeb);
 
 window.addEventListener('load', () => {
