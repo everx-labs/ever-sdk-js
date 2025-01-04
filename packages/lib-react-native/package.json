@@ -1,6 +1,6 @@
 {
 	"name": "@eversdk/lib-react-native",
-	"version": "1.49.2",
+	"version": "1.49.3",
 	"description": "TON Client React Native Module",
 	"main": "index.js",
 	"repository": {

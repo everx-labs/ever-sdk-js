@@ -1,6 +1,6 @@
 [package]
 name = 'ever_sdk_wasm_module'
-version = '1.49.1'
+version = '1.49.3'
 edition = '2018'
 description = 'TON Client WASM binding'
 license = 'Apache-2.0'
@@ -18,7 +18,7 @@ crate-type = [ 'staticlib', 'cdylib' ]
 
 [dependencies]
 js-sys = '0.3.57'
-wasm-bindgen = '=0.2.84'
+wasm-bindgen = '=0.2.99'
 serde-wasm-bindgen = '0.4.3'
 serde = { features = [ 'derive' ], version = '1.0' }
 serde_json = '1.0.81'
@@ -28,7 +28,7 @@ lazy_static = '1.4.0'
 # just to fix building of rand for WASM:
 getrandom = { default-features = false, features = [ 'js' ], version = '0.2.2' }
 
-ever_client = { git = 'https://github.com/everx-labs/ever-sdk.git', tag = '1.49.2', default-features = false, features = [ 'wasm' ] }
+ever_client = { git = 'https://github.com/everx-labs/ever-sdk.git', tag = '1.49.3', default-features = false, features = [ 'wasm' ] }
 
 [dependencies.web-sys]
 version = '0.3.57'
