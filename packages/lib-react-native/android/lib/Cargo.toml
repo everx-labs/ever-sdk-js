@@ -1,6 +1,6 @@
 [package]
 name = 'ever_sdk_react_native_android'
-version = '1.49.1'
+version = '1.49.3'
 authors = [ 'TON Labs' ]
 license = 'Apache-2.0'
 
