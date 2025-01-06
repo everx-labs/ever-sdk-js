@@ -1,16 +1,17 @@
 [package]
-name = 'ever_sdk_react_native_ios'
-version = '1.49.1'
 authors = [ 'TON Labs' ]
 license = 'Apache-2.0'
-
-[lib]
-name = 'eversdk'
-crate-type = [ 'staticlib' ]
+name = 'ever_sdk_react_native_ios'
+version = '1.49.4'
 
 [dependencies]
 libc = '0.2'
-ever_client = { git = 'https://github.com/everx-labs/ever-sdk.git', tag = '1.49.4', default-features = false, features = [ 'std', 'rustls-tls-webpki-roots' ] }
+ever_client = { default-features = false, features = [ 'std', 'rustls-tls-webpki-roots' ], git = 'https://github.com/everx-labs/ever-sdk.git', tag = '1.49.4' }
 
-[profile.release]
-lto = true
+[lib]
+crate-type = [ 'staticlib' ]
+name = 'eversdk'
+
+[profile]
+release = { lto = true }
+

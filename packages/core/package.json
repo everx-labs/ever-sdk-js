@@ -1,42 +1,37 @@
 {
-	"name": "@eversdk/core",
-	"version": "1.49.4",
-	"description": "TON Client for Java Script",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/everx-labs/ever-sdk-js.git"
-	},
-	"scripts": {
-		"prepublishOnly": "npm i && node before-compile.js && tsc",
-		"build": "node before-compile.js && tsc"
-	},
-	"publishConfig": {
-		"access": "public"
-	},
-	"keywords": [
-		"TON",
-		"Client",
-		"FreeTON",
-		"TONOS",
-		"SDK"
-	],
-	"author": "TON Labs LTD.",
-	"license": "Apache-2.0",
-	"licenses": [
-		{
-			"type": "Apache-2.0",
-			"url": "http://www.apache.org/licenses/LICENSE-2.0"
-		}
-	],
-	"homepage": "https://docs.ton.dev/",
-	"engines": {
-		"node": ">=6"
-	},
-	"devDependencies": {
-		"none": "^1.0.0",
-		"typedoc": "^0.22.11",
-		"typescript": "^4.0.3"
-	}
+    "name": "@eversdk/core",
+    "version": "1.49.4",
+    "description": "TON Client for Java Script",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "repository":     {
+        "type": "git",
+        "url": "https://github.com/everx-labs/ever-sdk-js.git"
+    },
+    "scripts":     {
+        "prepublishOnly": "npm i && node before-compile.js && tsc",
+        "build": "node before-compile.js && tsc"
+    },
+    "publishConfig": {"access": "public"},
+    "keywords":     [
+        "TON",
+        "Client",
+        "FreeTON",
+        "TONOS",
+        "SDK"
+    ],
+    "author": "TON Labs LTD.",
+    "license": "Apache-2.0",
+    "licenses": [    {
+        "type": "Apache-2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }],
+    "homepage": "https://docs.ton.dev/",
+    "engines": {"node": ">=6"},
+    "devDependencies":     {
+        "none": "^1.0.0",
+        "typedoc": "^0.22.11",
+        "typescript": "^4.0.3"
+    },
+    "package": "1.49.4"
 }

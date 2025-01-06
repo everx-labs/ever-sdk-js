@@ -1,35 +1,36 @@
 {
-  "name": "@eversdk/tests-react-native-jsi",
-  "version": "1.49.4",
-  "private": true,
-  "main": "index.js",
-  "browser": true,
-  "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "start": "react-native start",
-    "test": "jest",
-    "lint": "eslint .",
-    "npm install": "npm install",
-    "prepare tests": "node prepare-suite.js"
-  },
-  "dependencies": {
-    "@eversdk/core": "file:../core",
-    "@eversdk/lib-react-native-jsi": "file:../lib-react-native-jsi",
-    "@eversdk/tests": "file:../tests",
-    "assert": "^2.0.0",
-    "buffer": "^6.0.2",
-    "react": "16.13.1",
-    "react-native": "0.67.2"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.12.3",
-    "@babel/runtime": "^7.12.5",
-    "@react-native-community/eslint-config": "^2.0.0",
-    "@types/react": "^16",
-    "@types/react-native": "^0",
-    "eslint": "^7.13.0",
-    "find-process": "^1.4.4",
-    "metro-react-native-babel-preset": "^0.64.0"
-  }
+    "name": "@eversdk/tests-react-native-jsi",
+    "version": "1.49.4",
+    "private": true,
+    "main": "index.js",
+    "browser": true,
+    "scripts":     {
+        "android": "react-native run-android",
+        "ios": "react-native run-ios",
+        "start": "react-native start",
+        "test": "jest",
+        "lint": "eslint .",
+        "npm install": "npm install",
+        "prepare tests": "node prepare-suite.js"
+    },
+    "dependencies":     {
+        "@eversdk/core": "^1.49.4",
+        "@eversdk/lib-react-native-jsi": "file:../lib-react-native-jsi",
+        "@eversdk/tests": "file:../tests",
+        "assert": "^2.0.0",
+        "buffer": "^6.0.2",
+        "react": "16.13.1",
+        "react-native": "0.67.2"
+    },
+    "devDependencies":     {
+        "@babel/core": "^7.12.3",
+        "@babel/runtime": "^7.12.5",
+        "@react-native-community/eslint-config": "^2.0.0",
+        "@types/react": "^16",
+        "@types/react-native": "^0",
+        "eslint": "^7.13.0",
+        "find-process": "^1.4.4",
+        "metro-react-native-babel-preset": "^0.64.0"
+    },
+    "package": "1.49.4"
 }

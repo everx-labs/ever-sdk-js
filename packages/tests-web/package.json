@@ -1,42 +1,43 @@
 {
-	"name": "@eversdk/tests-web",
-	"version": "1.49.4",
-	"private": true,
-	"description": "TON Client WASM module tests runner",
-	"scripts": {
-		"npm install": "npm install",
-		"web": "webpack-dev-server -d --config webpack.config.js --progress --colors --host 0.0.0.0",
-		"web:bundle": "webpack -p --config webpack.config.js --progress --colors --display-error-details"
-	},
-	"keywords": [
-		"TON",
-		"Client",
-		"FreeTON",
-		"TONOS",
-		"SDK"
-	],
-	"author": "TON Labs LTD.",
-	"license": "SEE LICENSE IN LICENSE",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/everx-labs/ever-sdk-js.git"
-	},
-	"homepage": "https://docs.ton.dev/",
-	"dependencies": {
-		"@eversdk/core": "file:../core",
-		"@eversdk/lib-web": "file:../lib-web",
-		"@eversdk/tests": "file:../tests",
-		"assert": "^2.0.0",
-		"buffer": "^6.0.2",
-		"opentracing": "^0.14.4"
-	},
-	"devDependencies": {
-		"copy-webpack-plugin": "^6.2.1",
-		"find-process": "^1.4.4",
-		"puppeteer": "^5.3.1",
-		"webpack": "5.1.3",
-		"webpack-cli": "3.3.12",
-		"webpack-dev-server": "3.11.0"
-	},
-	"main": "index.js"
+    "name": "@eversdk/tests-web",
+    "version": "1.49.4",
+    "private": true,
+    "description": "TON Client WASM module tests runner",
+    "scripts":     {
+        "npm install": "npm install",
+        "web": "webpack-dev-server -d --config webpack.config.js --progress --colors --host 0.0.0.0",
+        "web:bundle": "webpack -p --config webpack.config.js --progress --colors --display-error-details"
+    },
+    "keywords":     [
+        "TON",
+        "Client",
+        "FreeTON",
+        "TONOS",
+        "SDK"
+    ],
+    "author": "TON Labs LTD.",
+    "license": "SEE LICENSE IN LICENSE",
+    "repository":     {
+        "type": "git",
+        "url": "https://github.com/everx-labs/ever-sdk-js.git"
+    },
+    "homepage": "https://docs.ton.dev/",
+    "dependencies":     {
+        "@eversdk/core": "^1.49.4",
+        "@eversdk/lib-web": "file:../lib-web",
+        "@eversdk/tests": "file:../tests",
+        "assert": "^2.0.0",
+        "buffer": "^6.0.2",
+        "opentracing": "^0.14.4"
+    },
+    "devDependencies":     {
+        "copy-webpack-plugin": "^6.2.1",
+        "find-process": "^1.4.4",
+        "puppeteer": "^5.3.1",
+        "webpack": "5.1.3",
+        "webpack-cli": "3.3.12",
+        "webpack-dev-server": "3.11.0"
+    },
+    "main": "index.js",
+    "package": "1.49.4"
 }
