@@ -1,18 +1,19 @@
 [package]
-name = 'ever_sdk_react_native_android'
-version = '1.49.1'
 authors = [ 'TON Labs' ]
 license = 'Apache-2.0'
-
-[lib]
-name = 'eversdk'
-crate-type = [ 'cdylib' ]
+name = 'ever_sdk_react_native_android'
+version = '1.49.1'
 
 [dependencies]
-openssl-sys = { version = "0.9.97", features = [ "vendored" ] }
-lazy_static = '1.4.0'
 jni = { default-features = false, version = '0.12.0' }
+lazy_static = '1.4.0'
+openssl-sys = { features = [ 'vendored' ], version = '0.9.97' }
 ever_client = { git = 'https://github.com/everx-labs/ever-sdk.git', tag = '1.49.2' }
 
-[profile.release]
-lto = true
+[lib]
+crate-type = [ 'cdylib' ]
+name = 'eversdk'
+
+[profile]
+release = { lto = true }
+

@@ -1,43 +1,28 @@
 [package]
+description = 'TON Client WASM binding'
+edition = '2018'
+license = 'Apache-2.0'
+metadata = { wasm-pack = { profile = { release = { wasm-opt = [ '-Os' ] } } } }
 name = 'ever_sdk_wasm_module'
 version = '1.49.1'
-edition = '2018'
-description = 'TON Client WASM binding'
-license = 'Apache-2.0'
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = [ '-Os' ]
-
-[profile.release]
-lto = true
-opt-level = 's'
-
-[lib]
-name = 'eversdk'
-crate-type = [ 'staticlib', 'cdylib' ]
 
 [dependencies]
-js-sys = '0.3.57'
-wasm-bindgen = '=0.2.84'
-serde-wasm-bindgen = '0.4.3'
-serde = { features = [ 'derive' ], version = '1.0' }
-serde_json = '1.0.81'
 base64 = '0.13.0'
-lazy_static = '1.4.0'
-# We need to build getrandom with fature "js" even though we don't use it by ourselves,
-# just to fix building of rand for WASM:
+clear_on_drop = { features = [ 'no_cc' ], version = '0.2' }
 getrandom = { default-features = false, features = [ 'js' ], version = '0.2.2' }
+js-sys = '0.3.57'
+lazy_static = '1.4.0'
+serde = { features = [ 'derive' ], version = '1.0' }
+serde-wasm-bindgen = '0.4.3'
+serde_json = '1.0.81'
+wasm-bindgen = '=0.2.84'
+web-sys = { features = [ 'Blob' ], version = '0.3.57' }
+ever_client = { default-features = false, features = [ 'wasm' ], git = 'https://github.com/everx-labs/ever-sdk.git', tag = '1.49.2' }
 
-ever_client = { git = 'https://github.com/everx-labs/ever-sdk.git', tag = '1.49.2', default-features = false, features = [ 'wasm' ] }
+[lib]
+crate-type = [ 'staticlib', 'cdylib' ]
+name = 'eversdk'
 
-[dependencies.web-sys]
-version = '0.3.57'
-features = [ 'Blob' ]
+[profile]
+release = { lto = true, opt-level = 's' }
 
-# The recrypt Ed25519 library that we use (https://github.com/dalek-cryptography/ed25519-dalek) depends on this clear_on_drop
-# crate (https://github.com/cesarb/clear_on_drop). That crate, by default, implements code via C to clear memory. That doesn't
-# work in WASM. However, they have a feature to turn off requiring C which we're enabling here. This allows our WASM bindings to enable
-# this feature without having to change the default for our recrypt-rust crate.
-[dependencies.clear_on_drop]
-version = '0.2'
-features = [ 'no_cc' ]
